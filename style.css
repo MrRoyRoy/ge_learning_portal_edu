@@ -1395,3 +1395,12 @@ input:checked + .slider:before {
     max-height: none;
   }
 }
+
+/* Placeholder Focus Softening: hides placeholders instantly upon active user input focus */
+input:focus::placeholder,
+textarea:focus::placeholder {
+  color: transparent !important;
+  opacity: 0 !important;
+  transition: color 0.15s ease, opacity 0.15s ease;
+}
+

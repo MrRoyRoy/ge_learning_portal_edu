@@ -180,22 +180,37 @@ Task:
     summary: "Build an AI support bot trained on club policy handbooks to answer operational and venue booking questions.",
     features: ["Agent Designer", "NotebookLM"],
     connectors: ["Email Connector"],
+    connectorEssential: false,
     role: "Student",
     level: ["University & College", "High School", "Generic"],
     steps: [
       "In NotebookLM, compile all Student Union club policies, room booking rules, and equipment reservation forms.",
       "Use Gemini Agent Designer to build a conversational agent named 'Student Union Support Assistant'.",
-      "Connect the agent to the policy knowledge base and configure custom escalate-by-email instructions via the Email Connector.",
+      "Connect the agent to the policy knowledge base to serve static queries.",
       "Test the agent's ability to handle complex queries (e.g. 'Can we book a room after 9 PM?').",
       "Embed the agent on the Student Union portal or social media page for 24/7 club leader support."
+    ],
+    advancedSteps: [
+      "In NotebookLM, compile all Student Union club policies, room booking rules, and equipment reservation forms.",
+      "Use Gemini Agent Designer to build a conversational agent named 'Student Union Support Assistant'.",
+      "Connect the agent to the policy knowledge base and configure custom escalate-by-email instructions via the Email Connector.",
+      "Test the agent's ability to automatically draft escalation messages.",
+      "Embed the agent on the Student Union portal for automated, end-to-end integration."
     ],
     prompt: `You are the 'Student Union Support Assistant.' Your job is to help student club leaders navigate room booking, funding applications, and event risk forms.
 1. **Ground your answers strictly** in the uploaded club handbooks. Never guess policies.
 2. Provide direct, step-by-step instructions (e.g., 'To book the Student Common Room, follow these 3 steps...').
 3. Cite the section number of the policy you are referencing.
-4. If a query is highly complex, involves sensitive disputes, or requires manual human approval, draft an escalation email template for the user to send to the Student Affairs Officer.
+4. If a query is highly complex, involves sensitive disputes, or requires manual human approval, provide a clear, pre-formatted draft escalation email on-screen for the user to copy and send manually to the Student Affairs Officer.
 5. Maintain a professional, supportive, and efficient tone.`,
-    proTip: "By configuring the Email Connector, the agent can automatically draft escalation emails directly in the user's draft folder when manual intervention is needed.",
+    advancedPrompt: `You are the 'Student Union Support Assistant' integrated with your Institutional Gmail. Your job is to help student club leaders navigate room booking, funding applications, and event risk forms.
+1. **Ground your answers strictly** in the uploaded club handbooks. Never guess policies.
+2. Provide direct, step-by-step instructions (e.g., 'To book the Student Common Room, follow these 3 steps...').
+3. Cite the section number of the policy you are referencing.
+4. If a query is highly complex or requires manual human approval, use your integrated Email Connector to automatically draft a detailed escalation email directly in the user's Gmail Drafts folder for the Student Affairs Officer, then notify the user that the draft is ready for review.
+5. Maintain a professional, supportive, and efficient tone.`,
+    proTip: "In Standalone mode, the agent provides pre-formatted drafts directly inside the chat window for easy copy-pasting.",
+    advancedProTip: "By configuring the Email Connector, the agent can automatically draft escalation emails directly in your Gmail draft folder when manual intervention is needed.",
     connectorGuide: {
       name: "Email Connector",
       steps: [
@@ -489,7 +504,16 @@ const uiTranslations = {
       student: "Student Center",
       operational: "Operational Command",
       administrative: "Administrative Support"
-    }
+    },
+    adminBrandText: "Admin Control",
+    adminMenuNavigationTitle: "Menu Navigation",
+    adminPortalTitle: "GEMINI EDUCATION MANAGEMENT",
+    adminPortalSubtitle: "Configure users, update learning playbooks, and analyze the last 6 months deployment metrics.",
+    adminTabUsersText: "Users Provisioning",
+    adminTabAnalyticsText: "System Analytics",
+    adminTabCasesText: "Use Cases CRUD",
+    btnAdminBackToPortalText: "Learning Portal",
+    btnAdminLogoutText: "Log Out"
   },
   "zh-TW": {
     wizardTitle: "Google Gemini Enterprise",
@@ -547,7 +571,16 @@ const uiTranslations = {
       student: "學生與社團中心 (Student Center)",
       operational: "運營管理指揮 (Operational Command)",
       administrative: "行政支援與安全 (Administrative Support)"
-    }
+    },
+    adminBrandText: "管理者控制台",
+    adminMenuNavigationTitle: "選單導覽",
+    adminPortalTitle: "GEMINI 教育管理控制台",
+    adminPortalSubtitle: "配置帳號權限、維護學習案例，並分析近 6 個月的導入統計數據。",
+    adminTabUsersText: "帳號帳戶管理",
+    adminTabAnalyticsText: "系統數據分析",
+    adminTabCasesText: "案例內容維護",
+    btnAdminBackToPortalText: "返回學習中心",
+    btnAdminLogoutText: "登出系統"
   },
   "zh-CN": {
     wizardTitle: "Google Gemini Enterprise",
@@ -606,7 +639,16 @@ const uiTranslations = {
       student: "学生与社团中心 (Student Center)",
       operational: "运营管理指挥 (Operational Command)",
       administrative: "行政支持与安全 (Administrative Support)"
-    }
+    },
+    adminBrandText: "管理者控制台",
+    adminMenuNavigationTitle: "菜单导航",
+    adminPortalTitle: "GEMINI 教育管理控制台",
+    adminPortalSubtitle: "配置账号权限、维护学习案例，并分析近 6 个月的导入统计数据。",
+    adminTabUsersText: "账号账户管理",
+    adminTabAnalyticsText: "系统数据分析",
+    adminTabCasesText: "案例内容维护",
+    btnAdminBackToPortalText: "返回学习中心",
+    btnAdminLogoutText: "登出系统"
   }
 };
 
@@ -959,17 +1001,31 @@ Task:
       steps: [
         "In NotebookLM, compile all Student Union club policies, room booking rules, and equipment reservation forms.",
         "Use Gemini Agent Designer to build a conversational agent named 'Student Union Support Assistant'.",
-        "Connect the agent to the policy knowledge base and configure custom escalate-by-email instructions via the Email Connector.",
+        "Connect the agent to the policy knowledge base to serve static queries.",
         "Test the agent's ability to handle complex queries (e.g. 'Can we book a room after 9 PM?').",
         "Embed the agent on the Student Union portal or social media page for 24/7 club leader support."
+      ],
+      advancedSteps: [
+        "In NotebookLM, compile all Student Union club policies, room booking rules, and equipment reservation forms.",
+        "Use Gemini Agent Designer to build a conversational agent named 'Student Union Support Assistant'.",
+        "Connect the agent to the policy knowledge base and configure custom escalate-by-email instructions via the Email Connector.",
+        "Test the agent's ability to automatically draft escalation messages.",
+        "Embed the agent on the Student Union portal for automated, end-to-end integration."
       ],
       prompt: `You are the 'Student Union Support Assistant.' Your job is to help student club leaders navigate room booking, funding applications, and event risk forms.
 1. **Ground your answers strictly** in the uploaded club handbooks. Never guess policies.
 2. Provide direct, step-by-step instructions (e.g., 'To book the Student Common Room, follow these 3 steps...').
 3. Cite the section number of the policy you are referencing.
-4. If a query is highly complex, involves sensitive disputes, or requires manual human approval, draft an escalation email template for the user to send to the Student Affairs Officer.
+4. If a query is highly complex, involves sensitive disputes, or requires manual human approval, provide a clear, pre-formatted draft escalation email on-screen for the user to copy and send manually to the Student Affairs Officer.
 5. Maintain a professional, supportive, and efficient tone.`,
-      proTip: "By configuring the Email Connector, the agent can automatically draft escalation emails directly in the user's draft folder when manual intervention is needed."
+      advancedPrompt: `You are the 'Student Union Support Assistant' integrated with your Institutional Gmail. Your job is to help student club leaders navigate room booking, funding applications, and event risk forms.
+1. **Ground your answers strictly** in the uploaded club handbooks. Never guess policies.
+2. Provide direct, step-by-step instructions (e.g., 'To book the Student Common Room, follow these 3 steps...').
+3. Cite the section number of the policy you are referencing.
+4. If a query is highly complex or requires manual human approval, use your integrated Email Connector to automatically draft a detailed escalation email directly in the user's Gmail Drafts folder for the Student Affairs Officer, then notify the user that the draft is ready for review.
+5. Maintain a professional, supportive, and efficient tone.`,
+      proTip: "In Standalone mode, the agent provides pre-formatted drafts directly inside the chat window for easy copy-pasting.",
+      advancedProTip: "By configuring the Email Connector, the agent can automatically draft escalation emails directly in your Gmail draft folder when manual intervention is needed."
     },
     "zh-TW": {
       title: "24/7 學生會政策諮詢 Agent",
@@ -977,18 +1033,33 @@ Task:
       steps: [
         "在 NotebookLM 中匯整所有學生會規章、課外活動組場地租借細則與活動安全切結書。",
         "使用 Gemini Agent Designer 創建一個名為「Student Union Support Assistant」的對話型 Agent。",
-        "將此 Agent 連結規章知識庫，並透過 Email Connector（郵件連接器）設定「自動生成郵件草稿」的諮詢升級機制。",
+        "將此 Agent 連結規章知識庫，在本地回答學生的靜態規定查詢。",
         "測試 Agent 對複雜規定的解答能力（例如：「我們可以在晚上9點後租用活動中心大禮堂嗎？」）。",
         "將該 Agent 的對話框嵌入至學生會官網或社團通訊軟體中，提供 24 小時不打烊的諮詢服務。"
+      ],
+      advancedSteps: [
+        "在 NotebookLM 中匯整所有學生會規章、課外活動組場地租借細則與活動安全切結書。",
+        "使用 Gemini Agent Designer 創建一個名為「Student Union Support Assistant」的對話型 Agent。",
+        "將此 Agent 連結規章知識庫，並透過 Email Connector 設定背景電子郵件自動草稿升級機制。",
+        "測試 Agent 自動於使用者的寄件夾起草升級郵件之整合功能。",
+        "將該 Agent 的對話框嵌入至學生會官網，提供自動化、端到端的整合。"
       ],
       prompt: `你是一位全天候在線的「學生會政策諮詢助手」。你的工作是引導學生社團幹部順利完成場地預約、經費申請與活動企劃安全備查。
 請遵循以下準則：
 1. **回答內容必須嚴格依據**上傳的社團法規手冊，絕不可憑空揣測。
 2. 提供清晰的、步驟化的操作指示（例如：「要預約學生交誼廳，請依照以下 3 個步驟進行...」）。
 3. 必須詳細引用手冊中的法規條款編號（例如：參見《社團活動管理辦法》第三條）。
-4. 面對極為複雜、涉及敏感爭議或必須由人工手動審批的案件，請自動為使用者撰寫一封完整的申訴/審核郵件草稿，以便他們能發送給學生事務官。
+4. 面對極為複雜、涉及敏感爭議或必須由人工審批的案件，請直接於對話框中提供一份預先格式化的申訴電子郵件草稿，方便使用者自行複製並手動發送給學生事務官。
 5. 全程保持專業、禮貌且高效的服務語氣。`,
-      proTip: "配置 Email Connector 後，Agent 可在需要人工審批時，直接在用戶的草稿信箱中擬好一封結構完整的升級審查信，大幅減少行政耗時。"
+      advancedPrompt: `你是一位與學校 Gmail 系統整合的全天候「學生會政策諮詢助手」。你的工作是引導學生社團幹部順利完成場地預約、經費申請與活動企劃安全備查。
+請遵循以下準則：
+1. **回答內容必須嚴格依據**上傳的社團法規手冊，絕不可憑空揣測。
+2. 提供清晰的、步驟化的操作指示（例如：「要預約學生交誼廳，請依照以下 3 個步驟進行...」）。
+3. 必須詳細引用手冊中的法規條款編號（例如：參見《社團活動管理辦法》第三條）。
+4. 面對極為複雜、涉及敏感爭議或必須由人工介入的案件，請使用已整合的 Email Connector（郵件連接器）在背景為使用者自動起草一封發給學生事務官的詳細申訴郵件，並保存在使用者的 Gmail 寄件夾草稿夾，隨後提醒使用者前往草稿夾確認。
+5. 全程保持專業、禮貌且高效的服務語氣。`,
+      proTip: "在標準/手動模式下，Agent 將直接在聊天視窗中提供格式完整的郵件草稿，方便您直接複製與貼上使用。",
+      advancedProTip: "配置 Email Connector 後，Agent 可在需要人工審批時，直接在用戶的 Gmail 草稿信箱中擬好一封結構完整的升級審查信，大幅減少行政耗時。"
     },
     "zh-CN": {
       title: "24/7 学生会政策咨询 Agent",
@@ -996,18 +1067,33 @@ Task:
       steps: [
         "在 NotebookLM 中汇整所有学生会规章、课外活动组场地租借细则与活动安全切结书。",
         "使用 Gemini Agent Designer 创建一个名为“Student Union Support Assistant”的对话型 Agent。",
-        "将此 Agent 链接规章知识库，并通过 Email Connector（邮件连接器）设置“自动生成邮件草稿”的咨询升级机制。",
+        "将此 Agent 链接规章知识库，在本地回答学生的静态规定查询。",
         "测试 Agent 对复杂规定的解答能力（例如：“我们可以在晚上9点后租用活动中心大礼堂吗？”）。",
         "将该 Agent 的对话框嵌入至学生会官网或社团通讯软件中，提供 24 小时不打烊的咨询服务。"
       ],
+      advancedSteps: [
+        "在 NotebookLM 中汇整所有学生会规章、课外活动组场地租借细则与活动安全切结书。",
+        "使用 Gemini Agent Designer 创建一个名为“Student Union Support Assistant”的对话型 Agent。",
+        "将此 Agent 链接规章知识库，并通过 Email Connector 设置背景电子邮件自动草稿升级机制。",
+        "测试 Agent 自动于使用者的寄件夹起草升级邮件之整合功能。",
+        "将该 Agent 的对话框嵌入至学生会官网，提供自动化、端到端的整合。"
+      ],
       prompt: `你是一位全天候在线的“学生会政策咨询助手”。你的工作是引导学生社团干部顺利完成场地预约、经费申请与活动策划安全备查。
 请遵循以下准则：
-1. **回答内容必须严格依据**上传的社团法规手册，绝不可凭空揣测。
+1. **回答内容必须严格依据**上传的社团法规手册，绝不可凭空猜测。
 2. 提供清晰的、步骤化的操作指示（例如：“要预约学生交谊厅，请依照以下 3 个步骤进行...”）。
 3. 必须详细引用手册中的法规条款编号（例如：参见《社团活动管理办法》第三条）。
-4. 面对极为复杂、涉及敏感争议或必须由人工手动审批的案件，请自动为使用者撰写一封完整的申诉/审核邮件草稿，以便他们能发送给学生事务官。
+4. 面对极为复杂、涉及敏感争议或必须由人工审批的案件，请直接于对话框中提供一份预先格式化的申诉电子邮件草稿，方便使用者自行复制并手动发送给学生事务官。
 5. 全程保持专业、礼貌且高效的服务语气。`,
-      proTip: "配置 Email Connector 后，Agent 可在需要人工审批时，直接在用户的草稿信箱中拟好一封结构完整的升级审查信，大幅减少行政耗时。"
+      advancedPrompt: `你是一位与学校 Gmail 系统整合的全天候“学生会政策咨询助手”。你的工作是引导学生社团干部顺利完成场地预约、经费申请与活动策划安全备查。
+请遵循以下准则：
+1. **回答内容必须严格依据**上传的社团法规手册，绝不可凭空猜测。
+2. 提供清晰的、步骤化的操作指示（例如：“要预约学生交谊厅，请依照以下 3 个步骤进行...”）。
+3. 必须详细引用手册中的法规条款编号（例如：参见《社团活动管理办法》第三条）。
+4. 面对极为复杂、涉及敏感争议或必须由人工介入的案件，请使用已整合的 Email Connector（邮件连接器）在背景为使用者自动起草一封发送给学生事务官的详细申诉邮件，并保存在使用者的 Gmail 寄件夹草稿夹，随后提醒使用者前往草稿夹确认。
+5. 全程保持专业、礼貌且高效的服务语气。`,
+      proTip: "在标准/手动模式下，Agent 将直接在聊天窗口中提供格式完整的邮件草稿，方便您直接复制与贴上使用。",
+      advancedProTip: "配置 Email Connector 后，Agent 可在需要人工审批时，直接在用户的 Gmail 草稿信箱中拟好一封结构完整的升级审查信，大幅减少行政耗时。"
     }
   },
   visual_campaign: {
@@ -1436,91 +1522,12 @@ const appState = {
   searchQuery: "",
   activeFilterFeature: "all",
   activeFilterStatus: "all",
+  activeFilterCategory: "all",
   activeLanguage: "en" // default language
 };
 
 // UI Initialization and Render Functions
-function initApp() {
-  // Execute dynamic database enhancements
-  enhanceUseCasesDatabase();
-
-  // Initialize dark/light theme
-  initTheme();
-
-  // Initialize languages dropdown selectors
-  initLanguage();
-
-  // Check for cached onboarding profile
-  const cachedProfile = localStorage.getItem("ge_adoption_profile");
-  if (cachedProfile) {
-    const profile = JSON.parse(cachedProfile);
-    appState.userRole = profile.role;
-    appState.institutionLevel = profile.level;
-    appState.activeLanguage = profile.lang || "en";
-    
-    // Sync UI elements
-    document.getElementById("navLang").value = appState.activeLanguage;
-    document.getElementById("wizardLang").value = appState.activeLanguage;
-    document.getElementById("wizardOverlay").style.display = "none";
-    
-    updateUILanguage();
-    updateSidebarContextUI();
-    renderUseCases();
-  } else {
-    // Show onboarding wizard
-    document.getElementById("wizardOverlay").style.display = "flex";
-    updateUILanguage();
-  }
-
-  // Set event listeners for wizard
-  document.getElementById("btnStart").addEventListener("click", handleOnboardingSubmit);
-  document.getElementById("wizardRole").addEventListener("change", handleWizardRoleChange);
-
-  // Set event listeners for search and filter elements
-  document.getElementById("searchInput").addEventListener("input", handleSearchInput);
-  
-  // Feature filters in sidebar
-  const featureItems = document.querySelectorAll(".feature-filter-item");
-  featureItems.forEach(item => {
-    item.addEventListener("click", () => {
-      featureItems.forEach(i => i.classList.remove("active"));
-      item.classList.add("active");
-      appState.activeFilterFeature = item.getAttribute("data-feature");
-      renderUseCases();
-    });
-  });
-
-  // Status filters in sidebar
-  const statusItems = document.querySelectorAll(".status-filter-item");
-  statusItems.forEach(item => {
-    item.addEventListener("click", () => {
-      statusItems.forEach(i => i.classList.remove("active"));
-      item.classList.add("active");
-      appState.activeFilterStatus = item.getAttribute("data-status");
-      renderUseCases();
-    });
-  });
-
-  // Set event listeners for connectors toggles
-  setupConnectorToggles();
-
-  // Header change profile button
-  document.getElementById("btnChangeContext").addEventListener("click", () => {
-    // Show onboarding wizard again
-    document.getElementById("wizardOverlay").style.display = "flex";
-    // Pre-populate selectors
-    if (appState.userRole) document.getElementById("wizardRole").value = appState.userRole;
-    if (appState.institutionLevel) document.getElementById("wizardLevel").value = appState.institutionLevel;
-    document.getElementById("wizardLang").value = appState.activeLanguage;
-    handleWizardRoleChange(); // trigger level check
-  });
-
-  // Modal close listeners
-  document.getElementById("modalClose").addEventListener("click", closeModal);
-  document.getElementById("modalOverlay").addEventListener("click", (e) => {
-    if (e.target === document.getElementById("modalOverlay")) closeModal();
-  });
-}
+// Obsolete local-only initApp placeholder removed. Unified initialization is handled in the master initApp lifecycle controller below.
 
 // Theme Initialization & Handling
 function initTheme() {
@@ -1552,11 +1559,16 @@ function initLanguage() {
     const newLang = e.target.value;
     appState.activeLanguage = newLang;
     
-    // Sync both dropdowns
-    document.getElementById("navLang").value = newLang;
-    document.getElementById("wizardLang").value = newLang;
+    // Sync all language dropdowns
+    const navL = document.getElementById("navLang");
+    const wizL = document.getElementById("wizardLang");
+    const admL = document.getElementById("adminLang");
+    if (navL) navL.value = newLang;
+    if (wizL) wizL.value = newLang;
+    if (admL) admL.value = newLang;
 
-    // Save language to active profile
+    // Save language to active profile and global language key
+    localStorage.setItem("ge_adoption_lang", newLang);
     const cachedProfile = localStorage.getItem("ge_adoption_profile");
     if (cachedProfile) {
       const profile = JSON.parse(cachedProfile);
@@ -1567,10 +1579,20 @@ function initLanguage() {
     // Apply translations across UI and cards
     updateUILanguage();
     renderUseCases();
+
+    // Also reload administrative use cases list if active
+    const adminPortal = document.getElementById("adminPortal");
+    if (adminPortal && adminPortal.style.display !== "none") {
+      loadAdminUseCases();
+    }
   };
 
-  document.getElementById("navLang").addEventListener("change", handleLanguageChange);
-  document.getElementById("wizardLang").addEventListener("change", handleLanguageChange);
+  const navL = document.getElementById("navLang");
+  const wizL = document.getElementById("wizardLang");
+  const admL = document.getElementById("adminLang");
+  if (navL) navL.addEventListener("change", handleLanguageChange);
+  if (wizL) wizL.addEventListener("change", handleLanguageChange);
+  if (admL) admL.addEventListener("change", handleLanguageChange);
 }
 
 // Translate dynamic and static DOM element values based on language selection
@@ -1640,6 +1662,20 @@ function updateUILanguage() {
 
   // Update sidebar profile card and navbar welcome text immediately
   updateSidebarContextUI();
+
+  // Translate Admin Portal elements if they exist
+  const adminBrand = document.getElementById("adminBrandText");
+  if (adminBrand) {
+    adminBrand.textContent = t.adminBrandText || "Admin Control";
+    document.getElementById("adminMenuNavigationTitle").textContent = t.adminMenuNavigationTitle || "Menu Navigation";
+    document.getElementById("adminPortalTitle").textContent = t.adminPortalTitle || "GEMINI EDUCATION MANAGEMENT";
+    document.getElementById("adminPortalSubtitle").textContent = t.adminPortalSubtitle || "Configure users, update learning playbooks, and analyze the last 6 months deployment metrics.";
+    document.getElementById("adminTabUsersText").textContent = t.adminTabUsersText || "Users Provisioning";
+    document.getElementById("adminTabAnalyticsText").textContent = t.adminTabAnalyticsText || "System Analytics";
+    document.getElementById("adminTabCasesText").textContent = t.adminTabCasesText || "Use Cases CRUD";
+    document.getElementById("btnAdminBackToPortalText").textContent = t.btnAdminBackToPortalText || "Learning Portal";
+    document.getElementById("btnAdminLogoutText").textContent = t.btnAdminLogoutText || "Log Out";
+  }
 }
 
 function getCategoryByRole(role) {
@@ -1673,7 +1709,7 @@ function handleWizardRoleChange() {
 }
 
 // Handle Onboarding Completion
-function handleOnboardingSubmit() {
+async function handleOnboardingSubmit() {
   const role = document.getElementById("wizardRole").value;
   const level = document.getElementById("wizardLevel").value;
   const lang = document.getElementById("wizardLang").value;
@@ -1691,6 +1727,9 @@ function handleOnboardingSubmit() {
   // Update UI and load content
   updateUILanguage();
   updateSidebarContextUI();
+  
+  // Fetch use cases and render
+  await loadUseCasesFromServer();
   renderUseCases();
   
   const welcomeText = uiTranslations[lang].profileSetSuccess;
@@ -1728,6 +1767,10 @@ function setupConnectorToggles() {
 
   toggles.forEach(t => {
     const el = document.getElementById(t.id);
+    if (!el) {
+      console.warn(`Connector toggle element not found: ${t.id}`);
+      return;
+    }
     el.addEventListener("change", (e) => {
       appState.activeConnectors[t.key] = e.target.checked;
       
@@ -1737,7 +1780,7 @@ function setupConnectorToggles() {
       const tTrans = uiTranslations[lang];
 
       if (e.target.checked) {
-        indicator.classList.add("active");
+        if (indicator) indicator.classList.add("active");
         let genericName = t.key.toUpperCase();
         if (t.key === "onedrive") genericName = lang === "en" ? "Drive Connector" : (lang === "zh-TW" ? "雲端硬碟連接器" : "云端硬盘连接器");
         else if (t.key === "outlook") genericName = lang === "en" ? "Email Connector" : (lang === "zh-TW" ? "電子郵件連接器" : "电子邮件连接器");
@@ -1745,7 +1788,7 @@ function setupConnectorToggles() {
         else if (t.key === "google") genericName = lang === "en" ? "Calendar Connector" : (lang === "zh-TW" ? "行事曆連接器" : "日历连接器");
         showToast(`${genericName} ${tTrans.linkedAndActive}`, "success");
       } else {
-        indicator.classList.remove("active");
+        if (indicator) indicator.classList.remove("active");
       }
       
       // Re-render dashboard cards
@@ -1804,7 +1847,7 @@ function renderUseCases() {
     // 4. Status Filter (Connector dependencies)
     let matchesStatus = true;
     const hasMissingConnector = checkMissingConnector(useCase);
-    if (appState.activeFilterStatus === "standard") {
+    if (appState.activeFilterStatus === "standard" || appState.activeFilterStatus === "unlocked") {
       matchesStatus = !hasMissingConnector;
     } else if (appState.activeFilterStatus === "integration") {
       matchesStatus = hasMissingConnector;
@@ -1824,7 +1867,14 @@ function renderUseCases() {
                       useCase.features.some(f => f.toLowerCase().includes(appState.searchQuery));
     }
 
-    return matchesRole && matchesLevel && matchesFeature && matchesStatus && matchesSearch;
+    // 6. Category Filter (Sidebar navigation)
+    let matchesCategory = true;
+    if (appState.activeFilterCategory && appState.activeFilterCategory !== "all") {
+      const filterCat = appState.activeFilterCategory === "admin" ? "administrative" : appState.activeFilterCategory;
+      matchesCategory = useCase.category === filterCat;
+    }
+
+    return matchesRole && matchesLevel && matchesFeature && matchesStatus && matchesSearch && matchesCategory;
   });
 
   // Group filtered use cases by Hub Category
@@ -2869,5 +2919,1111 @@ Keep the tone respectful, clear, and highly organized.`,
 }
 
 // Bind initialization lifecycle on DOM Load
-document.addEventListener("DOMContentLoaded", initApp);
+document.addEventListener("DOMContentLoaded", () => {
+  // Master Authentication and Dynamic Database Initialization Lifecycle
+  initApp();
+});
+
+// ============================================================================
+// GEMINI ENTERPRISE PORTAL - AUTHENTICATION, DATABASE & ADMIN MANAGEMENT SUITE
+// ============================================================================
+
+// 1. Dynamic Server-Side Use Case Database Syncing
+async function loadUseCasesFromServer() {
+  try {
+    const res = await fetch('/api/use-cases');
+    const data = await res.json();
+    if (Array.isArray(data) && data.length > 0) {
+      // Overwrite the local in-memory arrays so existing templates run smoothly
+      useCasesDb.length = 0;
+      useCasesDb.push(...data);
+
+      // Re-assign translations dynamically from fetched payload
+      for (const key in useCasesTranslations) {
+        delete useCasesTranslations[key];
+      }
+      data.forEach(uc => {
+        if (uc.translations) {
+          useCasesTranslations[uc.id] = uc.translations;
+        }
+      });
+      console.log(`🌐 Synced ${data.length} editable playbooks from server database.`);
+      renderUseCases();
+    }
+  } catch (err) {
+    console.error("⚠️ Failed to load use cases from server. Falling back to local static databases.", err);
+  }
+}
+
+// 2. Overridden renderUseCases containing interactive Likes & Deployments
+const baseRenderUseCases = renderUseCases;
+renderUseCases = function() {
+  // Call original render engine to establish HTML layout
+  baseRenderUseCases();
+
+  // Post-process DOM to inject Likes and Deployments indicators
+  const cards = document.querySelectorAll("#useCasesContainer .card");
+  cards.forEach(card => {
+    const titleEl = card.querySelector(".card-title");
+    if (!titleEl) return;
+    const titleText = titleEl.textContent.trim();
+
+    // Map card back to local useCasesDb item
+    const uc = useCasesDb.find(u => {
+      const lang = appState.activeLanguage || "en";
+      const trans = useCasesTranslations[u.id] ? useCasesTranslations[u.id][lang] : null;
+      const cTitle = trans ? trans.title : u.title;
+      return cTitle.trim() === titleText;
+    });
+
+    if (!uc) return;
+
+    const cardBottom = card.querySelector(".card-bottom");
+    if (cardBottom) {
+      // Create user preference controls
+      const prefBar = document.createElement("div");
+      prefBar.className = "card-preferences-bar";
+      prefBar.style.display = "flex";
+      prefBar.style.gap = "8px";
+      prefBar.style.alignItems = "center";
+      prefBar.style.marginLeft = "auto";
+      prefBar.style.position = "relative";
+      prefBar.style.zIndex = "10";
+
+      const likeActive = uc.isLiked === true || uc.isLiked === 1;
+      const deployActive = uc.isDeployed === true || uc.isDeployed === 1;
+
+      prefBar.innerHTML = `
+        <button class="pref-btn btn-like" style="background: none; border: none; padding: 4px; display: inline-flex; align-items: center; cursor: pointer; color: ${likeActive ? 'var(--color-danger)' : 'var(--text-muted)'}; transition: color 0.2s;" title="Like Use Case">
+          <span class="material-symbols-outlined" style="font-size: 18px; font-variation-settings: 'FILL' ${likeActive ? 1 : 0}">${likeActive ? 'favorite' : 'favorite'}</span>
+        </button>
+        <button class="pref-btn btn-deploy" style="background: none; border: none; padding: 4px; display: inline-flex; align-items: center; cursor: pointer; color: ${deployActive ? 'var(--color-success)' : 'var(--text-muted)'}; transition: color 0.2s;" title="Active Deployment Status">
+          <span class="material-symbols-outlined" style="font-size: 18px; font-variation-settings: 'FILL' ${deployActive ? 1 : 0}">${deployActive ? 'rocket_launch' : 'rocket_launch'}</span>
+        </button>
+      `;
+
+      cardBottom.appendChild(prefBar);
+
+      // Prevent card detail popup modal when liking or deploying
+      const likeBtn = prefBar.querySelector(".btn-like");
+      likeBtn.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        const newStatus = !uc.isLiked;
+        const success = await syncUserPreference(uc.id, 'like', newStatus);
+        if (success) {
+          uc.isLiked = newStatus;
+          likeBtn.style.color = newStatus ? 'var(--color-danger)' : 'var(--text-muted)';
+          likeBtn.querySelector(".material-symbols-outlined").style.fontVariationSettings = `'FILL' ${newStatus ? 1 : 0}`;
+          showToast(newStatus ? "Added to your favorites!" : "Removed from favorites");
+        }
+      });
+
+      const deployBtn = prefBar.querySelector(".btn-deploy");
+      deployBtn.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        const newStatus = !uc.isDeployed;
+        const success = await syncUserPreference(uc.id, 'deploy', newStatus);
+        if (success) {
+          uc.isDeployed = newStatus;
+          deployBtn.style.color = newStatus ? 'var(--color-success)' : 'var(--text-muted)';
+          deployBtn.querySelector(".material-symbols-outlined").style.fontVariationSettings = `'FILL' ${newStatus ? 1 : 0}`;
+          showToast(newStatus ? "Deployment marked as active!" : "Deployment marked as inactive");
+        }
+      });
+    }
+  });
+};
+
+// Sync Likes & Deployments to DB
+async function syncUserPreference(useCaseId, action, value) {
+  try {
+    const endpoint = action === 'like' ? '/api/use-cases/like' : '/api/use-cases/deploy';
+    const bodyKey = action === 'like' ? 'isLiked' : 'isDeployed';
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ useCaseId, [bodyKey]: value })
+    });
+    const data = await res.json();
+    return data.success;
+  } catch (error) {
+    console.error(`Preference sync error (${action}):`, error);
+    return false;
+  }
+}
+
+function injectAdminBackButton() {
+  if (!document.getElementById("btnBackToAdminDash")) {
+    const backBtn = document.createElement("button");
+    backBtn.className = "nav-button nav-button-primary";
+    backBtn.id = "btnBackToAdminDash";
+    backBtn.style.marginLeft = "12px";
+    backBtn.innerHTML = `<span class="material-symbols-outlined">shield</span> <span>Admin Dash</span>`;
+    backBtn.onclick = () => {
+      sessionStorage.setItem("ge_current_view", "admin");
+      document.getElementById("appLayout").style.display = "none";
+      document.getElementById("adminPortal").style.display = "block";
+      initAdminPortal();
+    };
+    const navRight = document.querySelector(".navbar-right");
+    if (navRight) navRight.appendChild(backBtn);
+  }
+}
+
+// 3. User & Admin Lifecycle Controller (Session checking & Login gating)
+async function initApp() {
+  // Execute base configs
+  enhanceUseCasesDatabase();
+  initTheme();
+  initLanguage();
+
+  // Establish base auth elements on start
+  const overlay = document.getElementById("wizardOverlay");
+  const loginCard = document.getElementById("loginCard");
+  const resetCard = document.getElementById("resetCard");
+  const profileCard = document.getElementById("profileCard");
+
+  // Reset display status
+  loginCard.style.display = "none";
+  resetCard.style.display = "none";
+  profileCard.style.display = "none";
+
+  try {
+    // Validate session
+    const res = await fetch('/api/auth/session');
+    const auth = await res.json();
+
+    if (auth.loggedIn) {
+      appState.userEmail = auth.user.email;
+      appState.isAdmin = auth.user.isAdmin;
+
+      if (appState.isAdmin) {
+        // Admin redirect or simulated view restore
+        const savedView = sessionStorage.getItem("ge_current_view") || "admin";
+        overlay.style.display = "none";
+        
+        if (savedView === "user") {
+          document.getElementById("adminPortal").style.display = "none";
+          document.getElementById("appLayout").style.display = "flex";
+          injectAdminBackButton();
+          
+          appState.userRole = "Lecturer";
+          appState.institutionLevel = "University & College";
+          updateSidebarContextUI();
+          
+          await loadUseCasesFromServer();
+          renderUseCases();
+        } else {
+          document.getElementById("appLayout").style.display = "none";
+          document.getElementById("adminPortal").style.display = "block";
+          initAdminPortal();
+        }
+      } else {
+        // Standard user login paths
+        if (auth.user.isTemp) {
+          // Force reset temp accounts
+          overlay.style.display = "flex";
+          resetCard.style.display = "block";
+          setupPasswordResetHandlers();
+        } else {
+          // Check profile onboarding status
+          if (auth.user.role && auth.user.institutionLevel) {
+            // Profile exists in DB
+            appState.userRole = auth.user.role;
+            appState.institutionLevel = auth.user.institutionLevel;
+            appState.activeLanguage = localStorage.getItem("ge_adoption_lang") || "en";
+
+            overlay.style.display = "none";
+            document.getElementById("navLang").value = appState.activeLanguage;
+            document.getElementById("wizardLang").value = appState.activeLanguage;
+
+            document.getElementById("navbarWelcomeText").textContent = `Logged in: ${appState.userEmail}`;
+
+            updateUILanguage();
+            updateSidebarContextUI();
+            
+            // Fetch use cases and render
+            await loadUseCasesFromServer();
+            renderUseCases();
+          } else {
+            // New user requires profile configuration
+            overlay.style.display = "flex";
+            profileCard.style.display = "block";
+            setupProfileOnboardingHandlers();
+          }
+        }
+      }
+    } else {
+      // Prompt Sign-in
+      overlay.style.display = "flex";
+      loginCard.style.display = "block";
+      setupLoginHandlers();
+    }
+  } catch (error) {
+    console.error("Initialization error:", error);
+    overlay.style.display = "flex";
+    loginCard.style.display = "block";
+    setupLoginHandlers();
+  }
+
+  // Restore filter values from sessionStorage
+  appState.activeFilterCategory = sessionStorage.getItem("ge_active_category") || "all";
+  appState.activeFilterFeature = sessionStorage.getItem("ge_active_feature") || "all";
+  appState.activeFilterStatus = sessionStorage.getItem("ge_active_status") || "all";
+
+  // Set event listeners for search and feature/status sidebars
+  document.getElementById("searchInput").addEventListener("input", handleSearchInput);
+
+  const categoryItems = document.querySelectorAll(".category-filter-item");
+  categoryItems.forEach(item => {
+    const cat = item.getAttribute("data-category");
+    if (cat === appState.activeFilterCategory) {
+      item.classList.add("active");
+    } else {
+      item.classList.remove("active");
+    }
+    item.addEventListener("click", () => {
+      categoryItems.forEach(i => i.classList.remove("active"));
+      item.classList.add("active");
+      appState.activeFilterCategory = cat;
+      sessionStorage.setItem("ge_active_category", cat);
+      renderUseCases();
+    });
+  });
+
+  const featureItems = document.querySelectorAll(".feature-filter-item");
+  featureItems.forEach(item => {
+    const feat = item.getAttribute("data-feature");
+    if (feat === appState.activeFilterFeature) {
+      item.classList.add("active");
+    } else {
+      item.classList.remove("active");
+    }
+    item.addEventListener("click", () => {
+      featureItems.forEach(i => i.classList.remove("active"));
+      item.classList.add("active");
+      appState.activeFilterFeature = feat;
+      sessionStorage.setItem("ge_active_feature", feat);
+      renderUseCases();
+    });
+  });
+
+  const statusItems = document.querySelectorAll(".status-filter-item");
+  statusItems.forEach(item => {
+    const stat = item.getAttribute("data-status");
+    if (stat === appState.activeFilterStatus) {
+      item.classList.add("active");
+    } else {
+      item.classList.remove("active");
+    }
+    item.addEventListener("click", () => {
+      statusItems.forEach(i => i.classList.remove("active"));
+      item.classList.add("active");
+      appState.activeFilterStatus = stat;
+      sessionStorage.setItem("ge_active_status", stat);
+      renderUseCases();
+    });
+  });
+
+  setupConnectorToggles();
+
+  // Profile Context switch trigger
+  document.getElementById("btnChangeContext").addEventListener("click", () => {
+    overlay.style.display = "flex";
+    profileCard.style.display = "block";
+    loginCard.style.display = "none";
+    resetCard.style.display = "none";
+
+    if (appState.userRole) document.getElementById("wizardRole").value = appState.userRole;
+    if (appState.institutionLevel) document.getElementById("wizardLevel").value = appState.institutionLevel;
+    document.getElementById("wizardLang").value = appState.activeLanguage;
+    handleWizardRoleChange();
+    setupProfileOnboardingHandlers();
+  });
+
+  // Global Logout binding
+  document.getElementById("btnLogout").addEventListener("click", triggerUserLogout);
+
+  // Modal details slider close bindings
+  document.getElementById("modalClose").addEventListener("click", closeModal);
+  document.getElementById("modalOverlay").addEventListener("click", (e) => {
+    if (e.target === document.getElementById("modalOverlay")) closeModal();
+  });
+}
+
+// 4. Session Operations (Login, Reset, Profile, Logout)
+function setupLoginHandlers() {
+  const btnLogin = document.getElementById("btnLogin");
+  const emailInput = document.getElementById("loginEmail");
+  const passwordInput = document.getElementById("loginPassword");
+  const errorMsg = document.getElementById("loginErrorMsg");
+  const adminToggle = document.getElementById("linkToggleAdminMode");
+
+  let isAdminMode = false;
+
+  adminToggle.addEventListener("click", (e) => {
+    e.preventDefault();
+    isAdminMode = !isAdminMode;
+    adminToggle.textContent = isAdminMode ? "Standard Sign In" : "Admin Sign In";
+    document.getElementById("loginTitle").textContent = isAdminMode ? "Admin Management Control" : "Google Gemini Enterprise";
+    emailInput.placeholder = isAdminMode ? "Enter Admin Username" : "e.g. academic@edu.hk";
+    document.getElementById("labelEmail").textContent = isAdminMode ? "Admin Username" : "Institutional Email";
+    errorMsg.style.display = "none";
+  });
+
+  // Enable pressing Enter to log in
+  const handleEnterKey = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      btnLogin.click();
+    }
+  };
+  emailInput.addEventListener("keydown", handleEnterKey);
+  passwordInput.addEventListener("keydown", handleEnterKey);
+
+  btnLogin.onclick = async () => {
+    errorMsg.style.display = "none";
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+
+    if (!email || !password) {
+      errorMsg.textContent = "Please fill in all authentication fields.";
+      errorMsg.style.display = "block";
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        showToast("Access Granted. Redirecting...");
+        setTimeout(() => {
+          window.location.reload();
+        }, 800);
+      } else {
+        errorMsg.textContent = data.message || "Invalid login credentials.";
+        errorMsg.style.display = "block";
+      }
+    } catch (err) {
+      errorMsg.textContent = "Unable to connect to the authentication server.";
+      errorMsg.style.display = "block";
+    }
+  };
+}
+
+function setupPasswordResetHandlers() {
+  const btnReset = document.getElementById("btnSubmitReset");
+  const p1 = document.getElementById("resetPassword1");
+  const p2 = document.getElementById("resetPassword2");
+  const errorMsg = document.getElementById("resetErrorMsg");
+
+  // Enable pressing Enter to submit password reset
+  const handleEnterKey = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      btnReset.click();
+    }
+  };
+  p1.addEventListener("keydown", handleEnterKey);
+  p2.addEventListener("keydown", handleEnterKey);
+
+  btnReset.onclick = async () => {
+    errorMsg.style.display = "none";
+    const pass = p1.value;
+    const confirm = p2.value;
+
+    if (!pass || pass.length < 6) {
+      errorMsg.textContent = "Password must be at least 6 characters long.";
+      errorMsg.style.display = "block";
+      return;
+    }
+
+    if (pass !== confirm) {
+      errorMsg.textContent = "Passwords do not match. Please verify.";
+      errorMsg.style.display = "block";
+      return;
+    }
+
+    // Since we are forcing password reset, we can also collect their initial onboarding details on this screen or proceed to profile wizard!
+    // We will let them set their password, then automatically transition them to Card 3 (Profile Card) so they can complete their onboarding context profile!
+    try {
+      const res = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ newPassword: pass })
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        showToast("Password updated successfully!");
+        document.getElementById("resetCard").style.display = "none";
+        document.getElementById("profileCard").style.display = "block";
+        setupProfileOnboardingHandlers();
+      } else {
+        errorMsg.textContent = data.message || "Failed to reset password.";
+        errorMsg.style.display = "block";
+      }
+    } catch (err) {
+      errorMsg.textContent = "Database connection error.";
+      errorMsg.style.display = "block";
+    }
+  };
+}
+
+function setupProfileOnboardingHandlers() {
+  const btnStart = document.getElementById("btnStart");
+  const selectRole = document.getElementById("wizardRole");
+  const selectLevel = document.getElementById("wizardLevel");
+  const selectLang = document.getElementById("wizardLang");
+
+  selectRole.addEventListener("change", handleWizardRoleChange);
+  handleWizardRoleChange(); // Initial alignment of helpers
+
+  btnStart.onclick = async () => {
+    const role = selectRole.value;
+    const level = selectLevel.value;
+    const lang = selectLang.value;
+
+    try {
+      // Save profile context configuration to database
+      const res = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ newPassword: "", role, institutionLevel: level }) // Empty pass skips hashing, updates metadata!
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        appState.userRole = role;
+        appState.institutionLevel = level;
+        appState.activeLanguage = lang;
+        localStorage.setItem("ge_adoption_lang", lang);
+
+        document.getElementById("navLang").value = lang;
+        document.getElementById("wizardOverlay").style.display = "none";
+        
+        document.getElementById("navbarWelcomeText").textContent = `Logged in: ${appState.userEmail}`;
+
+        updateUILanguage();
+        updateSidebarContextUI();
+
+        // Fetch use cases and render
+        await loadUseCasesFromServer();
+        renderUseCases();
+        showToast("Workspace fully configured!");
+      }
+    } catch (err) {
+      console.error("Onboarding saving failed:", err);
+    }
+  };
+}
+
+async function triggerUserLogout() {
+  try {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    showToast("Logged out successfully.");
+    setTimeout(() => {
+      window.location.reload();
+    }, 500);
+  } catch (err) {
+    window.location.reload();
+  }
+}
+
+// 5. Swiss Minimalist Administration Portal Dashboard Engine
+let currentAdminTab = 'users';
+
+function initAdminPortal() {
+  const savedTab = sessionStorage.getItem("ge_current_admin_tab") || "users";
+  currentAdminTab = savedTab;
+
+  const tabs = document.querySelectorAll(".admin-tab-item");
+  tabs.forEach(tab => {
+    const target = tab.getAttribute("data-tab");
+    if (target === savedTab) {
+      tab.classList.add("active");
+    } else {
+      tab.classList.remove("active");
+    }
+  });
+
+  document.getElementById("adminTabUsers").style.display = savedTab === 'users' ? 'block' : 'none';
+  document.getElementById("adminTabAnalytics").style.display = savedTab === 'analytics' ? 'block' : 'none';
+  document.getElementById("adminTabCases").style.display = savedTab === 'cases' ? 'block' : 'none';
+
+  if (savedTab === 'users') loadAdminUsers();
+  else if (savedTab === 'analytics') loadAdminStats();
+  else if (savedTab === 'cases') loadAdminUseCases();
+
+  tabs.forEach(tab => {
+    tab.addEventListener("click", () => {
+      tabs.forEach(t => t.classList.remove("active"));
+      tab.classList.add("active");
+      
+      const target = tab.getAttribute("data-tab");
+      currentAdminTab = target;
+      sessionStorage.setItem("ge_current_admin_tab", target);
+
+      document.getElementById("adminTabUsers").style.display = target === 'users' ? 'block' : 'none';
+      document.getElementById("adminTabAnalytics").style.display = target === 'analytics' ? 'block' : 'none';
+      document.getElementById("adminTabCases").style.display = target === 'cases' ? 'block' : 'none';
+
+      if (target === 'users') loadAdminUsers();
+      else if (target === 'analytics') loadAdminStats();
+      else if (target === 'cases') loadAdminUseCases();
+    });
+  });
+
+  // Admin Logout
+  document.getElementById("btnAdminLogout").addEventListener("click", triggerUserLogout);
+
+  // Return to Standard Playbook views
+  document.getElementById("btnAdminBackToPortal").addEventListener("click", () => {
+    sessionStorage.setItem("ge_current_view", "user");
+    document.getElementById("adminPortal").style.display = "none";
+    document.getElementById("appLayout").style.display = "flex";
+    
+    injectAdminBackButton();
+
+    // Default simulation load
+    appState.userRole = "Lecturer";
+    appState.institutionLevel = "University & College";
+    updateSidebarContextUI();
+    loadUseCasesFromServer().then(() => renderUseCases());
+  });
+
+  // User tab form hook
+  const formAddUser = document.getElementById("formAddUser");
+  formAddUser.onsubmit = async (e) => {
+    e.preventDefault();
+    const email = document.getElementById("inputNewUserEmail").value.trim();
+    const feedback = document.getElementById("userActionFeedback");
+    feedback.style.display = "none";
+
+    try {
+      const res = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        formAddUser.reset();
+        feedback.innerHTML = `
+          <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 4px; padding: 12px; font-size: 13px; color: var(--color-success);">
+            <strong>✅ User Account Provisioned!</strong><br>
+            Email: <code>${data.email}</code><br>
+            Temporary Password: <strong style="font-family: monospace; background: var(--bg-sidebar); padding: 2px 6px; border-radius: 2px; color: white;">${data.tempPassword}</strong>
+            <p style="font-size: 11px; margin-top: 4px; color: var(--text-secondary);">Share this credentials with the user. They will be prompted to reset it immediately on sign-in.</p>
+          </div>
+        `;
+        feedback.style.display = "block";
+        loadAdminUsers();
+      } else {
+        feedback.innerHTML = `<div style="background: var(--color-danger-glow); border: 1px solid rgba(239,68,68,0.2); border-radius: 4px; padding: 10px; color: var(--color-danger); font-size: 12px;">${data.message}</div>`;
+        feedback.style.display = "block";
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // Case CRUD create/export hooks
+  document.getElementById("btnAdminCreateCase").onclick = () => openAdminEditModal(null);
+  document.getElementById("btnAdminExportCases").onclick = () => {
+    window.open('/api/admin/use-cases/export', '_blank');
+  };
+  document.getElementById("adminCaseModalClose").onclick = () => {
+    document.getElementById("adminCaseEditModal").classList.remove("active");
+  };
+  document.getElementById("btnAdminFormCancel").onclick = () => {
+    document.getElementById("adminCaseEditModal").classList.remove("active");
+  };
+
+  // Trigger form saving
+  const formCase = document.getElementById("formAdminSaveCase");
+  formCase.onsubmit = async (e) => {
+    e.preventDefault();
+    await saveAdminUseCase();
+  };
+
+  // Default load
+  loadAdminUsers();
+}
+
+// Admin Tab 1: Load users table
+async function loadAdminUsers() {
+  const tbody = document.getElementById("adminUsersTableBody");
+  tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 20px; color: var(--text-muted);">Loading users list...</td></tr>`;
+
+  try {
+    const res = await fetch('/api/admin/users');
+    const users = await res.json();
+
+    if (users.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 20px; color: var(--text-muted);">No users registered yet.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = "";
+    users.forEach(u => {
+      const tr = document.createElement("tr");
+      tr.style.borderBottom = "1px solid var(--border-glass)";
+      
+      const date = new Date(u.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+      const statusText = u.isTemp ? 
+        `<span style="color: var(--color-warning); font-weight: 700;">Temporary (Pending Reset)</span>` : 
+        `<span style="color: var(--color-success); font-weight: 700;">Active Account</span>`;
+
+      tr.innerHTML = `
+        <td style="padding: 12px 8px; font-weight: 500;">${u.email}</td>
+        <td style="padding: 12px 8px;">${statusText}</td>
+        <td style="padding: 12px 8px; color: var(--text-muted);">${date}</td>
+        <td style="padding: 12px 8px; text-align: right; display: flex; gap: 8px; justify-content: flex-end;">
+          <button class="nav-button btn-reset-user" style="height: 28px; padding: 0 10px; font-size: 11px;">Reset Access</button>
+          <button class="nav-button btn-revoke-user" style="height: 28px; padding: 0 10px; font-size: 11px; background: var(--color-danger); border-color: var(--color-danger);">Revoke</button>
+        </td>
+      `;
+
+      tbody.appendChild(tr);
+
+      // Reset Password button bind
+      tr.querySelector(".btn-reset-user").onclick = async () => {
+        const feedback = document.getElementById("userActionFeedback");
+        feedback.style.display = "none";
+        if (confirm(`Generate a new temporary password for ${u.email}?`)) {
+          try {
+            const r = await fetch('/api/admin/users/reset', {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email: u.email })
+            });
+            const data = await r.json();
+            if (data.success) {
+              feedback.innerHTML = `
+                <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 4px; padding: 12px; font-size: 13px; color: var(--color-success);">
+                  <strong>✅ Password Re-Generated!</strong><br>
+                  Email: <code>${data.email}</code><br>
+                  New Temporary Password: <strong style="font-family: monospace; background: var(--bg-sidebar); padding: 2px 6px; border-radius: 2px; color: white;">${data.tempPassword}</strong>
+                </div>
+              `;
+              feedback.style.display = "block";
+              loadAdminUsers();
+            }
+          } catch (err) { console.error(err); }
+        }
+      };
+
+      // Revoke user bind
+      tr.querySelector(".btn-revoke-user").onclick = async () => {
+        if (confirm(`Are you absolutely sure you want to revoke and delete the account for ${u.email}?`)) {
+          try {
+            const r = await fetch('/api/admin/users', {
+              method: 'DELETE',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email: u.email })
+            });
+            const data = await r.json();
+            if (data.success) {
+              showToast("User successfully deleted.");
+              loadAdminUsers();
+            }
+          } catch (err) { console.error(err); }
+        }
+      };
+    });
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+// Admin Tab 2: Load metrics & SVG charts
+async function loadAdminStats() {
+  try {
+    const res = await fetch('/api/admin/stats');
+    const data = await res.json();
+
+    document.getElementById("statTotalUsers").textContent = data.totalUsers;
+    document.getElementById("statTotalUseCases").textContent = data.totalUseCases;
+    document.getElementById("statTotalLikes").textContent = data.totalLikes;
+    document.getElementById("statTotalDeployments").textContent = data.totalDeployments;
+
+    renderAdminStatsChart(data.history);
+  } catch (error) {
+    console.error("Failed to load statistics:", error);
+  }
+}
+
+// Render dynamic minimalist high-contrast SVG trend graph
+function renderAdminStatsChart(history) {
+  const container = document.getElementById("adminChartContainer");
+  container.innerHTML = "";
+
+  if (!history || history.length === 0) return;
+
+  const width = container.clientWidth || 600;
+  const height = 240;
+  const paddingLeft = 40;
+  const paddingRight = 20;
+  const paddingTop = 20;
+  const paddingBottom = 30;
+
+  const chartWidth = width - paddingLeft - paddingRight;
+  const chartHeight = height - paddingTop - paddingBottom;
+
+  // Find max value to auto-scale coordinates
+  let maxVal = 10;
+  history.forEach(h => {
+    if (h.views > maxVal) maxVal = h.views;
+    if (h.likes > maxVal) maxVal = h.likes;
+    if (h.deployments > maxVal) maxVal = h.deployments;
+  });
+  maxVal = Math.ceil(maxVal / 10) * 10; // Round up to nearest 10 for gridlines
+
+  // Calculate coordinates
+  const pointsViews = [];
+  const pointsLikes = [];
+  const pointsDeploy = [];
+
+  const stepX = chartWidth / (history.length - 1);
+
+  history.forEach((h, i) => {
+    const x = paddingLeft + (i * stepX);
+    const yViews = paddingTop + chartHeight - ((h.views / maxVal) * chartHeight);
+    const yLikes = paddingTop + chartHeight - ((h.likes / maxVal) * chartHeight);
+    const yDeploy = paddingTop + chartHeight - ((h.deployments / maxVal) * chartHeight);
+
+    pointsViews.push(`${x},${yViews}`);
+    pointsLikes.push(`${x},${yLikes}`);
+    pointsDeploy.push(`${x},${yDeploy}`);
+  });
+
+  // Build Gridlines HTML
+  let gridlinesHtml = "";
+  const gridSteps = 4;
+  for (let i = 0; i <= gridSteps; i++) {
+    const ratio = i / gridSteps;
+    const y = paddingTop + chartHeight - (ratio * chartHeight);
+    const labelVal = Math.round(ratio * maxVal);
+    gridlinesHtml += `
+      <line x1="${paddingLeft}" y1="${y}" x2="${width - paddingRight}" y2="${y}" stroke="var(--border-hairline)" stroke-dasharray="3,3" />
+      <text x="${paddingLeft - 10}" y="${y + 4}" fill="var(--text-muted)" font-size="10" text-anchor="end" font-family="monospace">${labelVal}</text>
+    `;
+  }
+
+  // Monthly Labels at bottom
+  let labelsHtml = "";
+  history.forEach((h, i) => {
+    const x = paddingLeft + (i * stepX);
+    labelsHtml += `
+      <text x="${x}" y="${height - 8}" fill="var(--text-secondary)" font-size="10" text-anchor="middle" font-weight="700">${h.month}</text>
+      <circle cx="${x}" cy="${paddingTop + chartHeight}" r="2" fill="var(--border-hairline)" />
+    `;
+  });
+
+  // Put it all together inside dynamic SVG
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("width", "100%");
+  svg.setAttribute("height", height);
+  svg.style.overflow = "visible";
+
+  svg.innerHTML = `
+    <!-- Grid Layout -->
+    ${gridlinesHtml}
+    ${labelsHtml}
+
+    <!-- Trend Lines -->
+    <polyline points="${pointsViews.join(' ')}" fill="none" stroke="var(--color-secondary)" stroke-width="2" />
+    <polyline points="${pointsLikes.join(' ')}" fill="none" stroke="var(--color-danger)" stroke-width="2" />
+    <polyline points="${pointsDeploy.join(' ')}" fill="none" stroke="var(--color-success)" stroke-width="2" />
+
+    <!-- Data Markers -->
+    ${history.map((h, i) => {
+      const x = paddingLeft + (i * stepX);
+      const yViews = paddingTop + chartHeight - ((h.views / maxVal) * chartHeight);
+      const yLikes = paddingTop + chartHeight - ((h.likes / maxVal) * chartHeight);
+      const yDeploy = paddingTop + chartHeight - ((h.deployments / maxVal) * chartHeight);
+      return `
+        <circle cx="${x}" cy="${yViews}" r="4" fill="var(--bg-dark-base)" stroke="var(--color-secondary)" stroke-width="2" class="chart-dot" style="cursor: pointer;" title="Views: ${h.views}"/>
+        <circle cx="${x}" cy="${yLikes}" r="4" fill="var(--bg-dark-base)" stroke="var(--color-danger)" stroke-width="2" class="chart-dot" style="cursor: pointer;" title="Likes: ${h.likes}"/>
+        <circle cx="${x}" cy="${yDeploy}" r="4" fill="var(--bg-dark-base)" stroke="var(--color-success)" stroke-width="2" class="chart-dot" style="cursor: pointer;" title="Deploys: ${h.deployments}"/>
+      `;
+    }).join('')}
+  `;
+
+  container.appendChild(svg);
+}
+
+// Admin Tab 3: Load Use Cases CRUD
+async function loadAdminUseCases() {
+  const tbody = document.getElementById("adminCasesTableBody");
+  tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 20px; color: var(--text-muted);">Loading use cases...</td></tr>`;
+
+  try {
+    const res = await fetch('/api/use-cases');
+    const cases = await res.json();
+
+    tbody.innerHTML = "";
+    const activeLang = appState.activeLanguage || "en";
+    cases.forEach(uc => {
+      const tr = document.createElement("tr");
+      tr.style.borderBottom = "1px solid var(--border-glass)";
+
+      const trans = uc.translations ? uc.translations[activeLang] : null;
+      const titleText = (trans && trans.title) ? trans.title : uc.title;
+
+      tr.innerHTML = `
+        <td style="padding: 12px 8px; font-family: monospace; font-size: 11px; color: var(--color-primary); font-weight: 700;">${uc.id}</td>
+        <td style="padding: 12px 8px; font-weight: 500;">${titleText}</td>
+        <td style="padding: 12px 8px; text-transform: capitalize; color: var(--text-secondary);">${uc.category}</td>
+        <td style="padding: 12px 8px; color: var(--text-muted);">${uc.role}</td>
+        <td style="padding: 12px 8px; text-align: right; display: flex; gap: 8px; justify-content: flex-end;">
+          <button class="nav-button btn-edit-case" style="height: 28px; padding: 0 10px; font-size: 11px;">Edit</button>
+          <button class="nav-button btn-delete-case" style="height: 28px; padding: 0 10px; font-size: 11px; background: var(--color-danger); border-color: var(--color-danger);">Delete</button>
+        </td>
+      `;
+
+      tbody.appendChild(tr);
+
+      tr.querySelector(".btn-edit-case").onclick = () => openAdminEditModal(uc);
+      tr.querySelector(".btn-delete-case").onclick = () => deleteAdminUseCase(uc.id);
+    });
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+// CRUD Modal Manager
+let editingUseCaseId = null;
+
+function openAdminEditModal(uc) {
+  const modal = document.getElementById("adminCaseEditModal");
+  const title = document.getElementById("adminCaseModalTitle");
+  const feedback = document.getElementById("adminFormFeedback");
+  const form = document.getElementById("formAdminSaveCase");
+
+  feedback.style.display = "none";
+  form.reset();
+
+  const idInput = document.getElementById("formCaseId");
+
+  if (uc) {
+    // EDIT MODE
+    editingUseCaseId = uc.id;
+    title.textContent = `Edit Playbook: ${uc.title}`;
+    idInput.value = uc.id;
+    idInput.disabled = true; // Immutable
+
+    document.getElementById("formCaseCategory").value = uc.category || "";
+    document.getElementById("formCaseTitle").value = uc.title || "";
+    document.getElementById("formCaseRole").value = uc.role || "";
+    document.getElementById("formCaseSummary").value = uc.summary || "";
+    
+    const stepsArray = Array.isArray(uc.steps) ? uc.steps : [];
+    document.getElementById("formCaseSteps").value = stepsArray.join("\n");
+    
+    document.getElementById("formCasePrompt").value = uc.prompt || "";
+    document.getElementById("formCaseProTip").value = uc.proTip || "";
+
+    const advStepsArray = Array.isArray(uc.advancedSteps) ? uc.advancedSteps : (uc.translations && uc.translations.en && Array.isArray(uc.translations.en.advancedSteps) ? uc.translations.en.advancedSteps : []);
+    document.getElementById("formCaseAdvancedSteps").value = advStepsArray.join("\n");
+    document.getElementById("formCaseAdvancedPrompt").value = uc.advancedPrompt || (uc.translations && uc.translations.en && uc.translations.en.advancedPrompt) || "";
+    document.getElementById("formCaseAdvancedProTip").value = uc.advancedProTip || (uc.translations && uc.translations.en && uc.translations.en.advancedProTip) || "";
+
+    // Checkbox mapping Features safely
+    const featuresArray = Array.isArray(uc.features) ? uc.features : [];
+    const featureBoxes = document.querySelectorAll("input[name='formFeatures']");
+    featureBoxes.forEach(box => {
+      box.checked = featuresArray.includes(box.value);
+    });
+
+    // Checkbox mapping Connectors safely
+    const connectorsArray = Array.isArray(uc.connectors) ? uc.connectors : [];
+    const connBoxes = document.querySelectorAll("input[name='formConnectors']");
+    connBoxes.forEach(box => {
+      box.checked = connectorsArray.includes(box.value) || connectorsArray.includes(box.value + " Connector");
+    });
+
+    // Checkbox mapping levels safely
+    const levelArray = Array.isArray(uc.level) ? uc.level : [];
+    const levelBoxes = document.querySelectorAll("input[name='formLevel']");
+    levelBoxes.forEach(box => {
+      box.checked = levelArray.includes(box.value);
+    });
+
+    // Translation values pre-population safely
+    const trans = uc.translations || {};
+    
+    const zhtw = trans["zh-TW"] || {};
+    document.getElementById("formTransZhtwTitle").value = zhtw.title || "";
+    document.getElementById("formTransZhtwSummary").value = zhtw.summary || "";
+    document.getElementById("formTransZhtwSteps").value = Array.isArray(zhtw.steps) ? zhtw.steps.join("\n") : "";
+    document.getElementById("formTransZhtwPrompt").value = zhtw.prompt || "";
+    document.getElementById("formTransZhtwProTip").value = zhtw.proTip || "";
+
+    const zhtwAdvSteps = Array.isArray(zhtw.advancedSteps) ? zhtw.advancedSteps : [];
+    document.getElementById("formTransZhtwAdvancedSteps").value = zhtwAdvSteps.join("\n");
+    document.getElementById("formTransZhtwAdvancedPrompt").value = zhtw.advancedPrompt || "";
+    document.getElementById("formTransZhtwAdvancedProTip").value = zhtw.advancedProTip || "";
+
+    const zhcn = trans["zh-CN"] || {};
+    document.getElementById("formTransZhcnTitle").value = zhcn.title || "";
+    document.getElementById("formTransZhcnSummary").value = zhcn.summary || "";
+    document.getElementById("formTransZhcnSteps").value = Array.isArray(zhcn.steps) ? zhcn.steps.join("\n") : "";
+    document.getElementById("formTransZhcnPrompt").value = zhcn.prompt || "";
+    document.getElementById("formTransZhcnProTip").value = zhcn.proTip || "";
+
+    const zhcnAdvSteps = Array.isArray(zhcn.advancedSteps) ? zhcn.advancedSteps : [];
+    document.getElementById("formTransZhcnAdvancedSteps").value = zhcnAdvSteps.join("\n");
+    document.getElementById("formTransZhcnAdvancedPrompt").value = zhcn.advancedPrompt || "";
+    document.getElementById("formTransZhcnAdvancedProTip").value = zhcn.advancedProTip || "";
+
+  } else {
+    // CREATE MODE
+    editingUseCaseId = null;
+    title.textContent = "Create New Playbook Template";
+    idInput.value = "";
+    idInput.disabled = false; // Mutable during creation
+
+    // Default checked boxes
+    document.querySelectorAll("input[name='formFeatures']").forEach(b => b.checked = false);
+    document.querySelectorAll("input[name='formConnectors']").forEach(b => b.checked = false);
+    document.querySelectorAll("input[name='formLevel']").forEach(b => b.checked = false);
+  }
+
+  modal.classList.add("active");
+}
+
+async function saveAdminUseCase() {
+  const feedback = document.getElementById("adminFormFeedback");
+  feedback.style.display = "none";
+
+  const id = document.getElementById("formCaseId").value.trim();
+  const category = document.getElementById("formCaseCategory").value;
+  const title = document.getElementById("formCaseTitle").value.trim();
+  const role = document.getElementById("formCaseRole").value.trim();
+  const summary = document.getElementById("formCaseSummary").value.trim();
+  const stepsRaw = document.getElementById("formCaseSteps").value;
+  const prompt = document.getElementById("formCasePrompt").value.trim();
+  const proTip = document.getElementById("formCaseProTip").value.trim();
+
+  if (!id || !title || !category || !role) {
+    feedback.textContent = "ID, Title, Category and Role are mandatory.";
+    feedback.style.display = "block";
+    return;
+  }
+
+  const steps = stepsRaw.split("\n").map(s => s.trim()).filter(s => s.length > 0);
+
+  // Compile Features
+  const features = [];
+  document.querySelectorAll("input[name='formFeatures']:checked").forEach(b => features.push(b.value));
+
+  // Compile Connectors
+  const connectors = [];
+  document.querySelectorAll("input[name='formConnectors']:checked").forEach(b => connectors.push(b.value));
+
+  // Compile Levels
+  const level = [];
+  document.querySelectorAll("input[name='formLevel']:checked").forEach(b => level.push(b.value));
+
+  // Compile Translations
+  const transZhtwSteps = document.getElementById("formTransZhtwSteps").value.split("\n").map(s => s.trim()).filter(s => s.length > 0);
+  const transZhtwAdvancedSteps = document.getElementById("formTransZhtwAdvancedSteps").value.split("\n").map(s => s.trim()).filter(s => s.length > 0);
+  const transZhcnSteps = document.getElementById("formTransZhcnSteps").value.split("\n").map(s => s.trim()).filter(s => s.length > 0);
+  const transZhcnAdvancedSteps = document.getElementById("formTransZhcnAdvancedSteps").value.split("\n").map(s => s.trim()).filter(s => s.length > 0);
+
+  const advancedStepsRaw = document.getElementById("formCaseAdvancedSteps").value;
+  const advancedPrompt = document.getElementById("formCaseAdvancedPrompt").value.trim();
+  const advancedProTip = document.getElementById("formCaseAdvancedProTip").value.trim();
+  const advancedSteps = advancedStepsRaw.split("\n").map(s => s.trim()).filter(s => s.length > 0);
+
+  const translations = {
+    "en": { 
+      title, 
+      summary, 
+      steps, 
+      prompt, 
+      proTip,
+      advancedSteps: advancedSteps.length > 0 ? advancedSteps : null,
+      advancedPrompt: advancedPrompt || null,
+      advancedProTip: advancedProTip || null
+    },
+    "zh-TW": {
+      title: document.getElementById("formTransZhtwTitle").value.trim() || title,
+      summary: document.getElementById("formTransZhtwSummary").value.trim() || summary,
+      steps: transZhtwSteps.length > 0 ? transZhtwSteps : steps,
+      prompt: document.getElementById("formTransZhtwPrompt").value.trim() || prompt,
+      proTip: document.getElementById("formTransZhtwProTip").value.trim() || proTip,
+      advancedSteps: transZhtwAdvancedSteps.length > 0 ? transZhtwAdvancedSteps : (advancedSteps.length > 0 ? advancedSteps : null),
+      advancedPrompt: document.getElementById("formTransZhtwAdvancedPrompt").value.trim() || (advancedPrompt || null),
+      advancedProTip: document.getElementById("formTransZhtwAdvancedProTip").value.trim() || (advancedProTip || null)
+    },
+    "zh-CN": {
+      title: document.getElementById("formTransZhcnTitle").value.trim() || title,
+      summary: document.getElementById("formTransZhcnSummary").value.trim() || summary,
+      steps: transZhcnSteps.length > 0 ? transZhcnSteps : steps,
+      prompt: document.getElementById("formTransZhcnPrompt").value.trim() || prompt,
+      proTip: document.getElementById("formTransZhcnProTip").value.trim() || proTip,
+      advancedSteps: transZhcnAdvancedSteps.length > 0 ? transZhcnAdvancedSteps : (advancedSteps.length > 0 ? advancedSteps : null),
+      advancedPrompt: document.getElementById("formTransZhcnAdvancedPrompt").value.trim() || (advancedPrompt || null),
+      advancedProTip: document.getElementById("formTransZhcnAdvancedProTip").value.trim() || (advancedProTip || null)
+    }
+  };
+
+  const payload = {
+    id, category, title, role, summary, features, connectors, level, steps, prompt, proTip, translations
+  };
+
+  try {
+    const isEdit = editingUseCaseId !== null;
+    const endpoint = '/api/admin/use-cases';
+    const method = isEdit ? 'PUT' : 'POST';
+
+    const res = await fetch(endpoint, {
+      method: method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      document.getElementById("adminCaseEditModal").classList.remove("active");
+      showToast(isEdit ? "Playbook template updated." : "New playbook template added!");
+      loadAdminUseCases();
+    } else {
+      feedback.textContent = data.error || "Failed to save template. Please verify input ID is unique.";
+      feedback.style.display = "block";
+    }
+  } catch (err) {
+    feedback.textContent = "Server database connection failure.";
+    feedback.style.display = "block";
+  }
+}
+
+async function deleteAdminUseCase(id) {
+  if (confirm(`Are you absolutely sure you want to delete the template [${id}]? This cannot be undone.`)) {
+    try {
+      const res = await fetch('/api/admin/use-cases', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast("Playbook template deleted.");
+        loadAdminUseCases();
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }
+}
+
 

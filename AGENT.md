@@ -6,16 +6,21 @@ This document serves as the persistent single source of truth for the **Google G
 
 ## 1. Technology Stack & Architecture
 
-The application is built entirely as a high-performance, single-page client-side web application. It requires no backend database server or runtime compiling.
+The application is built as a high-fidelity, dynamic web application supported by a secure containerized Node.js backend.
 
-* **Markup:** Standard HTML5 using semantic layout elements (`<aside>`, `<main>`, `<article>`, etc.).
-* **Styles:** Vanilla CSS utilizing deep custom property trees (CSS Variables) for global theme tokens (colors, gradients, glassmorphism blur, borders, typography scale). **TailwindCSS is strictly avoided** to maintain fine-grained layout control.
-* **Logic:** Vanilla ES6+ JavaScript.
-  * **State Machine:** Governed by a reactive `appState` object. Any mutations to this state (e.g. toggling role filters, searching, or switching themes) instantly trigger UI re-renders without full-page reloads.
-  * **Datastore:** Governed by an in-memory client-side default array (`useCasesDb`) dynamically enriched at boot-time with translation layers and advanced multi-state connectors.
-  * **Localization:** Programmatic static dictionary mapping (`uiTranslations`) and nested multi-lingual database trees (`useCasesTranslations`) supporting English (`en`), Traditional Chinese (`zh-TW`), and Simplified Chinese (`zh-CN`).
+* **Backend Server:** Node.js + Express framework (`server.js`) powering dynamic REST APIs, session storage, and database management.
+* **Dual Database Layer:**
+  * **Production (PostgreSQL):** Production-ready pool configuration (`pg`) optimized for container scaling on Google Cloud Run.
+  * **Local/Offline Fallback (SQLite):** File-based SQLite (`edu_portal.db`) with automatic table structures creation.
+* **VM Sandbox Seeding Module:** Securely parses and extracts 14 static scholastic/operational playbooks and translations from `app.js` on first boot inside an isolated Node `vm` context, eliminating seed duplication. Includes a 6-month historical log generator to populate visual analytics out-of-the-box.
+* **Authentication Gateways:** Enforced via `express-session` cookies and `bcryptjs` hashing.
+  * **Admin Account:** `hk_edu_admin` with password `eduHK2026`.
+  * **Standard Accounts:** Email-based provisioning with auto-generated 10-character temp passwords. Force-reset of credentials is strictly enforced on first login.
+* **Markup & Client Logic:** Vanilla HTML5 paired with modular ES6+ client-side logic (`app.js`). Hydrates page templates dynamically from `/api/use-cases` on session validation.
+* **Styles & Visual Identity:** Pure Swiss Minimalism Vanilla CSS (`style.css`), powered by CSS variable maps. **TailwindCSS is strictly avoided** to preserve precise typographic scale and structural grids.
 
 ---
+
 
 ## 2. Terminology & Brand Boundaries
 
@@ -66,40 +71,45 @@ The portal supports intelligent integration simulation via simulated enterprise 
 
 ## 5. Current Implementation State
 
-The following components are 100% verified, implemented, and operational:
+The following dynamic authorization, session gating, and admin workflows are 100% verified, compiled, and operational:
 
 ```mermaid
 graph TD
-  A[Onboarding Wizard] -->|Saves Local Cache| B(Active Session State)
-  B --> C{Dashboard Render Grid}
-  C -->|Standalone Use Cases| D[Positioned at Top]
-  C -->|Optional Connector Cases| E[Positioned at Bottom / Dashed Blue Badge]
-  C -->|Essential Connector Cases| F[Positioned at Bottom / Locked overlay if off]
-  E -->|Interactive Click| G[Modal Detail View]
-  G -->|Toggle Switch| H[Swap Standard Upload vs. Advanced Connected Steps]
+  A[Start / DOM Loaded] --> B{Fetch /api/auth/session}
+  B -->|Not Logged In| C[Display Login Card Gate]
+  C -->|Login Success| A
+  B -->|Is Admin| D[Display Administration Portal]
+  B -->|Is Standard User| E{isTemp Password?}
+  E -->|True| F[Enforce Temp Reset Card]
+  F -->|Reset Success| G[Display Profile Configuration Wizard]
+  E -->|False| H{Has Context Profile?}
+  H -->|No| G
+  G -->|Submit Config| I[Load Server-Side Playbooks & Active Main App]
+  H -->|Yes| I
+  I --> J[Sync Likes & Deploys on Card Interaction]
 ```
 
-* **Instant Translation Chain:** Switching languages immediately translates the sidebar role and "My Context Profile" overlay card in real-time without requiring a browser reload.
-* **Product-Agnostic Notifications:** Connector activation triggers generic, clean confirmation toasts in all three supported languages.
-* **Sorting Hierarchy:** Standalone tools programmatically float to the top of each category, while connector-dependent tools (both essential and optional) are neatly aligned at the bottom of the grid.
+* **Instant Translation Chain:** Language switches translate the full portal, sidebar filters, active user context metrics, and interactive toasts in real-time.
+* **Product-Agnostic Notifications:** Simulating connectors issues clean native toasts, fully localized across English (`en`), Traditional Chinese (`zh-TW`), and Simplified Chinese (`zh-CN`).
+* **Interactive Preferences (Likes/Deployments):** Standard use case cards carry responsive heart and rocket icons that bypass detail popups, updating preference tables dynamically on the server database.
+* **SVG Vector Graph Charts:** The admin statistics view aggregates database events and paints high-contrast line charts showing Page Views, Likes, and Deployments over the last 6 months.
 
 ---
 
-## 6. App State & Progress
-
+### 6. App State & Progress
+ 
 ### Accomplished Tasks (Latest Session Milestone)
-* **Swiss Minimalism Redesign:** Redesigned the entire portal layout and styling using a high-fidelity, premium Swiss Minimalist visual identity.
-  * **Engineering Grid Background:** Replaced generic background blobs with a subtle, precision 32x32px coordinate graph-paper grid matching the scholastic/architectural aesthetic.
-  * **High-End Razor Icons:** Globally overrode the Google Material Symbols Outlined icons weight parameter (`wght` set to `200` via CSS variation settings) to turn bulky default shapes into delicate, thin-line glyphs.
-  * **Precision Layout Spacing:** Removed all drop shadows and heavy glass blurs in favor of absolute flat solid container surfaces, crisp margins, and ultra-thin hairline dividers (`1px solid var(--border-hairline)`).
-  * **Modernist Border Radius:** Standardized all box corners, cards, inputs, and buttons to a sharp, professional `4px` corner radius.
-  * **Active Focus Stripe:** Designed a beautiful active animation where hovering a card smoothly slides in a 2px vertical accent bar on its left edge while its borders sharpen.
-  * **Diagonal Shading Locked States:** Redesigned off-connector card locked screens with a clean diagonal striped pattern overlay (`repeating-linear-gradient`) and crisp flat unlocking actions, preserving underlying text legibility.
-  * **Pristine Color Contrast:** Curated slate, zinc, and obsidian values for dark mode, and pure warm paper-alabaster textures for light mode, anchored by single, disciplined Indigo accents.
-  * **100% Logic Preservation:** Retained all JavaScript state mutations, translations, and selector references intact.
-
-### Next Concrete Actions
-1. **User Visual Verification:** Prompt the user to open the portal and evaluate the new layout, ensuring the Swiss engineering aesthetic resonates perfectly.
-2. **Interactive Flow Review:** Verify onboarding form submissions, language switches (English, Traditional Chinese, Simplified Chinese), feature filters, and connector toggle activations under both light and dark modes.
-3. **Drawer Sandbox Polish:** Open multiple card modals to inspect the crispness of step layouts, code prompt sandboxes, and green-glowing active state connections under the new theme.
-
+* **Standard Test Account Programmatic Auto-Seeding:** Integrated automatic checking and seeding inside `seedDatabase` in `server.js` to ensure the default test account `test-user@google.com` (password `12345678`, role `Lecturer`, level `University & College`) is programmatically seeded on database start if missing. This guarantees standard account availability for testing across database resets.
+* **Full Field Integration for Active-Integration Advanced Prompts:** Extended the administrator template editing form (`#adminCaseEditModal`) inside `index.html` to fully support editing advanced procedural steps, advanced prompts, and advanced pro-tips for English, Traditional Chinese (`zh-TW`), and Simplified Chinese (`zh-CN`).
+* **Linked Admin Form Data Flows to Database:** Refactored `openAdminCaseForm()` and `saveAdminUseCase()` inside `app.js` to correctly load existing advanced fields from database objects, parse steps into neat line-by-line arrays, and save changes cleanly back to the database as unified translation envelopes.
+* **Onboarding Use Case Auto-Fetch:** Resolved the structural gap where completing onboarding for the first time resulted in an empty dashboard. Added `await loadUseCasesFromServer()` inside `handleOnboardingSubmit()` prior to rendering to instantly fetch and display matched templates.
+* **State Persistence Across Page Refreshes:** Implemented robust session-state persistence utilizing `sessionStorage`:
+  * Highlighting and maintaining active category, feature, and status filters across page refreshes.
+  * Preserving the user's active view (retaining logged-in admins simulating the standard user learning portal instead of forcing them back to the admin dashboard).
+  * Remembering the admin's active dashboard tab selection (retaining focus on "Playbooks Templates" or "Analytics" across page reloads).
+* **Defensive Connector Toggle Safety:** Hardened `setupConnectorToggles()` in `app.js` with optional-chaining and element presence guards to protect against null reference exceptions when initializing standard elements.
+ 
+### Next Steps & Continuous Polish
+1. **Performance Tuning:** Optimize database query indexes in PostgreSQL schema configs for faster retrieval of translation envelopes.
+2. **Cloud Run Production Scaling:** Set optimal container scaling and CPU allocation targets for highly active traffic hours.
+3. **Accessibility Audits:** Review ARIA tags and color contrast metrics of the glassmorphism layout components across all devices.
