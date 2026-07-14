@@ -172,19 +172,25 @@ gcloud run deploy edu-ce-learning-portal --source . --region your-region --allow
 ######## 7. App State & Progress
  
 #### Accomplished Tasks (Latest Session Milestone)
-* **Interactive Institutional GE Adoption Roadmap (100% Complete):**
-  * **Multi-View Navigation System:** Built a premium sidebar-level views selector to toggle seamlessly between *Explore Playbooks* and the *Adoption Roadmap*, dynamically showing or hiding category, feature, and requirement filter panels to keep the viewport clean.
-  * **Immersive 3-Phase Milestone Pipeline:** Designed a premium chronological layout across 3 institutional rollout semesters: Phase 1 (Standalone OOTB Adoption), Phase 2 (Connected Campus database integrations), and Phase 3 (Automated Administrative operations & compliance).
-  * **Cascading Dependency Gates:** Engineered structural gates that lock future semesters/phases until all playbooks in preceding dependency milestones are 100% completed.
-  * **Real-time Deployment Progress:** Automatically queries active deployment state in real-time. The moment all assigned playbooks are marked as deployed, the milestone card dims gracefully with an emerald shimmer to unlock subsequent milestones.
-  * **Tactile Custom Assignment Controls:** Empowered educators to add or remove playbooks dynamically using inline deletion triggers and unassigned dropdown controls, seamlessly syncing the updated layout configuration inside `localStorage` across sessions.
-* **Mobile-Responsive Admin Sidebar Drawer (100% Complete):**
-  * **Off-Canvas Slide Menu:** Assigned the unique ID `#adminSidebar` and integrated a responsive `#btnAdminMobileMenu` hamburger menu and close button `#btnAdminMobileSidebarClose`.
-  * **Smooth Animations:** Bound off-canvas drawer animations in `app.js` using `active` state tracking, enabling fully accessible administrative menus on small screen formats (<= 1024px).
-* **Live Production Cloud Run Rollout (100% Complete):**
-  * Automated git version control synchronization to `MrRoyRoy/ge_learning_portal_edu` and successfully deployed container revision `00025` serving 100% of live traffic at the production Service URL: [https://edu-ce-learning-portal-PROJECT_NUMBER.your-region.run.app](https://edu-ce-learning-portal-PROJECT_NUMBER.your-region.run.app).
+* **High-Fidelity Dual Timeline & Verification Pipeline Redesign (100% Complete):**
+  * **Segmented Switcher Controller:** Built a premium sliding segmented toggle switcher allowing frictionless navigation between View A (Institutional Timeline) and View B (Verification Checkpoints).
+  * **Dual-Track Academic Chronological Timeline (View A):**
+    * Refactored into distinct chronological columns mapped to specific academic intervals: *Aug*, *Sep*, *Oct - Nov 15*, *Nov 16 - Jan 15*.
+    * **Track 1 (Semester-Restricted implementations):** Four separate custom card-nodes matching specific border colors and tracking individual mini-progress bars (Tech Provisioning, Launch & Onboard, Evaluation Pilot, Exam Prep & Audit).
+    * **Track 2 (Continuous Initiatives):** Designed as a full-width arrow chevron bar pointer spanning across semesters, dynamically styled to reflect completion percentage.
+    * **Playbook Mapping Details Panel:** Selected nodes slide open an interactive panel to assign/unassign use-case playbooks dynamically, matching user preferences across active sessions.
+  * **Isometric SVG Winding Pipeline Checklists (View B):**
+    * Created a premium engineering background grid featuring multi-node interactive joints.
+    * Drawn a custom isometric 3D metallic pipeline using linear gradient overlays, sheen gloss layers, and connector rings.
+    * Engineered 5 pulsating HSL neon joint glow pins with staggered keyframe delays (`@keyframes pipelinePulse`) matching specific roadmap phases.
+    * Built dynamic checklist cards with hover syncing (cross-highlighting between node hover and card focus), custom styled checkmark elements, and strikethrough logic.
+    * Completing all items inside a checklist transforms the SVG node into an emerald indicator ring instantly.
+* **Responsive Layout Fallbacks (100% Complete):**
+  * View A gracefully switches to a chronological vertical stream layout on screen viewports <= 1024px.
+  * View B collapses into a single-column block layout with the interactive SVG sticky sidebar flowing nicely.
 
 ### Next Steps & Continuous Polish
-1. **Gather Institutional Feedback:** Monitor educator interactions with the personalized milestone planning page.
-2. **PostgreSQL Telemetry Indexes:** Keep database queries optimal as users log custom adoption roadmap profiles.
+1. **Git Synchronization:** Commit the completed redesign under Git profile "MrRoyRoy" and push to GitHub.
+2. **GCP Deployment:** Deploy version update to live Google Cloud Run via `gcloud run deploy`.
+3. **Institutional Telemetry Analysis:** Monitor admin database telemetry to gauge user interaction metrics.
 

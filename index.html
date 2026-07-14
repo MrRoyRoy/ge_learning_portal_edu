@@ -376,17 +376,34 @@
 
         <!-- ADOPTION ROADMAP INTERACTIVE TIMELINE VIEW -->
         <div id="timelineView" style="display: none;">
-          <div class="dashboard-header">
+          <div class="dashboard-header" style="margin-bottom: 20px;">
             <div class="dashboard-title-row">
               <div>
                 <h1 class="welcome-msg" id="timelineWelcomeMsg">Gemini Adoption Roadmap</h1>
-                <p class="welcome-subtitle" id="timelineWelcomeSubtitle">Track and customize your institution's progressive Gemini Enterprise rollout stages. Mark playbooks as deployed in the main portal to unlock subsequent academic and operations milestones.</p>
+                <p class="welcome-subtitle" id="timelineWelcomeSubtitle">Track and customize your institution's progressive Gemini Enterprise rollout stages.</p>
               </div>
             </div>
           </div>
 
-          <!-- Interactive Milestone Track Grid -->
-          <div class="timeline-grid" id="timelineMilestonesContainer">
+          <!-- Premium Segmented Control / View Switcher -->
+          <div class="roadmap-toggle-container">
+            <button class="roadmap-toggle-btn active" id="btnShowTimeline" aria-label="Show Timeline">
+              <span class="material-symbols-outlined">timeline</span>
+              <span id="txtTabTimeline">Deployment Timeline</span>
+            </button>
+            <button class="roadmap-toggle-btn" id="btnShowCheckpoints" aria-label="Show Verification Checkpoints">
+              <span class="material-symbols-outlined">rule_folder</span>
+              <span id="txtTabCheckpoints">Verification Checkpoints</span>
+            </button>
+          </div>
+
+          <!-- VIEW A: CHRONOLOGICAL DEPLOYMENT TIMELINE SECTION -->
+          <div id="timelineDashboardSection" class="roadmap-section-view">
+            <!-- Rendered dynamically by app.js -->
+          </div>
+
+          <!-- VIEW B: MILESTONE VERIFICATION CHECKPOINTS SECTION -->
+          <div id="verificationDashboardSection" class="roadmap-section-view" style="display: none;">
             <!-- Rendered dynamically by app.js -->
           </div>
         </div>

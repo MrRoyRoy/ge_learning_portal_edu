@@ -1790,6 +1790,12 @@ function initLanguage() {
     updateUILanguage();
     renderUseCases();
 
+    // Re-render timeline if currently active
+    const timelineView = document.getElementById("timelineView");
+    if (timelineView && timelineView.style.display !== "none") {
+      renderTimeline();
+    }
+
     // Also reload administrative use cases list if active
     const adminPortal = document.getElementById("adminPortal");
     if (adminPortal && adminPortal.style.display !== "none") {
@@ -5395,328 +5401,882 @@ function escapeHtmlDiff(str) {
 }
 
 /* ==========================================================================
-   INTERACTIVE ADOPTION ROADMAP TIMELINE LOGIC
+   INTERACTIVE ADOPTION ROADMAP TIMELINE LOGIC (REDESIGNED)
    ========================================================================== */
 
-const TIMELINE_STORAGE_KEY = "ge_adoption_timeline_v1";
+const TIMELINE_STAGES_STORAGE_KEY = "ge_adoption_stages_v2";
+const VERIFICATION_STORAGE_KEY = "ge_verification_checkpoints_v1";
 
-const defaultTimelineMilestones = [
+const defaultTimelineStages = [
   {
-    id: "m1",
-    title: "Phase 1: Standalone Out-of-the-Box Adoption",
-    semester: "Semester 1",
-    dependency: null,
-    description: "Establish baseline familiarity with zero-setup standalone AI tools (NotebookLM, Canvas Mode, Deep Research, Image Generation) requiring no custom campus data integrations.",
-    playbookIds: ["socratic_tutor", "rubric_grading", "curriculum_design", "club_funding", "lab_manual_creator"]
+    id: "pre",
+    title: "Tech Provisioning (OneDrive/Moodle configs)",
+    titleZh: "技術準備與配置（Drive/Moodle 整合）",
+    subtitle: "Pre-Semester (Aug)",
+    subtitleZh: "學期前（八月）",
+    color: "#f59e0b", // Amber
+    description: "Initialize backend environments, configure drive security permissions, and prepare LMS connection structures before classes begin.",
+    descriptionZh: "在開學前初始化後端環境、配置 Drive 安全權限並準備 LMS 連接結構。",
+    playbookIds: ["socratic_tutor", "lab_manual_creator"]
   },
   {
-    id: "m2",
-    title: "Phase 2: Connected Campus Ecosystem",
-    semester: "Semester 2",
-    dependency: "m1",
-    description: "Unlock context-aware workflows by activating secure institutional connectors (Google Drive, Outlook Email, LMS Canvas/Moodle, Google Calendar) to ground responses in active records.",
-    playbookIds: ["su_helpdesk", "at_risk_cohort", "accreditation_reports", "sao_scavenger_hunt"]
+    id: "sem1",
+    title: "Launch & Onboard (Deploy Support Agent to Portal)",
+    titleZh: "正式啟動與引導（部署輔助 Agent 至門戶）",
+    subtitle: "Sem 1 (Sep)",
+    subtitleZh: "第一學期（九月）",
+    color: "#10b981", // Emerald
+    description: "Onboard students and faculty, deploy student support helpers, and establish baseline Gemini familiarity.",
+    descriptionZh: "引導學生與教職員工、部署學生支援助手並建立對 Gemini 的基礎熟練度。",
+    playbookIds: ["curriculum_design", "su_helpdesk"]
   },
   {
-    id: "m3",
-    title: "Phase 3: Automated Operations & Governance",
-    semester: "Semester 3 / All Time Allowed",
-    dependency: "m2",
-    description: "Standardize administrative auditing, financial procurement compliance, and campus-wide security drill modeling for institutional safety and governance.",
-    playbookIds: ["finance_compliance", "security_simulator", "workforce_federation"]
+    id: "mid",
+    title: "Evaluation Pilot (Roll out NotebookLM for mid-terms)",
+    titleZh: "期中試點評估（期中考試推廣 NotebookLM）",
+    subtitle: "Mid-Semester (Oct-Nov 15)",
+    subtitleZh: "期中（十月至十一月十五）",
+    color: "#3b82f6", // Blue
+    description: "Launch targeted pilots for course evaluations, rubric-based grading assistance, and classroom performance audits.",
+    descriptionZh: "啟動課程評估、基於量規的評分協助和課堂表現審計的針對性試點。",
+    playbookIds: ["rubric_grading", "at_risk_cohort", "accreditation_reports"]
+  },
+  {
+    id: "end",
+    title: "Exam Prep & Audit (Admin audits, model tuning for Sem 2)",
+    titleZh: "期末準備與審計（行政審核及第二學期模型微調）",
+    subtitle: "End-of-Semester (Nov 16-Jan 15)",
+    subtitleZh: "期末（十一月十六至一月十五）",
+    color: "#ef4444", // Coral/Red
+    description: "Secure data repository sweeps, audit exam papers, compile accreditation data, and tune models for the upcoming semester.",
+    descriptionZh: "執行安全數據儲存庫清理、審計考卷、編譯認證數據並為下學期微調模型。",
+    playbookIds: ["sao_scavenger_hunt"]
+  },
+  {
+    id: "track2",
+    title: "Certified Co-Curricular Courses, Student Club Agents, Continuous ITU Auditing",
+    titleZh: "認證共建課程、學生社團 Agent、持續資訊科技處審計",
+    subtitle: "Track 2: Continuous Anytime-Proceeded Initiatives",
+    subtitleZh: "軌道二：持續滾動式推進計畫",
+    color: "#a855f7", // Purple/Indigo
+    description: "Ongoing non-semester restricted milestones, student-led developer clubs, and high-security compliance audits.",
+    descriptionZh: "持續進行的非學期限制里程碑、學生主導的開發者社團以及高安全性合規審計。",
+    playbookIds: ["club_funding", "finance_compliance", "security_simulator", "workforce_federation"]
   }
 ];
 
-let timelineMilestones = [];
+const defaultVerificationCheckpoints = [
+  {
+    id: "vc1",
+    phase: "Phase 1",
+    title: "Phase 1 (Pre-Semester)",
+    titleZh: "階段一（學期前）",
+    tasks: [
+      { id: "vc1_t1", text: "Validate Microsoft Entra auth loop with ITU", textZh: "驗證與資訊科技處（ITU）的 Microsoft Entra 驗證迴路", done: false },
+      { id: "vc1_t2", text: "Ensure Moodle REST endpoints are accessible", textZh: "確保 Moodle REST 端點可正常存取", done: false }
+    ]
+  },
+  {
+    id: "vc2",
+    phase: "Phase 2",
+    title: "Phase 2 (Onboarding)",
+    titleZh: "階段二（導入期）",
+    tasks: [
+      { id: "vc2_t1", text: "Monitor real-time performance logs in GCP", textZh: "監控 Google Cloud Platform（GCP）實時效能日誌", done: false },
+      { id: "vc2_t2", text: "Review user feedback for routing gaps", textZh: "審查使用者關於路由缺口的意見回饋", done: false }
+    ]
+  },
+  {
+    id: "vc3",
+    phase: "Phase 3",
+    title: "Phase 3 (Mid-Semester)",
+    titleZh: "階段三（期中）",
+    tasks: [
+      { id: "vc3_t1", text: "Audit notebook sharing settings (restrict access)", textZh: "審計筆記共享設定（限制外部存取）", done: false },
+      { id: "vc3_t2", text: "Verify Moodle enrollment syncing", textZh: "驗證 Moodle 學生選課名單同步", done: false }
+    ]
+  },
+  {
+    id: "vc4",
+    phase: "Phase 4",
+    title: "Phase 4 (Winter Assessment)",
+    titleZh: "階段四（冬季評估）",
+    tasks: [
+      { id: "vc4_t1", text: "Perform security audits on data repositories", textZh: "對數據儲存庫進行安全審計", done: false },
+      { id: "vc4_t2", text: "Confirm zero assessment leakage", textZh: "確認評估題目零洩漏", done: false }
+    ]
+  },
+  {
+    id: "vc5",
+    phase: "Phase 5",
+    title: "Phase 5 (Rolling)",
+    titleZh: "階段五（持續滾動）",
+    tasks: [
+      { id: "vc5_t1", text: "Track certification completion rates", textZh: "追蹤證照/認證課程完成率", done: false },
+      { id: "vc5_t2", text: "Optimize Custom Tool integrations", textZh: "優化客製化工具（Custom Tool）整合", done: false }
+    ]
+  }
+];
 
-// Initialize or load the roadmap configuration
+let timelineStages = [];
+let verificationCheckpoints = [];
+
+// Initialize or load configuration
 function initTimeline() {
-  const saved = localStorage.getItem(TIMELINE_STORAGE_KEY);
-  if (saved) {
+  const savedStages = localStorage.getItem(TIMELINE_STAGES_STORAGE_KEY);
+  if (savedStages) {
     try {
-      timelineMilestones = JSON.parse(saved);
+      timelineStages = JSON.parse(savedStages);
     } catch (e) {
-      console.error("Failed to parse timeline milestones, resetting to defaults:", e);
-      timelineMilestones = JSON.parse(JSON.stringify(defaultTimelineMilestones));
+      timelineStages = JSON.parse(JSON.stringify(defaultTimelineStages));
     }
   } else {
-    timelineMilestones = JSON.parse(JSON.stringify(defaultTimelineMilestones));
+    timelineStages = JSON.parse(JSON.stringify(defaultTimelineStages));
+  }
+
+  const savedCheckpoints = localStorage.getItem(VERIFICATION_STORAGE_KEY);
+  if (savedCheckpoints) {
+    try {
+      verificationCheckpoints = JSON.parse(savedCheckpoints);
+    } catch (e) {
+      verificationCheckpoints = JSON.parse(JSON.stringify(defaultVerificationCheckpoints));
+    }
+  } else {
+    verificationCheckpoints = JSON.parse(JSON.stringify(defaultVerificationCheckpoints));
+  }
+
+  if (!appState.roadmapActiveTab) {
+    appState.roadmapActiveTab = localStorage.getItem("ge_roadmap_active_tab_v1") || "timeline";
+  }
+  if (!appState.roadmapActiveStage) {
+    appState.roadmapActiveStage = localStorage.getItem("ge_roadmap_active_stage_v1") || "pre";
   }
 }
 
-// Save milestones state to localStorage
+// Save states to local storage
 function saveTimeline() {
-  localStorage.setItem(TIMELINE_STORAGE_KEY, JSON.stringify(timelineMilestones));
+  localStorage.setItem(TIMELINE_STAGES_STORAGE_KEY, JSON.stringify(timelineStages));
+  localStorage.setItem(VERIFICATION_STORAGE_KEY, JSON.stringify(verificationCheckpoints));
 }
 
-// Render the entire roadmap
+// Core Roadmap Rendering Router
 function renderTimeline() {
-  const container = document.getElementById("timelineMilestonesContainer");
+  initTimeline();
+
+  // Setup main view buttons and states
+  const btnShowTimeline = document.getElementById("btnShowTimeline");
+  const btnShowCheckpoints = document.getElementById("btnShowCheckpoints");
+  const timelineDashboardSection = document.getElementById("timelineDashboardSection");
+  const verificationDashboardSection = document.getElementById("verificationDashboardSection");
+
+  if (btnShowTimeline && !btnShowTimeline.dataset.listenerBound) {
+    btnShowTimeline.dataset.listenerBound = "true";
+    btnShowTimeline.addEventListener("click", () => {
+      appState.roadmapActiveTab = "timeline";
+      localStorage.setItem("ge_roadmap_active_tab_v1", "timeline");
+      btnShowTimeline.classList.add("active");
+      btnShowCheckpoints.classList.remove("active");
+      renderTimeline();
+    });
+  }
+
+  if (btnShowCheckpoints && !btnShowCheckpoints.dataset.listenerBound) {
+    btnShowCheckpoints.dataset.listenerBound = "true";
+    btnShowCheckpoints.addEventListener("click", () => {
+      appState.roadmapActiveTab = "checkpoints";
+      localStorage.setItem("ge_roadmap_active_tab_v1", "checkpoints");
+      btnShowTimeline.classList.remove("active");
+      btnShowCheckpoints.classList.add("active");
+      renderTimeline();
+    });
+  }
+
+  // Handle Tab Displays
+  if (appState.roadmapActiveTab === "timeline") {
+    if (btnShowTimeline) btnShowTimeline.classList.add("active");
+    if (btnShowCheckpoints) btnShowCheckpoints.classList.remove("active");
+    if (timelineDashboardSection) timelineDashboardSection.style.display = "block";
+    if (verificationDashboardSection) verificationDashboardSection.style.display = "none";
+    renderTimelineDashboard();
+  } else {
+    if (btnShowTimeline) btnShowTimeline.classList.remove("active");
+    if (btnShowCheckpoints) btnShowCheckpoints.classList.add("active");
+    if (timelineDashboardSection) timelineDashboardSection.style.display = "none";
+    if (verificationDashboardSection) verificationDashboardSection.style.display = "block";
+    renderCheckpointsDashboard();
+  }
+}
+
+// 1. RENDER CHRONOLOGICAL TIMELINE VIEW (timeline.jpg)
+function renderTimelineDashboard() {
+  const container = document.getElementById("timelineDashboardSection");
   if (!container) return;
 
-  // Track completed milestones for dependency evaluation
-  const completionMap = {};
+  const isZh = appState.activeLanguage === "zh-TW" || appState.activeLanguage === "zh-CN";
 
-  // Step 1: Pre-calculate completion status for all milestones
-  timelineMilestones.forEach(m => {
-    if (m.playbookIds.length === 0) {
-      completionMap[m.id] = false;
-      return;
-    }
-    
-    // Check if every assigned playbook in this milestone has isDeployed === true or 1
-    const allDeployed = m.playbookIds.every(id => {
-      const uc = useCasesDb.find(u => u.id === id);
-      return uc ? (uc.isDeployed === true || uc.isDeployed === 1) : false;
-    });
-
-    completionMap[m.id] = allDeployed;
-  });
-
-  // Clear existing items
-  container.innerHTML = "";
-
-  // Step 2: Render each milestone card
-  timelineMilestones.forEach(m => {
-    // Evaluate dependency
-    let isLocked = false;
-    if (m.dependency) {
-      isLocked = !completionMap[m.dependency];
-    }
-
-    // Determine current status label
-    const isCompleted = completionMap[m.id];
-    let statusClass = "active";
-    let statusLabel = "In Progress";
-    let statusIcon = "sync";
-
-    if (isLocked) {
-      statusClass = "locked";
-      statusLabel = "Locked";
-      statusIcon = "lock";
-    } else if (isCompleted) {
-      statusClass = "completed";
-      statusLabel = "Completed";
-      statusIcon = "check_circle";
-    }
-
-    // Translate labels based on activeLanguage
-    const isZh = appState.activeLanguage === "zh-TW" || appState.activeLanguage === "zh-CN";
-    let localizedStatusLabel = statusLabel;
-    if (isZh) {
-      if (statusLabel === "Locked") localizedStatusLabel = "已鎖定";
-      else if (statusLabel === "Completed") localizedStatusLabel = "已完成";
-      else localizedStatusLabel = "進行中";
-    }
-
-    // Calculate progress fraction & percentage
+  // Pre-calculate deployment count and status for each stage
+  const stageStats = {};
+  timelineStages.forEach(stage => {
     let deployedCount = 0;
-    m.playbookIds.forEach(id => {
+    stage.playbookIds.forEach(id => {
       const uc = useCasesDb.find(u => u.id === id);
       if (uc && (uc.isDeployed === true || uc.isDeployed === 1)) {
         deployedCount++;
       }
     });
+    const totalCount = stage.playbookIds.length;
+    stageStats[stage.id] = {
+      deployedCount,
+      totalCount,
+      percent: totalCount > 0 ? Math.round((deployedCount / totalCount) * 100) : 0
+    };
+  });
 
-    const totalCount = m.playbookIds.length;
-    const progressPercent = totalCount > 0 ? Math.round((deployedCount / totalCount) * 100) : 0;
-
-    // Get localized progress text
-    const progressText = isZh 
-      ? `已部署 ${deployedCount} / ${totalCount} 個案例 (${progressPercent}%)` 
-      : `${deployedCount} of ${totalCount} playbooks deployed (${progressPercent}%)`;
-
-    // Compile playbook items inside this milestone
-    let playbooksHtml = "";
-    m.playbookIds.forEach(id => {
-      const uc = useCasesDb.find(u => u.id === id);
-      if (uc) {
-        const isUcDeployed = uc.isDeployed === true || uc.isDeployed === 1;
-        const ucTitle = uc.translations && uc.translations[appState.activeLanguage] && uc.translations[appState.activeLanguage].title 
-          ? uc.translations[appState.activeLanguage].title 
-          : uc.title;
-
-        playbooksHtml += `
-          <div class="milestone-playbook-item">
-            <div class="milestone-playbook-info">
-              <div class="milestone-playbook-status-dot ${isUcDeployed ? 'active' : ''}"></div>
-              <span class="milestone-playbook-title ${isUcDeployed ? 'completed' : ''}" title="${ucTitle}">
-                ${ucTitle}
-              </span>
+  // Build Desktop/Laptop Dual-Track Chronological Timeline Layout
+  let desktopHtml = `
+    <div class="chronological-timeline-desktop">
+      <!-- Row 1: Academic Calendar Header Axis -->
+      <div class="timeline-row calendar-header-row">
+        <div class="track-label-col">
+          <div class="track-label-card calendar-label">
+            <span class="material-symbols-outlined">calendar_month</span>
+            <span>${isZh ? '學術行事曆' : 'Academic Calendar'}</span>
+          </div>
+        </div>
+        <div class="timeline-tracks-col">
+          <div class="timeline-arrow-axis">
+            <div class="timeline-axis-point" style="left: 12.5%;">
+              <div class="axis-tick"></div>
+              <div class="axis-label">${isZh ? '學期前（八月）' : 'Pre-Semester<br>(Aug)'}</div>
             </div>
-            <button class="btn-remove-playbook" data-milestone="${m.id}" data-playbook="${id}" title="Remove from milestone">
-              <span class="material-symbols-outlined" style="font-size: 16px;">close</span>
-            </button>
-          </div>
-        `;
-      }
-    });
-
-    if (m.playbookIds.length === 0) {
-      playbooksHtml = `<p style="font-size: 11px; color: var(--text-muted); text-align: center; padding: 12px 0;">${isZh ? '未分配任何案例' : 'No playbooks assigned yet.'}</p>`;
-    }
-
-    // Compile unassigned playbooks for the "Add Playbook" dropdown select
-    let dropdownOptionsHtml = `<option value="">${isZh ? '+ 分配新案例到此階段' : '+ Assign Playbook to Milestone...'}</option>`;
-    
-    // Sort all use cases alphabetically by localized title
-    const sortedUseCases = [...useCasesDb].sort((a, b) => {
-      const titleA = a.translations && a.translations[appState.activeLanguage] && a.translations[appState.activeLanguage].title 
-        ? a.translations[appState.activeLanguage].title 
-        : a.title;
-      const titleB = b.translations && b.translations[appState.activeLanguage] && b.translations[appState.activeLanguage].title 
-        ? b.translations[appState.activeLanguage].title 
-        : b.title;
-      return titleA.localeCompare(titleB);
-    });
-
-    sortedUseCases.forEach(uc => {
-      // Exclude playbooks already assigned to THIS specific milestone
-      if (!m.playbookIds.includes(uc.id)) {
-        const ucTitle = uc.translations && uc.translations[appState.activeLanguage] && uc.translations[appState.activeLanguage].title 
-          ? uc.translations[appState.activeLanguage].title 
-          : uc.title;
-        dropdownOptionsHtml += `<option value="${uc.id}">${ucTitle}</option>`;
-      }
-    });
-
-    // Translate milestone metadata
-    let localizedSemester = m.semester;
-    let localizedTitle = m.title;
-    let localizedDesc = m.description;
-
-    if (isZh) {
-      if (m.id === "m1") {
-        localizedSemester = "第一學期";
-        localizedTitle = "階段一：即裝即用獨立工具推廣";
-        localizedDesc = "引導教職員工與學生建立對 Standalone AI 工具（如 NotebookLM、Canvas 模式、Deep Research、圖像生成）的基礎熟練度，無需任何校園數據庫接口配置。";
-      } else if (m.id === "m2") {
-        localizedSemester = "第二學期";
-        localizedTitle = "階段二：校園互聯生態系統構建";
-        localizedDesc = "啟用安全校園數據連接器（Google Drive、Outlook 郵箱、LMS Canvas/Moodle 課程系統、Google 歷程），建立具備上下文感知能力的教學及研發工作流。";
-      } else if (m.id === "m3") {
-        localizedSemester = "第三學期 / 全學期允許";
-        localizedTitle = "階段三：智慧行政審計與合規治理";
-        localizedDesc = "全面標準化教務行政審批合規管理、財務採購輔助核數、全校安全應急與虛擬災害演練模型，鞏固全校數智化治理基礎。";
-      }
-    }
-
-    // Build dependency message
-    let dependencyHtml = "";
-    if (m.dependency) {
-      const depMilestone = timelineMilestones.find(x => x.id === m.dependency);
-      if (depMilestone) {
-        const depTitle = isZh 
-          ? (m.dependency === "m1" ? "階段一：即裝即用獨立工具推廣" : "階段二：校園互聯生態系統構建")
-          : depMilestone.title;
-        dependencyHtml = `
-          <div class="milestone-dep">
-            <span class="material-symbols-outlined" style="font-size: 14px;">schema</span>
-            <span>${isZh ? '依賴於' : 'Depends on'}: ${depTitle}</span>
-          </div>
-        `;
-      }
-    }
-
-    // Card card-frame classes
-    const cardClasses = `milestone-card ${isLocked ? 'locked' : ''} ${isCompleted ? 'completed' : ''}`;
-
-    // Construct final HTML block
-    const cardHtml = `
-      <div class="${cardClasses}" id="card-${m.id}">
-        <div class="milestone-badge-row">
-          <span class="milestone-semester">${localizedSemester}</span>
-          <span class="milestone-status ${statusClass}">
-            <span class="material-symbols-outlined" style="font-size: 14px;">${statusIcon}</span>
-            <span>${localizedStatusLabel}</span>
-          </span>
-        </div>
-
-        <h3 class="milestone-title">${localizedTitle}</h3>
-        <p class="milestone-desc">${localizedDesc}</p>
-        
-        ${dependencyHtml}
-
-        <div class="milestone-progress-wrapper">
-          <div class="milestone-progress-text">
-            <span>${isZh ? '部署進度' : 'Deployment Progress'}</span>
-            <span>${progressText}</span>
-          </div>
-          <div class="milestone-progress-bar">
-            <div class="milestone-progress-fill" style="width: ${progressPercent}%;"></div>
+            <div class="timeline-axis-point" style="left: 37.5%;">
+              <div class="axis-tick"></div>
+              <div class="axis-label">${isZh ? '第一學期（九月）' : 'Sem 1<br>(Sep)'}</div>
+            </div>
+            <div class="timeline-axis-point" style="left: 62.5%;">
+              <div class="axis-tick"></div>
+              <div class="axis-label">${isZh ? '期中（十月至十一月十五）' : 'Mid-Semester<br>(Oct-Nov 15)'}</div>
+            </div>
+            <div class="timeline-axis-point" style="left: 87.5%;">
+              <div class="axis-tick"></div>
+              <div class="axis-label">${isZh ? '期末（十一月十六至一月十五）' : 'End-of-Semester<br>(Nov 16-Jan 15)'}</div>
+            </div>
           </div>
         </div>
+      </div>
 
-        <div class="milestone-playbooks-section-title">${isZh ? '分配的場景案例' : 'Assigned Playbooks'}</div>
-        <div class="milestone-playbooks-list">
-          ${playbooksHtml}
+      <!-- Row 2: Track 1 - Semester-Restricted Implementations -->
+      <div class="timeline-row track-row">
+        <div class="track-label-col">
+          <div class="track-label-card">
+            <div class="track-badge red-accent">${isZh ? '軌道一' : 'Track 1'}</div>
+            <div class="track-name">${isZh ? '學期限制性部署' : 'Semester-Restricted<br>Implementations'}</div>
+          </div>
         </div>
+        <div class="timeline-tracks-col cards-grid-col">
+  `;
 
-        <!-- Add Playbook Selector (interactive dropdown) -->
-        <div class="add-playbook-dropdown-wrapper">
-          <select class="select-add-playbook" data-milestone="${m.id}">
-            ${dropdownOptionsHtml}
-          </select>
+  // Render the 4 chronological Track 1 cards
+  const track1StageIds = ["pre", "sem1", "mid", "end"];
+  track1StageIds.forEach(id => {
+    const stage = timelineStages.find(s => s.id === id);
+    const stats = stageStats[id];
+    const isActive = appState.roadmapActiveStage === id;
+    const stageTitle = isZh ? stage.titleZh : stage.title;
+    const stageSubtitle = isZh ? stage.subtitleZh : stage.subtitle;
+
+    desktopHtml += `
+      <div class="timeline-card-node ${isActive ? 'active' : ''}" 
+           style="--node-accent: ${stage.color};" 
+           data-stage-id="${id}"
+           onclick="selectRoadmapStage('${id}')">
+        <div class="node-border-accent"></div>
+        <div class="node-header">
+          <span class="node-badge" style="background: ${stage.color}15; color: ${stage.color};">${stageSubtitle}</span>
+          ${stats.percent === 100 ? '<span class="material-symbols-outlined node-done-icon">verified</span>' : ''}
+        </div>
+        <h4 class="node-title">${stageTitle}</h4>
+        <div class="node-progress-mini">
+          <div class="node-progress-mini-bar" style="width: ${stats.percent}%; background: ${stage.color};"></div>
         </div>
       </div>
     `;
-
-    container.insertAdjacentHTML("beforeend", cardHtml);
   });
 
-  // Step 3: Register Interactive Event Handlers
-  // 1. Remove playbook event
-  container.querySelectorAll(".btn-remove-playbook").forEach(btn => {
-    btn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      const mId = btn.getAttribute("data-milestone");
-      const ucId = btn.getAttribute("data-playbook");
-      removeUseCaseFromMilestone(mId, ucId);
-    });
-  });
+  desktopHtml += `
+        </div>
+      </div>
 
-  // 2. Add playbook select event
-  container.querySelectorAll(".select-add-playbook").forEach(select => {
-    select.addEventListener("change", (e) => {
-      const mId = select.getAttribute("data-milestone");
-      const ucId = select.value;
-      if (ucId) {
-        addUseCaseToMilestone(mId, ucId);
-      }
-    });
+      <!-- Row 3: Track 2 - Continuous Anytime-Proceeded Initiatives -->
+      <div class="timeline-row track-row" style="margin-top: 12px;">
+        <div class="track-label-col">
+          <div class="track-label-card">
+            <div class="track-badge indigo-accent">${isZh ? '軌道二' : 'Track 2'}</div>
+            <div class="track-name">${isZh ? '持續滾動式項目' : 'Continuous Anytime-<br>Proceeded Initiatives'}</div>
+          </div>
+        </div>
+        <div class="timeline-tracks-col">
+  `;
+
+  // Render Track 2 full-width chevron arrow banner
+  const track2Stage = timelineStages.find(s => s.id === "track2");
+  const track2Stats = stageStats["track2"];
+  const isTrack2Active = appState.roadmapActiveStage === "track2";
+  const track2Title = isZh ? track2Stage.titleZh : track2Stage.title;
+
+  desktopHtml += `
+          <div class="continuous-arrow-bar ${isTrack2Active ? 'active' : ''}" 
+               data-stage-id="track2"
+               onclick="selectRoadmapStage('track2')">
+            <div class="arrow-chevron-tail"></div>
+            <div class="arrow-content">
+              <span class="material-symbols-outlined arrow-icon">all_inclusive</span>
+              <span class="arrow-text">${track2Title}</span>
+              <div class="arrow-progress-wrapper">
+                <span class="arrow-progress-label">${track2Stats.deployedCount}/${track2Stats.totalCount} ${isZh ? '已部署' : 'Deployed'}</span>
+                <div class="arrow-progress-bar">
+                  <div class="arrow-progress-fill" style="width: ${track2Stats.percent}%;"></div>
+                </div>
+              </div>
+            </div>
+            <div class="arrow-pointer-tip"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Build Mobile Stream Layout (<= 1024px)
+  let mobileHtml = `<div class="chronological-timeline-mobile">`;
+  
+  timelineStages.forEach(stage => {
+    const stats = stageStats[stage.id];
+    const isActive = appState.roadmapActiveStage === stage.id;
+    const stageTitle = isZh ? stage.titleZh : stage.title;
+    const stageSubtitle = isZh ? stage.subtitleZh : stage.subtitle;
+
+    mobileHtml += `
+      <div class="mobile-timeline-item ${isActive ? 'active' : ''}" 
+           style="--node-accent: ${stage.color};"
+           onclick="selectRoadmapStage('${stage.id}')">
+        <div class="mobile-timeline-connector"></div>
+        <div class="mobile-timeline-badge" style="background: ${stage.color};"></div>
+        <div class="mobile-timeline-content-card">
+          <div class="mobile-card-header">
+            <span class="mobile-card-subtitle" style="color: ${stage.color};">${stageSubtitle}</span>
+            ${stats.percent === 100 ? '<span class="material-symbols-outlined node-done-icon">verified</span>' : ''}
+          </div>
+          <h4 class="mobile-card-title">${stageTitle}</h4>
+          <div class="mobile-card-progress">
+            <div class="mobile-card-progress-bar" style="width: ${stats.percent}%; background: ${stage.color};"></div>
+          </div>
+        </div>
+      </div>
+    `;
   });
+  mobileHtml += `</div>`;
+
+  // Combine View A Structures and Append Details Panel Holder
+  container.innerHTML = `
+    ${desktopHtml}
+    ${mobileHtml}
+    <div id="timelineDetailsPanel" class="timeline-details-panel-card">
+      <!-- Updated dynamically via JavaScript -->
+    </div>
+  `;
+
+  // Render the selected phase's details
+  renderStageDetails();
 }
 
-// Assign a usecase to a milestone
-function addUseCaseToMilestone(milestoneId, useCaseId) {
-  // To keep clean state, ensure a playbook belongs to only one milestone at a time
-  timelineMilestones.forEach(m => {
-    m.playbookIds = m.playbookIds.filter(id => id !== useCaseId);
+// Selected phase controller
+window.selectRoadmapStage = function(stageId) {
+  appState.roadmapActiveStage = stageId;
+  localStorage.setItem("ge_roadmap_active_stage_v1", stageId);
+
+  // Sync class selections in DOM without full reload
+  document.querySelectorAll(".timeline-card-node, .continuous-arrow-bar, .mobile-timeline-item").forEach(el => {
+    if (el.getAttribute("data-stage-id") === stageId) {
+      el.classList.add("active");
+    } else {
+      el.classList.remove("active");
+    }
   });
 
-  const milestone = timelineMilestones.find(m => m.id === milestoneId);
-  if (milestone) {
-    milestone.playbookIds.push(useCaseId);
+  renderStageDetails();
+};
+
+// Render Selected Stage Detail and Playbook assignment dashboard
+function renderStageDetails() {
+  const panel = document.getElementById("timelineDetailsPanel");
+  if (!panel) return;
+
+  const stageId = appState.roadmapActiveStage || "pre";
+  const stage = timelineStages.find(s => s.id === stageId);
+  if (!stage) return;
+
+  const isZh = appState.activeLanguage === "zh-TW" || appState.activeLanguage === "zh-CN";
+
+  // Pre-calculate statistics
+  let deployedCount = 0;
+  stage.playbookIds.forEach(id => {
+    const uc = useCasesDb.find(u => u.id === id);
+    if (uc && (uc.isDeployed === true || uc.isDeployed === 1)) {
+      deployedCount++;
+    }
+  });
+  const totalCount = stage.playbookIds.length;
+  const progressPercent = totalCount > 0 ? Math.round((deployedCount / totalCount) * 100) : 0;
+
+  // Localize text variables
+  const stageTitle = isZh ? stage.titleZh : stage.title;
+  const stageDesc = isZh ? stage.descriptionZh : stage.description;
+  const progressText = isZh 
+    ? `已部署 ${deployedCount} / ${totalCount} 個案例 (${progressPercent}%)` 
+    : `${deployedCount} of ${totalCount} playbooks deployed (${progressPercent}%)`;
+
+  // Compile assigned playbooks HTML list
+  let playbooksHtml = "";
+  stage.playbookIds.forEach(id => {
+    const uc = useCasesDb.find(u => u.id === id);
+    if (uc) {
+      const isUcDeployed = uc.isDeployed === true || uc.isDeployed === 1;
+      const ucTitle = uc.translations && uc.translations[appState.activeLanguage] && uc.translations[appState.activeLanguage].title 
+        ? uc.translations[appState.activeLanguage].title 
+        : uc.title;
+
+      playbooksHtml += `
+        <div class="milestone-playbook-item">
+          <div class="milestone-playbook-info">
+            <div class="milestone-playbook-status-dot ${isUcDeployed ? 'active' : ''}"></div>
+            <span class="milestone-playbook-title ${isUcDeployed ? 'completed' : ''}" title="${ucTitle}">
+              ${ucTitle}
+            </span>
+          </div>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <button class="btn-toggle-deploy-mini ${isUcDeployed ? 'active' : ''}" 
+                    onclick="toggleTimelinePlaybookDeploy('${stageId}', '${id}', ${isUcDeployed})"
+                    title="${isUcDeployed ? (isZh ? '取消部署' : 'Mark Inactive') : (isZh ? '標記為已部署' : 'Mark Active')}">
+              <span class="material-symbols-outlined" style="font-size: 15px;">rocket_launch</span>
+            </button>
+            <button class="btn-remove-playbook" onclick="removePlaybookFromStage('${stageId}', '${id}')" title="${isZh ? '移除此關聯' : 'Remove from stage'}">
+              <span class="material-symbols-outlined" style="font-size: 15px;">close</span>
+            </button>
+          </div>
+        </div>
+      `;
+    }
+  });
+
+  if (stage.playbookIds.length === 0) {
+    playbooksHtml = `<p class="empty-playbook-msg">${isZh ? '目前未分配任何案例。' : 'No playbooks assigned yet.'}</p>`;
+  }
+
+  // Compile option dropdown select for assigning unassigned playbooks
+  let dropdownOptionsHtml = `<option value="">${isZh ? '+ 分配新案例到此階段' : '+ Assign Playbook to Stage...'}</option>`;
+  
+  const sortedUseCases = [...useCasesDb].sort((a, b) => {
+    const titleA = a.translations && a.translations[appState.activeLanguage] && a.translations[appState.activeLanguage].title 
+      ? a.translations[appState.activeLanguage].title 
+      : a.title;
+    const titleB = b.translations && b.translations[appState.activeLanguage] && b.translations[appState.activeLanguage].title 
+      ? b.translations[appState.activeLanguage].title 
+      : b.title;
+    return titleA.localeCompare(titleB);
+  });
+
+  sortedUseCases.forEach(uc => {
+    if (!stage.playbookIds.includes(uc.id)) {
+      const ucTitle = uc.translations && uc.translations[appState.activeLanguage] && uc.translations[appState.activeLanguage].title 
+        ? uc.translations[appState.activeLanguage].title 
+        : uc.title;
+      dropdownOptionsHtml += `<option value="${uc.id}">${ucTitle}</option>`;
+    }
+  });
+
+  // Inner Panel layout HTML
+  panel.innerHTML = `
+    <div class="panel-header-accent" style="background: ${stage.color};"></div>
+    <div class="panel-body">
+      <div class="panel-meta-row">
+        <h3 class="panel-stage-title">${stageTitle}</h3>
+        <span class="panel-percentage-tag" style="background: ${stage.color}15; color: ${stage.color};">${progressPercent}%</span>
+      </div>
+      <p class="panel-stage-desc">${stageDesc}</p>
+      
+      <!-- Progress Bar Meter -->
+      <div class="milestone-progress-wrapper" style="margin-top: 16px;">
+        <div class="milestone-progress-text">
+          <span>${isZh ? '部署進度' : 'Deployment Progress'}</span>
+          <span>${progressText}</span>
+        </div>
+        <div class="milestone-progress-bar">
+          <div class="milestone-progress-fill" style="width: ${progressPercent}%; background: ${stage.color};"></div>
+        </div>
+      </div>
+
+      <!-- Playbook assignments list -->
+      <div class="milestone-playbooks-section-title" style="margin-top: 24px;">
+        ${isZh ? '階段分配場景案例' : 'Assigned Phase Playbooks'}
+      </div>
+      <div class="milestone-playbooks-list" style="margin-bottom: 20px;">
+        ${playbooksHtml}
+      </div>
+
+      <!-- Assignment selector input -->
+      <div class="add-playbook-dropdown-wrapper">
+        <select class="select-add-playbook" style="border-color: ${stage.color}30;" onchange="handleAssignPlaybook(this, '${stageId}')">
+          ${dropdownOptionsHtml}
+        </select>
+      </div>
+    </div>
+  `;
+}
+
+// Mini deploy status toggler inside detail card
+window.toggleTimelinePlaybookDeploy = async function(stageId, playbookId, currentStatus) {
+  const uc = useCasesDb.find(u => u.id === playbookId);
+  if (!uc) return;
+
+  const newStatus = !currentStatus;
+  const success = await syncUserPreference(playbookId, 'deploy', newStatus);
+  if (success) {
+    uc.isDeployed = newStatus;
+    showToast(newStatus 
+      ? (appState.activeLanguage === "zh-TW" || appState.activeLanguage === "zh-CN" ? "部署狀態已啟用！" : "Deployment marked as active!") 
+      : (appState.activeLanguage === "zh-TW" || appState.activeLanguage === "zh-CN" ? "部署狀態已停用" : "Deployment marked as inactive")
+    );
+    
+    // Re-render both views
+    renderTimelineDashboard();
+  }
+};
+
+// Dropdown change trigger
+window.handleAssignPlaybook = function(selectEl, stageId) {
+  const ucId = selectEl.value;
+  if (ucId) {
+    addPlaybookToStage(stageId, ucId);
+  }
+};
+
+// Assign a usecase playbook to a stage
+function addPlaybookToStage(stageId, useCaseId) {
+  // Ensure a playbook belongs to only one stage at a time
+  timelineStages.forEach(stage => {
+    stage.playbookIds = stage.playbookIds.filter(id => id !== useCaseId);
+  });
+
+  const stage = timelineStages.find(s => s.id === stageId);
+  if (stage) {
+    stage.playbookIds.push(useCaseId);
     saveTimeline();
-    renderTimeline();
+    renderTimelineDashboard();
     showToast(appState.activeLanguage === "zh-TW" || appState.activeLanguage === "zh-CN" 
       ? "案例分配成功！" 
-      : "Playbook assigned to milestone successfully!");
+      : "Playbook assigned to stage successfully!");
   }
 }
 
-// Remove a usecase from a milestone
-function removeUseCaseFromMilestone(milestoneId, useCaseId) {
-  const milestone = timelineMilestones.find(m => m.id === milestoneId);
-  if (milestone) {
-    milestone.playbookIds = milestone.playbookIds.filter(id => id !== useCaseId);
+// Remove playbook from a stage
+window.removePlaybookFromStage = function(stageId, useCaseId) {
+  const stage = timelineStages.find(s => s.id === stageId);
+  if (stage) {
+    stage.playbookIds = stage.playbookIds.filter(id => id !== useCaseId);
     saveTimeline();
-    renderTimeline();
+    renderTimelineDashboard();
     showToast(appState.activeLanguage === "zh-TW" || appState.activeLanguage === "zh-CN" 
       ? "案例移除成功！" 
-      : "Playbook removed from milestone!");
+      : "Playbook removed from stage!");
   }
+};
+
+// 2. RENDER VERIFICATION CHECKPOINTS VIEW (milestons.jpg)
+function renderCheckpointsDashboard() {
+  const container = document.getElementById("verificationDashboardSection");
+  if (!container) return;
+
+  const isZh = appState.activeLanguage === "zh-TW" || appState.activeLanguage === "zh-CN";
+
+  // Pre-calculate status for each checkpoint (whether all of its tasks are complete)
+  const checkpointStates = {};
+  verificationCheckpoints.forEach(cp => {
+    const isCompleted = cp.tasks.every(t => t.done === true);
+    checkpointStates[cp.id] = isCompleted;
+  });
+
+  // Compile checklists HTML stack (Right column of view B)
+  let cardsHtml = `<div class="checkpoint-cards-stack">`;
+  
+  verificationCheckpoints.forEach(cp => {
+    const isCompleted = checkpointStates[cp.id];
+    const cpTitle = isZh ? cp.titleZh : cp.title;
+
+    let tasksHtml = `<div class="checkpoint-tasks-list">`;
+    cp.tasks.forEach(task => {
+      const taskText = isZh ? task.textZh : task.text;
+      tasksHtml += `
+        <label class="checkpoint-task-label ${task.done ? 'checked' : ''}">
+          <input type="checkbox" 
+                 class="verification-task-checkbox" 
+                 ${task.done ? 'checked' : ''} 
+                 onchange="toggleVerificationItem('${cp.id}', '${task.id}', this.checked)">
+          <span class="custom-checkbox-indicator"></span>
+          <span class="task-text">${taskText}</span>
+        </label>
+      `;
+    });
+    tasksHtml += `</div>`;
+
+    cardsHtml += `
+      <div class="checkpoint-checklist-card ${isCompleted ? 'completed' : ''}" 
+           id="checkpoint-card-${cp.id}"
+           onmouseenter="highlightPipelineNode('${cp.id}', true)"
+           onmouseleave="highlightPipelineNode('${cp.id}', false)">
+        <div class="checkpoint-card-accent"></div>
+        <div class="checkpoint-card-header">
+          <span class="checkpoint-phase-badge">${cp.phase}</span>
+          <span class="checkpoint-status-text ${isCompleted ? 'verified' : 'pending'}">
+            <span class="material-symbols-outlined" style="font-size: 15px;">
+              ${isCompleted ? 'verified' : 'pending_actions'}
+            </span>
+            <span>${isCompleted ? (isZh ? '已驗證' : 'Verified') : (isZh ? '待驗證' : 'Pending')}</span>
+          </span>
+        </div>
+        <h3 class="checkpoint-card-title">${cpTitle}</h3>
+        ${tasksHtml}
+      </div>
+    `;
+  });
+  cardsHtml += `</div>`;
+
+  // Draw the high-fidelity inline SVG 3D pipeline winding corridor
+  const svgPipeline = `
+    <div class="pipeline-visual-container">
+      <svg class="svg-pipeline" viewBox="0 0 500 450" width="100%" height="100%">
+        <!-- Define linear gradients for rich metallic pipeline rendering -->
+        <defs>
+          <linearGradient id="pipeMetalGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#3f3f46" />
+            <stop offset="30%" stop-color="#71717a" />
+            <stop offset="50%" stop-color="#a1a1aa" />
+            <stop offset="70%" stop-color="#71717a" />
+            <stop offset="100%" stop-color="#27272a" />
+          </linearGradient>
+          <linearGradient id="pipeShineGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#ffffff" stop-opacity="0.5" />
+            <stop offset="20%" stop-color="#ffffff" stop-opacity="0.1" />
+            <stop offset="80%" stop-color="#000000" stop-opacity="0.3" />
+            <stop offset="100%" stop-color="#000000" stop-opacity="0.6" />
+          </linearGradient>
+          
+          <filter id="nodeGlow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="5" result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+          </filter>
+        </defs>
+
+        <!-- GRID GUIDELINES (Isometric reference lines for premium engineering look) -->
+        <g stroke="var(--grid-line)" stroke-width="1">
+          <line x1="0" y1="50" x2="500" y2="300" />
+          <line x1="0" y1="150" x2="500" y2="400" />
+          <line x1="0" y1="250" x2="500" y2="450" />
+          <line x1="100" y1="0" x2="100" y2="450" />
+          <line x1="200" y1="0" x2="200" y2="450" />
+          <line x1="300" y1="0" x2="300" y2="450" />
+          <line x1="400" y1="0" x2="400" y2="450" />
+        </g>
+
+        <!-- 3D METALLIC PIPE CORRIDOR PATHWAYS -->
+        <!-- Main heavy pipeline path -->
+        <path d="M 0,20 L 110,55 L 110,145 L 175,145 L 240,205 L 280,285 L 345,365 L 500,410" 
+              fill="none" 
+              stroke="url(#pipeMetalGrad)" 
+              stroke-width="18" 
+              stroke-linecap="round" 
+              stroke-linejoin="round" />
+              
+        <!-- Highlight gloss layer on pipe -->
+        <path d="M 0,20 L 110,55 L 110,145 L 175,145 L 240,205 L 280,285 L 345,365 L 500,410" 
+              fill="none" 
+              stroke="url(#pipeShineGrad)" 
+              stroke-width="18" 
+              stroke-linecap="round" 
+              stroke-linejoin="round" />
+
+        <!-- Inner glow/core line of the pipeline -->
+        <path d="M 0,20 L 110,55 L 110,145 L 175,145 L 240,205 L 280,285 L 345,365 L 500,410" 
+              fill="none" 
+              stroke="#52525b" 
+              stroke-width="2" 
+              stroke-linecap="round" 
+              stroke-linejoin="round" 
+              stroke-dasharray="4, 4" />
+
+        <!-- Pipe coupling joints sleeves -->
+        <circle cx="50" cy="35" r="11" fill="none" stroke="#27272a" stroke-width="3" />
+        <circle cx="110" cy="100" r="11" fill="none" stroke="#27272a" stroke-width="3" />
+        <circle cx="210" cy="177" r="11" fill="none" stroke="#27272a" stroke-width="3" />
+        <circle cx="310" cy="322" r="11" fill="none" stroke="#27272a" stroke-width="3" />
+        <circle cx="420" cy="387" r="11" fill="none" stroke="#27272a" stroke-width="3" />
+
+        <!-- INTERACTIVE VERIFICATION CHECKPOINT PIN NODES -->
+        
+        <!-- Node 1: Phase 1 (Pre-Semester) -->
+        <g class="pipeline-node ${checkpointStates['vc1'] ? 'completed' : ''}" 
+           id="svg-node-vc1"
+           onclick="scrollToCheckpointCard('vc1')"
+           onmouseenter="highlightCheckpointCard('vc1', true)"
+           onmouseleave="highlightCheckpointCard('vc1', false)">
+          <circle class="pipeline-node-pulse c1-pulse" cx="110" cy="55" r="12" fill="#ef4444" opacity="0.4" />
+          <circle class="pipeline-node-core c1-core" cx="110" cy="55" r="7" fill="#ef4444" />
+          <text class="pipeline-node-text" x="110" y="59" text-anchor="middle" font-size="10" fill="white" font-weight="bold">1</text>
+        </g>
+
+        <!-- Node 2: Phase 2 (Onboarding) -->
+        <g class="pipeline-node ${checkpointStates['vc2'] ? 'completed' : ''}" 
+           id="svg-node-vc2"
+           onclick="scrollToCheckpointCard('vc2')"
+           onmouseenter="highlightCheckpointCard('vc2', true)"
+           onmouseleave="highlightCheckpointCard('vc2', false)">
+          <circle class="pipeline-node-pulse c2-pulse" cx="175" cy="145" r="12" fill="#f59e0b" opacity="0.4" />
+          <circle class="pipeline-node-core c2-core" cx="175" cy="145" r="7" fill="#f59e0b" />
+          <text class="pipeline-node-text" x="175" y="149" text-anchor="middle" font-size="10" fill="white" font-weight="bold">2</text>
+        </g>
+
+        <!-- Node 3: Phase 3 (Mid-Semester) -->
+        <g class="pipeline-node ${checkpointStates['vc3'] ? 'completed' : ''}" 
+           id="svg-node-vc3"
+           onclick="scrollToCheckpointCard('vc3')"
+           onmouseenter="highlightCheckpointCard('vc3', true)"
+           onmouseleave="highlightCheckpointCard('vc3', false)">
+          <circle class="pipeline-node-pulse c3-pulse" cx="240" cy="205" r="12" fill="#10b981" opacity="0.4" />
+          <circle class="pipeline-node-core c3-core" cx="240" cy="205" r="7" fill="#10b981" />
+          <text class="pipeline-node-text" x="240" y="209" text-anchor="middle" font-size="10" fill="white" font-weight="bold">3</text>
+        </g>
+
+        <!-- Node 4: Phase 4 (Winter Assessment) -->
+        <g class="pipeline-node ${checkpointStates['vc4'] ? 'completed' : ''}" 
+           id="svg-node-vc4"
+           onclick="scrollToCheckpointCard('vc4')"
+           onmouseenter="highlightCheckpointCard('vc4', true)"
+           onmouseleave="highlightCheckpointCard('vc4', false)">
+          <circle class="pipeline-node-pulse c4-pulse" cx="280" cy="285" r="12" fill="#3b82f6" opacity="0.4" />
+          <circle class="pipeline-node-core c4-core" cx="280" cy="285" r="7" fill="#3b82f6" />
+          <text class="pipeline-node-text" x="280" y="289" text-anchor="middle" font-size="10" fill="white" font-weight="bold">4</text>
+        </g>
+
+        <!-- Node 5: Phase 5 (Rolling) -->
+        <g class="pipeline-node ${checkpointStates['vc5'] ? 'completed' : ''}" 
+           id="svg-node-vc5"
+           onclick="scrollToCheckpointCard('vc5')"
+           onmouseenter="highlightCheckpointCard('vc5', true)"
+           onmouseleave="highlightCheckpointCard('vc5', false)">
+          <circle class="pipeline-node-pulse c5-pulse" cx="345" cy="365" r="12" fill="#6366f1" opacity="0.4" />
+          <circle class="pipeline-node-core c5-core" cx="345" cy="365" r="7" fill="#6366f1" />
+          <text class="pipeline-node-text" x="345" y="369" text-anchor="middle" font-size="10" fill="white" font-weight="bold">5</text>
+        </g>
+      </svg>
+    </div>
+  `;
+
+  // Assembly View B Elements into split layout
+  container.innerHTML = `
+    <div class="verification-view-split-layout">
+      ${svgPipeline}
+      ${cardsHtml}
+    </div>
+  `;
 }
+
+// Toggle individual task within a checkpoint
+window.toggleVerificationItem = function(cpId, taskId, isChecked) {
+  const cp = verificationCheckpoints.find(x => x.id === cpId);
+  if (cp) {
+    const task = cp.tasks.find(t => t.id === taskId);
+    if (task) {
+      task.done = isChecked;
+      saveTimeline();
+      
+      // Update task label visual state in DOM
+      const labelEl = event.target.closest(".checkpoint-task-label");
+      if (labelEl) {
+        if (isChecked) labelEl.classList.add("checked");
+        else labelEl.classList.remove("checked");
+      }
+
+      // Check if this entire phase is now complete
+      const isCompleted = cp.tasks.every(t => t.done === true);
+      const cardEl = document.getElementById(`checkpoint-card-${cpId}`);
+      if (cardEl) {
+        if (isCompleted) {
+          cardEl.classList.add("completed");
+          const statusText = cardEl.querySelector(".checkpoint-status-text");
+          if (statusText) {
+            statusText.className = "checkpoint-status-text verified";
+            statusText.querySelector(".material-symbols-outlined").textContent = "verified";
+            statusText.querySelector("span:not(.material-symbols-outlined)").textContent = 
+              appState.activeLanguage === "zh-TW" || appState.activeLanguage === "zh-CN" ? "已驗證" : "Verified";
+          }
+        } else {
+          cardEl.classList.remove("completed");
+          const statusText = cardEl.querySelector(".checkpoint-status-text");
+          if (statusText) {
+            statusText.className = "checkpoint-status-text pending";
+            statusText.querySelector(".material-symbols-outlined").textContent = "pending_actions";
+            statusText.querySelector("span:not(.material-symbols-outlined)").textContent = 
+              appState.activeLanguage === "zh-TW" || appState.activeLanguage === "zh-CN" ? "待驗證" : "Pending";
+          }
+        }
+      }
+
+      // Update SVG Node Core style immediately in the DOM
+      const svgNode = document.getElementById(`svg-node-${cpId}`);
+      if (svgNode) {
+        if (isCompleted) {
+          svgNode.classList.add("completed");
+        } else {
+          svgNode.classList.remove("completed");
+        }
+      }
+    }
+  }
+};
+
+// SVG interactions highlighting checklists
+window.highlightCheckpointCard = function(cpId, isHighlight) {
+  const card = document.getElementById(`checkpoint-card-${cpId}`);
+  if (card) {
+    if (isHighlight) {
+      card.classList.add("highlight");
+    } else {
+      card.classList.remove("highlight");
+    }
+  }
+};
+
+window.highlightPipelineNode = function(cpId, isHighlight) {
+  const node = document.getElementById(`svg-node-${cpId}`);
+  if (node) {
+    if (isHighlight) {
+      node.classList.add("highlight");
+    } else {
+      node.classList.remove("highlight");
+    }
+  }
+};
+
+window.scrollToCheckpointCard = function(cpId) {
+  const card = document.getElementById(`checkpoint-card-${cpId}`);
+  if (card) {
+    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    card.classList.add("pulse-highlight");
+    setTimeout(() => {
+      card.classList.remove("pulse-highlight");
+    }, 1500);
+  }
+};
+
 
 
 
