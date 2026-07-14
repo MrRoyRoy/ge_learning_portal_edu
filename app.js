@@ -5783,7 +5783,7 @@ function renderTimeline() {
   const track2Stats = stageStats["track2"];
   const progressWidth2 = 10 + (80 * (track2Stats.checklistPercent / 100));
 
-  // 1. Desktop Dual-Track Timeline (Track 1 and Track 2 stacked vertically)
+  // 1. Desktop Dual-Track Timeline (Track 1 is compressed horizontal, Track 2 is continuous interactive bar)
   let desktopHtml = `
     <div class="alternating-timeline-container">
       
@@ -5793,8 +5793,11 @@ function renderTimeline() {
           <span class="material-symbols-outlined track-header-icon" style="color: #6366f1;">calendar_month</span>
           <span class="track-header-title">${isZh ? "軌道一：學期限制性部署" : "Track 1: Academic Calendar Milestones"}</span>
         </div>
+        
+        <!-- Horizontal track baseline is a peer sibling -->
         <div class="timeline-horizontal-track">
           <div class="timeline-track-progress" style="width: ${progressWidth1}%;"></div>
+        </div>
   `;
 
   track1Stages.forEach((id, index) => {
@@ -5839,20 +5842,17 @@ function renderTimeline() {
   });
 
   desktopHtml += `
-        </div>
       </div>
 
       <!-- Divider line -->
       <div class="timeline-track-divider"></div>
 
-      <!-- TRACK 2: CONTINUOUS ROLLING INITIATIVES -->
-      <div class="timeline-track-block track-block-2">
+      <!-- TRACK 2: CONTINUOUS PIPELINE (Ultra-compact continuous bar) -->
+      <div class="timeline-track-block-continuous">
         <div class="timeline-track-header">
           <span class="material-symbols-outlined track-header-icon" style="color: #a855f7;">all_inclusive</span>
           <span class="track-header-title">${isZh ? "軌道二：持續滾動式項目" : "Track 2: Continuous Anytime-Proceeded Initiatives"}</span>
         </div>
-        <div class="timeline-horizontal-track">
-          <div class="timeline-track-progress" style="width: ${progressWidth2}%;"></div>
   `;
 
   {
@@ -5861,38 +5861,31 @@ function renderTimeline() {
     const stats = stageStats[id];
     const isActive = appState.roadmapActiveStage === id;
     const isCompleted = stats.isCompleted;
-    const isUp = true; // Sits above
-    const pos = 50; // Centered
 
     const stageSubtitle = isZh ? stage.subtitleZh : stage.subtitle;
-    let shortName = isZh ? "滾動項目" : "Rolling Projects";
 
     desktopHtml += `
-      <!-- Node Joint ${id} -->
-      <div class="timeline-node-joint ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}" 
-           style="left: ${pos}%; --node-color: ${stage.color};" 
-           onclick="selectRoadmapStage('${id}')">
-        <span class="material-symbols-outlined node-joint-icon">
-          ${isCompleted ? 'check' : 'pending'}
-        </span>
-      </div>
-
-      <!-- Connector line -->
-      <div class="alternating-marker-pin ${isUp ? 'pin-up' : 'pin-down'}" style="left: ${pos}%; --node-color: ${stage.color};"></div>
-
-      <!-- Floating Schedule Flag -->
-      <div class="floating-schedule-flag ${isUp ? 'flag-up' : 'flag-down'} ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}" 
-           style="left: ${pos}%; --node-color: ${stage.color};"
-           onclick="selectRoadmapStage('${id}')">
-        <div class="flag-date-label">${stageSubtitle}</div>
-        <div class="flag-title-label">${shortName}</div>
-        <div class="flag-subtitle-label">${stats.completedTasks}/${stats.totalTasks} ${isZh ? '已驗證' : 'Verified'}</div>
-      </div>
+        <!-- Thick Clickable Arrow Progress Pipeline (No popups/flags) -->
+        <div class="continuous-pipeline-capsule ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}" 
+             onclick="selectRoadmapStage('track2')">
+          
+          <!-- Baseline track with pulsating arrow indicator -->
+          <div class="continuous-pipeline-track">
+            <div class="continuous-pipeline-progress" style="width: ${stats.checklistPercent}%;"></div>
+            <div class="continuous-pipeline-arrow">▶</div>
+          </div>
+          
+          <!-- Content Overlay labels -->
+          <div class="continuous-pipeline-overlay">
+            <span class="pipeline-badge" style="background: ${stage.color};">${isZh ? "滾動項目" : "Rolling Projects"}</span>
+            <span class="pipeline-subtitle">${stageSubtitle}</span>
+            <span class="pipeline-stats-pill">${stats.completedTasks}/${stats.totalTasks} ${isZh ? '已驗證' : 'Verified'} (${stats.checklistPercent}%)</span>
+          </div>
+        </div>
     `;
   }
 
   desktopHtml += `
-        </div>
       </div>
 
     </div>
