@@ -148,14 +148,19 @@
 
   <!-- MAIN APPLICATION LAYOUT -->
   <div class="app-container" id="appLayout">
+    <!-- Mobile Sidebar Backdrop Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
     
     <!-- LEFT SIDEBAR: Context Profile & Filters -->
-    <aside class="sidebar">
+    <aside class="sidebar" id="appSidebar">
       <div class="sidebar-brand">
         <div class="logo-icon">
           <span class="material-symbols-outlined">school</span>
         </div>
         <span class="brand-text">GE Adoption Hub</span>
+        <button id="btnMobileSidebarClose" class="nav-button" aria-label="Close menu" style="margin-left: auto; border: none; background: transparent; padding: 4px; min-width: auto; height: auto;">
+          <span class="material-symbols-outlined" style="font-size: 20px; color: var(--text-primary);">close</span>
+        </button>
       </div>
 
       <!-- Live profile context panel -->
@@ -302,6 +307,9 @@
       <!-- TOP NAVIGATION NAVBAR -->
       <header class="navbar">
         <div class="navbar-left">
+          <button class="nav-button mobile-menu-btn" id="btnMobileMenu" aria-label="Open Filter Menu" style="margin-right: 4px; padding: 0 10px; flex-shrink: 0;">
+            <span class="material-symbols-outlined">menu</span>
+          </button>
           <div class="search-wrapper">
             <span class="material-symbols-outlined search-icon">search</span>
             <input type="text" class="search-input" id="searchInput" placeholder="Search prompts, templates, roles...">

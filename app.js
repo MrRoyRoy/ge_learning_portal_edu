@@ -3659,6 +3659,39 @@ async function initApp() {
   document.getElementById("modalOverlay").addEventListener("click", (e) => {
     if (e.target === document.getElementById("modalOverlay")) closeModal();
   });
+
+  // Mobile responsive sidebar drawer hooks
+  const btnMobileMenu = document.getElementById("btnMobileMenu");
+  const btnMobileSidebarClose = document.getElementById("btnMobileSidebarClose");
+  const sidebarOverlay = document.getElementById("sidebarOverlay");
+  const appSidebar = document.getElementById("appSidebar");
+
+  const openMobileSidebar = () => {
+    if (appSidebar) appSidebar.classList.add("active");
+    if (sidebarOverlay) sidebarOverlay.classList.add("active");
+  };
+
+  const closeMobileSidebar = () => {
+    if (appSidebar) appSidebar.classList.remove("active");
+    if (sidebarOverlay) sidebarOverlay.classList.remove("active");
+  };
+
+  if (btnMobileMenu) {
+    btnMobileMenu.addEventListener("click", openMobileSidebar);
+  }
+
+  if (btnMobileSidebarClose) {
+    btnMobileSidebarClose.addEventListener("click", closeMobileSidebar);
+  }
+
+  if (sidebarOverlay) {
+    sidebarOverlay.addEventListener("click", closeMobileSidebar);
+  }
+
+  // Auto-close sidebar drawer when navigating filters on mobile
+  document.querySelectorAll(".category-filter-item, .feature-filter-item, .status-filter-item").forEach(item => {
+    item.addEventListener("click", closeMobileSidebar);
+  });
 }
 
 // 4. Session Operations (Login, Reset, Profile, Logout)
@@ -5243,33 +5276,33 @@ function renderLineDiff(oldStr, newStr) {
     
     if (line.op === "equal") {
       html += `
-        <div style="display: flex; min-height: 24px; ${borderStyle}">
-          <div style="flex: 0 0 50%; width: 50%; padding: 6px 16px; font-family: monospace; font-size: 11px; white-space: pre-wrap; word-break: break-all; color: var(--text-secondary); background: transparent; border-right: 1px solid var(--border-glass); line-height: 1.5; box-sizing: border-box;">
+        <div class="diff-row" style="${borderStyle}">
+          <div class="diff-cell-left" style="color: var(--text-secondary); background: transparent;">
             ${escapeHtmlDiff(line.left)}
           </div>
-          <div style="flex: 0 0 50%; width: 50%; padding: 6px 16px; font-family: monospace; font-size: 11px; white-space: pre-wrap; word-break: break-all; color: var(--text-primary); background: transparent; line-height: 1.5; box-sizing: border-box;">
+          <div class="diff-cell-right" style="color: var(--text-primary); background: transparent;">
             ${escapeHtmlDiff(line.right)}
           </div>
         </div>
       `;
     } else if (line.op === "insert") {
       html += `
-        <div style="display: flex; min-height: 24px; ${borderStyle} background: rgba(34, 197, 94, 0.08);">
-          <div style="flex: 0 0 50%; width: 50%; padding: 6px 16px; font-family: monospace; font-size: 11px; color: transparent; background: transparent; user-select: none; border-right: 1px solid var(--border-glass); line-height: 1.5; box-sizing: border-box;">
+        <div class="diff-row" style="${borderStyle} background: rgba(34, 197, 94, 0.08);">
+          <div class="diff-cell-left" style="color: transparent; background: transparent; user-select: none;">
             &nbsp;
           </div>
-          <div style="flex: 0 0 50%; width: 50%; padding: 6px 16px; font-family: monospace; font-size: 11px; white-space: pre-wrap; word-break: break-all; color: #22c55e; font-weight: 600; line-height: 1.5; box-sizing: border-box;">
+          <div class="diff-cell-right" style="color: #22c55e; font-weight: 600;">
             + ${escapeHtmlDiff(line.right)}
           </div>
         </div>
       `;
     } else if (line.op === "delete") {
       html += `
-        <div style="display: flex; min-height: 24px; ${borderStyle} background: rgba(239, 68, 68, 0.08);">
-          <div style="flex: 0 0 50%; width: 50%; padding: 6px 16px; font-family: monospace; font-size: 11px; white-space: pre-wrap; word-break: break-all; color: #ef4444; text-decoration: line-through; font-weight: 600; border-right: 1px solid var(--border-glass); line-height: 1.5; box-sizing: border-box;">
+        <div class="diff-row" style="${borderStyle} background: rgba(239, 68, 68, 0.08);">
+          <div class="diff-cell-left" style="color: #ef4444; text-decoration: line-through; font-weight: 600;">
             - ${escapeHtmlDiff(line.left)}
           </div>
-          <div style="flex: 0 0 50%; width: 50%; padding: 6px 16px; font-family: monospace; font-size: 11px; color: transparent; background: transparent; user-select: none; line-height: 1.5; box-sizing: border-box;">
+          <div class="diff-cell-right" style="color: transparent; background: transparent; user-select: none;">
             &nbsp;
           </div>
         </div>
