@@ -196,7 +196,9 @@ gcloud run deploy edu-ce-learning-portal --source . --region asia-east2 --allow-
   * Deployed the fully integrated application source successfully to live Cloud Run instancing (`edu-ce-learning-portal`) at [https://edu-ce-learning-portal-1069209637728.asia-east2.run.app](https://edu-ce-learning-portal-1069209637728.asia-east2.run.app).
 * **Dual-Track Symmetrical Stacked Timeline & Color Matching (100% Complete):**
   * Redesigned the horizontal timeline into two stacked, isolated rows: Track 1 (Academic Calendar Milestones) and Track 2 (Continuous Rolling Initiatives), separated by a custom divider.
-  * Resolved all positioning overflow/clipping bugs by confining each track's layout symmetrically within its own block.
+  * Solved the "off the track" browser alignment issue completely by positioning nodes, connector pins, and flags as peer sibling absolute elements of the horizontal track, guaranteeing they align down to the exact sub-pixel.
+  * Compressed Track 1 height from 240px to 200px and tightened container paddings/gaps to maximize vertical space for details panels.
+  * Converted Track 2 into a thick, clickable continuous progress pipeline capsule complete with a pulsating arrow head indicator, displaying checklist stats inline and removing unnecessary floating flags and connector pins.
   * Aligned milestone node colors to match their corresponding details cards (Indigo, Amber, Emerald, Blue, Coral, Purple) when active or completed, with visual guides and schedule flags echoing the exact color theme.
 
 ### Next Steps & Continuous Polish
