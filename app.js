@@ -576,7 +576,7 @@ const uiTranslations = {
     adminFormLabelZhcnAdvancedProTip: "Translated Advanced Pro Tip",
     btnAdminFormCancel: "Cancel",
     btnAdminFormSave: "Save Changes",
-    sidebarFeaturesTitle: "Filter by CE Feature",
+    sidebarFeaturesTitle: "Filter by GE Feature",
     filterLiked: "My Liked Cases",
     filterDeployed: "My Deployed Cases",
     adminFormLabelDualModeCheckbox: "Enable Dual-Mode Template (Supports Standalone & Advanced workflows)",
@@ -1848,7 +1848,7 @@ function updateUILanguage() {
   if (sidebarConnectorsTitle) sidebarConnectorsTitle.textContent = t.sidebarConnectorsTitle;
   
   const sidebarFeaturesTitle = document.getElementById("sidebarFeaturesTitle") || document.getElementById("titleNavigation");
-  if (sidebarFeaturesTitle) sidebarFeaturesTitle.textContent = t.sidebarFeaturesTitle || "Filter by CE Feature";
+  if (sidebarFeaturesTitle) sidebarFeaturesTitle.textContent = t.sidebarFeaturesTitle || "Filter by GE Feature";
   
   const sidebarStatusTitle = document.getElementById("sidebarStatusTitle") || document.getElementById("titleFilters");
   if (sidebarStatusTitle) sidebarStatusTitle.textContent = t.sidebarStatusTitle;

@@ -100,10 +100,10 @@ graph TD
 
 The production environment is deployed and scaled on **Google Cloud Run** to serve the active user base with high-availability:
 
-* **Service Name:** `edu-ce-learning-portal`
+* **Service Name:** `edu-ge-learning-portal`
 * **GCP Project:** `ge-edu-demo`
 * **Active Region:** `asia-east2` (Hong Kong)
-* **Production Endpoint URL:** [https://edu-ce-learning-portal-1069209637728.asia-east2.run.app](https://edu-ce-learning-portal-1069209637728.asia-east2.run.app)
+* **Production Endpoint URL:** [https://edu-ge-learning-portal-1069209637728.asia-east2.run.app](https://edu-ge-learning-portal-1069209637728.asia-east2.run.app)
 * **Access Mode:** Domain-restricted access (enforced via active Organization Policies). Public unauthenticated access (`allUsers` binding) can be added by temporarily bypassing domain restriction constraints in the GCP Console.
 * **Cleanup Status:** Old duplicate deployments (`ge-edu-portal` and its Artifact Registry repository in `us-west1`) have been fully deleted and pruned.
 
@@ -124,7 +124,7 @@ To compile and deploy updates or new releases of the portal to the live producti
 3. **Deploy Codebase to Google Cloud Run:**
    * Execute the standardized source-deployment command in your terminal within the root directory of the repository:
      ```bash
-     gcloud run deploy edu-ce-learning-portal --source . --region asia-east2 --allow-unauthenticated --project ge-edu-demo
+     gcloud run deploy edu-ge-learning-portal --source . --region asia-east2 --allow-unauthenticated --project ge-edu-demo
      ```
    * *Note on builds:* Google Cloud Run automatically leverages the root `Dockerfile` to compile and containerize the environment via Cloud Build, saving the resulting artifact within Artifact Registry in `asia-east2`.
 
@@ -132,7 +132,7 @@ To compile and deploy updates or new releases of the portal to the live producti
     * If organization policies block public unauthenticated access, log in using your workspace domain credentials to access the production URL.
     * If public unauthenticated access is permitted by your organization policies, override the invoker role binding via:
       ```bash
-      gcloud run services add-iam-policy-binding edu-ce-learning-portal --region=asia-east2 --member=allUsers --role=roles/run.invoker --project=ge-edu-demo
+      gcloud run services add-iam-policy-binding edu-ge-learning-portal --region=asia-east2 --member=allUsers --role=roles/run.invoker --project=ge-edu-demo
       ```
 
 ### Agent-Driven Deployment & Version Control Workflow
@@ -161,7 +161,7 @@ Whenever the AI coding agent successfully implements code modifications, bug fix
 Once version control has been synced, the agent triggers a live source-deployment to update the production container environment:
 
 ```bash
-gcloud run deploy edu-ce-learning-portal --source . --region asia-east2 --allow-unauthenticated --project ge-edu-demo
+gcloud run deploy edu-ge-learning-portal --source . --region asia-east2 --allow-unauthenticated --project ge-edu-demo
 ```
 
 #### GitHub Token & Secrets Storage
