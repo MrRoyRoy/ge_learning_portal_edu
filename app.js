@@ -4072,7 +4072,7 @@ function initAdminPortal() {
           <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 4px; padding: 12px; font-size: 13px; color: var(--color-success);">
             <strong>✅ User Account Provisioned!</strong><br>
             Email: <code>${data.email}</code><br>
-            Temporary Password: <strong style="font-family: monospace; background: var(--bg-sidebar); padding: 2px 6px; border-radius: 2px; color: white;">${data.tempPassword}</strong>
+            Temporary Password: <strong style="font-family: monospace; background: var(--bg-prompt-box); padding: 2px 6px; border-radius: 4px; color: var(--text-prompt-box); border: 1px solid var(--border-glass);">${data.tempPassword}</strong>
             <p style="font-size: 11px; margin-top: 4px; color: var(--text-secondary);">Share this credentials with the user. They will be prompted to reset it immediately on sign-in.</p>
           </div>
         `;
@@ -4171,7 +4171,7 @@ async function loadAdminUsers() {
                 <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 4px; padding: 12px; font-size: 13px; color: var(--color-success);">
                   <strong>✅ Password Re-Generated!</strong><br>
                   Email: <code>${data.email}</code><br>
-                  New Temporary Password: <strong style="font-family: monospace; background: var(--bg-sidebar); padding: 2px 6px; border-radius: 2px; color: white;">${data.tempPassword}</strong>
+                  New Temporary Password: <strong style="font-family: monospace; background: var(--bg-prompt-box); padding: 2px 6px; border-radius: 4px; color: var(--text-prompt-box); border: 1px solid var(--border-glass);">${data.tempPassword}</strong>
                 </div>
               `;
               feedback.style.display = "block";
