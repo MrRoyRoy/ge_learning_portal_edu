@@ -4858,8 +4858,14 @@ async function triggerGeminiPlaybookGeneration() {
       })
     });
 
-    const data = res.ok ? await res.json() : null;
-    if (!data || !data.success) {
+    let data = null;
+    try {
+      data = await res.json();
+    } catch (parseErr) {
+      console.error("Failed to parse error response JSON:", parseErr);
+    }
+
+    if (!res.ok || !data || !data.success) {
       const errMsg = (data && data.error) ? data.error : "Failed to generate content from Gemini.";
       if (feedback) {
         feedback.style.display = "block";
