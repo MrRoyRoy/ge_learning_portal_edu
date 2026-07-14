@@ -1700,13 +1700,16 @@ textarea:focus::placeholder {
 .alternating-timeline-container {
   position: relative;
   width: 100%;
-  padding: 140px 24px;
+  padding: 32px 24px;
   background: var(--bg-card);
   border: 1px solid var(--border-glass);
   border-radius: 20px;
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.04);
   margin-bottom: 32px;
   overflow: visible; /* Crucial to let floating flags display without clipping */
+  display: flex;
+  flex-direction: column;
+  gap: 40px; /* Space between Track 1 and Track 2 */
 }
 
 @media (max-width: 1024px) {
@@ -1715,9 +1718,48 @@ textarea:focus::placeholder {
   }
 }
 
+/* Timeline Track Blocks */
+.timeline-track-block {
+  position: relative;
+  width: 100%;
+  height: 240px; /* Symmetrical height for UP and DOWN flags */
+  overflow: visible;
+}
+
+/* Track Header Labels */
+.timeline-track-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.track-header-icon {
+  font-size: 20px;
+}
+
+.track-header-title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--text-primary);
+  text-transform: uppercase;
+}
+
+/* Track Divider Line */
+.timeline-track-divider {
+  height: 1px;
+  background: var(--border-glass);
+  margin: 8px 0;
+  opacity: 0.6;
+}
+
 /* Horizontal Track Baseline */
 .timeline-horizontal-track {
-  position: relative;
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
   width: 100%;
   height: 8px;
   background: rgba(0, 0, 0, 0.06);
@@ -1745,13 +1787,15 @@ textarea:focus::placeholder {
   height: 32px;
   border-radius: 50%;
   background: var(--bg-card);
-  border: 4px solid var(--border-glass-focused);
   cursor: pointer;
   z-index: 10;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  
+  --node-color: #6366f1; /* Fallback */
+  border: 4px solid var(--border-glass-focused);
 }
 
 .node-joint-icon {
@@ -1762,25 +1806,25 @@ textarea:focus::placeholder {
 
 .timeline-node-joint:hover {
   transform: translate(-50%, -50%) scale(1.15);
-  border-color: var(--color-accent);
+  border-color: var(--node-color) !important;
 }
 
 .timeline-node-joint.active {
-  border-color: var(--color-accent) !important;
+  border-color: var(--node-color) !important;
   background: var(--bg-card) !important;
   transform: translate(-50%, -50%) scale(1.25);
-  box-shadow: 0 0 15px rgba(99, 102, 241, 0.35);
+  box-shadow: 0 0 15px var(--node-color);
 }
 
 .timeline-node-joint.active .node-joint-icon {
-  color: var(--color-accent) !important;
+  color: var(--node-color) !important;
 }
 
-/* Completed Node State (Emerald ring) */
+/* Completed Node State ( Emerald or Custom Stage Color ring ) */
 .timeline-node-joint.completed {
-  background: #10b981 !important;
-  border-color: #10b981 !important;
-  box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
+  background: var(--node-color) !important;
+  border-color: var(--node-color) !important;
+  box-shadow: 0 0 12px var(--node-color);
 }
 
 .timeline-node-joint.completed .node-joint-icon {
@@ -1789,7 +1833,7 @@ textarea:focus::placeholder {
 
 .timeline-node-joint.completed.active {
   transform: translate(-50%, -50%) scale(1.25);
-  box-shadow: 0 0 20px rgba(16, 185, 129, 0.7);
+  box-shadow: 0 0 20px var(--node-color);
 }
 
 /* Alternating Vertical Guidelines Connector Pins */
@@ -1800,29 +1844,29 @@ textarea:focus::placeholder {
   z-index: 2;
   pointer-events: none;
   transition: all 0.35s ease;
+  border-left: 2px dashed var(--border-glass-focused);
 }
 
-/* UP markers (Even indexes: Day 0, Sem 1, End-Sem) */
+/* UP markers */
 .alternating-marker-pin.pin-up {
-  bottom: 16px;
-  height: 80px;
-  border-left: 2px dashed var(--border-glass-focused);
+  bottom: 120px; /* Aligns exactly to the middle horizontal track line */
+  height: 65px;
 }
 
-/* DOWN markers (Odd indexes: Pre-Sem, Mid-Sem, Track 2) */
+/* DOWN markers */
 .alternating-marker-pin.pin-down {
-  top: 16px;
-  height: 80px;
-  border-left: 2px dashed var(--border-glass-focused);
+  top: 120px; /* Aligns exactly to the middle horizontal track line */
+  height: 65px;
 }
 
 .timeline-node-joint.active ~ .alternating-marker-pin {
   border-left-style: solid;
-  border-left-color: var(--color-accent);
+  border-left-color: var(--node-color) !important;
 }
 
 .timeline-node-joint.completed ~ .alternating-marker-pin {
-  border-left-color: rgba(16, 185, 129, 0.5);
+  border-left-style: solid;
+  border-left-color: var(--node-color) !important;
 }
 
 /* Floating Flag Schedule Cards */
@@ -1832,7 +1876,6 @@ textarea:focus::placeholder {
   transform: translateX(-50%);
   width: 175px;
   background: var(--bg-sidebar);
-  border: 1px solid var(--border-glass);
   border-radius: 12px;
   padding: 12px 14px;
   cursor: pointer;
@@ -1840,14 +1883,19 @@ textarea:focus::placeholder {
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
   transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   z-index: 5;
+  
+  --node-color: #6366f1; /* Fallback */
+  border: 1px solid var(--border-glass);
 }
 
 .floating-schedule-flag.flag-up {
-  bottom: 104px;
+  bottom: 185px; /* Sits cleanly above the 65px pin and the center line */
+  border-top: 4px solid var(--node-color) !important;
 }
 
 .floating-schedule-flag.flag-down {
-  top: 104px;
+  top: 185px; /* Sits cleanly below the 65px pin and the center line */
+  border-bottom: 4px solid var(--node-color) !important;
 }
 
 /* Flag Pointer triangles */
@@ -1875,14 +1923,14 @@ textarea:focus::placeholder {
 /* Hover effects */
 .floating-schedule-flag.flag-up:hover {
   transform: translateX(-50%) translateY(-6px);
-  border-color: var(--color-accent);
+  border-color: var(--node-color) !important;
   background: var(--bg-card);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
 .floating-schedule-flag.flag-down:hover {
   transform: translateX(-50%) translateY(6px);
-  border-color: var(--color-accent);
+  border-color: var(--node-color) !important;
   background: var(--bg-card);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
@@ -1890,14 +1938,14 @@ textarea:focus::placeholder {
 /* Active node flag */
 .floating-schedule-flag.active {
   background: var(--bg-card);
-  border-color: var(--color-accent) !important;
-  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.1);
+  border-color: var(--node-color) !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
   transform: translateX(-50%) scale(1.04);
   z-index: 6;
 }
 
 .floating-schedule-flag.completed {
-  border-color: #10b981;
+  border-color: var(--node-color) !important;
 }
 
 /* Flag inner labels */
@@ -1906,13 +1954,9 @@ textarea:focus::placeholder {
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--color-accent);
+  color: var(--node-color) !important;
   margin-bottom: 4px;
   transition: color 0.3s ease;
-}
-
-.floating-schedule-flag.completed .flag-date-label {
-  color: #10b981;
 }
 
 .flag-title-label {

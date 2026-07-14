@@ -5765,32 +5765,45 @@ function renderTimeline() {
     };
   });
 
-  // Calculate Alternating Timeline Progress Width (Inspired by timeline2.webp)
   const stageOrder = ["day0", "pre", "sem1", "mid", "end", "track2"];
-  const positions = [5, 23, 41, 59, 77, 95];
-  let progressWidth = 5; // starting node 0 is day 0
-  for (let i = 0; i < stageOrder.length; i++) {
-    if (stageStats[stageOrder[i]].isCompleted) {
-      progressWidth = positions[i];
+
+  // Calculate Track 1 progress fill
+  const track1Stages = ["day0", "pre", "sem1", "mid", "end"];
+  const positions1 = [10, 30, 50, 70, 90];
+  let progressWidth1 = 10;
+  for (let i = 0; i < track1Stages.length; i++) {
+    if (stageStats[track1Stages[i]].isCompleted) {
+      progressWidth1 = positions1[i];
     } else {
       break;
     }
   }
 
-  // 1. Desktop Alternating Horizontal Timeline
+  // Calculate Track 2 progress fill
+  const track2Stats = stageStats["track2"];
+  const progressWidth2 = 10 + (80 * (track2Stats.checklistPercent / 100));
+
+  // 1. Desktop Dual-Track Timeline (Track 1 and Track 2 stacked vertically)
   let desktopHtml = `
     <div class="alternating-timeline-container">
-      <div class="timeline-horizontal-track">
-        <div class="timeline-track-progress" style="width: ${progressWidth}%;"></div>
+      
+      <!-- TRACK 1: ACADEMIC CALENDAR MILESTONES -->
+      <div class="timeline-track-block track-block-1">
+        <div class="timeline-track-header">
+          <span class="material-symbols-outlined track-header-icon" style="color: #6366f1;">calendar_month</span>
+          <span class="track-header-title">${isZh ? "軌道一：學期限制性部署" : "Track 1: Academic Calendar Milestones"}</span>
+        </div>
+        <div class="timeline-horizontal-track">
+          <div class="timeline-track-progress" style="width: ${progressWidth1}%;"></div>
   `;
 
-  stageOrder.forEach((id, index) => {
+  track1Stages.forEach((id, index) => {
     const stage = timelineStages.find(s => s.id === id);
     const stats = stageStats[id];
     const isActive = appState.roadmapActiveStage === id;
     const isCompleted = stats.isCompleted;
     const isUp = index % 2 === 0; // Alternating height layouts! Even UP, Odd DOWN
-    const pos = positions[index];
+    const pos = positions1[index];
 
     const stageSubtitle = isZh ? stage.subtitleZh : stage.subtitle;
     
@@ -5799,13 +5812,12 @@ function renderTimeline() {
                   : id === "pre" ? (isZh ? "學期準備" : "Pre-Semester")
                   : id === "sem1" ? (isZh ? "正式啟動" : "Sem 1 Launch")
                   : id === "mid" ? (isZh ? "期中試點" : "Mid-Term Pilot")
-                  : id === "end" ? (isZh ? "期末審計" : "Exam Audit")
-                  : (isZh ? "滾動項目" : "Rolling Projects");
+                  : (isZh ? "期末審計" : "Exam Audit");
 
     desktopHtml += `
-      <!-- Node Joint ${index} -->
+      <!-- Node Joint ${id} -->
       <div class="timeline-node-joint ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}" 
-           style="left: ${pos}%;" 
+           style="left: ${pos}%; --node-color: ${stage.color};" 
            onclick="selectRoadmapStage('${id}')">
         <span class="material-symbols-outlined node-joint-icon">
           ${isCompleted ? 'check' : (id === 'day0' ? 'settings' : 'pending')}
@@ -5813,11 +5825,11 @@ function renderTimeline() {
       </div>
 
       <!-- Connector line -->
-      <div class="alternating-marker-pin ${isUp ? 'pin-up' : 'pin-down'}" style="left: ${pos}%;"></div>
+      <div class="alternating-marker-pin ${isUp ? 'pin-up' : 'pin-down'}" style="left: ${pos}%; --node-color: ${stage.color};"></div>
 
       <!-- Floating Schedule Flag -->
       <div class="floating-schedule-flag ${isUp ? 'flag-up' : 'flag-down'} ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}" 
-           style="left: ${pos}%;"
+           style="left: ${pos}%; --node-color: ${stage.color};"
            onclick="selectRoadmapStage('${id}')">
         <div class="flag-date-label">${stageSubtitle}</div>
         <div class="flag-title-label">${shortName}</div>
@@ -5827,7 +5839,62 @@ function renderTimeline() {
   });
 
   desktopHtml += `
+        </div>
       </div>
+
+      <!-- Divider line -->
+      <div class="timeline-track-divider"></div>
+
+      <!-- TRACK 2: CONTINUOUS ROLLING INITIATIVES -->
+      <div class="timeline-track-block track-block-2">
+        <div class="timeline-track-header">
+          <span class="material-symbols-outlined track-header-icon" style="color: #a855f7;">all_inclusive</span>
+          <span class="track-header-title">${isZh ? "軌道二：持續滾動式項目" : "Track 2: Continuous Anytime-Proceeded Initiatives"}</span>
+        </div>
+        <div class="timeline-horizontal-track">
+          <div class="timeline-track-progress" style="width: ${progressWidth2}%;"></div>
+  `;
+
+  {
+    const id = "track2";
+    const stage = timelineStages.find(s => s.id === id);
+    const stats = stageStats[id];
+    const isActive = appState.roadmapActiveStage === id;
+    const isCompleted = stats.isCompleted;
+    const isUp = true; // Sits above
+    const pos = 50; // Centered
+
+    const stageSubtitle = isZh ? stage.subtitleZh : stage.subtitle;
+    let shortName = isZh ? "滾動項目" : "Rolling Projects";
+
+    desktopHtml += `
+      <!-- Node Joint ${id} -->
+      <div class="timeline-node-joint ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}" 
+           style="left: ${pos}%; --node-color: ${stage.color};" 
+           onclick="selectRoadmapStage('${id}')">
+        <span class="material-symbols-outlined node-joint-icon">
+          ${isCompleted ? 'check' : 'pending'}
+        </span>
+      </div>
+
+      <!-- Connector line -->
+      <div class="alternating-marker-pin ${isUp ? 'pin-up' : 'pin-down'}" style="left: ${pos}%; --node-color: ${stage.color};"></div>
+
+      <!-- Floating Schedule Flag -->
+      <div class="floating-schedule-flag ${isUp ? 'flag-up' : 'flag-down'} ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}" 
+           style="left: ${pos}%; --node-color: ${stage.color};"
+           onclick="selectRoadmapStage('${id}')">
+        <div class="flag-date-label">${stageSubtitle}</div>
+        <div class="flag-title-label">${shortName}</div>
+        <div class="flag-subtitle-label">${stats.completedTasks}/${stats.totalTasks} ${isZh ? '已驗證' : 'Verified'}</div>
+      </div>
+    `;
+  }
+
+  desktopHtml += `
+        </div>
+      </div>
+
     </div>
   `;
 
