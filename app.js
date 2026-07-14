@@ -5466,7 +5466,7 @@ function renderTimeline() {
     
     // Check if every assigned playbook in this milestone has isDeployed === true or 1
     const allDeployed = m.playbookIds.every(id => {
-      const uc = appState.useCases.find(u => u.id === id);
+      const uc = useCasesDb.find(u => u.id === id);
       return uc ? (uc.isDeployed === true || uc.isDeployed === 1) : false;
     });
 
@@ -5512,7 +5512,7 @@ function renderTimeline() {
     // Calculate progress fraction & percentage
     let deployedCount = 0;
     m.playbookIds.forEach(id => {
-      const uc = appState.useCases.find(u => u.id === id);
+      const uc = useCasesDb.find(u => u.id === id);
       if (uc && (uc.isDeployed === true || uc.isDeployed === 1)) {
         deployedCount++;
       }
@@ -5529,7 +5529,7 @@ function renderTimeline() {
     // Compile playbook items inside this milestone
     let playbooksHtml = "";
     m.playbookIds.forEach(id => {
-      const uc = appState.useCases.find(u => u.id === id);
+      const uc = useCasesDb.find(u => u.id === id);
       if (uc) {
         const isUcDeployed = uc.isDeployed === true || uc.isDeployed === 1;
         const ucTitle = uc.translations && uc.translations[appState.activeLanguage] && uc.translations[appState.activeLanguage].title 
@@ -5560,7 +5560,7 @@ function renderTimeline() {
     let dropdownOptionsHtml = `<option value="">${isZh ? '+ 分配新案例到此階段' : '+ Assign Playbook to Milestone...'}</option>`;
     
     // Sort all use cases alphabetically by localized title
-    const sortedUseCases = [...appState.useCases].sort((a, b) => {
+    const sortedUseCases = [...useCasesDb].sort((a, b) => {
       const titleA = a.translations && a.translations[appState.activeLanguage] && a.translations[appState.activeLanguage].title 
         ? a.translations[appState.activeLanguage].title 
         : a.title;
