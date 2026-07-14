@@ -246,6 +246,34 @@
         </ul>
       </div>
 
+      <!-- CE FEATURES FILTER SECTION -->
+      <div class="sidebar-section">
+        <div class="sidebar-title" id="sidebarFeaturesTitle">Filter by CE Feature</div>
+        <ul class="filter-menu-list">
+          <li class="filter-menu-item active feature-filter-item" data-feature="all">
+            <span class="material-symbols-outlined">apps</span> <span id="featAll">All Capabilities</span>
+          </li>
+          <li class="filter-menu-item feature-filter-item" data-feature="Agent Designer">
+            <span class="material-symbols-outlined">smart_toy</span> <span class="feature-name">Agent Designer</span>
+          </li>
+          <li class="filter-menu-item feature-filter-item" data-feature="NotebookLM">
+            <span class="material-symbols-outlined">menu_book</span> <span class="feature-name">NotebookLM</span>
+          </li>
+          <li class="filter-menu-item feature-filter-item" data-feature="Deep Research">
+            <span class="material-symbols-outlined">travel_explore</span> <span class="feature-name">Deep Research</span>
+          </li>
+          <li class="filter-menu-item feature-filter-item" data-feature="Canvas Mode">
+            <span class="material-symbols-outlined">draw</span> <span class="feature-name">Canvas Mode</span>
+          </li>
+          <li class="filter-menu-item feature-filter-item" data-feature="Image Generation">
+            <span class="material-symbols-outlined">image</span> <span class="feature-name">Image Generation</span>
+          </li>
+          <li class="filter-menu-item feature-filter-item" data-feature="Video Generation">
+            <span class="material-symbols-outlined">movie</span> <span class="feature-name">Video Generation</span>
+          </li>
+        </ul>
+      </div>
+
       <div class="sidebar-section">
         <div class="sidebar-title" id="titleFilters">Requirement Filter</div>
         <ul class="filter-menu-list">
@@ -257,6 +285,12 @@
           </li>
           <li class="filter-menu-item status-filter-item" data-status="integration">
             <span class="material-symbols-outlined">lock_open_right</span> <span id="filterConnectors">Requires Connectors</span>
+          </li>
+          <li class="filter-menu-item status-filter-item" data-status="liked">
+            <span class="material-symbols-outlined">favorite</span> <span id="filterLiked">My Liked Cases</span>
+          </li>
+          <li class="filter-menu-item status-filter-item" data-status="deployed">
+            <span class="material-symbols-outlined">rocket_launch</span> <span id="filterDeployed">My Deployed Cases</span>
           </li>
         </ul>
       </div>
@@ -389,6 +423,10 @@
             <p id="adminPortalSubtitle" style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">Configure users, update learning playbooks, and analyze the last 6 months deployment metrics.</p>
           </div>
           <div style="display: flex; align-items: center; gap: 8px;">
+            <!-- Admin Theme Toggle Button -->
+            <button class="nav-button" id="btnAdminThemeToggle" aria-label="Toggle Theme" style="padding: 0; width: 44px; justify-content: center; flex-shrink: 0; height: 38px;">
+              <span class="material-symbols-outlined" id="adminThemeIcon" style="font-size: 20px;">dark_mode</span>
+            </button>
             <span class="material-symbols-outlined" style="font-size: 18px; color: var(--text-muted);">language</span>
             <select class="select-control" id="adminLang" style="width: auto; height: 38px; padding: 0 10px; font-size: 12px; flex-shrink: 0;">
               <option value="en">English</option>
@@ -401,17 +439,17 @@
         <!-- TAB 1: USER PROVISIONING & ACCOUNT MANAGEMENT -->
         <section class="admin-tab-content" id="adminTabUsers">
           <div class="glass-panel" style="padding: 24px; margin-bottom: 24px;">
-            <h2 style="font-size: 16px; margin-bottom: 8px;">Provision New Account</h2>
-            <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 16px;">This generates a random 10-character temporary password. Users are forced to reset it upon their first login.</p>
+            <h2 id="adminProvisionTitle" style="font-size: 16px; margin-bottom: 8px;">Provision New Account</h2>
+            <p id="adminProvisionDesc" style="font-size: 12px; color: var(--text-secondary); margin-bottom: 16px;">This generates a random 10-character temporary password. Users are forced to reset it upon their first login.</p>
             
             <div id="userActionFeedback" style="display: none; margin-bottom: 16px;"></div>
 
             <form id="formAddUser" style="display: flex; gap: 12px; align-items: flex-end; max-width: 500px;">
               <div class="form-group" style="flex-grow: 1;">
-                <label class="form-label">User Email Address</label>
+                <label id="adminProvisionLabelEmail" class="form-label">User Email Address</label>
                 <input type="email" class="select-control" id="inputNewUserEmail" placeholder="e.g. professor@edu.hk" required>
               </div>
-              <button class="nav-button nav-button-primary" type="submit" style="height: 40px;">
+              <button id="adminBtnProvision" class="nav-button nav-button-primary" type="submit" style="height: 40px;">
                 Provision <span class="material-symbols-outlined">person_add</span>
               </button>
             </form>
@@ -419,14 +457,14 @@
 
           <!-- Registered Users Table -->
           <div class="glass-panel" style="padding: 24px; overflow-x: auto;">
-            <h2 style="font-size: 16px; margin-bottom: 16px;">Registered Portal Users</h2>
+            <h2 id="adminRegisteredUsersTitle" style="font-size: 16px; margin-bottom: 16px;">Registered Portal Users</h2>
             <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
               <thead>
                 <tr style="border-bottom: 1px solid var(--border-glass); color: var(--text-secondary); font-weight: 600;">
-                  <th style="padding: 12px 8px;">User Email</th>
-                  <th style="padding: 12px 8px;">Password Status</th>
-                  <th style="padding: 12px 8px;">Created Date</th>
-                  <th style="padding: 12px 8px; text-align: right;">Administrative Actions</th>
+                  <th id="adminThUserEmail" style="padding: 12px 8px;">User Email</th>
+                  <th id="adminThPasswordStatus" style="padding: 12px 8px;">Password Status</th>
+                  <th id="adminThCreatedDate" style="padding: 12px 8px;">Created Date</th>
+                  <th id="adminThAdminActions" style="padding: 12px 8px; text-align: right;">Administrative Actions</th>
                 </tr>
               </thead>
               <tbody id="adminUsersTableBody">
@@ -442,22 +480,22 @@
           <!-- Key metrics counters -->
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
             <div class="glass-panel" style="padding: 20px; position: relative;">
-              <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary);">Total Registered Users</div>
+              <div id="adminLabelTotalUsers" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary);">Total Registered Users</div>
               <div id="statTotalUsers" style="font-size: 32px; font-weight: 700; margin-top: 8px; font-family: var(--font-heading);">0</div>
               <div class="connector-indicator active" style="position: absolute; top: 20px; right: 20px; background: var(--color-primary);"></div>
             </div>
             <div class="glass-panel" style="padding: 20px; position: relative;">
-              <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary);">Total Use Cases</div>
+              <div id="adminLabelTotalUseCases" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary);">Total Use Cases</div>
               <div id="statTotalUseCases" style="font-size: 32px; font-weight: 700; margin-top: 8px; font-family: var(--font-heading);">0</div>
               <div class="connector-indicator active" style="position: absolute; top: 20px; right: 20px; background: var(--color-accent);"></div>
             </div>
             <div class="glass-panel" style="padding: 20px; position: relative;">
-              <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary);">User Liked Counts</div>
+              <div id="adminLabelTotalLikes" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary);">User Liked Counts</div>
               <div id="statTotalLikes" style="font-size: 32px; font-weight: 700; margin-top: 8px; font-family: var(--font-heading);">0</div>
               <div class="connector-indicator active" style="position: absolute; top: 20px; right: 20px; background: var(--color-danger);"></div>
             </div>
             <div class="glass-panel" style="padding: 20px; position: relative;">
-              <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary);">Cases Deployed Counts</div>
+              <div id="adminLabelTotalDeployments" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary);">Cases Deployed Counts</div>
               <div id="statTotalDeployments" style="font-size: 32px; font-weight: 700; margin-top: 8px; font-family: var(--font-heading);">0</div>
               <div class="connector-indicator active" style="position: absolute; top: 20px; right: 20px; background: var(--color-success);"></div>
             </div>
@@ -465,13 +503,13 @@
 
           <!-- Gorgeous native SVG Line Chart mapping the last 6 months metrics -->
           <div class="glass-panel" style="padding: 24px;">
-            <h2 style="font-size: 16px; margin-bottom: 4px;">6-Month Portal Adoption Metrics</h2>
-            <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 20px;">Detailed aggregation charting Views, Likes, and Deployed actions across the academic term.</p>
+            <h2 id="adminChartTitle" style="font-size: 16px; margin-bottom: 4px;">6-Month Portal Adoption Metrics</h2>
+            <p id="adminChartDesc" style="font-size: 11px; color: var(--text-muted); margin-bottom: 20px;">Detailed aggregation charting Views, Likes, and Deployed actions across the academic term.</p>
             
             <div style="display: flex; gap: 24px; margin-bottom: 12px; font-size: 11px; font-weight: 700;">
-              <div style="display: flex; align-items: center; gap: 6px;"><span style="display: inline-block; width: 12px; height: 3px; background: var(--color-secondary);"></span> PAGE VIEWS</div>
-              <div style="display: flex; align-items: center; gap: 6px;"><span style="display: inline-block; width: 12px; height: 3px; background: var(--color-danger);"></span> USER LIKES</div>
-              <div style="display: flex; align-items: center; gap: 6px;"><span style="display: inline-block; width: 12px; height: 3px; background: var(--color-success);"></span> DEPLOYMENTS</div>
+              <div id="adminLabelViewsLegend" style="display: flex; align-items: center; gap: 6px;"><span style="display: inline-block; width: 12px; height: 3px; background: var(--color-secondary);"></span> PAGE VIEWS</div>
+              <div id="adminLabelLikesLegend" style="display: flex; align-items: center; gap: 6px;"><span style="display: inline-block; width: 12px; height: 3px; background: var(--color-danger);"></span> USER LIKES</div>
+              <div id="adminLabelDeploymentsLegend" style="display: flex; align-items: center; gap: 6px;"><span style="display: inline-block; width: 12px; height: 3px; background: var(--color-success);"></span> DEPLOYMENTS</div>
             </div>
 
             <!-- Native SVG container for precision chart rendering -->
@@ -479,18 +517,31 @@
               <!-- App.js renders high fidelity lines here dynamically -->
             </div>
           </div>
+
+          <!-- Most Popular Playbooks Leaderboard -->
+          <div class="glass-panel" style="padding: 24px; margin-top: 24px;">
+            <h2 id="adminLeaderboardTitle" style="font-size: 16px; margin-bottom: 4px; display: flex; align-items: center; gap: 8px;">
+              <span class="material-symbols-outlined" style="color: var(--color-danger);">star</span>
+              <span>Most Popular Playbooks (Leaderboard)</span>
+            </h2>
+            <p id="adminLeaderboardDesc" style="font-size: 11px; color: var(--text-muted); margin-bottom: 20px;">Top-performing educational use cases ranked by collective user appreciation likes.</p>
+            
+            <div id="adminMostLikedList" style="display: grid; grid-template-columns: 1fr; gap: 12px;">
+              <!-- App.js renders dynamically here -->
+            </div>
+          </div>
         </section>
 
         <!-- TAB 3: USE CASE EDITOR & CRUD PANEL -->
         <section class="admin-tab-content" id="adminTabCases" style="display: none;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h2 style="font-size: 16px;">Playbook Content Master Management</h2>
+            <h2 id="adminCrudTitle" style="font-size: 16px;">Playbook Content Master Management</h2>
             <div style="display: flex; gap: 10px;">
               <button class="nav-button" id="btnAdminExportCases">
-                <span class="material-symbols-outlined">download</span> Extract All (JSON)
+                <span class="material-symbols-outlined">download</span> <span id="adminBtnExportText">Extract All (JSON)</span>
               </button>
               <button class="nav-button nav-button-primary" id="btnAdminCreateCase">
-                <span class="material-symbols-outlined">add_box</span> Add Use Case
+                <span class="material-symbols-outlined">add_box</span> <span id="adminBtnCreateCaseText">Add Use Case</span>
               </button>
             </div>
           </div>
@@ -500,11 +551,11 @@
             <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
               <thead>
                 <tr style="border-bottom: 1px solid var(--border-glass); color: var(--text-secondary); font-weight: 600;">
-                  <th style="padding: 12px 8px;">ID</th>
-                  <th style="padding: 12px 8px;">Title</th>
-                  <th style="padding: 12px 8px;">Category Hub</th>
-                  <th style="padding: 12px 8px;">Primary Role</th>
-                  <th style="padding: 12px 8px; text-align: right;">Actions</th>
+                  <th id="adminCrudThId" style="padding: 12px 8px;">ID</th>
+                  <th id="adminCrudThTitle" style="padding: 12px 8px;">Title</th>
+                  <th id="adminCrudThCategory" style="padding: 12px 8px;">Category Hub</th>
+                  <th id="adminCrudThRole" style="padding: 12px 8px;">Primary Role</th>
+                  <th id="adminCrudThActions" style="padding: 12px 8px; text-align: right;">Actions</th>
                 </tr>
               </thead>
               <tbody id="adminCasesTableBody">
@@ -535,14 +586,34 @@
           
           <div id="adminFormFeedback" style="display: none; background: var(--color-danger-glow); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 4px; padding: 10px 12px; color: var(--color-danger); font-size: 12px; text-align: center; width: 100%;"></div>
 
+          <!-- Interactive AI Drafting Request Card -->
+          <div class="glass-panel" style="padding: 16px; border: 1px solid rgba(79, 70, 229, 0.25); background: rgba(79, 70, 229, 0.03); width: 100%; box-sizing: border-box; display: flex; flex-direction: column; gap: 10px; border-radius: 8px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="material-symbols-outlined" style="color: var(--color-primary); font-size: 18px;">psychology</span>
+                <span style="font-size: 13px; font-weight: 700; color: var(--color-primary);" id="adminFormLabelGeminiPromptTitle">Generate/Refine Playbook with Gemini</span>
+              </div>
+              <button id="btnAdminFormGemini" class="nav-button" type="button" style="background: linear-gradient(135deg, #4f46e5 0%, #2563eb 100%); color: white; display: flex; align-items: center; gap: 6px; border: none; border-radius: 6px; padding: 6px 12px; font-weight: 600; cursor: pointer; font-size: 12px; box-shadow: 0 4px 12px rgba(37,99,235,0.25);" title="Generate playbook contents with Gemini 3.5 Flash">
+                <span class="material-symbols-outlined" style="font-size: 16px; color: white !important;">bolt</span>
+                <span>Draft with Gemini</span>
+              </button>
+            </div>
+            <p style="font-size: 11px; color: var(--text-muted); margin: 0;" id="adminFormLabelGeminiPromptDesc">Specify what you want to create, or describe the edits you'd like to apply to this playbook. Gemini will generate high-fidelity, localized playbooks, system prompts, steps, and tips.</p>
+            <textarea class="select-control" id="formCaseGeminiInstruction" style="height: 60px; padding: 8px 12px; resize: none; font-size: 12px; border-color: rgba(79, 70, 229, 0.2);" placeholder="e.g. Create a rubric grading guide for high school chemistry lab reports using Canvas Mode, focusing on safety..."></textarea>
+          </div>
+
+          <!-- DUAL-MODE ADVANCED & STANDALONE NOTIFICATION INDICATOR -->
+          <div id="adminFormDualModeIndicator" style="display: none; background: rgba(79, 70, 229, 0.08); border: 1px dashed var(--color-primary); border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; font-size: 12px; color: var(--text-primary); line-height: 1.5; width: 100%;">
+          </div>
+
           <!-- ID and Category Row -->
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
             <div class="form-group">
-              <label class="form-label">ID (Unique, Immutable)</label>
+              <label id="adminFormLabelId" class="form-label">ID (Unique, Immutable)</label>
               <input type="text" class="select-control" id="formCaseId" required placeholder="e.g. research_agent">
             </div>
             <div class="form-group">
-              <label class="form-label">Category Hub</label>
+              <label id="adminFormLabelCategory" class="form-label">Category Hub</label>
               <select class="select-control" id="formCaseCategory" required>
                 <option value="academic">Academic Portal</option>
                 <option value="student">Student Support</option>
@@ -555,24 +626,35 @@
           <!-- Title and Role Row -->
           <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 16px;">
             <div class="form-group">
-              <label class="form-label">Template Title</label>
+              <label id="adminFormLabelTitle" class="form-label">Template Title</label>
               <input type="text" class="select-control" id="formCaseTitle" required placeholder="e.g. Chemistry Lab Safety Agent">
             </div>
             <div class="form-group">
-              <label class="form-label">Primary Role Context</label>
+              <label id="adminFormLabelRole" class="form-label">Primary Role Context</label>
               <input type="text" class="select-control" id="formCaseRole" required placeholder="e.g. Lecturer, Student">
             </div>
           </div>
 
           <div class="form-group">
-            <label class="form-label">Brief Summary Description</label>
+            <label id="adminFormLabelSummary" class="form-label">Brief Summary Description</label>
             <textarea class="select-control" id="formCaseSummary" required style="height: 60px; padding: 8px 12px; resize: vertical;" placeholder="1-2 sentences summarizing the core adoption outcome..."></textarea>
+          </div>
+
+          <!-- Dual-Mode Active-Integration Toggle -->
+          <div class="form-group" style="margin-bottom: 16px; border: 1px dashed rgba(37, 99, 235, 0.2); padding: 12px; border-radius: 6px; background: rgba(37, 99, 235, 0.02);">
+            <label style="display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--color-primary); cursor: pointer; font-size: 13px;">
+              <input type="checkbox" id="formCaseDualMode" style="width: 16px; height: 16px; accent-color: var(--color-primary);"> 
+              <span id="adminFormLabelDualModeCheckbox">Enable Dual-Mode Template (Supports Standalone & Advanced workflows)</span>
+            </label>
+            <div id="adminFormDescDualModeCheckbox" style="font-size: 11px; color: var(--text-secondary); margin-left: 24px; margin-top: 4px;">
+              When enabled, this playbook supports both standard manual file workflows and advanced integration modes, automatically managing standard prompt variables.
+            </div>
           </div>
 
           <!-- Features and Connectors Checkboxes -->
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
             <div class="form-group">
-              <label class="form-label">Required Gemini Features</label>
+              <label id="adminFormLabelFeatures" class="form-label">Required Gemini Features</label>
               <div class="glass-panel" style="padding: 10px; display: grid; grid-template-columns: 1fr; gap: 4px; font-size: 12px;">
                 <label style="display: flex; align-items: center; gap: 6px;"><input type="checkbox" name="formFeatures" value="Agent Designer"> Agent Designer</label>
                 <label style="display: flex; align-items: center; gap: 6px;"><input type="checkbox" name="formFeatures" value="NotebookLM"> NotebookLM</label>
@@ -583,7 +665,7 @@
               </div>
             </div>
             <div class="form-group">
-              <label class="form-label">Required Connectors</label>
+              <label id="adminFormLabelConnectors" class="form-label">Required Connectors</label>
               <div class="glass-panel" style="padding: 10px; display: grid; grid-template-columns: 1fr; gap: 4px; font-size: 12px;">
                 <label style="display: flex; align-items: center; gap: 6px;"><input type="checkbox" name="formConnectors" value="OneDrive"> OneDrive</label>
                 <label style="display: flex; align-items: center; gap: 6px;"><input type="checkbox" name="formConnectors" value="GoogleDrive"> Google Drive</label>
@@ -593,7 +675,7 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label">Applicable Institution Levels</label>
+            <label id="adminFormLabelLevel" class="form-label">Applicable Institution Levels</label>
             <div class="glass-panel" style="padding: 10px; display: flex; gap: 16px; font-size: 12px;">
               <label style="display: flex; align-items: center; gap: 6px;"><input type="checkbox" name="formLevel" value="University & College"> University & College</label>
               <label style="display: flex; align-items: center; gap: 6px;"><input type="checkbox" name="formLevel" value="High School"> High School</label>
@@ -603,72 +685,72 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label">Procedural Guide Steps (One step per line)</label>
+            <label id="adminFormLabelSteps" class="form-label">Procedural Guide Steps (One step per line)</label>
             <textarea class="select-control" id="formCaseSteps" required style="height: 100px; padding: 8px 12px; resize: vertical; font-family: monospace; font-size: 11px;" placeholder="Upload materials to NotebookLM...&#10;Open Agent Designer...&#10;Generate shareable link..."></textarea>
           </div>
 
           <div class="form-group">
-            <label class="form-label">System Prompt sandbox instruction</label>
+            <label id="adminFormLabelPrompt" class="form-label">System Prompt sandbox instruction</label>
             <textarea class="select-control" id="formCasePrompt" required style="height: 120px; padding: 8px 12px; resize: vertical; font-family: monospace; font-size: 11px;" placeholder="You are the class AI assistant..."></textarea>
           </div>
 
           <div class="form-group">
-            <label class="form-label">Pro Tip</label>
+            <label id="adminFormLabelProTip" class="form-label">Pro Tip</label>
             <input type="text" class="select-control" id="formCaseProTip" required placeholder="Grounding the agent prevents hallucinations...">
           </div>
 
           <!-- Advanced Active-Integration Mode Fields -->
           <div class="form-group" style="border-left: 2px solid var(--color-primary); padding-left: 10px; margin-top: 10px;">
-            <label class="form-label" style="color: var(--color-primary); font-weight: 600;">Advanced Procedural Steps - Active-Integration Mode (One step per line)</label>
+            <label id="adminFormLabelAdvancedSteps" class="form-label" style="color: var(--color-primary); font-weight: 600;">Advanced Procedural Steps - Active-Integration Mode (One step per line)</label>
             <textarea class="select-control" id="formCaseAdvancedSteps" style="height: 100px; padding: 8px 12px; resize: vertical; font-family: monospace; font-size: 11px;" placeholder="Connect to the LMS system...&#10;Enable automated draft creation..."></textarea>
           </div>
 
           <div class="form-group" style="border-left: 2px solid var(--color-primary); padding-left: 10px;">
-            <label class="form-label" style="color: var(--color-primary); font-weight: 600;">Advanced System Prompt - Active-Integration Mode</label>
+            <label id="adminFormLabelAdvancedPrompt" class="form-label" style="color: var(--color-primary); font-weight: 600;">Advanced System Prompt - Active-Integration Mode</label>
             <textarea class="select-control" id="formCaseAdvancedPrompt" style="height: 120px; padding: 8px 12px; resize: vertical; font-family: monospace; font-size: 11px;" placeholder="You are the integrated automated student support agent..."></textarea>
           </div>
 
           <div class="form-group" style="border-left: 2px solid var(--color-primary); padding-left: 10px; margin-bottom: 20px;">
-            <label class="form-label" style="color: var(--color-primary); font-weight: 600;">Advanced Pro Tip - Active-Integration Mode</label>
+            <label id="adminFormLabelAdvancedProTip" class="form-label" style="color: var(--color-primary); font-weight: 600;">Advanced Pro Tip - Active-Integration Mode</label>
             <input type="text" class="select-control" id="formCaseAdvancedProTip" placeholder="Active integration requires setting OAuth permissions in Google Cloud...">
           </div>
 
           <!-- Simplified Translation Inputs (Traditional Chinese) -->
           <div class="glass-panel" style="padding: 16px; margin-top: 10px;">
-            <h4 style="font-size: 12px; margin-bottom: 10px; color: var(--color-primary); text-transform: uppercase;">Traditional Chinese (繁體中文) Translations</h4>
+            <h4 id="adminFormLabelZhtwHeader" style="font-size: 12px; margin-bottom: 10px; color: var(--color-primary); text-transform: uppercase;">Traditional Chinese (繁體中文) Translations</h4>
             <div style="display: grid; grid-template-columns: 1fr; gap: 10px;">
               <div class="form-group">
-                <label class="form-label" style="font-size: 10px;">Translated Title</label>
+                <label id="adminFormLabelZhtwTitle" class="form-label" style="font-size: 10px;">Translated Title</label>
                 <input type="text" class="select-control" id="formTransZhtwTitle" placeholder="預算審核指南助理">
               </div>
               <div class="form-group">
-                <label class="form-label" style="font-size: 10px;">Translated Summary</label>
+                <label id="adminFormLabelZhtwSummary" class="form-label" style="font-size: 10px;">Translated Summary</label>
                 <input type="text" class="select-control" id="formTransZhtwSummary" placeholder="在 NotebookLM 中分析與審查社團預算案...">
               </div>
               <div class="form-group">
-                <label class="form-label" style="font-size: 10px;">Translated Steps (One per line)</label>
+                <label id="adminFormLabelZhtwSteps" class="form-label" style="font-size: 10px;">Translated Steps (One per line)</label>
                 <textarea class="select-control" id="formTransZhtwSteps" style="height: 80px; padding: 8px 12px; font-family: monospace; font-size: 11px;" placeholder="將社團章程上傳到 NotebookLM..."></textarea>
               </div>
               <div class="form-group">
-                <label class="form-label" style="font-size: 10px;">Translated Prompt</label>
+                <label id="adminFormLabelZhtwPrompt" class="form-label" style="font-size: 10px;">Translated Prompt</label>
                 <textarea class="select-control" id="formTransZhtwPrompt" style="height: 80px; padding: 8px 12px; font-family: monospace; font-size: 11px;" placeholder="你是一位社團輔導老師..."></textarea>
               </div>
               <div class="form-group">
-                <label class="form-label" style="font-size: 10px;">Translated Pro Tip</label>
+                <label id="adminFormLabelZhtwProTip" class="form-label" style="font-size: 10px;">Translated Pro Tip</label>
                 <input type="text" class="select-control" id="formTransZhtwProTip" placeholder="透過 NotebookLM 連接試算表...">
               </div>
               
               <!-- Traditional Chinese Advanced Fields -->
               <div class="form-group" style="border-left: 2px solid var(--color-primary); padding-left: 10px;">
-                <label class="form-label" style="font-size: 10px; color: var(--color-primary); font-weight: 600;">Translated Advanced Steps (One per line)</label>
+                <label id="adminFormLabelZhtwAdvancedSteps" class="form-label" style="font-size: 10px; color: var(--color-primary); font-weight: 600;">Translated Advanced Steps (One per line)</label>
                 <textarea class="select-control" id="formTransZhtwAdvancedSteps" style="height: 80px; padding: 8px 12px; font-family: monospace; font-size: 11px;" placeholder="在 LMS 系統中連結 NotebookLM..."></textarea>
               </div>
               <div class="form-group" style="border-left: 2px solid var(--color-primary); padding-left: 10px;">
-                <label class="form-label" style="font-size: 10px; color: var(--color-primary); font-weight: 600;">Translated Advanced Prompt</label>
+                <label id="adminFormLabelZhtwAdvancedPrompt" class="form-label" style="font-size: 10px; color: var(--color-primary); font-weight: 600;">Translated Advanced Prompt</label>
                 <textarea class="select-control" id="formTransZhtwAdvancedPrompt" style="height: 80px; padding: 8px 12px; font-family: monospace; font-size: 11px;" placeholder="你是一位整合式自動化學生支援代理人..."></textarea>
               </div>
               <div class="form-group" style="border-left: 2px solid var(--color-primary); padding-left: 10px;">
-                <label class="form-label" style="font-size: 10px; color: var(--color-primary); font-weight: 600;">Translated Advanced Pro Tip</label>
+                <label id="adminFormLabelZhtwAdvancedProTip" class="form-label" style="font-size: 10px; color: var(--color-primary); font-weight: 600;">Translated Advanced Pro Tip</label>
                 <input type="text" class="select-control" id="formTransZhtwAdvancedProTip" placeholder="主動整合需要在 Google Cloud 中設定 OAuth 權限...">
               </div>
             </div>
@@ -676,40 +758,40 @@
 
           <!-- Simplified Translation Inputs (Simplified Chinese) -->
           <div class="glass-panel" style="padding: 16px; margin-top: 10px;">
-            <h4 style="font-size: 12px; margin-bottom: 10px; color: var(--color-primary); text-transform: uppercase;">Simplified Chinese (简体中文) Translations</h4>
+            <h4 id="adminFormLabelZhcnHeader" style="font-size: 12px; margin-bottom: 10px; color: var(--color-primary); text-transform: uppercase;">Simplified Chinese (简体中文) Translations</h4>
             <div style="display: grid; grid-template-columns: 1fr; gap: 10px;">
               <div class="form-group">
-                <label class="form-label" style="font-size: 10px;">Translated Title</label>
+                <label id="adminFormLabelZhcnTitle" class="form-label" style="font-size: 10px;">Translated Title</label>
                 <input type="text" class="select-control" id="formTransZhcnTitle" placeholder="预算审核指南助理">
               </div>
               <div class="form-group">
-                <label class="form-label" style="font-size: 10px;">Translated Summary</label>
+                <label id="adminFormLabelZhcnSummary" class="form-label" style="font-size: 10px;">Translated Summary</label>
                 <input type="text" class="select-control" id="formTransZhcnSummary" placeholder="在 NotebookLM 中分析与审查社团预算案...">
               </div>
               <div class="form-group">
-                <label class="form-label" style="font-size: 10px;">Translated Steps (One per line)</label>
+                <label id="adminFormLabelZhcnSteps" class="form-label" style="font-size: 10px;">Translated Steps (One per line)</label>
                 <textarea class="select-control" id="formTransZhcnSteps" style="height: 80px; padding: 8px 12px; font-family: monospace; font-size: 11px;" placeholder="将社团章程上传到 NotebookLM..."></textarea>
               </div>
               <div class="form-group">
-                <label class="form-label" style="font-size: 10px;">Translated Prompt</label>
+                <label id="adminFormLabelZhcnPrompt" class="form-label" style="font-size: 10px;">Translated Prompt</label>
                 <textarea class="select-control" id="formTransZhcnPrompt" style="height: 80px; padding: 8px 12px; font-family: monospace; font-size: 11px;" placeholder="你是一位社团辅导老师..."></textarea>
               </div>
               <div class="form-group">
-                <label class="form-label" style="font-size: 10px;">Translated Pro Tip</label>
+                <label id="adminFormLabelZhcnProTip" class="form-label" style="font-size: 10px;">Translated Pro Tip</label>
                 <input type="text" class="select-control" id="formTransZhcnProTip" placeholder="通过 NotebookLM 连接电子表格...">
               </div>
 
               <!-- Simplified Chinese Advanced Fields -->
               <div class="form-group" style="border-left: 2px solid var(--color-primary); padding-left: 10px;">
-                <label class="form-label" style="font-size: 10px; color: var(--color-primary); font-weight: 600;">Translated Advanced Steps (One per line)</label>
+                <label id="adminFormLabelZhcnAdvancedSteps" class="form-label" style="font-size: 10px; color: var(--color-primary); font-weight: 600;">Translated Advanced Steps (One per line)</label>
                 <textarea class="select-control" id="formTransZhcnAdvancedSteps" style="height: 80px; padding: 8px 12px; font-family: monospace; font-size: 11px;" placeholder="在 LMS 系统中链接 NotebookLM..."></textarea>
               </div>
               <div class="form-group" style="border-left: 2px solid var(--color-primary); padding-left: 10px;">
-                <label class="form-label" style="font-size: 10px; color: var(--color-primary); font-weight: 600;">Translated Advanced Prompt</label>
+                <label id="adminFormLabelZhcnAdvancedPrompt" class="form-label" style="font-size: 10px; color: var(--color-primary); font-weight: 600;">Translated Advanced Prompt</label>
                 <textarea class="select-control" id="formTransZhcnAdvancedPrompt" style="height: 80px; padding: 8px 12px; font-family: monospace; font-size: 11px;" placeholder="你是一位整合式自动化学生支援代理人..."></textarea>
               </div>
               <div class="form-group" style="border-left: 2px solid var(--color-primary); padding-left: 10px;">
-                <label class="form-label" style="font-size: 10px; color: var(--color-primary); font-weight: 600;">Translated Advanced Pro Tip</label>
+                <label id="adminFormLabelZhcnAdvancedProTip" class="form-label" style="font-size: 10px; color: var(--color-primary); font-weight: 600;">Translated Advanced Pro Tip</label>
                 <input type="text" class="select-control" id="formTransZhcnAdvancedProTip" placeholder="主动整合需要在 Google Cloud 中设定 OAuth 权限...">
               </div>
             </div>
@@ -719,9 +801,57 @@
 
         <div style="padding: 20px 32px; border-top: 1px solid var(--border-glass); background: var(--bg-sidebar); display: flex; justify-content: flex-end; gap: 12px;">
           <button class="nav-button" type="button" id="btnAdminFormCancel">Cancel</button>
-          <button class="nav-button nav-button-primary" type="submit">Save Changes</button>
+          <button id="btnAdminFormSave" class="nav-button nav-button-primary" type="submit">Save Changes</button>
         </div>
       </form>
+      <!-- Stunning dynamic Gemini generating loader overlay -->
+      <div class="gemini-loading-overlay" id="geminiLoadingOverlay">
+        <div class="gemini-loader-circle">
+          <div class="gemini-loader-ring-outer"></div>
+          <div class="gemini-loader-ring"></div>
+          <span class="material-symbols-outlined gemini-loader-sparkle" style="color: white !important;">bolt</span>
+        </div>
+        <div style="margin-top: 20px; font-weight: 700; font-family: var(--font-heading); color: #ffffff; letter-spacing: 0.05em; text-transform: uppercase; font-size: 14px;" id="adminFormLabelGenerating">Gemini is drafting playbook...</div>
+        <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;" id="adminFormLabelGeneratingDesc">Optimizing guidelines, prompts, and localizations in real-time.</div>
+        <div class="gemini-loader-bar">
+          <div class="gemini-loader-bar-fill"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PREMIUM SIDE-BY-SIDE INTERACTIVE DIFF VIEWER MODAL OVERLAY -->
+  <div class="modal-overlay" id="adminDiffViewerModal" aria-modal="true" role="dialog" style="display: none; z-index: 2000;">
+    <div class="modal-content-card" style="max-height: 85vh; height: 680px; max-width: 950px; border-radius: 12px; background: var(--bg-card); display: flex; flex-direction: column;">
+      <div class="modal-header" style="background: linear-gradient(135deg, rgba(37,99,235,0.05) 0%, rgba(79,70,229,0.05) 100%);">
+        <div class="modal-header-left">
+          <span class="material-symbols-outlined" style="color: var(--color-primary); font-size: 28px;">difference</span>
+          <h3 class="modal-title" style="margin-left: 8px;">Gemini Optimization Review (Diff Viewer)</h3>
+        </div>
+        <button class="close-btn" id="adminDiffViewerClose" aria-label="Close diff viewer">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      
+      <div style="flex: 1; display: flex; flex-direction: column; overflow: hidden; padding: 20px 32px; gap: 16px;">
+        <div style="background: rgba(37, 99, 235, 0.05); border: 1px solid rgba(37, 99, 235, 0.15); padding: 12px 16px; border-radius: 8px; font-size: 12px; line-height: 1.5; color: var(--text-primary);">
+          <strong>Gemini 3.5 Flash</strong> has analyzed your playbook parameters and generated optimized translations, prompt instructions, and step-by-step guides. Please review the comparison below.
+        </div>
+        
+        <div style="display: flex; gap: 16px; width: 100%;">
+          <div style="flex: 1; text-align: center; font-weight: 700; color: var(--text-secondary); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Current Draft / Database Version</div>
+          <div style="flex: 1; text-align: center; font-weight: 700; color: var(--color-primary); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Optimized Gemini Version</div>
+        </div>
+
+        <div style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; padding-right: 4px;" id="adminDiffScrollContainer">
+          <!-- Diff sections will be dynamically drawn here -->
+        </div>
+      </div>
+
+      <div style="padding: 20px 32px; border-top: 1px solid var(--border-glass); background: var(--bg-sidebar); display: flex; justify-content: flex-end; gap: 12px; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px;">
+        <button class="nav-button" type="button" id="btnDiffReject">Keep Current Version</button>
+        <button class="nav-button nav-button-primary" type="button" id="btnDiffAccept" style="background: linear-gradient(135deg, #4f46e5 0%, #2563eb 100%); border: none;">Accept & Apply Gemini suggestions</button>
+      </div>
     </div>
   </div>
 

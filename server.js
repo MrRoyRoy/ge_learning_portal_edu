@@ -90,6 +90,35 @@ function query(sql, params = []) {
   }
 }
 
+// Dynamic OAuth Access Token helper for GCP metadata or local gcloud fallback
+async function getGcpAccessToken() {
+  try {
+    // 1. Try local Metadata Server (GCP environment)
+    const res = await fetch('http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token', {
+      headers: { 'Metadata-Flavor': 'Google' }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      return data.access_token;
+    }
+  } catch (err) {
+    // Fallback to command line
+  }
+
+  try {
+    // 2. Try application-default (ADC)
+    const { execSync } = require('child_process');
+    return execSync('gcloud auth application-default print-access-token').toString().trim();
+  } catch (err) {
+    try {
+      const { execSync } = require('child_process');
+      return execSync('gcloud auth print-access-token').toString().trim();
+    } catch (e) {
+      throw new Error('Failed to retrieve a valid Google Cloud access token.');
+    }
+  }
+}
+
 // Unify table schemas across Postgres and SQLite dialects
 async function initializeSchemas() {
   const createUsersTable = dbType === 'postgres' ? `
@@ -254,8 +283,8 @@ async function seedDatabase() {
       }
     }
 
-    // Seed beautiful and highly realistic 6-month historical log data for analytics
-    await seedAnalytics();
+    // Clean up any previously pre-seeded mock analytics data to reflect actual adoption metrics
+    await query("DELETE FROM analytics WHERE user_email = 'academic_trial@edu.hk'");
 
     // Seed standard trial user demo-user@example.com with password ***REMOVED*** if missing
     const existingTestUser = await query('SELECT count(*) as count FROM users WHERE email = ?', ['demo-user@example.com']);
@@ -352,8 +381,14 @@ app.post('/api/auth/login', async (req, res) => {
   }
 
   // Admin bypass credentials
-  if (email.trim() === 'hk_edu_admin' && password === 'eduHK2026') {
-    req.session.user = { email: 'hk_edu_admin', isAdmin: true };
+  if (email.trim() === 'edu_portal_s_admin' && password === '***REMOVED***') {
+    req.session.user = { email: 'edu_portal_s_admin', isAdmin: true, isAssist: false };
+    return res.json({ success: true, isAdmin: true });
+  }
+
+  // Admin Assist bypass credentials
+  if (email.trim() === 'edu_portal_admin' && password === '***REMOVED***') {
+    req.session.user = { email: 'edu_portal_admin', isAdmin: true, isAssist: true };
     return res.json({ success: true, isAdmin: true });
   }
 
@@ -467,6 +502,13 @@ app.get('/api/use-cases', async (req, res) => {
   try {
     const useCases = await query('SELECT * FROM use_cases ORDER BY id ASC');
     
+    // Retrieve aggregated count of likes from user_preferences table
+    const likesRes = await query('SELECT use_case_id, COUNT(*) as total_likes FROM user_preferences WHERE is_liked = true GROUP BY use_case_id');
+    const likesMap = {};
+    likesRes.forEach(l => {
+      likesMap[l.use_case_id] = parseInt(l.total_likes, 10);
+    });
+
     // Parse strings into Arrays/JSON
     const formattedUseCases = useCases.map(uc => {
       const transObj = JSON.parse(uc.translations || '{}');
@@ -479,7 +521,9 @@ app.get('/api/use-cases', async (req, res) => {
         summary: uc.summary,
         features: JSON.parse(uc.features || '[]'),
         connectors: JSON.parse(uc.connectors || '[]'),
-        connectorEssential: uc.id === 'su_helpdesk' ? false : true,
+        connectorEssential: (uc.connector_guide && JSON.parse(uc.connector_guide).connectorEssential !== undefined)
+          ? JSON.parse(uc.connector_guide).connectorEssential
+          : (uc.id === 'su_helpdesk' ? false : true),
         role: uc.role,
         level: JSON.parse(uc.level || '[]'),
         steps: JSON.parse(uc.steps || '[]'),
@@ -491,7 +535,8 @@ app.get('/api/use-cases', async (req, res) => {
         connectorGuide: uc.connector_guide ? JSON.parse(uc.connector_guide) : null,
         translations: transObj,
         isLiked: false,
-        isDeployed: false
+        isDeployed: false,
+        totalLikes: likesMap[uc.id] || 0
       };
     });
 
@@ -556,7 +601,14 @@ app.post('/api/use-cases/like', async (req, res) => {
       [isLiked ? 'like' : 'unlike', useCaseId, email]
     );
 
-    res.json({ success: true });
+    // Retrieve updated total count of likes for this use case
+    const likeCountRes = await query(
+      'SELECT COUNT(*) as total_likes FROM user_preferences WHERE use_case_id = ? AND is_liked = true',
+      [useCaseId]
+    );
+    const totalLikes = likeCountRes[0] ? parseInt(likeCountRes[0].total_likes, 10) : 0;
+
+    res.json({ success: true, totalLikes });
   } catch (error) {
     console.error('Like toggle error:', error);
     res.status(500).json({ success: false, message: 'Database query error.' });
@@ -736,8 +788,8 @@ app.get('/api/admin/stats', requireAdmin, async (req, res) => {
 
     const preferenceStats = await query(`
       SELECT 
-        SUM(CASE WHEN is_liked = 1 OR is_liked = true THEN 1 ELSE 0 END) as likes,
-        SUM(CASE WHEN is_deployed = 1 OR is_deployed = true THEN 1 ELSE 0 END) as deployments
+        SUM(CASE WHEN is_liked = true THEN 1 ELSE 0 END) as likes,
+        SUM(CASE WHEN is_deployed = true THEN 1 ELSE 0 END) as deployments
       FROM user_preferences
     `);
 
@@ -765,17 +817,37 @@ app.get('/api/admin/stats', requireAdmin, async (req, res) => {
       historicalAnalytics.push({
         month: monthLabel,
         views: parseInt(viewQuery[0].count || viewQuery[0]['count(*)'] || 0),
-        likes: parseInt(likeQuery[0].count || likeQuery[0]['count(*)'] || 0) + (i === 0 ? totalLikes : Math.floor(Math.random() * 5)), // Anchored with live preferences
-        deployments: parseInt(deployQuery[0].count || deployQuery[0]['count(*)'] || 0) + (i === 0 ? totalDeployments : Math.floor(Math.random() * 2))
+        likes: parseInt(likeQuery[0].count || likeQuery[0]['count(*)'] || 0),
+        deployments: parseInt(deployQuery[0].count || deployQuery[0]['count(*)'] || 0)
       });
     }
+
+    // Fetch use cases with their total likes count
+    const mostLikedRes = await query(`
+      SELECT 
+        uc.id, 
+        uc.title, 
+        uc.category, 
+        uc.role,
+        COALESCE(likes_tbl.cnt, 0) as likes_count
+      FROM use_cases uc
+      LEFT JOIN (
+        SELECT use_case_id, COUNT(*) as cnt 
+        FROM user_preferences 
+        WHERE is_liked = true 
+        GROUP BY use_case_id
+      ) likes_tbl ON uc.id = likes_tbl.use_case_id
+      ORDER BY likes_count DESC, uc.title ASC
+      LIMIT 5
+    `);
 
     res.json({
       totalUsers,
       totalUseCases,
       totalLikes,
       totalDeployments,
-      history: historicalAnalytics
+      history: historicalAnalytics,
+      mostLiked: mostLikedRes
     });
 
   } catch (error) {
@@ -786,6 +858,10 @@ app.get('/api/admin/stats', requireAdmin, async (req, res) => {
 
 // Use Case CRUD: Add or Modify
 app.post('/api/admin/use-cases', requireAdmin, async (req, res) => {
+  if (req.session.user.isAssist) {
+    return res.status(403).json({ success: false, message: 'Access denied. Administrative assistants are not authorized to create playbooks.' });
+  }
+
   const uc = req.body;
   if (!uc.id || !uc.title || !uc.category) {
     return res.status(400).json({ success: false, message: 'Missing required use case parameter fields.' });
@@ -822,6 +898,10 @@ app.post('/api/admin/use-cases', requireAdmin, async (req, res) => {
 
 // Use Case CRUD: Update
 app.put('/api/admin/use-cases', requireAdmin, async (req, res) => {
+  if (req.session.user.isAssist) {
+    return res.status(403).json({ success: false, message: 'Access denied. Administrative assistants are not authorized to modify playbooks.' });
+  }
+
   const uc = req.body;
   if (!uc.id || !uc.title) {
     return res.status(400).json({ success: false, message: 'ID and Title are mandatory.' });
@@ -859,6 +939,10 @@ app.put('/api/admin/use-cases', requireAdmin, async (req, res) => {
 
 // Use Case CRUD: Delete / Revoke
 app.delete('/api/admin/use-cases', requireAdmin, async (req, res) => {
+  if (req.session.user.isAssist) {
+    return res.status(403).json({ success: false, message: 'Access denied. Administrative assistants are not authorized to delete playbooks.' });
+  }
+
   const { id } = req.body;
   if (!id) {
     return res.status(400).json({ success: false, message: 'Please specify the ID to delete.' });
@@ -897,6 +981,135 @@ app.get('/api/admin/use-cases/export', requireAdmin, async (req, res) => {
     res.send(JSON.stringify(exportData, null, 2));
 
   } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Admin-Gemini: Optimize or Draft Playbooks with Gemini 3.5 Flash using Service Account Access
+app.post('/api/admin/generate-gemini', requireAdmin, async (req, res) => {
+  const { id, title, category, features, connectors, role, level, isDualMode, instruction } = req.body;
+  if (!title && (!instruction || instruction.trim().length === 0)) {
+    return res.status(400).json({ success: false, message: 'Please specify either a playbook title or custom instructions so Gemini can draft relevant content.' });
+  }
+
+  try {
+    const token = await getGcpAccessToken();
+    const url = 'https://aiplatform.googleapis.com/v1/projects/your-gcp-project-id/locations/global/publishers/google/models/gemini-3.5-flash:generateContent';
+
+    let promptText = `
+You are the AI Playbook Architect for "Gemini Enterprise - Edu Portal".
+Generate a high-fidelity educational/operational playbook based on the following input parameters:
+- Playbook Title: "${title || 'Suggest a professional, high-fidelity playbook title based on instructions'}"
+- Category: "${category || 'academic'}"
+- Gemini Features: ${JSON.stringify(features || [])}
+- Connected Data Connectors: ${JSON.stringify(connectors || [])}
+- Target User Role: "${role || 'Lecturer'}"
+- Target Institutional Levels: ${JSON.stringify(level || [])}
+- Enable Dual-Mode Connectors Workflow: ${isDualMode ? 'Yes' : 'No'}
+`;
+
+    if (instruction && instruction.trim().length > 0) {
+      promptText += `
+- SPECIAL USER CUSTOM DRAFTING INSTRUCTIONS:
+"${instruction.trim()}"
+Please fully implement, customize, and prioritize these instructions above. Focus your generated titles, summaries, prompts, steps, and tips on satisfying this instruction.
+`;
+    }
+
+    promptText += `
+
+Please output a raw JSON object containing full translation profiles for English ("en"), Traditional Chinese ("zh-TW"), and Simplified Chinese ("zh-CN").
+The JSON object MUST EXACTLY follow this schema:
+{
+  "id": "suggested_lowercase_kebab_case_id_matching_the_title",
+  "category": "academic",
+  "role": "Lecturer",
+  "features": ${JSON.stringify(features || [])},
+  "en": {
+    "title": "Suggested High-Fidelity English Title",
+    "summary": "Detailed summary describing how this playbook uses Gemini to solve the target challenge.",
+    "steps": ["Step 1", "Step 2", "Step 3", "Step 4"],
+    "advancedSteps": ${isDualMode ? '["Advanced Step 1 using Connectors", "Advanced Step 2 using Connectors", "Advanced Step 3 using Connectors", "Advanced Step 4 using Connectors"]' : 'null'},
+    "prompt": "Highly detailed model prompt that the user can copy and paste into Gemini.",
+    "advancedPrompt": ${isDualMode ? '"Detailed advanced integration prompt..."' : 'null'},
+    "proTip": "Helpful pro-tip for getting the best outcome from Gemini.",
+    "advancedProTip": ${isDualMode ? '"Advanced pro-tip about data connectors..."' : 'null'}
+  },
+  "zh-TW": {
+    "title": "繁體中文版高質量標題",
+    "summary": "繁體中文版詳細描述...",
+    "steps": ["繁體中文步驟 1", "繁體中文步驟 2", "繁體中文步驟 3", "繁體中文步驟 4"],
+    "advancedSteps": ${isDualMode ? '["繁體中文進階步驟 1", "繁體中文進階步驟 2", "繁體中文進階步驟 3", "繁體中文進階步驟 4"]' : 'null'},
+    "prompt": "繁體中文詳細提示詞...",
+    "advancedPrompt": ${isDualMode ? '"繁體中文進階提示詞..."' : 'null'},
+    "proTip": "繁體中文實用技巧...",
+    "advancedProTip": ${isDualMode ? '"繁體中文進階實用技巧..."' : 'null'}
+  },
+  "zh-CN": {
+    "title": "简体中文版高质量标题",
+    "summary": "简体中文版详细描述...",
+    "steps": ["简体中文步骤 1", "简体中文步骤 2", "简体中文步骤 3", "简体中文步骤 4"],
+    "advancedSteps": ${isDualMode ? '["简体中文高级步骤 1", "简体中文高级步骤 2", "简体中文高级步骤 3", "简体中文高级步骤 4"]' : 'null'},
+    "prompt": "简体中文详细提示词...",
+    "advancedPrompt": ${isDualMode ? '"简体中文高级提示词..."' : 'null'},
+    "proTip": "简体中文实用技巧...",
+    "advancedProTip": ${isDualMode ? '"简体中文高级实用技巧..."' : 'null'}
+  }
+}
+
+Brand Guidelines & Localisation Boundaries:
+1. Keep ALL product and feature names (e.g. "NotebookLM", "Gemini", "Canvas Mode", "Deep Research", "Agent Designer", "Image Generation", "Video Generation", "Drive Connector", "Email Connector", "Calendar Connector", "LMS Connector") strictly in ENGLISH, even inside the Traditional Chinese ("zh-TW") and Simplified Chinese ("zh-CN") translations.
+2. Never use the term "Gem" (always use "Agent"). Never use the term "Copilot".
+3. Avoid generic red/blue/green references. Ensure suggestions are premium and tailored for educational excellence.
+4. Output ONLY the raw JSON block. Do NOT surround it with markdown code blocks (such as \`\`\`json ... \`\`\`), HTML tags, or any other introductory or concluding commentary text.
+`;
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        contents: {
+          role: 'USER',
+          parts: [{ text: promptText }]
+        }
+      })
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      return res.status(response.status).json({ success: false, error: `Gemini API returned error: ${errText}` });
+    }
+
+    const data = await response.json();
+    let text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!text) {
+      return res.status(500).json({ success: false, error: 'Empty response returned from Gemini.' });
+    }
+
+    // Clean up markdown fences if Gemini returned them despite instructions
+    text = text.trim();
+    if (text.startsWith('```')) {
+      const firstLineBreak = text.indexOf('\n');
+      const lastFence = text.lastIndexOf('```');
+      if (firstLineBreak !== -1 && lastFence > firstLineBreak) {
+        text = text.substring(firstLineBreak + 1, lastFence).trim();
+      }
+    }
+
+    let parsedResult;
+    try {
+      parsedResult = JSON.parse(text);
+    } catch (e) {
+      console.error('Failed to parse Gemini response as JSON. Raw response:', text);
+      return res.status(500).json({ success: false, error: 'Failed to parse Gemini response as JSON. Please try again.', raw: text });
+    }
+
+    res.json({ success: true, result: parsedResult });
+  } catch (error) {
+    console.error('Gemini content generation error:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });

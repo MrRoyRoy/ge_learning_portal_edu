@@ -14,7 +14,8 @@ The application is built as a high-fidelity, dynamic web application supported b
   * **Local/Offline Fallback (SQLite):** File-based SQLite (`edu_portal.db`) with automatic table structures creation.
 * **VM Sandbox Seeding Module:** Securely parses and extracts 14 static scholastic/operational playbooks and translations from `app.js` on first boot inside an isolated Node `vm` context, eliminating seed duplication. Includes a 6-month historical log generator to populate visual analytics out-of-the-box.
 * **Authentication Gateways:** Enforced via `express-session` cookies and `bcryptjs` hashing.
-  * **Admin Account:** `hk_edu_admin` with password `eduHK2026`.
+  * **Master Admin Account:** `edu_portal_s_admin` with password `***REMOVED***`.
+  * **Admin Assist Account:** `edu_portal_admin` with password `***REMOVED***` (cannot Create, Update, or Delete use case playbooks).
   * **Standard Accounts:** Email-based provisioning with auto-generated 10-character temp passwords. Force-reset of credentials is strictly enforced on first login.
 * **Markup & Client Logic:** Vanilla HTML5 paired with modular ES6+ client-side logic (`app.js`). Hydrates page templates dynamically from `/api/use-cases` on session validation.
 * **Styles & Visual Identity:** Pure Swiss Minimalism Vanilla CSS (`style.css`), powered by CSS variable maps. **TailwindCSS is strictly avoided** to preserve precise typographic scale and structural grids.
@@ -95,21 +96,91 @@ graph TD
 * **SVG Vector Graph Charts:** The admin statistics view aggregates database events and paints high-contrast line charts showing Page Views, Likes, and Deployments over the last 6 months.
 
 ---
+## 6. Cloud Run Production Deployment
 
-### 6. App State & Progress
+The production environment is deployed and scaled on **Google Cloud Run** to serve the active user base with high-availability:
+
+* **Service Name:** `edu-ce-learning-portal`
+* **GCP Project:** `your-gcp-project-id`
+* **Active Region:** `your-region` (Hong Kong)
+* **Production Endpoint URL:** [https://edu-ce-learning-portal-PROJECT_NUMBER.your-region.run.app](https://edu-ce-learning-portal-PROJECT_NUMBER.your-region.run.app)
+* **Access Mode:** Domain-restricted access (enforced via active Organization Policies). Public unauthenticated access (`allUsers` binding) can be added by temporarily bypassing domain restriction constraints in the GCP Console.
+* **Cleanup Status:** Old duplicate deployments (`ge-edu-portal` and its Artifact Registry repository in `us-west1`) have been fully deleted and pruned.
+
+### Standard Deployment & Release Workflow
+
+To compile and deploy updates or new releases of the portal to the live production environment, follow this standardized step-by-step workflow:
+
+1. **Verify Local Assets & Configuration:**
+   * Ensure that `style.css`, `app.js`, `index.html`, and `server.js` contain no syntax errors and all dynamic references are correct.
+   * Verify that local testing configurations do not override the production database environment values.
+
+2. **Authenticate with Google Cloud SDK:**
+   * Ensure you are authenticated with your authorized Google Cloud developer account:
+     ```bash
+     gcloud auth login
+     ```
+
+3. **Deploy Codebase to Google Cloud Run:**
+   * Execute the standardized source-deployment command in your terminal within the root directory of the repository:
+     ```bash
+     gcloud run deploy edu-ce-learning-portal --source . --region your-region --allow-unauthenticated --project your-gcp-project-id
+     ```
+   * *Note on builds:* Google Cloud Run automatically leverages the root `Dockerfile` to compile and containerize the environment via Cloud Build, saving the resulting artifact within Artifact Registry in `your-region`.
+
+4. **Verify Access & Organization Policies:**
+    * If organization policies block public unauthenticated access, log in using your workspace domain credentials to access the production URL.
+    * If public unauthenticated access is permitted by your organization policies, override the invoker role binding via:
+      ```bash
+      gcloud run services add-iam-policy-binding edu-ce-learning-portal --region=your-region --member=allUsers --role=roles/run.invoker --project=your-gcp-project-id
+      ```
+
+### Agent-Driven Deployment & Version Control Workflow
+
+To streamline development, ensure version history consistency, and automate production releases, the following **Agent-Driven Deployment & Version Control Workflow** is followed:
+
+#### Step 1: Git Commit & Push (Version Control)
+Whenever the AI coding agent successfully implements code modifications, bug fixes, or enhancements, the agent must immediately stage, commit, and push the revisions to the remote GitHub repository under the user account **MrRoyRoy**:
+
+1. Configure the Git author credentials locally:
+   ```bash
+   git config user.name "MrRoyRoy"
+   git config user.email "you@example.com"
+   ```
+2. Stage and commit the modified files with a descriptive, professional commit message:
+   ```bash
+   git add .
+   git commit -m "feat: [Descriptive Title of Accomplished Revisions]"
+   ```
+3. Push the local commits to the upstream repository branch:
+   ```bash
+   git push
+   ```
+
+#### Step 2: Live Cloud Run Production Deployment
+Once version control has been synced, the agent triggers a live source-deployment to update the production container environment:
+
+```bash
+gcloud run deploy edu-ce-learning-portal --source . --region your-region --allow-unauthenticated --project your-gcp-project-id
+```
+
+#### GitHub Token & Secrets Storage
+* **GitHub Personal Access Token (PAT):** Saved securely in the local project workspace in the [gp](file:///path/to/home/Desktop/dev-projects/edu-ge-adoption-portal/gp) file. This token authorizes push workflows and repository management actions.
+
+---
+
+####### 7. App State & Progress
  
-### Accomplished Tasks (Latest Session Milestone)
-* **Standard Test Account Programmatic Auto-Seeding:** Integrated automatic checking and seeding inside `seedDatabase` in `server.js` to ensure the default test account `demo-user@example.com` (password `***REMOVED***`, role `Lecturer`, level `University & College`) is programmatically seeded on database start if missing. This guarantees standard account availability for testing across database resets.
-* **Full Field Integration for Active-Integration Advanced Prompts:** Extended the administrator template editing form (`#adminCaseEditModal`) inside `index.html` to fully support editing advanced procedural steps, advanced prompts, and advanced pro-tips for English, Traditional Chinese (`zh-TW`), and Simplified Chinese (`zh-CN`).
-* **Linked Admin Form Data Flows to Database:** Refactored `openAdminCaseForm()` and `saveAdminUseCase()` inside `app.js` to correctly load existing advanced fields from database objects, parse steps into neat line-by-line arrays, and save changes cleanly back to the database as unified translation envelopes.
-* **Onboarding Use Case Auto-Fetch:** Resolved the structural gap where completing onboarding for the first time resulted in an empty dashboard. Added `await loadUseCasesFromServer()` inside `handleOnboardingSubmit()` prior to rendering to instantly fetch and display matched templates.
-* **State Persistence Across Page Refreshes:** Implemented robust session-state persistence utilizing `sessionStorage`:
-  * Highlighting and maintaining active category, feature, and status filters across page refreshes.
-  * Preserving the user's active view (retaining logged-in admins simulating the standard user learning portal instead of forcing them back to the admin dashboard).
-  * Remembering the admin's active dashboard tab selection (retaining focus on "Playbooks Templates" or "Analytics" across page reloads).
-* **Defensive Connector Toggle Safety:** Hardened `setupConnectorToggles()` in `app.js` with optional-chaining and element presence guards to protect against null reference exceptions when initializing standard elements.
- 
+#### Accomplished Tasks (Latest Session Milestone)
+* **Master Admin Credentials Rebranded (100% Complete):** Rebranded master administrator bypass username to `edu_portal_s_admin` and password to `***REMOVED***`.
+* **Read-only "Admin Assist" Role (100% Complete):** Introduced the `edu_portal_admin / ***REMOVED***` credential block with an `isAssist` session state. Programmed specific Express backend query blocks to reject creates, updates, and deletes, and modified client-side forms to load as read-only (disabling fields, hiding submit/Gemini actions, rendering a non-disruptive "View" state).
+* **6-Month Adoption Chart Authentic Sync (100% Complete):** Disabled random historical seeds and deleted stale mock view/like/deploy history from `analytics` to guarantee that the portal statistics display authentic, genuine database actions, starting strictly from July (showing the active liked case).
+* **LCS Dynamic Diff Alignment & Active Class Fix (100% Complete):** Fixed visual display and interactiveness of `adminDiffViewerModal` by fully integrating `.classList.add("active")` transitions. Redesigned comparative panels with exactly 50% box-sized splits to render the dividing border exactly centered. Added string safety against undefined values inside escaping blocks.
+* **Titleless Gemini Playbook Co-Creation (100% Complete):** Enabled co-drafting of playbooks from scratch without specifying titles beforehand. When custom instructions are given, Gemini 3.5 Flash automatically co-creates a relevant kebab-case ID, category, user role, and translated title attributes, fully populating the empty form.
+* **Boundary-Safe Flipping Trend Tooltip (100% Complete):** Added a horizontal screen-boundary check to the interactive graph tooltip coordinates. When the cursor goes past the midpoint of the chart, the tooltip automatically swaps to the left side of the vertical guideline, preventing clipping and viewport overflows.
+* **Premium Theme Switicher & Sim Branding (100% Complete):** Integrated a theme toggle button `#btnAdminThemeToggle` in the portal header, fully synchronized with `initTheme()` and `applyTheme()` in `app.js` to persist themes in local storage across session views. Overhauled standard headers, sub-menus, role indicators, and browser title headers inside `updateUILanguage()` to display `"ADMIN SIMULATION VIEW"`, `"Administrator"`, and `"Simulation Mode"` when `appState.isAdmin === true`.
+
 ### Next Steps & Continuous Polish
-1. **Performance Tuning:** Optimize database query indexes in PostgreSQL schema configs for faster retrieval of translation envelopes.
-2. **Cloud Run Production Scaling:** Set optimal container scaling and CPU allocation targets for highly active traffic hours.
-3. **Accessibility Audits:** Review ARIA tags and color contrast metrics of the glassmorphism layout components across all devices.
+1. **Cloud Run Service Scales:** Validate connection pool scaling metrics on Google Cloud Run.
+2. **PostgreSQL Telemetry Indexes:** Ensure database query indices are maintained for optimal response times.
+

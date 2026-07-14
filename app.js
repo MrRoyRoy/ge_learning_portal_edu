@@ -513,7 +513,72 @@ const uiTranslations = {
     adminTabAnalyticsText: "System Analytics",
     adminTabCasesText: "Use Cases CRUD",
     btnAdminBackToPortalText: "Learning Portal",
-    btnAdminLogoutText: "Log Out"
+    btnAdminLogoutText: "Log Out",
+    adminProvisionTitle: "Provision New Account",
+    adminProvisionDesc: "This generates a random 10-character temporary password. Users are forced to reset it upon their first login.",
+    adminProvisionLabelEmail: "User Email Address",
+    adminBtnProvision: "Provision",
+    adminRegisteredUsersTitle: "Registered Portal Users",
+    adminThUserEmail: "User Email",
+    adminThPasswordStatus: "Password Status",
+    adminThCreatedDate: "Created Date",
+    adminThAdminActions: "Administrative Actions",
+    adminLabelTotalUsers: "Total Registered Users",
+    adminLabelTotalUseCases: "Total Use Cases",
+    adminLabelTotalLikes: "User Liked Counts",
+    adminLabelTotalDeployments: "Cases Deployed Counts",
+    adminChartTitle: "6-Month Portal Adoption Metrics",
+    adminChartDesc: "Detailed aggregation charting Views, Likes, and Deployed actions across the academic term.",
+    adminLabelViewsLegend: "PAGE VIEWS",
+    adminLabelLikesLegend: "USER LIKES",
+    adminLabelDeploymentsLegend: "DEPLOYMENTS",
+    adminCrudTitle: "Playbook Content Master Management",
+    adminBtnExportText: "Extract All (JSON)",
+    adminBtnCreateCaseText: "Add Use Case",
+    adminCrudThId: "ID",
+    adminCrudThTitle: "Title",
+    adminCrudThCategory: "Category Hub",
+    adminCrudThRole: "Primary Role",
+    adminCrudThActions: "Actions",
+    adminFormLabelId: "ID (Unique, Immutable)",
+    adminFormLabelCategory: "Category Hub",
+    adminFormLabelTitle: "Template Title",
+    adminFormLabelRole: "Primary Role Context",
+    adminFormLabelSummary: "Brief Summary Description",
+    adminFormLabelFeatures: "Required Gemini Features",
+    adminFormLabelConnectors: "Required Connectors",
+    adminFormLabelLevel: "Applicable Institution Levels",
+    adminFormLabelSteps: "Procedural Guide Steps (One step per line)",
+    adminFormLabelPrompt: "System Prompt sandbox instruction",
+    adminFormLabelProTip: "Pro Tip",
+    adminFormLabelAdvancedSteps: "Advanced Procedural Steps - Active-Integration Mode (One step per line)",
+    adminFormLabelAdvancedPrompt: "Advanced System Prompt - Active-Integration Mode",
+    adminFormLabelAdvancedProTip: "Advanced Pro Tip - Active-Integration Mode",
+    adminFormLabelZhtwHeader: "Traditional Chinese (繁體中文) Translations",
+    adminFormLabelZhtwTitle: "Translated Title",
+    adminFormLabelZhtwSummary: "Translated Summary",
+    adminFormLabelZhtwSteps: "Translated Steps (One per line)",
+    adminFormLabelZhtwPrompt: "Translated Prompt",
+    adminFormLabelZhtwProTip: "Translated Pro Tip",
+    adminFormLabelZhtwAdvancedSteps: "Translated Advanced Steps (One per line)",
+    adminFormLabelZhtwAdvancedPrompt: "Translated Advanced Prompt",
+    adminFormLabelZhtwAdvancedProTip: "Translated Advanced Pro Tip",
+    adminFormLabelZhcnHeader: "Simplified Chinese (简体中文) Translations",
+    adminFormLabelZhcnTitle: "Translated Title",
+    adminFormLabelZhcnSummary: "Translated Summary",
+    adminFormLabelZhcnSteps: "Translated Steps (One per line)",
+    adminFormLabelZhcnPrompt: "Translated Prompt",
+    adminFormLabelZhcnProTip: "Translated Pro Tip",
+    adminFormLabelZhcnAdvancedSteps: "Translated Advanced Steps (One per line)",
+    adminFormLabelZhcnAdvancedPrompt: "Translated Advanced Prompt",
+    adminFormLabelZhcnAdvancedProTip: "Translated Advanced Pro Tip",
+    btnAdminFormCancel: "Cancel",
+    btnAdminFormSave: "Save Changes",
+    sidebarFeaturesTitle: "Filter by CE Feature",
+    filterLiked: "My Liked Cases",
+    filterDeployed: "My Deployed Cases",
+    adminFormLabelDualModeCheckbox: "Enable Dual-Mode Template (Supports Standalone & Advanced workflows)",
+    adminFormDescDualModeCheckbox: "When enabled, this playbook supports both standard manual file workflows and advanced integration modes, automatically managing standard prompt variables."
   },
   "zh-TW": {
     wizardTitle: "Google Gemini Enterprise",
@@ -580,7 +645,72 @@ const uiTranslations = {
     adminTabAnalyticsText: "系統數據分析",
     adminTabCasesText: "案例內容維護",
     btnAdminBackToPortalText: "返回學習中心",
-    btnAdminLogoutText: "登出系統"
+    btnAdminLogoutText: "登出系統",
+    adminProvisionTitle: "開通新帳戶",
+    adminProvisionDesc: "系統將自動生成一組 10 位字元的臨時隨機密碼。使用者於首次登入時必須強制重設密碼。",
+    adminProvisionLabelEmail: "使用者電子郵件地址",
+    adminBtnProvision: "開通帳戶",
+    adminRegisteredUsersTitle: "已註冊門戶使用者",
+    adminThUserEmail: "使用者電子郵件",
+    adminThPasswordStatus: "密碼重設狀態",
+    adminThCreatedDate: "建立日期",
+    adminThAdminActions: "帳戶管理權限",
+    adminLabelTotalUsers: "已註冊使用者總數",
+    adminLabelTotalUseCases: "學習案例總數",
+    adminLabelTotalLikes: "使用者按讚計數",
+    adminLabelTotalDeployments: "部署案例計數",
+    adminChartTitle: "近 6 個月門戶導入分析圖表",
+    adminChartDesc: "詳細彙整整個學期期間的使用者瀏覽量、按讚次數與實際部署操作統計。",
+    adminLabelViewsLegend: "頁面瀏覽量",
+    adminLabelLikesLegend: "使用者按讚",
+    adminLabelDeploymentsLegend: "案例部署數",
+    adminCrudTitle: "學習案例內容主檔管理 (CRUD)",
+    adminBtnExportText: "匯出案例 (JSON)",
+    adminBtnCreateCaseText: "新增使用案例",
+    adminCrudThId: "案例 ID",
+    adminCrudThTitle: "案例標題",
+    adminCrudThCategory: "所屬分類中心",
+    adminCrudThRole: "主要角色定位",
+    adminCrudThActions: "編輯操作",
+    adminFormLabelId: "案例 ID (唯一、不可變更)",
+    adminFormLabelCategory: "所屬分類中心",
+    adminFormLabelTitle: "範本標題名稱",
+    adminFormLabelRole: "主要套用角色定位",
+    adminFormLabelSummary: "簡短摘要描述",
+    adminFormLabelFeatures: "所需 Gemini 核心功能",
+    adminFormLabelConnectors: "所需企業數據連接器",
+    adminFormLabelLevel: "適用學校 / 機構級別",
+    adminFormLabelSteps: "引導操作步驟說明 (每行一步驟)",
+    adminFormLabelPrompt: "沙盒系統提示詞 (System Prompt)",
+    adminFormLabelProTip: "導入心法 (Pro Tip)",
+    adminFormLabelAdvancedSteps: "進階主動整合步驟 (僅適用於連接器連線模式)",
+    adminFormLabelAdvancedPrompt: "進階主動整合系統提示詞 (System Prompt)",
+    adminFormLabelAdvancedProTip: "進階主動整合導入心法 (Pro Tip)",
+    adminFormLabelZhtwHeader: "繁體中文 (Traditional Chinese) 翻譯對應",
+    adminFormLabelZhtwTitle: "翻譯標題 (繁體)",
+    adminFormLabelZhtwSummary: "翻譯摘要描述 (繁體)",
+    adminFormLabelZhtwSteps: "翻譯步驟 (每行一步驟)",
+    adminFormLabelZhtwPrompt: "翻譯系統提示詞 (繁體)",
+    adminFormLabelZhtwProTip: "翻譯導入心法 (繁體)",
+    adminFormLabelZhtwAdvancedSteps: "翻譯進階整合步驟 (每行一步驟)",
+    adminFormLabelZhtwAdvancedPrompt: "翻譯進階整合提示詞 (繁體)",
+    adminFormLabelZhtwAdvancedProTip: "翻譯進階整合導入心法 (繁體)",
+    adminFormLabelZhcnHeader: "簡體中文 (Simplified Chinese) 翻譯對應",
+    adminFormLabelZhcnTitle: "翻譯標題 (简体)",
+    adminFormLabelZhcnSummary: "翻譯摘要描述 (简体)",
+    adminFormLabelZhcnSteps: "翻譯步驟 (每行一步骤)",
+    adminFormLabelZhcnPrompt: "翻譯系統提示詞 (简体)",
+    adminFormLabelZhcnProTip: "翻譯導入心法 (简体)",
+    adminFormLabelZhcnAdvancedSteps: "翻譯进阶整合步骤 (每行一步骤)",
+    adminFormLabelZhcnAdvancedPrompt: "翻譯进阶整合提示词 (简体)",
+    adminFormLabelZhcnAdvancedProTip: "翻譯进阶整合导入心法 (简体)",
+    btnAdminFormCancel: "取消",
+    btnAdminFormSave: "儲存變更",
+    sidebarFeaturesTitle: "按 CE 功能篩選",
+    filterLiked: "我的收藏案例",
+    filterDeployed: "我的部署案例",
+    adminFormLabelDualModeCheckbox: "啟用雙重模式範本 (支援獨立與進階連接器工作流程)",
+    adminFormDescDualModeCheckbox: "啟用後，此案例同時支援手動上傳與進階連接器模式，標準提示詞與步驟將由系統自動處理。"
   },
   "zh-CN": {
     wizardTitle: "Google Gemini Enterprise",
@@ -648,7 +778,72 @@ const uiTranslations = {
     adminTabAnalyticsText: "系统数据分析",
     adminTabCasesText: "案例内容维护",
     btnAdminBackToPortalText: "返回学习中心",
-    btnAdminLogoutText: "登出系统"
+    btnAdminLogoutText: "登出系统",
+    adminProvisionTitle: "开通新账户",
+    adminProvisionDesc: "系统将自动生成一组 10 位字符的临时随机密码。使用者于首次登录时必须强制重设密码。",
+    adminProvisionLabelEmail: "使用者电子邮件地址",
+    adminBtnProvision: "开通账户",
+    adminRegisteredUsersTitle: "已注册门户使用者",
+    adminThUserEmail: "使用者电子邮件",
+    adminThPasswordStatus: "密码重设状态",
+    adminThCreatedDate: "建立日期",
+    adminThAdminActions: "账户管理权限",
+    adminLabelTotalUsers: "已注册使用者总数",
+    adminLabelTotalUseCases: "学习案例总数",
+    adminLabelTotalLikes: "使用者点赞计数",
+    adminLabelTotalDeployments: "部署案例计数",
+    adminChartTitle: "近 6 个月门户导入分析图表",
+    adminChartDesc: "详细汇总整个学期期间的使用者浏览量、点赞次数与实际部署操作统计。",
+    adminLabelViewsLegend: "页面浏览量",
+    adminLabelLikesLegend: "使用者点赞",
+    adminLabelDeploymentsLegend: "案例部署数",
+    adminCrudTitle: "学习案例内容主档管理 (CRUD)",
+    adminBtnExportText: "导出案例 (JSON)",
+    adminBtnCreateCaseText: "新增使用案例",
+    adminCrudThId: "案例 ID",
+    adminCrudThTitle: "案例标题",
+    adminCrudThCategory: "所属分类中心",
+    adminCrudThRole: "主要角色定位",
+    adminCrudThActions: "编辑操作",
+    adminFormLabelId: "案例 ID (唯一、不可变更)",
+    adminFormLabelCategory: "所属分类中心",
+    adminFormLabelTitle: "范本标题名称",
+    adminFormLabelRole: "主要套用角色定位",
+    adminFormLabelSummary: "简短摘要描述",
+    adminFormLabelFeatures: "所需 Gemini 核心功能",
+    adminFormLabelConnectors: "所需企业数据连接器",
+    adminFormLabelLevel: "适用学校 / 机构级别",
+    adminFormLabelSteps: "引导操作步骤说明 (每行一步骤)",
+    adminFormLabelPrompt: "沙盒系统提示词 (System Prompt)",
+    adminFormLabelProTip: "导入心法 (Pro Tip)",
+    adminFormLabelAdvancedSteps: "进阶主动整合步骤 (仅适用于连接器连线模式)",
+    adminFormLabelAdvancedPrompt: "进阶主动整合系统提示词 (System Prompt)",
+    adminFormLabelAdvancedProTip: "进阶主动整合导入心法 (Pro Tip)",
+    adminFormLabelZhtwHeader: "繁体中文 (Traditional Chinese) 翻译对应",
+    adminFormLabelZhtwTitle: "翻译标题 (繁体)",
+    adminFormLabelZhtwSummary: "翻译摘要描述 (繁体)",
+    adminFormLabelZhtwSteps: "翻译步骤 (每行一步骤)",
+    adminFormLabelZhtwPrompt: "翻译系统提示词 (繁體)",
+    adminFormLabelZhtwProTip: "翻译导入心法 (繁體)",
+    adminFormLabelZhtwAdvancedSteps: "翻译进阶整合步骤 (每行一步骤)",
+    adminFormLabelZhtwAdvancedPrompt: "翻译进阶整合提示词 (繁體)",
+    adminFormLabelZhtwAdvancedProTip: "翻译进阶整合导入心法 (繁體)",
+    adminFormLabelZhcnHeader: "简体中文 (Simplified Chinese) 翻译对应",
+    adminFormLabelZhcnTitle: "翻译标题 (简体)",
+    adminFormLabelZhcnSummary: "翻译摘要描述 (简体)",
+    adminFormLabelZhcnSteps: "翻译步骤 (每行一步骤)",
+    adminFormLabelZhcnPrompt: "翻译系统提示词 (简体)",
+    adminFormLabelZhcnProTip: "翻译导入心法 (简体)",
+    adminFormLabelZhcnAdvancedSteps: "翻译进阶整合步骤 (每行一步骤)",
+    adminFormLabelZhcnAdvancedPrompt: "翻译进阶整合提示词 (简体)",
+    adminFormLabelZhcnAdvancedProTip: "翻译进阶整合导入心法 (简体)",
+    btnAdminFormCancel: "取消",
+    btnAdminFormSave: "保存变更",
+    sidebarFeaturesTitle: "按 CE 功能筛选",
+    filterLiked: "我的点赞案例",
+    filterDeployed: "我的部署案例",
+    adminFormLabelDualModeCheckbox: "启用双重模式范本 (支持独立与进阶连接器工作流程)",
+    adminFormDescDualModeCheckbox: "启用后，此案例同时支持手动上传与进阶连接器模式，标准提示词与步骤将由系统自动处理。"
   }
 };
 
@@ -1534,11 +1729,23 @@ function initTheme() {
   const cachedTheme = localStorage.getItem("ge_theme") || "dark";
   applyTheme(cachedTheme);
 
-  document.getElementById("btnThemeToggle").addEventListener("click", () => {
-    const currentTheme = document.documentElement.getAttribute("data-theme") || "dark";
-    const newTheme = currentTheme === "dark" ? "light" : "dark";
-    applyTheme(newTheme);
-  });
+  const toggleBtn = document.getElementById("btnThemeToggle");
+  if (toggleBtn) {
+    toggleBtn.addEventListener("click", () => {
+      const currentTheme = document.documentElement.getAttribute("data-theme") || "dark";
+      const newTheme = currentTheme === "dark" ? "light" : "dark";
+      applyTheme(newTheme);
+    });
+  }
+
+  const adminToggleBtn = document.getElementById("btnAdminThemeToggle");
+  if (adminToggleBtn) {
+    adminToggleBtn.addEventListener("click", () => {
+      const currentTheme = document.documentElement.getAttribute("data-theme") || "dark";
+      const newTheme = currentTheme === "dark" ? "light" : "dark";
+      applyTheme(newTheme);
+    });
+  }
 }
 
 function applyTheme(theme) {
@@ -1546,10 +1753,13 @@ function applyTheme(theme) {
   localStorage.setItem("ge_theme", theme);
 
   const themeIcon = document.getElementById("themeIcon");
-  if (theme === "dark") {
-    themeIcon.textContent = "dark_mode";
-  } else {
-    themeIcon.textContent = "light_mode";
+  if (themeIcon) {
+    themeIcon.textContent = theme === "dark" ? "dark_mode" : "light_mode";
+  }
+
+  const adminThemeIcon = document.getElementById("adminThemeIcon");
+  if (adminThemeIcon) {
+    adminThemeIcon.textContent = theme === "dark" ? "dark_mode" : "light_mode";
   }
 }
 
@@ -1600,61 +1810,101 @@ function updateUILanguage() {
   const lang = appState.activeLanguage || "en";
   const t = uiTranslations[lang];
 
+  const safeSetText = (id, text) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = text;
+  };
+  const safeSetHTML = (id, html) => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = html;
+  };
+
   // Static strings
-  document.getElementById("wizardTitle").textContent = t.wizardTitle;
-  document.getElementById("wizardSubtitle").textContent = t.wizardSubtitle;
-  document.getElementById("wizardDesc").textContent = t.wizardDesc;
-  document.getElementById("labelRole").textContent = t.labelRole;
-  document.getElementById("labelLevel").textContent = t.labelLevel;
-  document.getElementById("labelLang").textContent = t.labelLang;
-  document.getElementById("btnStart").innerHTML = `<span class="material-symbols-outlined">rocket_launch</span> ${t.btnStart}`;
+  safeSetText("wizardTitle", t.wizardTitle);
+  safeSetText("wizardSubtitle", t.wizardSubtitle);
+  safeSetText("wizardDesc", t.wizardDesc);
+  safeSetText("labelRole", t.labelRole);
+  safeSetText("labelLevel", t.labelLevel);
+  safeSetText("labelLang", t.labelLang);
+  safeSetHTML("btnStart", `<span class="material-symbols-outlined">rocket_launch</span> ${t.btnStart}`);
   
-  document.getElementById("sidebarProfileTitle").textContent = t.sidebarProfileTitle;
-  document.getElementById("sidebarConnectorsTitle").textContent = t.sidebarConnectorsTitle;
-  document.getElementById("sidebarFeaturesTitle").textContent = t.sidebarFeaturesTitle;
-  document.getElementById("sidebarStatusTitle").textContent = t.sidebarStatusTitle;
-  document.getElementById("btnChangeContextText").textContent = t.btnChangeContextText;
+  // Sidebar titles (with robust fallback selectors to match index.html elements)
+  const sidebarProfileTitle = document.getElementById("sidebarProfileTitle") || document.getElementById("titleContextProfile");
+  if (sidebarProfileTitle) sidebarProfileTitle.textContent = t.sidebarProfileTitle;
+  
+  const sidebarConnectorsTitle = document.getElementById("sidebarConnectorsTitle");
+  if (sidebarConnectorsTitle) sidebarConnectorsTitle.textContent = t.sidebarConnectorsTitle;
+  
+  const sidebarFeaturesTitle = document.getElementById("sidebarFeaturesTitle") || document.getElementById("titleNavigation");
+  if (sidebarFeaturesTitle) sidebarFeaturesTitle.textContent = t.sidebarFeaturesTitle || "Filter by CE Feature";
+  
+  const sidebarStatusTitle = document.getElementById("sidebarStatusTitle") || document.getElementById("titleFilters");
+  if (sidebarStatusTitle) sidebarStatusTitle.textContent = t.sidebarStatusTitle;
+
+  safeSetText("btnChangeContextText", t.btnChangeContextText);
 
   // Static sidebar filter items
   const statusFilterItems = document.querySelectorAll(".status-filter-item");
-  if (statusFilterItems.length === 3) {
-    statusFilterItems[0].innerHTML = `<span class="material-symbols-outlined">view_cozy</span> ${t.showAllCases}`;
-    statusFilterItems[1].innerHTML = `<span class="material-symbols-outlined">auto_awesome</span> ${t.standardToolsOnly}`;
-    statusFilterItems[2].innerHTML = `<span class="material-symbols-outlined">api</span> ${t.integrationRequired}`;
-  }
+  statusFilterItems.forEach(item => {
+    const status = item.getAttribute("data-status");
+    if (status === "all") {
+      item.innerHTML = `<span class="material-symbols-outlined">check_circle</span> ${t.showAllCases || "Show All"}`;
+    } else if (status === "unlocked") {
+      item.innerHTML = `<span class="material-symbols-outlined">cloud_done</span> ${t.standardToolsOnly || "Ready to Deploy"}`;
+    } else if (status === "integration") {
+      item.innerHTML = `<span class="material-symbols-outlined">lock_open_right</span> ${t.integrationRequired || "Requires Connectors"}`;
+    } else if (status === "liked") {
+      item.innerHTML = `<span class="material-symbols-outlined">favorite</span> ${t.filterLiked || "My Liked Cases"}`;
+    } else if (status === "deployed") {
+      item.innerHTML = `<span class="material-symbols-outlined">rocket_launch</span> ${t.filterDeployed || "My Deployed Cases"}`;
+    }
+  });
 
-  // Feature filters titles
   const featureFilterItems = document.querySelectorAll(".feature-filter-item");
   if (featureFilterItems.length > 0) {
-    featureFilterItems[0].innerHTML = `<span class="material-symbols-outlined">grid_view</span> ${t.allCapabilities}`;
+    featureFilterItems[0].innerHTML = `<span class="material-symbols-outlined">apps</span> ${t.allCapabilities || "All Capabilities"}`;
   }
 
   // Onboarding Dropdown roles
   const roleSelect = document.getElementById("wizardRole");
-  Array.from(roleSelect.options).forEach(opt => {
-    if (t.roles[opt.value]) {
-      opt.textContent = t.roles[opt.value];
-    }
-  });
+  if (roleSelect) {
+    Array.from(roleSelect.options).forEach(opt => {
+      if (t.roles[opt.value]) {
+        opt.textContent = t.roles[opt.value];
+      }
+    });
+  }
 
   // Onboarding Dropdown levels
   const levelSelect = document.getElementById("wizardLevel");
-  Array.from(levelSelect.options).forEach(opt => {
-    if (t.levels[opt.value]) {
-      opt.textContent = t.levels[opt.value];
-    }
-  });
+  if (levelSelect) {
+    Array.from(levelSelect.options).forEach(opt => {
+      if (t.levels[opt.value]) {
+        opt.textContent = t.levels[opt.value];
+      }
+    });
+  }
 
   // Dashboard Welcome Msg
-  if (appState.userRole) {
+  if (appState.isAdmin === true) {
+    let adminTitle = "ADMIN SIMULATION VIEW";
+    let adminSub = "Reviewing all playbooks across all roles and levels with full management permissions.";
+    if (lang === "zh-TW") {
+      adminSub = "正在以完整管理權限審查所有角色與學制層級的學習案例。";
+    } else if (lang === "zh-CN") {
+      adminSub = "正在以完整管理权限审查所有角色与学制层级学习案例。";
+    }
+    safeSetText("welcomeMsg", adminTitle);
+    safeSetText("welcomeSubtitle", adminSub);
+  } else if (appState.userRole) {
     const category = getCategoryByRole(appState.userRole);
     const translatedHub = t.hubs[category] || t.hubs.academic;
     const translatedRole = t.roles[appState.userRole] || appState.userRole;
-    document.getElementById("welcomeMsg").textContent = `${translatedHub} • ${translatedRole}`;
-    document.getElementById("welcomeSubtitle").textContent = t.wizardDesc;
+    safeSetText("welcomeMsg", `${translatedHub} • ${translatedRole}`);
+    safeSetText("welcomeSubtitle", t.wizardDesc);
   } else {
-    document.getElementById("welcomeMsg").textContent = t.wizardSubtitle;
-    document.getElementById("welcomeSubtitle").textContent = t.wizardDesc;
+    safeSetText("welcomeMsg", t.wizardSubtitle);
+    safeSetText("welcomeSubtitle", t.wizardDesc);
   }
 
   // Help support roles explanation in wizard
@@ -1667,14 +1917,121 @@ function updateUILanguage() {
   const adminBrand = document.getElementById("adminBrandText");
   if (adminBrand) {
     adminBrand.textContent = t.adminBrandText || "Admin Control";
-    document.getElementById("adminMenuNavigationTitle").textContent = t.adminMenuNavigationTitle || "Menu Navigation";
-    document.getElementById("adminPortalTitle").textContent = t.adminPortalTitle || "GEMINI EDUCATION MANAGEMENT";
-    document.getElementById("adminPortalSubtitle").textContent = t.adminPortalSubtitle || "Configure users, update learning playbooks, and analyze the last 6 months deployment metrics.";
-    document.getElementById("adminTabUsersText").textContent = t.adminTabUsersText || "Users Provisioning";
-    document.getElementById("adminTabAnalyticsText").textContent = t.adminTabAnalyticsText || "System Analytics";
-    document.getElementById("adminTabCasesText").textContent = t.adminTabCasesText || "Use Cases CRUD";
-    document.getElementById("btnAdminBackToPortalText").textContent = t.btnAdminBackToPortalText || "Learning Portal";
-    document.getElementById("btnAdminLogoutText").textContent = t.btnAdminLogoutText || "Log Out";
+    safeSetText("adminMenuNavigationTitle", t.adminMenuNavigationTitle || "Menu Navigation");
+    safeSetText("adminPortalTitle", t.adminPortalTitle || "GEMINI EDUCATION MANAGEMENT");
+    safeSetText("adminPortalSubtitle", t.adminPortalSubtitle || "Configure users, update learning playbooks, and analyze the last 6 months deployment metrics.");
+    safeSetText("adminTabUsersText", t.adminTabUsersText || "Users Provisioning");
+    safeSetText("adminTabAnalyticsText", t.adminTabAnalyticsText || "System Analytics");
+    safeSetText("adminTabCasesText", t.adminTabCasesText || "Use Cases CRUD");
+    safeSetText("btnAdminBackToPortalText", t.btnAdminBackToPortalText || "Learning Portal");
+    safeSetText("btnAdminLogoutText", t.btnAdminLogoutText || "Log Out");
+
+    // Dynamic Admin Sub-labels and inputs
+    safeSetText("adminProvisionTitle", t.adminProvisionTitle);
+    safeSetText("adminProvisionDesc", t.adminProvisionDesc);
+    safeSetText("adminProvisionLabelEmail", t.adminProvisionLabelEmail);
+    const btnProvision = document.getElementById("adminBtnProvision");
+    if (btnProvision) {
+      btnProvision.innerHTML = `${t.adminBtnProvision || "Provision"} <span class="material-symbols-outlined">person_add</span>`;
+    }
+    safeSetText("adminRegisteredUsersTitle", t.adminRegisteredUsersTitle);
+    safeSetText("adminThUserEmail", t.adminThUserEmail);
+    safeSetText("adminThPasswordStatus", t.adminThPasswordStatus);
+    safeSetText("adminThCreatedDate", t.adminThCreatedDate);
+    safeSetText("adminThAdminActions", t.adminThAdminActions);
+
+    safeSetText("adminLabelTotalUsers", t.adminLabelTotalUsers);
+    safeSetText("adminLabelTotalUseCases", t.adminLabelTotalUseCases);
+    safeSetText("adminLabelTotalLikes", t.adminLabelTotalLikes);
+    safeSetText("adminLabelTotalDeployments", t.adminLabelTotalDeployments);
+
+    safeSetText("adminChartTitle", t.adminChartTitle);
+    safeSetText("adminChartDesc", t.adminChartDesc);
+    const legendViews = document.getElementById("adminLabelViewsLegend");
+    if (legendViews) {
+      legendViews.innerHTML = `<span style="display: inline-block; width: 12px; height: 3px; background: var(--color-secondary);"></span> ${t.adminLabelViewsLegend || "PAGE VIEWS"}`;
+    }
+    const legendLikes = document.getElementById("adminLabelLikesLegend");
+    if (legendLikes) {
+      legendLikes.innerHTML = `<span style="display: inline-block; width: 12px; height: 3px; background: var(--color-danger);"></span> ${t.adminLabelLikesLegend || "USER LIKES"}`;
+    }
+    const legendDeployments = document.getElementById("adminLabelDeploymentsLegend");
+    if (legendDeployments) {
+      legendDeployments.innerHTML = `<span style="display: inline-block; width: 12px; height: 3px; background: var(--color-success);"></span> ${t.adminLabelDeploymentsLegend || "DEPLOYMENTS"}`;
+    }
+
+    safeSetText("adminCrudTitle", t.adminCrudTitle);
+    const btnExport = document.getElementById("btnAdminExportCases");
+    if (btnExport) {
+      btnExport.innerHTML = `<span class="material-symbols-outlined">download</span> <span id="adminBtnExportText">${t.adminBtnExportText || "Extract All (JSON)"}</span>`;
+    }
+    const btnCreate = document.getElementById("btnAdminCreateCase");
+    if (btnCreate) {
+      btnCreate.innerHTML = `<span class="material-symbols-outlined">add_box</span> <span id="adminBtnCreateCaseText">${t.adminBtnCreateCaseText || "Add Use Case"}</span>`;
+    }
+
+    safeSetText("adminCrudThId", t.adminCrudThId);
+    safeSetText("adminCrudThTitle", t.adminCrudThTitle);
+    safeSetText("adminCrudThCategory", t.adminCrudThCategory);
+    safeSetText("adminCrudThRole", t.adminCrudThRole);
+    safeSetText("adminCrudThActions", t.adminCrudThActions);
+
+    // Form labels inside modal
+    safeSetText("adminFormLabelId", t.adminFormLabelId);
+    safeSetText("adminFormLabelCategory", t.adminFormLabelCategory);
+    safeSetText("adminFormLabelTitle", t.adminFormLabelTitle);
+    safeSetText("adminFormLabelRole", t.adminFormLabelRole);
+    safeSetText("adminFormLabelSummary", t.adminFormLabelSummary);
+    safeSetText("adminFormLabelDualModeCheckbox", t.adminFormLabelDualModeCheckbox);
+    safeSetText("adminFormDescDualModeCheckbox", t.adminFormDescDualModeCheckbox);
+    safeSetText("adminFormLabelFeatures", t.adminFormLabelFeatures);
+    safeSetText("adminFormLabelConnectors", t.adminFormLabelConnectors);
+    safeSetText("adminFormLabelLevel", t.adminFormLabelLevel);
+    safeSetText("adminFormLabelSteps", t.adminFormLabelSteps);
+    safeSetText("adminFormLabelPrompt", t.adminFormLabelPrompt);
+    safeSetText("adminFormLabelProTip", t.adminFormLabelProTip);
+    safeSetText("adminFormLabelAdvancedSteps", t.adminFormLabelAdvancedSteps);
+    safeSetText("adminFormLabelAdvancedPrompt", t.adminFormLabelAdvancedPrompt);
+    safeSetText("adminFormLabelAdvancedProTip", t.adminFormLabelAdvancedProTip);
+
+    safeSetText("adminFormLabelZhtwHeader", t.adminFormLabelZhtwHeader);
+    safeSetText("adminFormLabelZhtwTitle", t.adminFormLabelZhtwTitle);
+    safeSetText("adminFormLabelZhtwSummary", t.adminFormLabelZhtwSummary);
+    safeSetText("adminFormLabelZhtwSteps", t.adminFormLabelZhtwSteps);
+    safeSetText("adminFormLabelZhtwPrompt", t.adminFormLabelZhtwPrompt);
+    safeSetText("adminFormLabelZhtwProTip", t.adminFormLabelZhtwProTip);
+    safeSetText("adminFormLabelZhtwAdvancedSteps", t.adminFormLabelZhtwAdvancedSteps);
+    safeSetText("adminFormLabelZhtwAdvancedPrompt", t.adminFormLabelZhtwAdvancedPrompt);
+    safeSetText("adminFormLabelZhtwAdvancedProTip", t.adminFormLabelZhtwAdvancedProTip);
+
+    safeSetText("adminFormLabelZhcnHeader", t.adminFormLabelZhcnHeader);
+    safeSetText("adminFormLabelZhcnTitle", t.adminFormLabelZhcnTitle);
+    safeSetText("adminFormLabelZhcnSummary", t.adminFormLabelZhcnSummary);
+    safeSetText("adminFormLabelZhcnSteps", t.adminFormLabelZhcnSteps);
+    safeSetText("adminFormLabelZhcnPrompt", t.adminFormLabelZhcnPrompt);
+    safeSetText("adminFormLabelZhcnProTip", t.adminFormLabelZhcnProTip);
+    safeSetText("adminFormLabelZhcnAdvancedSteps", t.adminFormLabelZhcnAdvancedSteps);
+    safeSetText("adminFormLabelZhcnAdvancedPrompt", t.adminFormLabelZhcnAdvancedPrompt);
+    safeSetText("adminFormLabelZhcnAdvancedProTip", t.adminFormLabelZhcnAdvancedProTip);
+
+    // Localize the AI Drafting instructions block
+    const instructionInput = document.getElementById("formCaseGeminiInstruction");
+    if (lang === "zh-TW") {
+      safeSetText("adminFormLabelGeminiPromptTitle", "使用 Gemini 智能生成 / 優化案例");
+      safeSetText("adminFormLabelGeminiPromptDesc", "輸入您想建立的案例方向，或說明您想對此案例進行的具體修改。Gemini 將會全自動為您編寫高品質的多語言對應、系統提示詞、操作步驟及導入心法。");
+      if (instructionInput) instructionInput.placeholder = "例如：使用 Canvas 模式，為高中化學實驗報告建立一份評分量表指南，重點放在實驗安全上...";
+    } else if (lang === "zh-CN") {
+      safeSetText("adminFormLabelGeminiPromptTitle", "使用 Gemini 智能生成 / 优化案例");
+      safeSetText("adminFormLabelGeminiPromptDesc", "输入您想建立的案例方向，或说明您想对此案例进行的具体修改。Gemini 将会全自动为您编写高质量的多语言对应、系统提示词、操作步骤及导入心法。");
+      if (instructionInput) instructionInput.placeholder = "例如：使用 Canvas 模式，为高中化学实验报告建立一份评分量表指南，重点放在实验安全上...";
+    } else {
+      safeSetText("adminFormLabelGeminiPromptTitle", "Generate/Refine Playbook with Gemini");
+      safeSetText("adminFormLabelGeminiPromptDesc", "Specify what you want to create, or describe the edits you'd like to apply to this playbook. Gemini will generate high-fidelity, localized playbooks, system prompts, steps, and tips.");
+      if (instructionInput) instructionInput.placeholder = "e.g. Create a rubric grading guide for high school chemistry lab reports using Canvas Mode, focusing on safety...";
+    }
+
+    safeSetText("btnAdminFormCancel", t.btnAdminFormCancel);
+    safeSetText("btnAdminFormSave", t.btnAdminFormSave);
   }
 }
 
@@ -1741,19 +2098,42 @@ function updateSidebarContextUI() {
   const lang = appState.activeLanguage || "en";
   const t = uiTranslations[lang];
 
-  const roleText = t.roles[appState.userRole] || appState.userRole;
-  document.getElementById("sidebarRole").textContent = roleText;
-  
-  const isSupportRole = ["Security", "Finance", "IT Admin", "SAO"].includes(appState.userRole);
-  if (isSupportRole) {
-    document.getElementById("sidebarLevel").textContent = lang === "en" ? "Global (All Levels)" : (lang === "zh-TW" ? "全局 (所有級別)" : "全局 (所有级别)");
-  } else {
-    const levelText = t.levels[appState.institutionLevel] || appState.institutionLevel;
-    document.getElementById("sidebarLevel").textContent = levelText;
-  }
+  if (appState.isAdmin === true) {
+    document.title = "ADMIN SIMULATION VIEW";
 
-  // Update navbar welcome text
-  document.getElementById("navbarWelcomeText").textContent = `Edu GE Adoption Portal • ${roleText}`;
+    const navWelcomeEl = document.getElementById("navbarWelcomeText");
+    if (navWelcomeEl) navWelcomeEl.textContent = "ADMIN SIMULATION VIEW";
+
+    const sidebarProfileTitle = document.getElementById("sidebarProfileTitle") || document.getElementById("titleContextProfile");
+    if (sidebarProfileTitle) sidebarProfileTitle.textContent = "ADMIN SIMULATION VIEW";
+
+    const roleEl = document.getElementById("sidebarRole") || document.getElementById("profileRoleName");
+    if (roleEl) roleEl.textContent = "Administrator";
+
+    const levelEl = document.getElementById("sidebarLevel") || document.getElementById("profileInstitutionName");
+    if (levelEl) levelEl.textContent = "Simulation Mode";
+  } else {
+    document.title = "Gemini Enterprise - Edu Portal";
+
+    const roleText = t.roles[appState.userRole] || appState.userRole;
+    const roleEl = document.getElementById("sidebarRole") || document.getElementById("profileRoleName");
+    if (roleEl) roleEl.textContent = roleText;
+    
+    const isSupportRole = ["Security", "Finance", "IT Admin", "SAO"].includes(appState.userRole);
+    const levelEl = document.getElementById("sidebarLevel") || document.getElementById("profileInstitutionName");
+    if (levelEl) {
+      if (isSupportRole) {
+        levelEl.textContent = lang === "en" ? "Global (All Levels)" : (lang === "zh-TW" ? "全局 (所有級別)" : "全局 (所有级别)");
+      } else {
+        const levelText = t.levels[appState.institutionLevel] || appState.institutionLevel;
+        levelEl.textContent = levelText;
+      }
+    }
+
+    // Update navbar welcome text
+    const navWelcomeEl = document.getElementById("navbarWelcomeText");
+    if (navWelcomeEl) navWelcomeEl.textContent = `Edu GE Adoption Portal • ${roleText}`;
+  }
 }
 
 // Configure Connector Toggles
@@ -1817,7 +2197,9 @@ function renderUseCases() {
     let matchesRole = false;
     const isSupportRole = ["Security", "Finance", "IT Admin", "SAO"].includes(appState.userRole);
     
-    if (appState.userRole === "Lecturer") {
+    if (appState.isAdmin === true) {
+      matchesRole = true;
+    } else if (appState.userRole === "Lecturer") {
       matchesRole = ["Lecturer", "TA"].includes(useCase.role) || useCase.category === "academic";
     } else if (appState.userRole === "TA") {
       matchesRole = ["Lecturer", "TA"].includes(useCase.role) || useCase.category === "academic";
@@ -1834,7 +2216,9 @@ function renderUseCases() {
 
     // 2. Institution Level Filter: Support roles ignore this completely.
     let matchesLevel = true;
-    if (!isSupportRole && useCase.level && useCase.level.length > 0) {
+    if (appState.isAdmin === true) {
+      matchesLevel = true;
+    } else if (!isSupportRole && useCase.level && useCase.level.length > 0) {
       matchesLevel = useCase.level.includes("Generic") || useCase.level.includes(appState.institutionLevel);
     }
 
@@ -1851,6 +2235,10 @@ function renderUseCases() {
       matchesStatus = !hasMissingConnector;
     } else if (appState.activeFilterStatus === "integration") {
       matchesStatus = hasMissingConnector;
+    } else if (appState.activeFilterStatus === "liked") {
+      matchesStatus = useCase.isLiked === true || useCase.isLiked === 1;
+    } else if (appState.activeFilterStatus === "deployed") {
+      matchesStatus = useCase.isDeployed === true || useCase.isDeployed === 1;
     }
 
     // 5. Search Bar Query
@@ -1949,8 +2337,11 @@ function renderUseCases() {
         tagsHtml += `<span class="tag tag-feature">${f}</span>`;
       });
       if (uc.level && uc.level.length > 0) {
-        const levelText = t.levels[uc.level[0]] || uc.level[0];
-        tagsHtml += `<span class="tag tag-level">${levelText}</span>`;
+        const displayLevels = uc.level.length > 1 ? ["Generic"] : uc.level;
+        displayLevels.forEach(lvl => {
+          const levelText = t.levels[lvl] || lvl;
+          tagsHtml += `<span class="tag tag-level">${levelText}</span>`;
+        });
       }
 
       // Connector localized title
@@ -2127,8 +2518,11 @@ function openUseCaseModal(useCase) {
     tagsHtml += `<span class="tag tag-feature" style="font-size: 11px;">${f}</span>`;
   });
   if (useCase.level && useCase.level.length > 0) {
-    const levelText = t.levels[useCase.level[0]] || useCase.level[0];
-    tagsHtml += `<span class="tag tag-level" style="font-size: 11px;">${levelText}</span>`;
+    const displayLevels = useCase.level.length > 1 ? ["Generic"] : useCase.level;
+    displayLevels.forEach(lvl => {
+      const levelText = t.levels[lvl] || lvl;
+      tagsHtml += `<span class="tag tag-level" style="font-size: 11px;">${levelText}</span>`;
+    });
   }
   document.getElementById("modalTags").innerHTML = tagsHtml;
 
@@ -2992,10 +3386,12 @@ renderUseCases = function() {
 
       const likeActive = uc.isLiked === true || uc.isLiked === 1;
       const deployActive = uc.isDeployed === true || uc.isDeployed === 1;
+      const totalLikes = uc.totalLikes || 0;
 
       prefBar.innerHTML = `
-        <button class="pref-btn btn-like" style="background: none; border: none; padding: 4px; display: inline-flex; align-items: center; cursor: pointer; color: ${likeActive ? 'var(--color-danger)' : 'var(--text-muted)'}; transition: color 0.2s;" title="Like Use Case">
+        <button class="pref-btn btn-like" style="background: none; border: none; padding: 4px; display: inline-flex; align-items: center; cursor: pointer; color: ${likeActive ? 'var(--color-danger)' : 'var(--text-muted)'}; transition: color 0.2s; gap: 4px;" title="Like Use Case">
           <span class="material-symbols-outlined" style="font-size: 18px; font-variation-settings: 'FILL' ${likeActive ? 1 : 0}">${likeActive ? 'favorite' : 'favorite'}</span>
+          <span class="likes-count" style="font-size: 12px; font-family: inherit; font-weight: 500;">${totalLikes}</span>
         </button>
         <button class="pref-btn btn-deploy" style="background: none; border: none; padding: 4px; display: inline-flex; align-items: center; cursor: pointer; color: ${deployActive ? 'var(--color-success)' : 'var(--text-muted)'}; transition: color 0.2s;" title="Active Deployment Status">
           <span class="material-symbols-outlined" style="font-size: 18px; font-variation-settings: 'FILL' ${deployActive ? 1 : 0}">${deployActive ? 'rocket_launch' : 'rocket_launch'}</span>
@@ -3009,11 +3405,13 @@ renderUseCases = function() {
       likeBtn.addEventListener("click", async (e) => {
         e.stopPropagation();
         const newStatus = !uc.isLiked;
-        const success = await syncUserPreference(uc.id, 'like', newStatus);
-        if (success) {
+        const resObj = await syncUserPreference(uc.id, 'like', newStatus);
+        if (resObj && resObj.success) {
           uc.isLiked = newStatus;
+          uc.totalLikes = resObj.totalLikes;
           likeBtn.style.color = newStatus ? 'var(--color-danger)' : 'var(--text-muted)';
           likeBtn.querySelector(".material-symbols-outlined").style.fontVariationSettings = `'FILL' ${newStatus ? 1 : 0}`;
+          likeBtn.querySelector(".likes-count").textContent = resObj.totalLikes;
           showToast(newStatus ? "Added to your favorites!" : "Removed from favorites");
         }
       });
@@ -3045,7 +3443,7 @@ async function syncUserPreference(useCaseId, action, value) {
       body: JSON.stringify({ useCaseId, [bodyKey]: value })
     });
     const data = await res.json();
-    return data.success;
+    return action === 'like' ? { success: data.success, totalLikes: data.totalLikes } : data.success;
   } catch (error) {
     console.error(`Preference sync error (${action}):`, error);
     return false;
@@ -3096,6 +3494,7 @@ async function initApp() {
     if (auth.loggedIn) {
       appState.userEmail = auth.user.email;
       appState.isAdmin = auth.user.isAdmin;
+      appState.isAssist = auth.user.isAssist || false;
 
       if (appState.isAdmin) {
         // Admin redirect or simulated view restore
@@ -3111,6 +3510,7 @@ async function initApp() {
           appState.institutionLevel = "University & College";
           updateSidebarContextUI();
           
+          updateUILanguage(); // Make sure admin headers are drawn!
           await loadUseCasesFromServer();
           renderUseCases();
         } else {
@@ -3442,6 +3842,11 @@ function initAdminPortal() {
   const savedTab = sessionStorage.getItem("ge_current_admin_tab") || "users";
   currentAdminTab = savedTab;
 
+  const btnCreate = document.getElementById("btnAdminCreateCase");
+  if (btnCreate) {
+    btnCreate.style.display = appState.isAssist ? "none" : "block";
+  }
+
   const tabs = document.querySelectorAll(".admin-tab-item");
   tabs.forEach(tab => {
     const target = tab.getAttribute("data-tab");
@@ -3494,6 +3899,7 @@ function initAdminPortal() {
     appState.userRole = "Lecturer";
     appState.institutionLevel = "University & College";
     updateSidebarContextUI();
+    updateUILanguage(); // Make sure admin headers are drawn!
     loadUseCasesFromServer().then(() => renderUseCases());
   });
 
@@ -3546,6 +3952,13 @@ function initAdminPortal() {
     document.getElementById("adminCaseEditModal").classList.remove("active");
   };
 
+  const btnGemini = document.getElementById("btnAdminFormGemini");
+  if (btnGemini) {
+    btnGemini.onclick = async () => {
+      await triggerGeminiPlaybookGeneration();
+    };
+  }
+
   // Trigger form saving
   const formCase = document.getElementById("formAdminSaveCase");
   formCase.onsubmit = async (e) => {
@@ -3556,6 +3969,7 @@ function initAdminPortal() {
   // Default load
   loadAdminUsers();
 }
+
 
 // Admin Tab 1: Load users table
 async function loadAdminUsers() {
@@ -3587,7 +4001,7 @@ async function loadAdminUsers() {
         <td style="padding: 12px 8px; color: var(--text-muted);">${date}</td>
         <td style="padding: 12px 8px; text-align: right; display: flex; gap: 8px; justify-content: flex-end;">
           <button class="nav-button btn-reset-user" style="height: 28px; padding: 0 10px; font-size: 11px;">Reset Access</button>
-          <button class="nav-button btn-revoke-user" style="height: 28px; padding: 0 10px; font-size: 11px; background: var(--color-danger); border-color: var(--color-danger);">Revoke</button>
+          <button class="nav-button btn-revoke-user" style="height: 28px; padding: 0 10px; font-size: 11px; background: var(--color-danger); border-color: var(--color-danger); color: #ffffff !important;">Revoke</button>
         </td>
       `;
 
@@ -3655,6 +4069,58 @@ async function loadAdminStats() {
     document.getElementById("statTotalDeployments").textContent = data.totalDeployments;
 
     renderAdminStatsChart(data.history);
+
+    // Render Most Liked Playbooks Leaderboard
+    const leaderboardContainer = document.getElementById("adminMostLikedList");
+    if (leaderboardContainer && data.mostLiked) {
+      leaderboardContainer.innerHTML = "";
+      if (data.mostLiked.length === 0) {
+        leaderboardContainer.innerHTML = `<p style="font-size: 13px; color: var(--text-muted); text-align: center; padding: 24px;">No user likes recorded yet.</p>`;
+      } else {
+        data.mostLiked.forEach((item, index) => {
+          const rank = index + 1;
+          let rankBadgeBg = "var(--border-glass)";
+          let rankBadgeColor = "var(--text-secondary)";
+          if (rank === 1) {
+            rankBadgeBg = "rgba(255, 215, 0, 0.15)";
+            rankBadgeColor = "#FFD700";
+          } else if (rank === 2) {
+            rankBadgeBg = "rgba(192, 192, 192, 0.15)";
+            rankBadgeColor = "#C0C0C0";
+          } else if (rank === 3) {
+            rankBadgeBg = "rgba(205, 127, 50, 0.15)";
+            rankBadgeColor = "#CD7F32";
+          }
+          
+          const categoryName = item.category === 'academic' ? 'Academic' : (item.category === 'operational' ? 'Operational' : 'Strategic Support');
+          const cardHtml = `
+            <div class="glass-panel" style="display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; transition: transform 0.2s, box-shadow 0.2s; cursor: default;">
+              <div style="display: flex; align-items: center; gap: 16px;">
+                <!-- Rank Badge -->
+                <div style="width: 32px; height: 32px; border-radius: 50%; background: ${rankBadgeBg}; color: ${rankBadgeColor}; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; font-family: var(--font-heading);">
+                  ${rank}
+                </div>
+                <!-- Playbook Info -->
+                <div>
+                  <div style="font-size: 14px; font-weight: 700; color: var(--text-primary);">${item.title}</div>
+                  <div style="display: flex; gap: 8px; margin-top: 4px; align-items: center;">
+                    <span style="font-size: 10px; background: rgba(255,255,255,0.05); color: var(--text-secondary); padding: 2px 8px; border-radius: 12px; font-weight: 500; text-transform: capitalize; border: 1px solid var(--border-hairline);">${categoryName}</span>
+                    <span style="font-size: 10px; background: rgba(255,255,255,0.05); color: var(--text-muted); padding: 2px 8px; border-radius: 12px; font-weight: 500; border: 1px solid var(--border-hairline);">${item.role}</span>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Likes Count -->
+              <div style="display: flex; align-items: center; gap: 6px; background: rgba(235, 87, 87, 0.1); border: 1px solid rgba(235, 87, 87, 0.2); padding: 6px 12px; border-radius: 16px; color: var(--color-danger); font-weight: 700; font-size: 13px;">
+                <span class="material-symbols-outlined" style="font-size: 16px; font-variation-settings: 'FILL' 1;">favorite</span>
+                <span>${item.likes_count}</span>
+              </div>
+            </div>
+          `;
+          leaderboardContainer.insertAdjacentHTML('beforeend', cardHtml);
+        });
+      }
+    }
   } catch (error) {
     console.error("Failed to load statistics:", error);
   }
@@ -3666,6 +4132,8 @@ function renderAdminStatsChart(history) {
   container.innerHTML = "";
 
   if (!history || history.length === 0) return;
+
+  container.style.position = "relative";
 
   const width = container.clientWidth || 600;
   const height = 240;
@@ -3727,6 +4195,25 @@ function renderAdminStatsChart(history) {
     `;
   });
 
+  // Create absolute glassmorphic tooltip box
+  const tooltip = document.createElement("div");
+  tooltip.id = "chartTooltip";
+  tooltip.style.position = "absolute";
+  tooltip.style.display = "none";
+  tooltip.style.background = "var(--bg-sidebar)";
+  tooltip.style.border = "1px solid var(--border-glass-focused)";
+  tooltip.style.backdropFilter = "blur(16px)";
+  tooltip.style.padding = "10px 14px";
+  tooltip.style.borderRadius = "8px";
+  tooltip.style.pointerEvents = "none";
+  tooltip.style.zIndex = "10";
+  tooltip.style.fontSize = "11px";
+  tooltip.style.boxShadow = "0 10px 25px -5px rgba(0, 0, 0, 0.4)";
+  tooltip.style.color = "var(--text-primary)";
+  tooltip.style.minWidth = "130px";
+  tooltip.style.transition = "opacity 0.15s ease, left 0.15s ease, top 0.15s ease";
+  container.appendChild(tooltip);
+
   // Put it all together inside dynamic SVG
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   svg.setAttribute("width", "100%");
@@ -3737,6 +4224,9 @@ function renderAdminStatsChart(history) {
     <!-- Grid Layout -->
     ${gridlinesHtml}
     ${labelsHtml}
+
+    <!-- Interactive Hover vertical guide -->
+    <line id="hoverLine" x1="0" y1="${paddingTop}" x2="0" y2="${paddingTop + chartHeight}" stroke="var(--color-primary)" stroke-width="1.5" stroke-dasharray="3,3" opacity="0" pointer-events="none" />
 
     <!-- Trend Lines -->
     <polyline points="${pointsViews.join(' ')}" fill="none" stroke="var(--color-secondary)" stroke-width="2" />
@@ -3750,12 +4240,117 @@ function renderAdminStatsChart(history) {
       const yLikes = paddingTop + chartHeight - ((h.likes / maxVal) * chartHeight);
       const yDeploy = paddingTop + chartHeight - ((h.deployments / maxVal) * chartHeight);
       return `
-        <circle cx="${x}" cy="${yViews}" r="4" fill="var(--bg-dark-base)" stroke="var(--color-secondary)" stroke-width="2" class="chart-dot" style="cursor: pointer;" title="Views: ${h.views}"/>
-        <circle cx="${x}" cy="${yLikes}" r="4" fill="var(--bg-dark-base)" stroke="var(--color-danger)" stroke-width="2" class="chart-dot" style="cursor: pointer;" title="Likes: ${h.likes}"/>
-        <circle cx="${x}" cy="${yDeploy}" r="4" fill="var(--bg-dark-base)" stroke="var(--color-success)" stroke-width="2" class="chart-dot" style="cursor: pointer;" title="Deploys: ${h.deployments}"/>
+        <circle cx="${x}" cy="${yViews}" r="4" fill="var(--bg-dark-base)" stroke="var(--color-secondary)" stroke-width="2" class="chart-dot" style="cursor: pointer;" />
+        <circle cx="${x}" cy="${yLikes}" r="4" fill="var(--bg-dark-base)" stroke="var(--color-danger)" stroke-width="2" class="chart-dot" style="cursor: pointer;" />
+        <circle cx="${x}" cy="${yDeploy}" r="4" fill="var(--bg-dark-base)" stroke="var(--color-success)" stroke-width="2" class="chart-dot" style="cursor: pointer;" />
       `;
     }).join('')}
+
+    <!-- Interactive Hover Markers -->
+    <circle id="hoverViewsCircle" r="5.5" fill="var(--color-secondary)" stroke="#ffffff" stroke-width="1.5" opacity="0" pointer-events="none" />
+    <circle id="hoverLikesCircle" r="5.5" fill="var(--color-danger)" stroke="#ffffff" stroke-width="1.5" opacity="0" pointer-events="none" />
+    <circle id="hoverDeploysCircle" r="5.5" fill="var(--color-success)" stroke="#ffffff" stroke-width="1.5" opacity="0" pointer-events="none" />
   `;
+
+  // Interaction handlers
+  svg.addEventListener("mousemove", (e) => {
+    const rect = svg.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+
+    if (mouseX < paddingLeft || mouseX > width - paddingRight) {
+      hideTooltip();
+      return;
+    }
+
+    const relativeX = mouseX - paddingLeft;
+    const idx = Math.round(relativeX / stepX);
+    if (idx < 0 || idx >= history.length) {
+      hideTooltip();
+      return;
+    }
+
+    const h = history[idx];
+    const x = paddingLeft + (idx * stepX);
+
+    const yViews = paddingTop + chartHeight - ((h.views / maxVal) * chartHeight);
+    const yLikes = paddingTop + chartHeight - ((h.likes / maxVal) * chartHeight);
+    const yDeploy = paddingTop + chartHeight - ((h.deployments / maxVal) * chartHeight);
+
+    const hLine = svg.getElementById("hoverLine");
+    if (hLine) {
+      hLine.setAttribute("x1", x);
+      hLine.setAttribute("x2", x);
+      hLine.setAttribute("opacity", "0.6");
+    }
+
+    const cViews = svg.getElementById("hoverViewsCircle");
+    const cLikes = svg.getElementById("hoverLikesCircle");
+    const cDeploys = svg.getElementById("hoverDeploysCircle");
+
+    if (cViews) { cViews.setAttribute("cx", x); cViews.setAttribute("cy", yViews); cViews.setAttribute("opacity", "1"); }
+    if (cLikes) { cLikes.setAttribute("cx", x); cLikes.setAttribute("cy", yLikes); cLikes.setAttribute("opacity", "1"); }
+    if (cDeploys) { cDeploys.setAttribute("cx", x); cDeploys.setAttribute("cy", yDeploy); cDeploys.setAttribute("opacity", "1"); }
+
+    tooltip.style.display = "block";
+    tooltip.style.opacity = "1";
+    if (x <= width / 2) {
+      tooltip.style.left = `${x + 15}px`;
+    } else {
+      tooltip.style.left = `${x - 145}px`;
+    }
+    tooltip.style.top = `${Math.min(mouseY - 10, height - 95)}px`;
+
+    const lang = appState.activeLanguage || "en";
+    let labelViews = "Views";
+    let labelLikes = "Likes";
+    let labelDeploys = "Deploys";
+
+    if (lang === "zh-TW") {
+      labelViews = "查看次數";
+      labelLikes = "按讚數";
+      labelDeploys = "部署次數";
+    } else if (lang === "zh-CN") {
+      labelViews = "查看次数";
+      labelLikes = "点赞数";
+      labelDeploys = "部署次数";
+    }
+
+    tooltip.innerHTML = `
+      <div style="font-weight: 700; margin-bottom: 6px; border-bottom: 1px solid var(--border-glass); padding-bottom: 4px; color: var(--color-primary); font-family: var(--font-heading); font-size: 11px;">${h.month}</div>
+      <div style="display: flex; justify-content: space-between; gap: 16px; margin-bottom: 3px;">
+        <span style="color: var(--text-secondary); display: flex; align-items: center; gap: 4px;"><span style="display: inline-block; width: 6px; height: 6px; background: var(--color-secondary); border-radius: 50%;"></span>${labelViews}:</span>
+        <strong style="color: var(--text-primary); font-family: monospace;">${h.views}</strong>
+      </div>
+      <div style="display: flex; justify-content: space-between; gap: 16px; margin-bottom: 3px;">
+        <span style="color: var(--text-secondary); display: flex; align-items: center; gap: 4px;"><span style="display: inline-block; width: 6px; height: 6px; background: var(--color-danger); border-radius: 50%;"></span>${labelLikes}:</span>
+        <strong style="color: var(--text-primary); font-family: monospace;">${h.likes}</strong>
+      </div>
+      <div style="display: flex; justify-content: space-between; gap: 16px;">
+        <span style="color: var(--text-secondary); display: flex; align-items: center; gap: 4px;"><span style="display: inline-block; width: 6px; height: 6px; background: var(--color-success); border-radius: 50%;"></span>${labelDeploys}:</span>
+        <strong style="color: var(--text-primary); font-family: monospace;">${h.deployments}</strong>
+      </div>
+    `;
+  });
+
+  svg.addEventListener("mouseleave", () => {
+    hideTooltip();
+  });
+
+  function hideTooltip() {
+    tooltip.style.display = "none";
+    tooltip.style.opacity = "0";
+    const hLine = svg.getElementById("hoverLine");
+    if (hLine) hLine.setAttribute("opacity", "0");
+
+    const cViews = svg.getElementById("hoverViewsCircle");
+    const cLikes = svg.getElementById("hoverLikesCircle");
+    const cDeploys = svg.getElementById("hoverDeploysCircle");
+
+    if (cViews) cViews.setAttribute("opacity", "0");
+    if (cLikes) cLikes.setAttribute("opacity", "0");
+    if (cDeploys) cDeploys.setAttribute("opacity", "0");
+  }
 
   container.appendChild(svg);
 }
@@ -3778,21 +4373,24 @@ async function loadAdminUseCases() {
       const trans = uc.translations ? uc.translations[activeLang] : null;
       const titleText = (trans && trans.title) ? trans.title : uc.title;
 
+      const isAssist = appState.isAssist === true;
       tr.innerHTML = `
         <td style="padding: 12px 8px; font-family: monospace; font-size: 11px; color: var(--color-primary); font-weight: 700;">${uc.id}</td>
         <td style="padding: 12px 8px; font-weight: 500;">${titleText}</td>
         <td style="padding: 12px 8px; text-transform: capitalize; color: var(--text-secondary);">${uc.category}</td>
         <td style="padding: 12px 8px; color: var(--text-muted);">${uc.role}</td>
         <td style="padding: 12px 8px; text-align: right; display: flex; gap: 8px; justify-content: flex-end;">
-          <button class="nav-button btn-edit-case" style="height: 28px; padding: 0 10px; font-size: 11px;">Edit</button>
-          <button class="nav-button btn-delete-case" style="height: 28px; padding: 0 10px; font-size: 11px; background: var(--color-danger); border-color: var(--color-danger);">Delete</button>
+          <button class="nav-button btn-edit-case" style="height: 28px; padding: 0 10px; font-size: 11px;">${isAssist ? 'View' : 'Edit'}</button>
+          ${isAssist ? '' : '<button class="nav-button btn-delete-case" style="height: 28px; padding: 0 10px; font-size: 11px; background: var(--color-danger); border-color: var(--color-danger); color: #ffffff !important;">Delete</button>'}
         </td>
       `;
 
       tbody.appendChild(tr);
 
       tr.querySelector(".btn-edit-case").onclick = () => openAdminEditModal(uc);
-      tr.querySelector(".btn-delete-case").onclick = () => deleteAdminUseCase(uc.id);
+      if (!isAssist) {
+        tr.querySelector(".btn-delete-case").onclick = () => deleteAdminUseCase(uc.id);
+      }
     });
   } catch (error) {
     console.error(error);
@@ -3801,6 +4399,97 @@ async function loadAdminUseCases() {
 
 // CRUD Modal Manager
 let editingUseCaseId = null;
+
+function toggleFormDualModeFields(isDualMode) {
+  const dualIndicator = document.getElementById("adminFormDualModeIndicator");
+
+  // Standard groupings
+  const standardStepsGroup = document.getElementById("formCaseSteps") ? document.getElementById("formCaseSteps").closest(".form-group") : null;
+  const standardPromptGroup = document.getElementById("formCasePrompt") ? document.getElementById("formCasePrompt").closest(".form-group") : null;
+  const standardProTipGroup = document.getElementById("formCaseProTip") ? document.getElementById("formCaseProTip").closest(".form-group") : null;
+
+  const twStepsGroup = document.getElementById("formTransZhtwSteps") ? document.getElementById("formTransZhtwSteps").closest(".form-group") : null;
+  const twPromptGroup = document.getElementById("formTransZhtwPrompt") ? document.getElementById("formTransZhtwPrompt").closest(".form-group") : null;
+  const twProTipGroup = document.getElementById("formTransZhtwProTip") ? document.getElementById("formTransZhtwProTip").closest(".form-group") : null;
+
+  const cnStepsGroup = document.getElementById("formTransZhcnSteps") ? document.getElementById("formTransZhcnSteps").closest(".form-group") : null;
+  const cnPromptGroup = document.getElementById("formTransZhcnPrompt") ? document.getElementById("formTransZhcnPrompt").closest(".form-group") : null;
+  const cnProTipGroup = document.getElementById("formTransZhcnProTip") ? document.getElementById("formTransZhcnProTip").closest(".form-group") : null;
+
+  // Advanced groupings
+  const advStepsGroup = document.getElementById("formCaseAdvancedSteps") ? document.getElementById("formCaseAdvancedSteps").closest(".form-group") : null;
+  const advPromptGroup = document.getElementById("formCaseAdvancedPrompt") ? document.getElementById("formCaseAdvancedPrompt").closest(".form-group") : null;
+  const advProTipGroup = document.getElementById("formCaseAdvancedProTip") ? document.getElementById("formCaseAdvancedProTip").closest(".form-group") : null;
+
+  const twAdvStepsGroup = document.getElementById("formTransZhtwAdvancedSteps") ? document.getElementById("formTransZhtwAdvancedSteps").closest(".form-group") : null;
+  const twAdvPromptGroup = document.getElementById("formTransZhtwAdvancedPrompt") ? document.getElementById("formTransZhtwAdvancedPrompt").closest(".form-group") : null;
+  const twAdvProTipGroup = document.getElementById("formTransZhtwAdvancedProTip") ? document.getElementById("formTransZhtwAdvancedProTip").closest(".form-group") : null;
+
+  const cnAdvStepsGroup = document.getElementById("formTransZhcnAdvancedSteps") ? document.getElementById("formTransZhcnAdvancedSteps").closest(".form-group") : null;
+  const cnAdvPromptGroup = document.getElementById("formTransZhcnAdvancedPrompt") ? document.getElementById("formTransZhcnAdvancedPrompt").closest(".form-group") : null;
+  const cnAdvProTipGroup = document.getElementById("formTransZhcnAdvancedProTip") ? document.getElementById("formTransZhcnAdvancedProTip").closest(".form-group") : null;
+
+  if (isDualMode) {
+    if (dualIndicator) {
+      dualIndicator.style.display = "block";
+      const lang = appState.activeLanguage || "en";
+      if (lang === "zh-TW") {
+        dualIndicator.innerHTML = `
+          <div style="display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--color-primary); margin-bottom: 4px;">
+            <span class="material-symbols-outlined" style="font-size: 18px;">api</span> 
+            已啟用雙重模式範本 (標準手動 + 進階連接器整合)
+          </div>
+          <div style="font-size: 11px; color: var(--text-secondary);">
+            此學習案例同時支援手動檔案工作流程與進階連接器模式。在此雙重配置下，<strong>標準提示詞與步驟由系統自動對應，您僅需直接編輯進階整合提示詞與引導步驟。</strong>
+          </div>
+        `;
+      } else if (lang === "zh-CN") {
+        dualIndicator.innerHTML = `
+          <div style="display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--color-primary); margin-bottom: 4px;">
+            <span class="material-symbols-outlined" style="font-size: 18px;">api</span> 
+            已启用双重模式范本 (标准手动 + 进阶连接器整合)
+          </div>
+          <div style="font-size: 11px; color: var(--text-secondary);">
+            此学习案例同时支持手动档案工作流程与进阶连接器模式。在此双重配置下，<strong>标准提示词与步骤将由系统自动对应，您仅需直接编辑进阶整合提示词与引导步骤。</strong>
+          </div>
+        `;
+      } else {
+        dualIndicator.innerHTML = `
+          <div style="display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--color-primary); margin-bottom: 4px;">
+            <span class="material-symbols-outlined" style="font-size: 18px;">api</span> 
+            Dual-Mode Template Enabled (Standalone + Advanced)
+          </div>
+          <div style="font-size: 11px; color: var(--text-secondary);">
+            This playbook supports both standard manual file workflows and advanced integration modes. In this dual configuration, <strong>standard prompts are auto-managed, so you are editing the Advanced (Active-Integration) prompts directly.</strong>
+          </div>
+        `;
+      }
+    }
+
+    // Hide standard fields
+    [standardStepsGroup, standardPromptGroup, standardProTipGroup, twStepsGroup, twPromptGroup, twProTipGroup, cnStepsGroup, cnPromptGroup, cnProTipGroup].forEach(g => {
+      if (g) g.style.display = "none";
+    });
+
+    // Show advanced fields
+    [advStepsGroup, advPromptGroup, advProTipGroup, twAdvStepsGroup, twAdvPromptGroup, twAdvProTipGroup, cnAdvStepsGroup, cnAdvPromptGroup, cnAdvProTipGroup].forEach(g => {
+      if (g) g.style.display = "block";
+    });
+
+  } else {
+    if (dualIndicator) dualIndicator.style.display = "none";
+
+    // Show standard fields
+    [standardStepsGroup, standardPromptGroup, standardProTipGroup, twStepsGroup, twPromptGroup, twProTipGroup, cnStepsGroup, cnPromptGroup, cnProTipGroup].forEach(g => {
+      if (g) g.style.display = "block";
+    });
+
+    // Hide advanced fields
+    [advStepsGroup, advPromptGroup, advProTipGroup, twAdvStepsGroup, twAdvPromptGroup, twAdvProTipGroup, cnAdvStepsGroup, cnAdvPromptGroup, cnAdvProTipGroup].forEach(g => {
+      if (g) g.style.display = "none";
+    });
+  }
+}
 
 function openAdminEditModal(uc) {
   const modal = document.getElementById("adminCaseEditModal");
@@ -3812,6 +4501,19 @@ function openAdminEditModal(uc) {
   form.reset();
 
   const idInput = document.getElementById("formCaseId");
+
+  const isAssist = appState.isAssist === true;
+  document.getElementById("btnAdminFormSave").style.display = isAssist ? "none" : "block";
+  document.getElementById("btnAdminFormGemini").style.display = isAssist ? "none" : "flex";
+
+  const inputs = form.querySelectorAll("input, select, textarea");
+  inputs.forEach(input => {
+    if (input.id === "formCaseId" && uc) {
+      input.disabled = true;
+    } else {
+      input.disabled = isAssist;
+    }
+  });
 
   if (uc) {
     // EDIT MODE
@@ -3895,12 +4597,56 @@ function openAdminEditModal(uc) {
     document.querySelectorAll("input[name='formFeatures']").forEach(b => b.checked = false);
     document.querySelectorAll("input[name='formConnectors']").forEach(b => b.checked = false);
     document.querySelectorAll("input[name='formLevel']").forEach(b => b.checked = false);
+
+    // Clear all form text inputs
+    document.getElementById("formCaseCategory").value = "academic";
+    document.getElementById("formCaseTitle").value = "";
+    document.getElementById("formCaseRole").value = "";
+    document.getElementById("formCaseSummary").value = "";
+    document.getElementById("formCaseSteps").value = "";
+    document.getElementById("formCasePrompt").value = "";
+    document.getElementById("formCaseProTip").value = "";
+    document.getElementById("formCaseAdvancedSteps").value = "";
+    document.getElementById("formCaseAdvancedPrompt").value = "";
+    document.getElementById("formCaseAdvancedProTip").value = "";
+    
+    // Clear all translation inputs
+    document.getElementById("formTransZhtwTitle").value = "";
+    document.getElementById("formTransZhtwSummary").value = "";
+    document.getElementById("formTransZhtwSteps").value = "";
+    document.getElementById("formTransZhtwPrompt").value = "";
+    document.getElementById("formTransZhtwProTip").value = "";
+    document.getElementById("formTransZhtwAdvancedSteps").value = "";
+    document.getElementById("formTransZhtwAdvancedPrompt").value = "";
+    document.getElementById("formTransZhtwAdvancedProTip").value = "";
+
+    document.getElementById("formTransZhcnTitle").value = "";
+    document.getElementById("formTransZhcnSummary").value = "";
+    document.getElementById("formTransZhcnSteps").value = "";
+    document.getElementById("formTransZhcnPrompt").value = "";
+    document.getElementById("formTransZhcnProTip").value = "";
+    document.getElementById("formTransZhcnAdvancedSteps").value = "";
+    document.getElementById("formTransZhcnAdvancedPrompt").value = "";
+    document.getElementById("formTransZhcnAdvancedProTip").value = "";
   }
 
+  // Handle conditional displaying of standard/advanced prompt fields
+  const isDualMode = !!(uc && Array.isArray(uc.connectors) && uc.connectors.length > 0 && uc.connectorEssential === false);
+  const dualCheckbox = document.getElementById("formCaseDualMode");
+  if (dualCheckbox) {
+    dualCheckbox.checked = isDualMode;
+    dualCheckbox.onchange = (e) => toggleFormDualModeFields(e.target.checked);
+  }
+
+  toggleFormDualModeFields(isDualMode);
   modal.classList.add("active");
 }
 
 async function saveAdminUseCase() {
+  if (appState.isAssist) {
+    alert("Administrative assistants are not permitted to save or modify templates.");
+    return;
+  }
   const feedback = document.getElementById("adminFormFeedback");
   feedback.style.display = "none";
 
@@ -3977,8 +4723,11 @@ async function saveAdminUseCase() {
     }
   };
 
+  const isDualMode = document.getElementById("formCaseDualMode").checked;
+  const connectorGuide = { connectorEssential: !isDualMode };
+
   const payload = {
-    id, category, title, role, summary, features, connectors, level, steps, prompt, proTip, translations
+    id, category, title, role, summary, features, connectors, level, steps, prompt, proTip, connectorGuide, translations
   };
 
   try {
@@ -4025,5 +4774,492 @@ async function deleteAdminUseCase(id) {
     }
   }
 }
+
+// ==========================================
+// AI-Assisted Playbook Drafting & Diff Review (Vertex AI Gemini Integration)
+// ==========================================
+async function triggerGeminiPlaybookGeneration() {
+  const btn = document.getElementById("btnAdminFormGemini");
+  const feedback = document.getElementById("adminFormFeedback");
+  
+  if (feedback) {
+    feedback.style.display = "none";
+    feedback.textContent = "";
+  }
+
+  const title = document.getElementById("formCaseTitle").value.trim();
+  const instructionEl = document.getElementById("formCaseGeminiInstruction");
+  const instruction = instructionEl ? instructionEl.value.trim() : "";
+
+  if (!title && !instruction) {
+    if (feedback) {
+      feedback.style.display = "block";
+      feedback.textContent = "Please specify either a playbook title or custom instructions so Gemini can draft relevant content.";
+      feedback.scrollIntoView({ behavior: 'smooth' });
+    }
+    return;
+  }
+
+  // Gather current inputs
+  const category = document.getElementById("formCaseCategory").value;
+  const role = document.getElementById("formCaseRole").value.trim() || "Lecturer";
+  const isDualMode = document.getElementById("formCaseDualMode").checked;
+
+  const features = [];
+  document.querySelectorAll("input[name='formFeatures']:checked").forEach(b => features.push(b.value));
+  
+  const connectors = [];
+  document.querySelectorAll("input[name='formConnectors']:checked").forEach(b => connectors.push(b.value));
+
+  const level = [];
+  document.querySelectorAll("input[name='formLevel']:checked").forEach(b => level.push(b.value));
+
+  // Activate dynamic Gemini generating loader overlay
+  const loader = document.getElementById("geminiLoadingOverlay");
+  if (loader) {
+    const lang = appState.activeLanguage || "en";
+    const genLabel = document.getElementById("adminFormLabelGenerating");
+    const genDesc = document.getElementById("adminFormLabelGeneratingDesc");
+    if (genLabel && genDesc) {
+      if (lang === "zh-TW") {
+        genLabel.textContent = "Gemini 正在生成學習案例中...";
+        genDesc.textContent = "正在即時優化導引、提示詞與繁體中文本地化資料。";
+      } else if (lang === "zh-CN") {
+        genLabel.textContent = "Gemini 正在生成学习案例中...";
+        genDesc.textContent = "正在即时优化指引、提示词与简体中文本地化数据。";
+      } else {
+        genLabel.textContent = "Gemini is drafting playbook...";
+        genDesc.textContent = "Optimizing guidelines, prompts, and localizations in real-time.";
+      }
+    }
+    loader.classList.add("active");
+  }
+
+  // Change button state
+  const originalBtnHtml = btn.innerHTML;
+  btn.disabled = true;
+  btn.style.opacity = "0.7";
+  btn.innerHTML = `<span class="material-symbols-outlined" style="font-size: 16px; animation: spin 1s linear infinite;">autorenew</span> <span>Generating...</span>`;
+
+  try {
+    const res = await fetch('/api/admin/generate-gemini', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: editingUseCaseId, // null if creation
+        title,
+        category,
+        features,
+        connectors,
+        role,
+        level,
+        isDualMode,
+        instruction
+      })
+    });
+
+    const data = res.ok ? await res.json() : null;
+    if (!data || !data.success) {
+      const errMsg = (data && data.error) ? data.error : "Failed to generate content from Gemini.";
+      if (feedback) {
+        feedback.style.display = "block";
+        feedback.textContent = errMsg;
+        feedback.scrollIntoView({ behavior: 'smooth' });
+      }
+      return;
+    }
+
+    const aiRes = data.result;
+
+    // Successful generation: clear the instruction field
+    if (instructionEl) {
+      instructionEl.value = "";
+    }
+
+    if (!editingUseCaseId) {
+      // CREATION MODE: Apply suggestions directly!
+      applyGeminiSuggestions(aiRes, isDualMode);
+      showToast("Gemini has successfully drafted your new playbook!");
+    } else {
+      // EDITING MODE: Show Side-by-Side Diff modal!
+      showDiffViewer(aiRes, isDualMode);
+    }
+
+  } catch (err) {
+    console.error("Gemini generation error:", err);
+    if (feedback) {
+      feedback.style.display = "block";
+      feedback.textContent = "An error occurred during Gemini AI drafting: " + err.message;
+      feedback.scrollIntoView({ behavior: 'smooth' });
+    }
+  } finally {
+    if (loader) {
+      loader.classList.remove("active");
+    }
+    btn.disabled = false;
+    btn.style.opacity = "1";
+    btn.innerHTML = originalBtnHtml;
+  }
+}
+
+function applyGeminiSuggestions(aiRes, isDualMode) {
+  // English (en)
+  const en = aiRes.en || {};
+  if (en.title) {
+    document.getElementById("formCaseTitle").value = en.title;
+  }
+  if (aiRes.category) {
+    document.getElementById("formCaseCategory").value = aiRes.category;
+  }
+  if (aiRes.role) {
+    document.getElementById("formCaseRole").value = aiRes.role;
+  }
+  if (aiRes.id && !editingUseCaseId) {
+    document.getElementById("formCaseId").value = aiRes.id;
+  }
+
+  document.getElementById("formCaseSummary").value = en.summary || "";
+  
+  if (isDualMode) {
+    const advSteps = Array.isArray(en.advancedSteps) ? en.advancedSteps : [];
+    document.getElementById("formCaseAdvancedSteps").value = advSteps.join("\n");
+    document.getElementById("formCaseAdvancedPrompt").value = en.advancedPrompt || "";
+    document.getElementById("formCaseAdvancedProTip").value = en.advancedProTip || "";
+  } else {
+    const steps = Array.isArray(en.steps) ? en.steps : [];
+    document.getElementById("formCaseSteps").value = steps.join("\n");
+    document.getElementById("formCasePrompt").value = en.prompt || "";
+    document.getElementById("formCaseProTip").value = en.proTip || "";
+  }
+
+  // Traditional Chinese (zh-TW)
+  const zhtw = aiRes["zh-TW"] || {};
+  document.getElementById("formTransZhtwTitle").value = zhtw.title || document.getElementById("formCaseTitle").value;
+  document.getElementById("formTransZhtwSummary").value = zhtw.summary || "";
+  
+  const twSteps = Array.isArray(zhtw.steps) ? zhtw.steps : [];
+  document.getElementById("formTransZhtwSteps").value = twSteps.join("\n");
+  document.getElementById("formTransZhtwPrompt").value = zhtw.prompt || "";
+  document.getElementById("formTransZhtwProTip").value = zhtw.proTip || "";
+
+  const twAdvSteps = Array.isArray(zhtw.advancedSteps) ? zhtw.advancedSteps : [];
+  document.getElementById("formTransZhtwAdvancedSteps").value = twAdvSteps.join("\n");
+  document.getElementById("formTransZhtwAdvancedPrompt").value = zhtw.advancedPrompt || "";
+  document.getElementById("formTransZhtwAdvancedProTip").value = zhtw.advancedProTip || "";
+
+  // Simplified Chinese (zh-CN)
+  const zhcn = aiRes["zh-CN"] || {};
+  document.getElementById("formTransZhcnTitle").value = zhcn.title || document.getElementById("formCaseTitle").value;
+  document.getElementById("formTransZhcnSummary").value = zhcn.summary || "";
+
+  const cnSteps = Array.isArray(zhcn.steps) ? zhcn.steps : [];
+  document.getElementById("formTransZhcnSteps").value = cnSteps.join("\n");
+  document.getElementById("formTransZhcnPrompt").value = zhcn.prompt || "";
+  document.getElementById("formTransZhcnProTip").value = zhcn.proTip || "";
+
+  const cnAdvSteps = Array.isArray(zhcn.advancedSteps) ? zhcn.advancedSteps : [];
+  document.getElementById("formTransZhcnAdvancedSteps").value = cnAdvSteps.join("\n");
+  document.getElementById("formTransZhcnAdvancedPrompt").value = zhcn.advancedPrompt || "";
+  document.getElementById("formTransZhcnAdvancedProTip").value = zhcn.advancedProTip || "";
+}
+
+function showDiffViewer(aiRes, isDualMode) {
+  const modal = document.getElementById("adminDiffViewerModal");
+  const scrollContainer = document.getElementById("adminDiffScrollContainer");
+  if (!modal || !scrollContainer) return;
+  
+  scrollContainer.innerHTML = "";
+
+  // Compile list of comparison elements
+  const diffItems = [];
+
+  // English Summary
+  diffItems.push({
+    label: "English Summary Description",
+    current: document.getElementById("formCaseSummary").value,
+    proposed: aiRes.en?.summary || ""
+  });
+
+  if (isDualMode) {
+    // English Advanced Steps
+    diffItems.push({
+      label: "English Advanced Steps (Active-Integration Mode)",
+      current: document.getElementById("formCaseAdvancedSteps").value,
+      proposed: Array.isArray(aiRes.en?.advancedSteps) ? aiRes.en.advancedSteps.join("\n") : ""
+    });
+    // English Advanced Prompt
+    diffItems.push({
+      label: "English Advanced Prompt (Active-Integration Mode)",
+      current: document.getElementById("formCaseAdvancedPrompt").value,
+      proposed: aiRes.en?.advancedPrompt || ""
+    });
+    // English Advanced Pro Tip
+    diffItems.push({
+      label: "English Advanced Pro Tip (Active-Integration Mode)",
+      current: document.getElementById("formCaseAdvancedProTip").value,
+      proposed: aiRes.en?.advancedProTip || ""
+    });
+  } else {
+    // English Steps
+    diffItems.push({
+      label: "English Guide Steps",
+      current: document.getElementById("formCaseSteps").value,
+      proposed: Array.isArray(aiRes.en?.steps) ? aiRes.en.steps.join("\n") : ""
+    });
+    // English Prompt
+    diffItems.push({
+      label: "English Prompt Instruction",
+      current: document.getElementById("formCasePrompt").value,
+      proposed: aiRes.en?.prompt || ""
+    });
+    // English Pro Tip
+    diffItems.push({
+      label: "English Pro Tip",
+      current: document.getElementById("formCaseProTip").value,
+      proposed: aiRes.en?.proTip || ""
+    });
+  }
+
+  // Traditional Chinese Translations
+  diffItems.push({
+    label: "Traditional Chinese Translated Title",
+    current: document.getElementById("formTransZhtwTitle").value,
+    proposed: aiRes["zh-TW"]?.title || document.getElementById("formCaseTitle").value
+  });
+  diffItems.push({
+    label: "Traditional Chinese Translated Summary",
+    current: document.getElementById("formTransZhtwSummary").value,
+    proposed: aiRes["zh-TW"]?.summary || ""
+  });
+
+  if (isDualMode) {
+    diffItems.push({
+      label: "Traditional Chinese Advanced Steps",
+      current: document.getElementById("formTransZhtwAdvancedSteps").value,
+      proposed: Array.isArray(aiRes["zh-TW"]?.advancedSteps) ? aiRes["zh-TW"].advancedSteps.join("\n") : ""
+    });
+    diffItems.push({
+      label: "Traditional Chinese Advanced Prompt",
+      current: document.getElementById("formTransZhtwAdvancedPrompt").value,
+      proposed: aiRes["zh-TW"]?.advancedPrompt || ""
+    });
+    diffItems.push({
+      label: "Traditional Chinese Advanced Pro Tip",
+      current: document.getElementById("formTransZhtwAdvancedProTip").value,
+      proposed: aiRes["zh-TW"]?.advancedProTip || ""
+    });
+  } else {
+    diffItems.push({
+      label: "Traditional Chinese Steps",
+      current: document.getElementById("formTransZhtwSteps").value,
+      proposed: Array.isArray(aiRes["zh-TW"]?.steps) ? aiRes["zh-TW"].steps.join("\n") : ""
+    });
+    diffItems.push({
+      label: "Traditional Chinese Prompt",
+      current: document.getElementById("formTransZhtwPrompt").value,
+      proposed: aiRes["zh-TW"]?.prompt || ""
+    });
+    diffItems.push({
+      label: "Traditional Chinese Pro Tip",
+      current: document.getElementById("formTransZhtwProTip").value,
+      proposed: aiRes["zh-TW"]?.proTip || ""
+    });
+  }
+
+  // Simplified Chinese Translations
+  diffItems.push({
+    label: "Simplified Chinese Translated Title",
+    current: document.getElementById("formTransZhcnTitle").value,
+    proposed: aiRes["zh-CN"]?.title || document.getElementById("formCaseTitle").value
+  });
+  diffItems.push({
+    label: "Simplified Chinese Translated Summary",
+    current: document.getElementById("formTransZhcnSummary").value,
+    proposed: aiRes["zh-CN"]?.summary || ""
+  });
+
+  if (isDualMode) {
+    diffItems.push({
+      label: "Simplified Chinese Advanced Steps",
+      current: document.getElementById("formTransZhcnAdvancedSteps").value,
+      proposed: Array.isArray(aiRes["zh-CN"]?.advancedSteps) ? aiRes["zh-CN"].advancedSteps.join("\n") : ""
+    });
+    diffItems.push({
+      label: "Simplified Chinese Advanced Prompt",
+      current: document.getElementById("formTransZhcnAdvancedPrompt").value,
+      proposed: aiRes["zh-CN"]?.advancedPrompt || ""
+    });
+    diffItems.push({
+      label: "Simplified Chinese Advanced Pro Tip",
+      current: document.getElementById("formTransZhcnAdvancedProTip").value,
+      proposed: aiRes["zh-CN"]?.advancedProTip || ""
+    });
+  } else {
+    diffItems.push({
+      label: "Simplified Chinese Steps",
+      current: document.getElementById("formTransZhcnSteps").value,
+      proposed: Array.isArray(aiRes["zh-CN"]?.steps) ? aiRes["zh-CN"].steps.join("\n") : ""
+    });
+    diffItems.push({
+      label: "Simplified Chinese Prompt",
+      current: document.getElementById("formTransZhcnPrompt").value,
+      proposed: aiRes["zh-CN"]?.prompt || ""
+    });
+    diffItems.push({
+      label: "Simplified Chinese Pro Tip",
+      current: document.getElementById("formTransZhcnProTip").value,
+      proposed: aiRes["zh-CN"]?.proTip || ""
+    });
+  }
+
+  // Render comparative items
+  diffItems.forEach(item => {
+    // Only display if at least one of the sides is not empty, or they differ
+    if (!item.current && !item.proposed) return;
+    
+    const isDifferent = item.current.trim() !== item.proposed.trim();
+
+    const section = document.createElement("div");
+    section.style.display = "flex";
+    section.style.flexDirection = "column";
+    section.style.gap = "6px";
+    section.style.borderBottom = "1px solid var(--border-glass)";
+    section.style.paddingBottom = "12px";
+
+    section.innerHTML = `
+      <div style="font-size: 11px; font-weight: 700; color: ${isDifferent ? 'var(--color-primary)' : 'var(--text-secondary)'}; display: flex; align-items: center; gap: 4px;">
+        <span class="material-symbols-outlined" style="font-size: 14px;">${isDifferent ? 'pending_actions' : 'check_circle'}</span>
+        <span>${item.label}</span>
+        ${isDifferent ? '<span style="font-size: 9px; padding: 2px 6px; border-radius: 4px; background: rgba(79, 70, 229, 0.15); color: var(--color-primary); margin-left: auto;">OPTIMIZED SUGGESTION AVAILABLE</span>' : ''}
+      </div>
+      <div style="display: flex; flex-direction: column; border: 1px solid ${isDifferent ? 'var(--color-primary)' : 'var(--border-glass)'}; border-radius: 8px; overflow: hidden; background: var(--bg-dark-surface);">
+        ${renderLineDiff(item.current, item.proposed)}
+      </div>
+    `;
+    scrollContainer.appendChild(section);
+  });
+
+  // Bind Accept / Reject buttons
+  document.getElementById("btnDiffAccept").onclick = () => {
+    applyGeminiSuggestions(aiRes, isDualMode);
+    modal.classList.remove("active");
+    setTimeout(() => {
+      modal.style.display = "none";
+    }, 300);
+    showToast("Gemini suggestions applied successfully to form!");
+  };
+
+  document.getElementById("btnDiffReject").onclick = () => {
+    modal.classList.remove("active");
+    setTimeout(() => {
+      modal.style.display = "none";
+    }, 300);
+    showToast("Gemini suggestions declined. Kept current version.");
+  };
+
+  document.getElementById("adminDiffViewerClose").onclick = () => {
+    modal.classList.remove("active");
+    setTimeout(() => {
+      modal.style.display = "none";
+    }, 300);
+  };
+
+  modal.style.display = "flex";
+  setTimeout(() => {
+    modal.classList.add("active");
+  }, 10);
+}
+
+// PREMIUM LCS SPLIT LINE-BY-LINE ALIGNMENT DIFF ENGINE
+function renderLineDiff(oldStr, newStr) {
+  const lines1 = (oldStr || "").split("\n");
+  const lines2 = (newStr || "").split("\n");
+  
+  const m = lines1.length;
+  const n = lines2.length;
+  
+  // DP table for Longest Common Subsequence
+  const dp = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      if (lines1[i - 1].trim() === lines2[j - 1].trim()) {
+        dp[i][j] = dp[i - 1][j - 1] + 1;
+      } else {
+        dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
+      }
+    }
+  }
+  
+  // Traceback to align
+  let i = m, j = n;
+  const aligned = [];
+  
+  while (i > 0 || j > 0) {
+    if (i > 0 && j > 0 && lines1[i - 1].trim() === lines2[j - 1].trim()) {
+      aligned.unshift({ op: "equal", left: lines1[i - 1], right: lines2[j - 1] });
+      i--;
+      j--;
+    } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
+      aligned.unshift({ op: "insert", left: "", right: lines2[j - 1] });
+      j--;
+    } else {
+      aligned.unshift({ op: "delete", left: lines1[i - 1], right: "" });
+      i--;
+    }
+  }
+  
+  let html = "";
+  aligned.forEach((line, idx) => {
+    const isLast = idx === aligned.length - 1;
+    const borderStyle = isLast ? "" : "border-bottom: 1px solid var(--border-glass);";
+    
+    if (line.op === "equal") {
+      html += `
+        <div style="display: flex; min-height: 24px; ${borderStyle}">
+          <div style="flex: 0 0 50%; width: 50%; padding: 6px 16px; font-family: monospace; font-size: 11px; white-space: pre-wrap; word-break: break-all; color: var(--text-secondary); background: transparent; border-right: 1px solid var(--border-glass); line-height: 1.5; box-sizing: border-box;">
+            ${escapeHtmlDiff(line.left)}
+          </div>
+          <div style="flex: 0 0 50%; width: 50%; padding: 6px 16px; font-family: monospace; font-size: 11px; white-space: pre-wrap; word-break: break-all; color: var(--text-primary); background: transparent; line-height: 1.5; box-sizing: border-box;">
+            ${escapeHtmlDiff(line.right)}
+          </div>
+        </div>
+      `;
+    } else if (line.op === "insert") {
+      html += `
+        <div style="display: flex; min-height: 24px; ${borderStyle} background: rgba(34, 197, 94, 0.08);">
+          <div style="flex: 0 0 50%; width: 50%; padding: 6px 16px; font-family: monospace; font-size: 11px; color: transparent; background: transparent; user-select: none; border-right: 1px solid var(--border-glass); line-height: 1.5; box-sizing: border-box;">
+            &nbsp;
+          </div>
+          <div style="flex: 0 0 50%; width: 50%; padding: 6px 16px; font-family: monospace; font-size: 11px; white-space: pre-wrap; word-break: break-all; color: #22c55e; font-weight: 600; line-height: 1.5; box-sizing: border-box;">
+            + ${escapeHtmlDiff(line.right)}
+          </div>
+        </div>
+      `;
+    } else if (line.op === "delete") {
+      html += `
+        <div style="display: flex; min-height: 24px; ${borderStyle} background: rgba(239, 68, 68, 0.08);">
+          <div style="flex: 0 0 50%; width: 50%; padding: 6px 16px; font-family: monospace; font-size: 11px; white-space: pre-wrap; word-break: break-all; color: #ef4444; text-decoration: line-through; font-weight: 600; border-right: 1px solid var(--border-glass); line-height: 1.5; box-sizing: border-box;">
+            - ${escapeHtmlDiff(line.left)}
+          </div>
+          <div style="flex: 0 0 50%; width: 50%; padding: 6px 16px; font-family: monospace; font-size: 11px; color: transparent; background: transparent; user-select: none; line-height: 1.5; box-sizing: border-box;">
+            &nbsp;
+          </div>
+        </div>
+      `;
+    }
+  });
+  
+  return html;
+}
+
+function escapeHtmlDiff(str) {
+  return (str || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 
 

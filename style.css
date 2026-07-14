@@ -253,6 +253,7 @@ p {
   position: sticky;
   top: 0;
   z-index: 50;
+  overflow-y: auto;
 }
 
 .sidebar-brand {
@@ -939,6 +940,7 @@ input:checked + .slider:before {
 }
 
 .modal-content-card {
+  position: relative;
   width: 100%;
   max-width: 740px;
   height: 85vh;
@@ -1402,5 +1404,112 @@ textarea:focus::placeholder {
   color: transparent !important;
   opacity: 0 !important;
   transition: color 0.15s ease, opacity 0.15s ease;
+}
+
+/* Gemini Generating Loader & Overlay */
+.gemini-loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(10, 10, 12, 0.85);
+  backdrop-filter: blur(12px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  border-radius: 4px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.gemini-loading-overlay.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.gemini-loader-circle {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gemini-loader-sparkle {
+  font-size: 42px;
+  background: linear-gradient(135deg, #a78bfa 0%, #6366f1 50%, #3b82f6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: pulse-sparkle 2s infinite ease-in-out, spin-slow 12s infinite linear;
+}
+
+.gemini-loader-ring {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border: 2px solid transparent;
+  border-top-color: #818cf8;
+  border-bottom-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin-fast 1.5s infinite linear;
+}
+
+.gemini-loader-ring-outer {
+  position: absolute;
+  width: 120%;
+  height: 120%;
+  border: 1px solid transparent;
+  border-left-color: rgba(167, 139, 250, 0.4);
+  border-right-color: rgba(59, 130, 246, 0.4);
+  border-radius: 50%;
+  animation: spin-reverse 3s infinite linear;
+}
+
+.gemini-loader-bar {
+  width: 240px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  margin-top: 24px;
+  overflow: hidden;
+  position: relative;
+}
+
+.gemini-loader-bar-fill {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6, #818cf8, #a78bfa, #3b82f6);
+  background-size: 200% 100%;
+  animation: shimmer-bar 1.5s infinite linear;
+}
+
+@keyframes pulse-sparkle {
+  0%, 100% { transform: scale(0.9); opacity: 0.8; filter: drop-shadow(0 0 4px rgba(129, 140, 248, 0.3)); }
+  50% { transform: scale(1.1); opacity: 1; filter: drop-shadow(0 0 15px rgba(129, 140, 248, 0.8)); }
+}
+
+@keyframes spin-slow {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes spin-fast {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes spin-reverse {
+  0% { transform: rotate(360deg); }
+  100% { transform: rotate(0deg); }
+}
+
+@keyframes shimmer-bar {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 

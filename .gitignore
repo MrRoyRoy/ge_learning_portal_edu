@@ -1,2 +1,6 @@
 .DS_Store
 *.zip
+gp
+*.pdf
+test-*.js
+find-working-model.js
