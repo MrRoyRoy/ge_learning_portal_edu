@@ -169,26 +169,24 @@ gcloud run deploy your-service --source . --region your-region --allow-unauthent
 
 ---
 
-######### 7. App State & Progress
+########## 7. App State & Progress
  
 #### Accomplished Tasks (Latest Session Milestone)
 * **Horizontal Timeline Vertical Spacing Adjustments (100% Complete):**
-  * Shifted the Track 1 baseline coordinates, horizontal connector lines, alternate joint pins, and floating cards downward inside an expanded `290px` container.
-  * Increased vertical spacing from `22px` to a generous **`62px` clearance gap** below the Section Title to prevent visual crowding.
-* **Administrative Role Localizations (100% Complete):**
-  * Added missing dictionaries translations for `Program Leader` ("Program Leader / Department Head") and `Dean` ("Dean / Educational Leader").
-  * Successfully localized both roles across English (`en`), Traditional Chinese (`zh-TW`), and Simplified Chinese (`zh-CN`) schemas.
-* **Persistent Universal Feedback Widget (100% Complete):**
-  * Created a database-backed, persistent feedback submission pipeline supported by dynamic SQLite/PostgreSQL tables.
-  * Styled and positioned a premium linear-gradient, glassmorphism floating feedback trigger button at the bottom-right corner of all user pages.
-  * Formulated secure REST API endpoints (`POST /api/feedbacks`, `GET /api/feedbacks`, and `POST /api/feedbacks/delete`) bound implicitly to active user email profiles.
-* **Exclusive Super-Admin Feedbacks Review Console (100% Complete):**
-  * Built a fourth navigation tab ("User Feedbacks") inside the Admin Portal sidebar, strictly restricted and displayed *only* to the super-admin account (`edu_portal_s_admin`).
-  * Structured interactive data lists with responsive cross/delete buttons to delete and cross-off feedback entries.
-* **Root-level Playbook Directory Cleanups (100% Complete):**
-  * Organized workspace root environment by moving 5 deprecated developmental testing scripts (`test-endpoint.js`, `test-fast.js`, `test-gemini.js`, `test-global.js`, and `find-working-model.js`) into the `/scratch` subdirectory.
+  * Shifted the Track 1 baseline coordinates, horizontal connector lines, alternate joint pins, and floating cards downward inside an expanded `290px` container with a generous **`62px` clearance gap** below the Section Title.
+* **Administrative Role Localizations & Milestones (100% Complete):**
+  * Added missing dictionaries translations for `Program Leader` and `Dean` across all three locale schemas.
+  * Formulated and integrated rich, high-fidelity milestone checklists for both academic administrative roles, supporting dual-language rendering (English and Traditional Chinese).
+* **Feedback Modal Click Handler Debug (100% Complete):**
+  * Patched the modal open/close trigger handler to toggle the core design system's `.active` transition class, making the form fully visible and interactive.
+* **Navigation Header & Select Option Simplification (100% Complete):**
+  * Simplified welcome headers inside the navigation bar to display only the dynamic role text or "Admin View", cleaning up excess template branding.
+  * Replaced "+ Assign Playbook to Phase" placeholder label inside the timeline details dropdown with standard, minimal select prompts.
+* **Workspace Typo Sanitizations (100% Complete):**
+  * Corrected all "CE" feature typos to "GE" feature.
+  * Re-deployed the entire workspace container under the newly corrected Cloud Run service: **`your-service`**.
 
 ### Next Steps & Continuous Polish
-1. **Institutional Telemetry Monitoring:** Evaluate administrative analytic dashboards to gauge actual workspace adoption and engagement rates across various user cohorts.
-2. **Review User Feedback Submissions**: Routinely check user suggestions inside the new feedback dashboard to adjust playbooks and checklists.
+1. **Domain Access Audits:** Work with administrators to verify active organization policy bounds on the newly deployed service.
+2. **Review User Feedback Submissions**: Routinely check user suggestions inside the super-admin feedback dashboard.
 
