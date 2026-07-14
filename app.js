@@ -1899,7 +1899,7 @@ function updateUILanguage() {
 
   // Dashboard Welcome Msg
   if (appState.isAdmin === true) {
-    let adminTitle = "ADMIN SIMULATION VIEW";
+    let adminTitle = "Admin View";
     let adminSub = "Reviewing all playbooks across all roles and levels with full management permissions.";
     if (lang === "zh-TW") {
       adminSub = "正在以完整管理權限審查所有角色與學制層級的學習案例。";
@@ -2112,13 +2112,13 @@ function updateSidebarContextUI() {
   const t = uiTranslations[lang];
 
   if (appState.isAdmin === true) {
-    document.title = "ADMIN SIMULATION VIEW";
+    document.title = "Admin View";
 
     const navWelcomeEl = document.getElementById("navbarWelcomeText");
-    if (navWelcomeEl) navWelcomeEl.textContent = "ADMIN SIMULATION VIEW";
+    if (navWelcomeEl) navWelcomeEl.textContent = "Admin View";
 
     const sidebarProfileTitle = document.getElementById("sidebarProfileTitle") || document.getElementById("titleContextProfile");
-    if (sidebarProfileTitle) sidebarProfileTitle.textContent = "ADMIN SIMULATION VIEW";
+    if (sidebarProfileTitle) sidebarProfileTitle.textContent = "Admin View";
 
     const roleEl = document.getElementById("sidebarRole") || document.getElementById("profileRoleName");
     if (roleEl) roleEl.textContent = "Administrator";
@@ -2145,7 +2145,7 @@ function updateSidebarContextUI() {
 
     // Update navbar welcome text
     const navWelcomeEl = document.getElementById("navbarWelcomeText");
-    if (navWelcomeEl) navWelcomeEl.textContent = `Edu GE Adoption Portal • ${roleText}`;
+    if (navWelcomeEl) navWelcomeEl.textContent = roleText;
   }
 }
 
@@ -6150,7 +6150,7 @@ function renderRoadmapDashboardDetails() {
     : `${deployedCount} of ${rolePlaybookCount} playbooks deployed (${progressPercent}%)`;
 
   // Compile strictly filtered dropdown selection option list
-  let dropdownOptionsHtml = `<option value="">${isZh ? '+ 關聯新場景案例到此階段' : '+ Assign Playbook to Phase...'}</option>`;
+  let dropdownOptionsHtml = `<option value="">${isZh ? '選擇學習案例...' : 'Select a Playbook...'}</option>`;
   
   const sortedUseCases = [...useCasesDb]
     .filter(uc => isUsecaseRelatedToRole(uc, role))
