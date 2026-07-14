@@ -5684,6 +5684,58 @@ const roleVerificationCheckpoints = {
       { id: "sao_t2_1", text: "Analyze co-curricular workshop and club certificate completion stats", textZh: "統計並分析通識教育工作坊與社團幹部認證完成率" },
       { id: "sao_t2_2", text: "Maintain custom student mental wellness supportive bots", textZh: "維護並微調客製化學生生活支持與暖心輔導 AI 機器人" }
     ]
+  },
+  "Program Leader": {
+    day0: [
+      { id: "pl_d0_1", text: "Confirm departmental platform licensing quotas and supervisor identities", textZh: "確認系所平台授權配額與管理人員識別" },
+      { id: "pl_d0_2", text: "Initialize curriculum templates and syllabus guidelines for the department", textZh: "初始化系所課程模板與大綱指引" }
+    ],
+    pre: [
+      { id: "pl_pre_1", text: "Draft course curriculum guidelines and alignment checklists inside Canvas Mode", textZh: "在 Canvas Mode 中撰寫課程大綱指引與對齊清單" },
+      { id: "pl_pre_2", text: "Organize teacher training workshops for departmental AI tools adoptions", textZh: "組織系所教師 AI 工具應用導入訓練工作坊" }
+    ],
+    sem1: [
+      { id: "pl_sem1_1", text: "Approve individual course playbook configurations and LMS links", textZh: "審查並核准個別課程之 AI 案例配置與 LMS 連結" },
+      { id: "pl_sem1_2", text: "Distribute student AI-use integrity manuals across all courses", textZh: "向所有學位課程分發學術誠信與 AI 引用規範" }
+    ],
+    mid: [
+      { id: "pl_mid_1", text: "Review mid-term course evaluation feedback and academic satisfaction logs", textZh: "審查系所期中教學意見調查與 AI 學習滿意度指標" },
+      { id: "pl_mid_2", text: "Audit alignment of course delivery with departmental guidelines", textZh: "查核課程教學進度與系所 AI 導入指引之對齊情況" }
+    ],
+    end: [
+      { id: "pl_end_1", text: "Review student performance data and compile course grade statistics", textZh: "審查學生學習表現數據並分析期末成績統計" },
+      { id: "pl_end_2", text: "Archive course portfolios and document successful adoption case-studies", textZh: "封存課程檔案並記錄成功的 AI 導入與應用案例" }
+    ],
+    track2: [
+      { id: "pl_t2_1", text: "Optimize department curriculum structure for future semesters", textZh: "優化下學期系所課程結構與教學大綱" },
+      { id: "pl_t2_2", text: "Facilitate cross-disciplinary research and teaching resource sharing", textZh: "促進跨學科 AI 協作、研究與教研資源共享" }
+    ]
+  },
+  "Dean": {
+    day0: [
+      { id: "dn_d0_1", text: "Establish college-wide strategic adoption indicators and data boundaries", textZh: "確立學院級 AI 戰略導入指標與數據合規邊界" },
+      { id: "dn_d0_2", text: "Confirm institutional budgets and verify funding lines are allocated", textZh: "確認學校專項經費與學院建設預算已核撥到位" }
+    ],
+    pre: [
+      { id: "dn_pre_1", text: "Draft college-wide strategic roadmap inside Gemini Canvas Mode", textZh: "在 Gemini Canvas Mode 中編寫學院 AI 發展戰略規劃" },
+      { id: "dn_pre_2", text: "Establish academic steering committees for quality assurance audits", textZh: "成立學術諮詢與審查委員會，推動教學質量保證" }
+    ],
+    sem1: [
+      { id: "dn_sem1_1", text: "Approve department adoption milestones and resource distribution schedules", textZh: "核定各學系之 AI 導入里程碑與軟硬體資源分配" },
+      { id: "dn_sem1_2", text: "Deliver college welcome address on educational innovation and AI ethics", textZh: "發表關於教育創新、AI 倫理與未來學術願景之院長迎新致詞" }
+    ],
+    mid: [
+      { id: "dn_mid_1", text: "Review college-wide adoption telemetry dashboards and budget executions", textZh: "審查學院 AI 導入數據儀表板與期中預算執行進度" },
+      { id: "dn_mid_2", text: "Conduct inter-departmental progress reviews with Program Leaders", textZh: "與各系主任召開期中工作協調會，評估導入成效" }
+    ],
+    end: [
+      { id: "dn_end_1", text: "Receive academic audit reports and verify compliance with standards", textZh: "審閱學術審計報告，確保各項教學完全符合質量標準" },
+      { id: "dn_end_2", text: "Publish annual college education innovation reports and success stories", textZh: "發布學院年度教育創新成果報告與最佳實務案例" }
+    ],
+    track2: [
+      { id: "dn_t2_1", text: "Maintain and update strategic collaboration frameworks with enterprise partners", textZh: "維護並更新與企業夥伴之產學合作與策略聯盟框架" },
+      { id: "dn_t2_2", text: "Drive continuous faculty capacity building and research center setups", textZh: "持續推動教職員 AI 能力提升與教學研究中心建設" }
+    ]
   }
 };
 
@@ -5734,6 +5786,14 @@ function isUsecaseRelatedToRole(useCase, role) {
   // Student sees Student & club operations
   if (role === "Student") {
     return useCase.role === "Student" || useCase.category === "student";
+  }
+  // Program Leader has departmental supervisor capabilities
+  if (role === "Program Leader") {
+    return useCase.role === "Program Leader" || useCase.role === "Lecturer" || useCase.role === "TA" || useCase.category === "academic";
+  }
+  // Dean has college-wide strategic oversight capabilities (sees academic and operational)
+  if (role === "Dean") {
+    return useCase.role === "Dean" || useCase.role === "Program Leader" || useCase.role === "Lecturer" || useCase.role === "TA" || useCase.category === "academic" || useCase.category === "operational";
   }
   // Support roles see their exact roles
   return useCase.role === role;
@@ -6227,11 +6287,13 @@ window.initFeedbackSystem = function() {
 
   btn.addEventListener("click", () => {
     modal.style.display = "flex";
+    modal.classList.add("active");
     txtContent.value = "";
     txtContent.focus();
   });
 
   const hideModal = () => {
+    modal.classList.remove("active");
     modal.style.display = "none";
   };
 
@@ -6261,7 +6323,11 @@ window.handleFeedbackSubmit = async function(event) {
     const data = await res.json();
     if (data.success) {
       showToast(appState.activeLanguage === 'zh-TW' ? "感謝您的回饋！" : (appState.activeLanguage === 'zh-CN' ? "感谢您的反馈！" : "Feedback submitted successfully!"));
-      document.getElementById("feedbackSubmissionModal").style.display = "none";
+      const modal = document.getElementById("feedbackSubmissionModal");
+      if (modal) {
+        modal.classList.remove("active");
+        modal.style.display = "none";
+      }
     } else {
       alert(data.error || "Failed to submit feedback.");
     }
