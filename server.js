@@ -1019,6 +1019,12 @@ Please fully implement, customize, and prioritize these instructions above. Focu
     promptText += `
 
 Please output a raw JSON object containing full translation profiles for English ("en"), Traditional Chinese ("zh-TW"), and Simplified Chinese ("zh-CN").
+
+CRITICAL INSTRUCTION ON LANGUAGE CONSISTENCY:
+1. First, focus entirely on drafting the high-fidelity, comprehensive English profile ("en") based on the input parameters and custom instructions.
+2. Once the English profile ("en") is finalized, translate every single field and list item exactly 1-to-1 (preserving the exact meaning, paragraph layout, number of steps, tips, and guidelines) into Traditional Chinese ("zh-TW") and Simplified Chinese ("zh-CN").
+3. All translation profiles ("en", "zh-TW", "zh-CN") MUST be 100% semantically and structurally consistent (e.g. have the exact same step-by-step logic, features used, and pro-tips, just properly localized).
+
 The JSON object MUST EXACTLY follow this schema:
 {
   "id": "suggested_lowercase_kebab_case_id_matching_the_title",
@@ -1062,6 +1068,7 @@ Brand Guidelines & Localisation Boundaries:
 2. Never use the term "Gem" (always use "Agent"). Never use the term "Copilot".
 3. Avoid generic red/blue/green references. Ensure suggestions are premium and tailored for educational excellence.
 4. Output ONLY the raw JSON block. Do NOT surround it with markdown code blocks (such as \`\`\`json ... \`\`\`), HTML tags, or any other introductory or concluding commentary text.
+
 `;
 
     const response = await fetch(url, {
