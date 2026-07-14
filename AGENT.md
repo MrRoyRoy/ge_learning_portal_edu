@@ -188,9 +188,14 @@ gcloud run deploy edu-ce-learning-portal --source . --region asia-east2 --allow-
 * **Responsive Layout Fallbacks (100% Complete):**
   * View A gracefully switches to a chronological vertical stream layout on screen viewports <= 1024px.
   * View B collapses into a single-column block layout with the interactive SVG sticky sidebar flowing nicely.
+* **Reactive Role-Switching Integration (100% Complete):**
+  * Hooked `renderTimeline()` reactively into `handleOnboardingSubmit` and database-backed profile setup scripts. Switching active roles now instantly redraws custom verification checkpoints and filters playbooks in real-time.
+* **Git Version Synchronization (100% Complete):**
+  * Configured Git author properties and remote URL credentials. staged, committed, and successfully pushed the completed timeline features to GitHub repository (`MrRoyRoy/ge_learning_portal_edu`).
+* **Live Google Cloud Run Production Release (100% Complete):**
+  * Deployed the fully integrated application source successfully to live Cloud Run instancing (`edu-ce-learning-portal`) at [https://edu-ce-learning-portal-1069209637728.asia-east2.run.app](https://edu-ce-learning-portal-1069209637728.asia-east2.run.app).
 
 ### Next Steps & Continuous Polish
-1. **Git Synchronization:** Commit the completed redesign under Git profile "MrRoyRoy" and push to GitHub.
-2. **GCP Deployment:** Deploy version update to live Google Cloud Run via `gcloud run deploy`.
-3. **Institutional Telemetry Analysis:** Monitor admin database telemetry to gauge user interaction metrics.
+1. **Institutional Telemetry Monitoring:** Evaluate administrative analytic dashboards to gauge actual workspace adoption and engagement rates across various user cohorts.
+2. **Review Feedback Loops:** Check back with institutional leaders for custom playbooks or checkpoint adjustments.
 
