@@ -1722,7 +1722,7 @@ textarea:focus::placeholder {
 .timeline-track-block {
   position: relative;
   width: 100%;
-  height: 240px; /* Symmetrical height for UP and DOWN flags */
+  height: 260px; /* Symmetrical height for UP and DOWN flags */
   overflow: visible;
 }
 
@@ -1758,7 +1758,7 @@ textarea:focus::placeholder {
 .timeline-horizontal-track {
   position: absolute;
   left: 0;
-  top: 120px; /* Sits exactly in the center of the 240px container */
+  top: 150px; /* Shifted down to clear header space */
   width: 100%;
   height: 8px;
   background: rgba(0, 0, 0, 0.06);
@@ -1782,7 +1782,7 @@ textarea:focus::placeholder {
 /* Joint Nodes along track (Siblings of track, positioned at y = 120px) */
 .timeline-node-joint {
   position: absolute;
-  top: 120px; /* Placed exactly at the center baseline coordinate */
+  top: 150px; /* Shifted down to clear header space */
   transform: translate(-50%, -50%);
   width: 32px;
   height: 32px;
@@ -1850,14 +1850,14 @@ textarea:focus::placeholder {
 
 /* UP markers */
 .alternating-marker-pin.pin-up {
-  bottom: 120px; /* Starts exactly at center y = 120px and goes up */
-  height: 65px;
+  bottom: 110px; /* Starts exactly at center y = 150px (260px height container) */
+  height: 50px;
 }
 
 /* DOWN markers */
 .alternating-marker-pin.pin-down {
-  top: 120px; /* Starts exactly at center y = 120px and goes down */
-  height: 65px;
+  top: 150px; /* Starts exactly at center y = 150px */
+  height: 50px;
 }
 
 .timeline-node-joint.active ~ .alternating-marker-pin {
@@ -1890,12 +1890,12 @@ textarea:focus::placeholder {
 }
 
 .floating-schedule-flag.flag-up {
-  bottom: 185px; /* Sits cleanly above the 65px pin and the center line */
+  bottom: 160px; /* Sits cleanly above the 50px pin (90px top distance) */
   border-top: 4px solid var(--node-color) !important;
 }
 
 .floating-schedule-flag.flag-down {
-  top: 185px; /* Sits cleanly below the 65px pin and the center line */
+  top: 200px; /* Sits cleanly below the 50px pin (200px top distance) */
   border-bottom: 4px solid var(--node-color) !important;
 }
 
@@ -2017,7 +2017,7 @@ textarea:focus::placeholder {
   left: 20px;
   right: 48px; /* Leaves perfect space for the arrow */
   height: 12px;
-  background: rgba(0, 0, 0, 0.06);
+  background: transparent; /* No inner dark grey line */
   border-radius: 6px;
 }
 
