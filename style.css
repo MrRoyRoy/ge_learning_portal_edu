@@ -1357,44 +1357,197 @@ input:checked + .slider:before {
   color: #ffffff !important;
 }
 
-/* Mobile Responsiveness Guidelines */
+/* Mobile Responsiveness & Premium Sliding Drawer Sidebar */
+.sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(10, 10, 12, 0.6);
+  backdrop-filter: blur(8px);
+  z-index: 900;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar-overlay.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.mobile-menu-btn {
+  display: none !important;
+}
+
+#btnMobileSidebarClose {
+  display: none !important;
+}
+
+/* Premium LCS Diff Classes */
+.diff-row {
+  display: flex;
+  min-height: 24px;
+}
+.diff-cell-left {
+  flex: 0 0 50%;
+  width: 50%;
+  padding: 8px 16px;
+  font-family: monospace;
+  font-size: 11px;
+  white-space: pre-wrap;
+  word-break: break-all;
+  border-right: 1px solid var(--border-glass);
+  line-height: 1.5;
+  box-sizing: border-box;
+}
+.diff-cell-right {
+  flex: 0 0 50%;
+  width: 50%;
+  padding: 8px 16px;
+  font-family: monospace;
+  font-size: 11px;
+  white-space: pre-wrap;
+  word-break: break-all;
+  line-height: 1.5;
+  box-sizing: border-box;
+}
+
 @media (max-width: 1024px) {
   .app-container {
     flex-direction: column;
   }
-  .sidebar {
-    width: 100%;
-    height: auto;
-    border-right: none;
-    border-bottom: 1px solid var(--border-glass);
-    position: static;
-    padding: 24px;
+  
+  .mobile-menu-btn {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
   }
+
+  #btnMobileSidebarClose {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .sidebar {
+    position: fixed !important;
+    top: 0;
+    left: -320px; /* Slide completely out of viewport */
+    width: 290px;
+    height: 100vh !important;
+    z-index: 1000 !important;
+    box-shadow: 20px 0 45px rgba(0, 0, 0, 0.4);
+    transition: left 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    border-right: 1px solid var(--border-glass-focused);
+    background: var(--bg-sidebar) !important;
+    padding: 24px 20px !important;
+  }
+  
+  .sidebar.active {
+    left: 0 !important;
+  }
+
   .workspace {
-    height: auto;
-    overflow-y: visible;
+    width: 100% !important;
+    margin-left: 0 !important;
+    height: 100vh;
+    overflow-y: auto;
+  }
+  
+  .navbar {
+    padding: 16px 24px !important;
   }
 }
 
 @media (max-width: 768px) {
+  #navbarWelcomeText {
+    display: none !important;
+  }
+
   .navbar {
     flex-direction: column;
     height: auto;
-    padding: 20px;
+    padding: 14px 16px !important;
     gap: 12px;
   }
+
   .navbar-left {
     width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
+  
+  .search-wrapper {
+    flex: 1;
+    width: auto !important;
+  }
+
+  .navbar-right {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+    align-items: stretch !important;
+  }
+
+  .navbar-right .nav-button,
+  .navbar-right select {
+    width: 100% !important;
+    justify-content: center !important;
+    font-size: 11px !important;
+    padding: 0 8px !important;
+    height: 36px !important;
+    margin-left: 0 !important;
+  }
+  
+  /* Place language select and theme toggle as grid squares */
+  #btnThemeToggle {
+    grid-column: span 1;
+  }
+  #navLang {
+    grid-column: span 1;
+  }
+  #btnChangeContext {
+    grid-column: span 1;
+  }
+  #btnLogout {
+    grid-column: span 1;
+  }
+
   .content-area {
-    padding: 20px;
+    padding: 16px !important;
   }
+
   .cards-grid {
     grid-template-columns: 1fr;
   }
+
   .modal-content-card {
-    height: 95vh;
-    max-height: none;
+    height: 100vh !important;
+    max-height: none !important;
+    border-radius: 0 !important;
+  }
+  
+  .modal-header {
+    padding: 16px 20px !important;
+  }
+
+  /* Make diff row stack vertically on narrow phones */
+  .diff-row {
+    flex-direction: column !important;
+  }
+  .diff-cell-left {
+    flex: 1 0 100% !important;
+    width: 100% !important;
+    border-right: none !important;
+    border-bottom: 1px dashed var(--border-glass) !important;
+  }
+  .diff-cell-right {
+    flex: 1 0 100% !important;
+    width: 100% !important;
   }
 }
 
