@@ -491,7 +491,9 @@ const uiTranslations = {
       "Security": "Campus Security Officer",
       "Finance": "Financial Administrator",
       "IT Admin": "IT Administrator / SysAdmin",
-      "SAO": "Student Affairs Officer (SAO)"
+      "SAO": "Student Affairs Officer (SAO)",
+      "Program Leader": "Program Leader / Department Head",
+      "Dean": "Dean / Educational Leader"
     },
     levels: {
       "Generic": "Generic (Cross-Level Adaptable)",
@@ -617,13 +619,15 @@ const uiTranslations = {
     promptCopiedSuccess: "提示詞已複製到剪貼簿！",
     levelHelperText: "行政與支援角色不需選擇學校級別。",
     roles: {
-      "Lecturer": "講師 / 教育工作者",
-      "TA": "助教 (TA)",
-      "Student": "學生 / 社團幹部",
-      "Security": "校園安全官",
-      "Finance": "財務管理員",
-      "IT Admin": "IT 系統管理員",
-      "SAO": "學生事務官 (SAO)"
+       "Lecturer": "講師 / 教育工作者",
+       "TA": "助教 (TA)",
+       "Student": "學生 / 社團幹部",
+       "Security": "校園安全官",
+       "Finance": "財務管理員",
+       "IT Admin": "IT 系統管理員",
+       "SAO": "學生事務官 (SAO)",
+       "Program Leader": "學程負責人 / 系主任",
+       "Dean": "院長 / 教育領導者"
     },
     levels: {
       "Generic": "通用 (跨級別適用)",
@@ -755,7 +759,9 @@ const uiTranslations = {
       "Security": "校园安全官",
       "Finance": "财务管理员",
       "IT Admin": "IT 系统管理员",
-      "SAO": "学生事务官 (SAO)"
+      "SAO": "学生事务官 (SAO)",
+      "Program Leader": "学程负责人 / 系主任",
+      "Dean": "院长 / 教育领导者"
     },
     levels: {
       "Generic": "通用 (跨级别适用)",
@@ -3492,6 +3498,7 @@ async function initApp() {
   initTheme();
   initLanguage();
   initTimeline();
+  initFeedbackSystem();
 
   // Establish base auth elements on start
   const overlay = document.getElementById("wizardOverlay");
@@ -3970,6 +3977,13 @@ function initAdminPortal() {
     btnCreate.style.display = appState.isAssist ? "none" : "block";
   }
 
+  // Super admin ONLY display check
+  const feedbacksNav = document.getElementById("adminTabFeedbacksNav");
+  const isSuperAdmin = (appState.userEmail === 'edu_portal_s_admin');
+  if (feedbacksNav) {
+    feedbacksNav.style.display = isSuperAdmin ? "flex" : "none";
+  }
+
   const tabs = document.querySelectorAll(".admin-tab-item");
   tabs.forEach(tab => {
     const target = tab.getAttribute("data-tab");
@@ -3983,10 +3997,16 @@ function initAdminPortal() {
   document.getElementById("adminTabUsers").style.display = savedTab === 'users' ? 'block' : 'none';
   document.getElementById("adminTabAnalytics").style.display = savedTab === 'analytics' ? 'block' : 'none';
   document.getElementById("adminTabCases").style.display = savedTab === 'cases' ? 'block' : 'none';
+  
+  const tabFeedbacks = document.getElementById("adminTabFeedbacks");
+  if (tabFeedbacks) {
+    tabFeedbacks.style.display = savedTab === 'feedbacks' ? 'block' : 'none';
+  }
 
   if (savedTab === 'users') loadAdminUsers();
   else if (savedTab === 'analytics') loadAdminStats();
   else if (savedTab === 'cases') loadAdminUseCases();
+  else if (savedTab === 'feedbacks' && isSuperAdmin) loadAdminFeedbacks();
 
   tabs.forEach(tab => {
     tab.addEventListener("click", () => {
@@ -4000,10 +4020,14 @@ function initAdminPortal() {
       document.getElementById("adminTabUsers").style.display = target === 'users' ? 'block' : 'none';
       document.getElementById("adminTabAnalytics").style.display = target === 'analytics' ? 'block' : 'none';
       document.getElementById("adminTabCases").style.display = target === 'cases' ? 'block' : 'none';
+      if (tabFeedbacks) {
+        tabFeedbacks.style.display = target === 'feedbacks' ? 'block' : 'none';
+      }
 
       if (target === 'users') loadAdminUsers();
       else if (target === 'analytics') loadAdminStats();
       else if (target === 'cases') loadAdminUseCases();
+      else if (target === 'feedbacks' && isSuperAdmin) loadAdminFeedbacks();
     });
   });
 
@@ -6186,5 +6210,121 @@ window.removePlaybookFromStage = function(stageId, useCaseId) {
     showToast(appState.activeLanguage === "zh-TW" || appState.activeLanguage === "zh-CN" 
       ? "已解除此關聯" 
       : "Playbook association removed!");
+  }
+};
+
+// ==========================================
+// User Feedback System Client Engine
+// ==========================================
+window.initFeedbackSystem = function() {
+  const btn = document.getElementById("btnFloatingFeedback");
+  const modal = document.getElementById("feedbackSubmissionModal");
+  const closeBtn = document.getElementById("feedbackModalClose");
+  const cancelBtn = document.getElementById("btnCancelFeedback");
+  const txtContent = document.getElementById("txtFeedbackContent");
+
+  if (!btn || !modal) return;
+
+  btn.addEventListener("click", () => {
+    modal.style.display = "flex";
+    txtContent.value = "";
+    txtContent.focus();
+  });
+
+  const hideModal = () => {
+    modal.style.display = "none";
+  };
+
+  closeBtn.addEventListener("click", hideModal);
+  cancelBtn.addEventListener("click", hideModal);
+
+  // Close modal on backdrop click
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) hideModal();
+  });
+};
+
+window.handleFeedbackSubmit = async function(event) {
+  event.preventDefault();
+  const txtContent = document.getElementById("txtFeedbackContent");
+  if (!txtContent) return;
+
+  const feedbackText = txtContent.value.trim();
+  if (!feedbackText) return;
+
+  try {
+    const res = await fetch('/api/feedbacks', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ feedback_text: feedbackText })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast(appState.activeLanguage === 'zh-TW' ? "感謝您的回饋！" : (appState.activeLanguage === 'zh-CN' ? "感谢您的反馈！" : "Feedback submitted successfully!"));
+      document.getElementById("feedbackSubmissionModal").style.display = "none";
+    } else {
+      alert(data.error || "Failed to submit feedback.");
+    }
+  } catch (err) {
+    alert("Server connection failure. Please try again.");
+  }
+};
+
+window.loadAdminFeedbacks = async function() {
+  const tbody = document.getElementById("adminFeedbacksTableBody");
+  if (!tbody) return;
+  tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 24px; color: var(--text-muted);">Loading feedbacks...</td></tr>`;
+  try {
+    const res = await fetch('/api/feedbacks');
+    const data = await res.json();
+    if (!data.success) {
+      tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 24px; color: var(--color-danger);">${data.error || 'Failed to load feedbacks'}</td></tr>`;
+      return;
+    }
+    if (data.feedbacks.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 24px; color: var(--text-muted);">No feedback suggestions submitted yet.</td></tr>`;
+      return;
+    }
+    
+    let html = '';
+    data.feedbacks.forEach(fb => {
+      const d = new Date(fb.created_at);
+      const dateStr = d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      html += `
+        <tr style="border-bottom: 1px solid var(--border-glass); transition: background 0.2s ease;">
+          <td style="padding: 12px 8px; font-weight: 700; color: var(--text-primary); font-family: var(--font-heading);">${fb.user_email}</td>
+          <td style="padding: 12px 8px; color: var(--text-secondary); line-height: 1.5; white-space: pre-wrap;">${fb.feedback_text}</td>
+          <td style="padding: 12px 8px; color: var(--text-muted); font-size: 11px;">${dateStr}</td>
+          <td style="padding: 12px 8px; text-align: right;">
+            <button class="nav-button" onclick="deleteFeedback(${fb.id})" style="padding: 4px; min-width: auto; border: none; background: transparent; color: var(--text-muted); transition: color 0.2s ease;" onmouseover="this.style.color='var(--color-danger)'" onmouseout="this.style.color='var(--text-muted)'">
+              <span class="material-symbols-outlined" style="font-size: 18px;">close</span>
+            </button>
+          </td>
+        </tr>
+      `;
+    });
+    tbody.innerHTML = html;
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 24px; color: var(--color-danger);">Server connection error.</td></tr>`;
+  }
+};
+
+window.deleteFeedback = async function(id) {
+  if (!confirm("Are you sure you want to dismiss this feedback?")) return;
+  try {
+    const res = await fetch('/api/feedbacks/delete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast("Feedback dismissed successfully.");
+      loadAdminFeedbacks();
+    } else {
+      alert(data.error || "Failed to dismiss feedback.");
+    }
+  } catch (err) {
+    alert("Server connection failure.");
   }
 };

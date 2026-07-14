@@ -443,6 +443,9 @@
             <li class="filter-menu-item admin-tab-item" data-tab="cases" id="adminTabCasesNav">
               <span class="material-symbols-outlined">edit_note</span> <span id="adminTabCasesText">Use Cases CRUD</span>
             </li>
+            <li class="filter-menu-item admin-tab-item" data-tab="feedbacks" id="adminTabFeedbacksNav" style="display: none;">
+              <span class="material-symbols-outlined">rate_review</span> <span id="adminTabFeedbacksText">User Feedbacks</span>
+            </li>
           </ul>
         </div>
 
@@ -608,6 +611,30 @@
                 </tr>
               </thead>
               <tbody id="adminCasesTableBody">
+                <!-- Injected dynamically by app.js -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- TAB 4: USER FEEDBACKS PANEL (EDU_PORTAL_S_ADMIN ONLY) -->
+        <section class="admin-tab-content" id="adminTabFeedbacks" style="display: none;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2 id="adminFeedbackTitle" style="font-size: 16px;">User Feedbacks & Suggestions</h2>
+          </div>
+
+          <!-- Feedbacks List -->
+          <div class="glass-panel" style="padding: 24px; overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
+              <thead>
+                <tr style="border-bottom: 1px solid var(--border-glass); color: var(--text-secondary); font-weight: 600;">
+                  <th style="padding: 12px 8px; width: 200px;">User / Author</th>
+                  <th style="padding: 12px 8px;">Feedback Suggestion</th>
+                  <th style="padding: 12px 8px; width: 150px;">Submitted At</th>
+                  <th style="padding: 12px 8px; width: 80px; text-align: right;">Action</th>
+                </tr>
+              </thead>
+              <tbody id="adminFeedbacksTableBody">
                 <!-- Injected dynamically by app.js -->
               </tbody>
             </table>
@@ -919,6 +946,43 @@
   <div class="toast" id="toastNotification" role="status">
     <span class="material-symbols-outlined" id="toastIcon" style="font-size: 20px;">check_circle</span>
     <span id="toastMsg">Action completed successfully!</span>
+  </div>
+
+  <!-- PREMIUM FLOATING FEEDBACK BUTTON -->
+  <button id="btnFloatingFeedback" class="floating-feedback-button" aria-label="Submit Feedback">
+    <span class="material-symbols-outlined" style="font-size: 22px;">rate_review</span>
+    <span class="feedback-button-text">Feedback</span>
+  </button>
+
+  <!-- FEEDBACK SUBMISSION MODAL OVERLAY -->
+  <div class="modal-overlay" id="feedbackSubmissionModal" aria-modal="true" role="dialog" style="display: none; z-index: 2010;">
+    <div class="modal-content-card" style="max-width: 460px; padding: 24px;">
+      <div class="modal-header" style="margin-bottom: 16px;">
+        <div class="modal-header-left">
+          <span class="material-symbols-outlined" style="color: #a855f7; font-size: 24px;">rate_review</span>
+          <h3 class="modal-title" style="margin-left: 8px;">Share Your Feedback</h3>
+        </div>
+        <button class="close-btn" id="feedbackModalClose" aria-label="Close feedback form">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      
+      <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px; line-height: 1.4;">
+        Help us optimize the Gemini Enterprise Adoption Portal. Your suggestions will be directly reviewed by the portal's system administrator.
+      </p>
+
+      <form id="formFeedbackSubmit" onsubmit="handleFeedbackSubmit(event)">
+        <div class="form-group">
+          <label class="form-label" for="txtFeedbackContent">Feedback & Suggestions</label>
+          <textarea class="select-control" id="txtFeedbackContent" rows="5" style="height: 120px; padding: 12px; resize: none; font-family: inherit; line-height: 1.5; background: var(--bg-primary); border: 1px solid var(--border-glass);" placeholder="What features or workflows would you like to see? Let us know..." required></textarea>
+        </div>
+        
+        <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 16px;">
+          <button class="nav-button" type="button" id="btnCancelFeedback">Cancel</button>
+          <button class="nav-button nav-button-primary" type="submit" style="background: linear-gradient(135deg, #a855f7 0%, #6366f1 100%); border: none;">Submit Feedback</button>
+        </div>
+      </form>
+    </div>
   </div>
 
 </body>

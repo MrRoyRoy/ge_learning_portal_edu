@@ -1722,7 +1722,7 @@ textarea:focus::placeholder {
 .timeline-track-block {
   position: relative;
   width: 100%;
-  height: 260px; /* Symmetrical height for UP and DOWN flags */
+  height: 290px; /* Symmetrical height for UP and DOWN flags */
   overflow: visible;
 }
 
@@ -1758,7 +1758,7 @@ textarea:focus::placeholder {
 .timeline-horizontal-track {
   position: absolute;
   left: 0;
-  top: 150px; /* Shifted down to clear header space */
+  top: 180px; /* Shifted down to clear header space */
   width: 100%;
   height: 8px;
   background: rgba(0, 0, 0, 0.06);
@@ -1782,7 +1782,7 @@ textarea:focus::placeholder {
 /* Joint Nodes along track (Siblings of track, positioned at y = 120px) */
 .timeline-node-joint {
   position: absolute;
-  top: 150px; /* Shifted down to clear header space */
+  top: 180px; /* Shifted down to clear header space */
   transform: translate(-50%, -50%);
   width: 32px;
   height: 32px;
@@ -1850,13 +1850,13 @@ textarea:focus::placeholder {
 
 /* UP markers */
 .alternating-marker-pin.pin-up {
-  bottom: 110px; /* Starts exactly at center y = 150px (260px height container) */
+  bottom: 110px; /* Starts exactly at center y = 180px (290px height container) */
   height: 50px;
 }
 
 /* DOWN markers */
 .alternating-marker-pin.pin-down {
-  top: 150px; /* Starts exactly at center y = 150px */
+  top: 180px; /* Starts exactly at center y = 180px */
   height: 50px;
 }
 
@@ -1890,12 +1890,12 @@ textarea:focus::placeholder {
 }
 
 .floating-schedule-flag.flag-up {
-  bottom: 160px; /* Sits cleanly above the 50px pin (90px top distance) */
+  bottom: 160px; /* Sits cleanly above the 50px pin (130px top distance) */
   border-top: 4px solid var(--node-color) !important;
 }
 
 .floating-schedule-flag.flag-down {
-  top: 200px; /* Sits cleanly below the 50px pin (200px top distance) */
+  top: 230px; /* Sits cleanly below the 50px pin (230px top distance) */
   border-bottom: 4px solid var(--node-color) !important;
 }
 
@@ -2507,4 +2507,49 @@ textarea:focus::placeholder {
   border-radius: 8px;
   background: var(--bg-sidebar);
 }
+
+/* PREMIUM FLOATING FEEDBACK BUTTON */
+.floating-feedback-button {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 999;
+  background: linear-gradient(135deg, #a855f7 0%, #6366f1 100%);
+  border: none;
+  border-radius: 30px;
+  color: white !important;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(168, 85, 247, 0.35);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.floating-feedback-button:hover {
+  transform: translateY(-4px) scale(1.04);
+  box-shadow: 0 12px 30px rgba(168, 85, 247, 0.45);
+}
+
+.floating-feedback-button:active {
+  transform: translateY(-1px) scale(0.98);
+}
+
+.feedback-button-text {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+@media (max-width: 768px) {
+  .floating-feedback-button {
+    padding: 12px;
+    border-radius: 50%;
+  }
+  .feedback-button-text {
+    display: none;
+  }
+}
+
 

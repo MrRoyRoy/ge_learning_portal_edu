@@ -169,39 +169,26 @@ gcloud run deploy edu-ce-learning-portal --source . --region your-region --allow
 
 ---
 
-######## 7. App State & Progress
+######### 7. App State & Progress
  
 #### Accomplished Tasks (Latest Session Milestone)
-* **High-Fidelity Dual Timeline & Verification Pipeline Redesign (100% Complete):**
-  * **Segmented Switcher Controller:** Built a premium sliding segmented toggle switcher allowing frictionless navigation between View A (Institutional Timeline) and View B (Verification Checkpoints).
-  * **Dual-Track Academic Chronological Timeline (View A):**
-    * Refactored into distinct chronological columns mapped to specific academic intervals: *Aug*, *Sep*, *Oct - Nov 15*, *Nov 16 - Jan 15*.
-    * **Track 1 (Semester-Restricted implementations):** Four separate custom card-nodes matching specific border colors and tracking individual mini-progress bars (Tech Provisioning, Launch & Onboard, Evaluation Pilot, Exam Prep & Audit).
-    * **Track 2 (Continuous Initiatives):** Designed as a full-width arrow chevron bar pointer spanning across semesters, dynamically styled to reflect completion percentage.
-    * **Playbook Mapping Details Panel:** Selected nodes slide open an interactive panel to assign/unassign use-case playbooks dynamically, matching user preferences across active sessions.
-  * **Isometric SVG Winding Pipeline Checklists (View B):**
-    * Created a premium engineering background grid featuring multi-node interactive joints.
-    * Drawn a custom isometric 3D metallic pipeline using linear gradient overlays, sheen gloss layers, and connector rings.
-    * Engineered 5 pulsating HSL neon joint glow pins with staggered keyframe delays (`@keyframes pipelinePulse`) matching specific roadmap phases.
-    * Built dynamic checklist cards with hover syncing (cross-highlighting between node hover and card focus), custom styled checkmark elements, and strikethrough logic.
-    * Completing all items inside a checklist transforms the SVG node into an emerald indicator ring instantly.
-* **Responsive Layout Fallbacks (100% Complete):**
-  * View A gracefully switches to a chronological vertical stream layout on screen viewports <= 1024px.
-  * View B collapses into a single-column block layout with the interactive SVG sticky sidebar flowing nicely.
-* **Reactive Role-Switching Integration (100% Complete):**
-  * Hooked `renderTimeline()` reactively into `handleOnboardingSubmit` and database-backed profile setup scripts. Switching active roles now instantly redraws custom verification checkpoints and filters playbooks in real-time.
-* **Git Version Synchronization (100% Complete):**
-  * Configured Git author properties and remote URL credentials. staged, committed, and successfully pushed the completed timeline features to GitHub repository (`MrRoyRoy/ge_learning_portal_edu`).
-* **Live Google Cloud Run Production Release (100% Complete):**
-  * Deployed the fully integrated application source successfully to live Cloud Run instancing (`edu-ce-learning-portal`) at [https://edu-ce-learning-portal-PROJECT_NUMBER.your-region.run.app](https://edu-ce-learning-portal-PROJECT_NUMBER.your-region.run.app).
-* **Dual-Track Symmetrical Stacked Timeline & Color Matching (100% Complete):**
-  * Redesigned the horizontal timeline into two stacked, isolated rows: Track 1 (Academic Calendar Milestones) and Track 2 (Continuous Rolling Initiatives), separated by a custom divider.
-  * Solved the "off the track" browser alignment issue completely by positioning nodes, connector pins, and flags as peer sibling absolute elements of the horizontal track, guaranteeing they align down to the exact sub-pixel.
-  * Compressed Track 1 height from 240px to 200px and tightened container paddings/gaps to maximize vertical space for details panels.
-  * Converted Track 2 into a thick, clickable continuous progress pipeline capsule complete with a pulsating arrow head indicator, displaying checklist stats inline and removing unnecessary floating flags and connector pins.
-  * Aligned milestone node colors to match their corresponding details cards (Indigo, Amber, Emerald, Blue, Coral, Purple) when active or completed, with visual guides and schedule flags echoing the exact color theme.
+* **Horizontal Timeline Vertical Spacing Adjustments (100% Complete):**
+  * Shifted the Track 1 baseline coordinates, horizontal connector lines, alternate joint pins, and floating cards downward inside an expanded `290px` container.
+  * Increased vertical spacing from `22px` to a generous **`62px` clearance gap** below the Section Title to prevent visual crowding.
+* **Administrative Role Localizations (100% Complete):**
+  * Added missing dictionaries translations for `Program Leader` ("Program Leader / Department Head") and `Dean` ("Dean / Educational Leader").
+  * Successfully localized both roles across English (`en`), Traditional Chinese (`zh-TW`), and Simplified Chinese (`zh-CN`) schemas.
+* **Persistent Universal Feedback Widget (100% Complete):**
+  * Created a database-backed, persistent feedback submission pipeline supported by dynamic SQLite/PostgreSQL tables.
+  * Styled and positioned a premium linear-gradient, glassmorphism floating feedback trigger button at the bottom-right corner of all user pages.
+  * Formulated secure REST API endpoints (`POST /api/feedbacks`, `GET /api/feedbacks`, and `POST /api/feedbacks/delete`) bound implicitly to active user email profiles.
+* **Exclusive Super-Admin Feedbacks Review Console (100% Complete):**
+  * Built a fourth navigation tab ("User Feedbacks") inside the Admin Portal sidebar, strictly restricted and displayed *only* to the super-admin account (`edu_portal_s_admin`).
+  * Structured interactive data lists with responsive cross/delete buttons to delete and cross-off feedback entries.
+* **Root-level Playbook Directory Cleanups (100% Complete):**
+  * Organized workspace root environment by moving 5 deprecated developmental testing scripts (`test-endpoint.js`, `test-fast.js`, `test-gemini.js`, `test-global.js`, and `find-working-model.js`) into the `/scratch` subdirectory.
 
 ### Next Steps & Continuous Polish
 1. **Institutional Telemetry Monitoring:** Evaluate administrative analytic dashboards to gauge actual workspace adoption and engagement rates across various user cohorts.
-2. **Review Feedback Loops:** Check back with institutional leaders for custom playbooks or checkpoint adjustments.
+2. **Review User Feedback Submissions**: Routinely check user suggestions inside the new feedback dashboard to adjust playbooks and checklists.
 

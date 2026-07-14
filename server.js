@@ -217,10 +217,27 @@ async function initializeSchemas() {
     );
   `;
 
+  const createFeedbacksTable = dbType === 'postgres' ? `
+    CREATE TABLE IF NOT EXISTS feedbacks (
+      id SERIAL PRIMARY KEY,
+      user_email VARCHAR(255) NOT NULL,
+      feedback_text TEXT NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  ` : `
+    CREATE TABLE IF NOT EXISTS feedbacks (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_email TEXT NOT NULL,
+      feedback_text TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+  `;
+
   await query(createUsersTable);
   await query(createUseCasesTable);
   await query(createPreferencesTable);
   await query(createAnalyticsTable);
+  await query(createFeedbacksTable);
 
   // Dynamic schema migrations for existing databases
   try {
@@ -681,6 +698,58 @@ app.post('/api/use-cases/view', async (req, res) => {
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+// ==========================================
+// User Feedback submission and admin control
+// ==========================================
+
+// Submit Feedback
+app.post('/api/feedbacks', async (req, res) => {
+  try {
+    const feedbackText = req.body.feedback_text;
+    if (!feedbackText || !feedbackText.trim()) {
+      return res.status(400).json({ error: 'Feedback text is mandatory.' });
+    }
+    const email = req.session.user ? req.session.user.email : 'anonymous';
+    await query('INSERT INTO feedbacks (user_email, feedback_text) VALUES (?, ?)', [email, feedbackText.trim()]);
+    res.json({ success: true, message: 'Feedback submitted successfully!' });
+  } catch (err) {
+    console.error('Submit feedback error:', err);
+    res.status(500).json({ error: 'Database error. Failed to save feedback.' });
+  }
+});
+
+// List Feedbacks (Strictly Super-Admin ONLY)
+app.get('/api/feedbacks', async (req, res) => {
+  try {
+    if (!req.session.user || req.session.user.email !== 'edu_portal_s_admin') {
+      return res.status(403).json({ error: 'Unauthorized access. Super-admin role required.' });
+    }
+    const feedbacks = await query('SELECT * FROM feedbacks ORDER BY created_at DESC');
+    res.json({ success: true, feedbacks });
+  } catch (err) {
+    console.error('List feedbacks error:', err);
+    res.status(500).json({ error: 'Database error.' });
+  }
+});
+
+// Delete Feedback (Strictly Super-Admin ONLY)
+app.post('/api/feedbacks/delete', async (req, res) => {
+  try {
+    if (!req.session.user || req.session.user.email !== 'edu_portal_s_admin') {
+      return res.status(403).json({ error: 'Unauthorized access. Super-admin role required.' });
+    }
+    const { id } = req.body;
+    if (!id) {
+      return res.status(400).json({ error: 'Feedback ID is required.' });
+    }
+    await query('DELETE FROM feedbacks WHERE id = ?', [id]);
+    res.json({ success: true, message: 'Feedback dismissed successfully.' });
+  } catch (err) {
+    console.error('Delete feedback error:', err);
+    res.status(500).json({ error: 'Database error.' });
   }
 });
 
