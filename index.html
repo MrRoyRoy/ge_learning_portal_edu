@@ -172,6 +172,19 @@
         </div>
       </div>
 
+      <!-- Primary Page Views -->
+      <div class="sidebar-section">
+        <div class="sidebar-title" id="titlePrimaryViews">Portal Views</div>
+        <ul class="filter-menu-list">
+          <li class="filter-menu-item active portal-view-item" data-view="playbooks" id="viewPlaybooksNav">
+            <span class="material-symbols-outlined">explore</span> <span id="navExplorePlaybooks">Explore Playbooks</span>
+          </li>
+          <li class="filter-menu-item portal-view-item" data-view="timeline" id="viewTimelineNav">
+            <span class="material-symbols-outlined">route</span> <span id="navAdoptionTimeline">Adoption Roadmap</span>
+          </li>
+        </ul>
+      </div>
+
       <!-- Connector States Control Panel -->
       <div class="sidebar-section">
         <div class="sidebar-title" id="sidebarConnectorsTitle" style="display: flex; align-items: center; justify-content: space-between;">
@@ -230,7 +243,7 @@
       </div>
 
       <!-- Filter menus: Category and attributes -->
-      <div class="sidebar-section">
+      <div class="sidebar-section" id="sidebarCategorySection">
         <div class="sidebar-title" id="titleNavigation">Navigation</div>
         <ul class="filter-menu-list">
           <li class="filter-menu-item active category-filter-item" data-category="all">
@@ -252,7 +265,7 @@
       </div>
 
       <!-- CE FEATURES FILTER SECTION -->
-      <div class="sidebar-section">
+      <div class="sidebar-section" id="sidebarFeatureSection">
         <div class="sidebar-title" id="sidebarFeaturesTitle">Filter by CE Feature</div>
         <ul class="filter-menu-list">
           <li class="filter-menu-item active feature-filter-item" data-feature="all">
@@ -279,7 +292,7 @@
         </ul>
       </div>
 
-      <div class="sidebar-section">
+      <div class="sidebar-section" id="sidebarStatusSection">
         <div class="sidebar-title" id="titleFilters">Requirement Filter</div>
         <ul class="filter-menu-list">
           <li class="filter-menu-item active status-filter-item" data-status="all">
@@ -344,19 +357,39 @@
 
       <!-- DASHBOARD CORE CONTENTS CONTAINER -->
       <article class="content-area">
-        <div class="dashboard-header">
-          <div class="dashboard-title-row">
-            <div>
-              <h1 class="welcome-msg" id="welcomeMsg">Adoption Playbook & Reference Hub</h1>
-              <p class="welcome-subtitle" id="welcomeSubtitle">Explore battle-tested prompt recipes, custom Agent instructions, and configuration guidelines tailored specifically to support your educational role.</p>
+        <!-- EXPLORE PLAYBOOKS VIEW -->
+        <div id="playbooksView">
+          <div class="dashboard-header">
+            <div class="dashboard-title-row">
+              <div>
+                <h1 class="welcome-msg" id="welcomeMsg">Adoption Playbook & Reference Hub</h1>
+                <p class="welcome-subtitle" id="welcomeSubtitle">Explore battle-tested prompt recipes, custom Agent instructions, and configuration guidelines tailored specifically to support your educational role.</p>
+              </div>
             </div>
           </div>
+
+          <!-- DYNAMIC CARDS CONTAINER BY HUB CATEGORY -->
+          <section class="hubs-grid" id="useCasesContainer">
+            <!-- Dynamic category boxes will be rendered here by app.js -->
+          </section>
         </div>
 
-        <!-- DYNAMIC CARDS CONTAINER BY HUB CATEGORY -->
-        <section class="hubs-grid" id="useCasesContainer">
-          <!-- Dynamic category boxes will be rendered here by app.js -->
-        </section>
+        <!-- ADOPTION ROADMAP INTERACTIVE TIMELINE VIEW -->
+        <div id="timelineView" style="display: none;">
+          <div class="dashboard-header">
+            <div class="dashboard-title-row">
+              <div>
+                <h1 class="welcome-msg" id="timelineWelcomeMsg">Gemini Adoption Roadmap</h1>
+                <p class="welcome-subtitle" id="timelineWelcomeSubtitle">Track and customize your institution's progressive Gemini Enterprise rollout stages. Mark playbooks as deployed in the main portal to unlock subsequent academic and operations milestones.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Interactive Milestone Track Grid -->
+          <div class="timeline-grid" id="timelineMilestonesContainer">
+            <!-- Rendered dynamically by app.js -->
+          </div>
+        </div>
       </article>
     </main>
   </div>
@@ -387,12 +420,15 @@
     <div style="display: flex; min-height: 100vh;">
       
       <!-- Admin Sidebar Navigation -->
-      <aside class="sidebar" style="z-index: 600;">
+      <aside class="sidebar" id="adminSidebar" style="z-index: 600;">
         <div class="sidebar-brand">
           <div class="logo-icon" style="background: var(--color-accent);">
             <span class="material-symbols-outlined" style="color: white !important;">shield</span>
           </div>
           <span class="brand-text" id="adminBrandText">Admin Control</span>
+          <button id="btnAdminMobileSidebarClose" class="nav-button" aria-label="Close menu" style="margin-left: auto; border: none; background: transparent; padding: 4px; min-width: auto; height: auto; display: none;">
+            <span class="material-symbols-outlined" style="font-size: 20px; color: var(--text-primary);">close</span>
+          </button>
         </div>
 
         <div class="sidebar-section">
@@ -426,9 +462,14 @@
         
         <!-- Header banner -->
         <div class="dashboard-header" style="border-bottom: 1px solid var(--border-glass); padding-bottom: 20px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
-          <div>
-            <h1 id="adminPortalTitle" style="font-size: 24px; font-weight: 600; letter-spacing: -0.02em;">GEMINI EDUCATION MANAGEMENT</h1>
-            <p id="adminPortalSubtitle" style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">Configure users, update learning playbooks, and analyze the last 6 months deployment metrics.</p>
+          <div style="display: flex; align-items: center; gap: 12px; flex-grow: 1;">
+            <button class="nav-button" id="btnAdminMobileMenu" aria-label="Open Admin Menu" style="padding: 0 10px; flex-shrink: 0; display: none; height: 38px; width: 44px; justify-content: center; align-items: center;">
+              <span class="material-symbols-outlined" style="font-size: 24px;">menu</span>
+            </button>
+            <div>
+              <h1 id="adminPortalTitle" style="font-size: 24px; font-weight: 600; letter-spacing: -0.02em;">GEMINI EDUCATION MANAGEMENT</h1>
+              <p id="adminPortalSubtitle" style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">Configure users, update learning playbooks, and analyze the last 6 months deployment metrics.</p>
+            </div>
           </div>
           <div style="display: flex; align-items: center; gap: 8px;">
             <!-- Admin Theme Toggle Button -->

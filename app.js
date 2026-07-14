@@ -3484,6 +3484,7 @@ async function initApp() {
   enhanceUseCasesDatabase();
   initTheme();
   initLanguage();
+  initTimeline();
 
   // Establish base auth elements on start
   const overlay = document.getElementById("wizardOverlay");
@@ -3660,6 +3661,44 @@ async function initApp() {
     if (e.target === document.getElementById("modalOverlay")) closeModal();
   });
 
+  // Portal View Tab Switching (Explore Playbooks vs Adoption Roadmap)
+  const viewPlaybooksNav = document.getElementById("viewPlaybooksNav");
+  const viewTimelineNav = document.getElementById("viewTimelineNav");
+  const playbooksView = document.getElementById("playbooksView");
+  const timelineView = document.getElementById("timelineView");
+  const sidebarCategorySection = document.getElementById("sidebarCategorySection");
+  const sidebarFeatureSection = document.getElementById("sidebarFeatureSection");
+  const sidebarStatusSection = document.getElementById("sidebarStatusSection");
+
+  const switchPortalView = (viewName) => {
+    document.querySelectorAll(".portal-view-item").forEach(i => i.classList.remove("active"));
+    
+    if (viewName === "playbooks") {
+      if (viewPlaybooksNav) viewPlaybooksNav.classList.add("active");
+      if (playbooksView) playbooksView.style.display = "block";
+      if (timelineView) timelineView.style.display = "none";
+      if (sidebarCategorySection) sidebarCategorySection.style.display = "block";
+      if (sidebarFeatureSection) sidebarFeatureSection.style.display = "block";
+      if (sidebarStatusSection) sidebarStatusSection.style.display = "block";
+    } else {
+      if (viewTimelineNav) viewTimelineNav.classList.add("active");
+      if (playbooksView) playbooksView.style.display = "none";
+      if (timelineView) timelineView.style.display = "block";
+      if (sidebarCategorySection) sidebarCategorySection.style.display = "none";
+      if (sidebarFeatureSection) sidebarFeatureSection.style.display = "none";
+      if (sidebarStatusSection) sidebarStatusSection.style.display = "none";
+      
+      renderTimeline(); // render the interactive timeline elements
+    }
+  };
+
+  if (viewPlaybooksNav) {
+    viewPlaybooksNav.addEventListener("click", () => switchPortalView("playbooks"));
+  }
+  if (viewTimelineNav) {
+    viewTimelineNav.addEventListener("click", () => switchPortalView("timeline"));
+  }
+
   // Mobile responsive sidebar drawer hooks
   const btnMobileMenu = document.getElementById("btnMobileMenu");
   const btnMobileSidebarClose = document.getElementById("btnMobileSidebarClose");
@@ -3692,6 +3731,39 @@ async function initApp() {
   document.querySelectorAll(".category-filter-item, .feature-filter-item, .status-filter-item").forEach(item => {
     item.addEventListener("click", closeMobileSidebar);
   });
+
+  // Mobile responsive admin sidebar drawer hooks
+  const btnAdminMobileMenu = document.getElementById("btnAdminMobileMenu");
+  const btnAdminMobileSidebarClose = document.getElementById("btnAdminMobileSidebarClose");
+  const adminSidebar = document.getElementById("adminSidebar");
+
+  const openAdminMobileSidebar = () => {
+    if (adminSidebar) adminSidebar.classList.add("active");
+    if (sidebarOverlay) sidebarOverlay.classList.add("active");
+  };
+
+  const closeAdminMobileSidebar = () => {
+    if (adminSidebar) adminSidebar.classList.remove("active");
+    if (sidebarOverlay) sidebarOverlay.classList.remove("active");
+  };
+
+  if (btnAdminMobileMenu) {
+    btnAdminMobileMenu.addEventListener("click", openAdminMobileSidebar);
+  }
+
+  if (btnAdminMobileSidebarClose) {
+    btnAdminMobileSidebarClose.addEventListener("click", closeAdminMobileSidebar);
+  }
+
+  // Close admin sidebar on tab selections or clicking the overlay
+  document.querySelectorAll(".admin-tab-item").forEach(item => {
+    item.addEventListener("click", closeAdminMobileSidebar);
+  });
+  
+  // Make sidebarOverlay close the active admin sidebar too
+  if (sidebarOverlay) {
+    sidebarOverlay.addEventListener("click", closeAdminMobileSidebar);
+  }
 }
 
 // 4. Session Operations (Login, Reset, Profile, Logout)
@@ -5320,6 +5392,330 @@ function escapeHtmlDiff(str) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
+}
+
+/* ==========================================================================
+   INTERACTIVE ADOPTION ROADMAP TIMELINE LOGIC
+   ========================================================================== */
+
+const TIMELINE_STORAGE_KEY = "ge_adoption_timeline_v1";
+
+const defaultTimelineMilestones = [
+  {
+    id: "m1",
+    title: "Phase 1: Standalone Out-of-the-Box Adoption",
+    semester: "Semester 1",
+    dependency: null,
+    description: "Establish baseline familiarity with zero-setup standalone AI tools (NotebookLM, Canvas Mode, Deep Research, Image Generation) requiring no custom campus data integrations.",
+    playbookIds: ["socratic_tutor", "rubric_grading", "curriculum_design", "club_funding", "lab_manual_creator"]
+  },
+  {
+    id: "m2",
+    title: "Phase 2: Connected Campus Ecosystem",
+    semester: "Semester 2",
+    dependency: "m1",
+    description: "Unlock context-aware workflows by activating secure institutional connectors (Google Drive, Outlook Email, LMS Canvas/Moodle, Google Calendar) to ground responses in active records.",
+    playbookIds: ["su_helpdesk", "at_risk_cohort", "accreditation_reports", "sao_scavenger_hunt"]
+  },
+  {
+    id: "m3",
+    title: "Phase 3: Automated Operations & Governance",
+    semester: "Semester 3 / All Time Allowed",
+    dependency: "m2",
+    description: "Standardize administrative auditing, financial procurement compliance, and campus-wide security drill modeling for institutional safety and governance.",
+    playbookIds: ["finance_compliance", "security_simulator", "workforce_federation"]
+  }
+];
+
+let timelineMilestones = [];
+
+// Initialize or load the roadmap configuration
+function initTimeline() {
+  const saved = localStorage.getItem(TIMELINE_STORAGE_KEY);
+  if (saved) {
+    try {
+      timelineMilestones = JSON.parse(saved);
+    } catch (e) {
+      console.error("Failed to parse timeline milestones, resetting to defaults:", e);
+      timelineMilestones = JSON.parse(JSON.stringify(defaultTimelineMilestones));
+    }
+  } else {
+    timelineMilestones = JSON.parse(JSON.stringify(defaultTimelineMilestones));
+  }
+}
+
+// Save milestones state to localStorage
+function saveTimeline() {
+  localStorage.setItem(TIMELINE_STORAGE_KEY, JSON.stringify(timelineMilestones));
+}
+
+// Render the entire roadmap
+function renderTimeline() {
+  const container = document.getElementById("timelineMilestonesContainer");
+  if (!container) return;
+
+  // Track completed milestones for dependency evaluation
+  const completionMap = {};
+
+  // Step 1: Pre-calculate completion status for all milestones
+  timelineMilestones.forEach(m => {
+    if (m.playbookIds.length === 0) {
+      completionMap[m.id] = false;
+      return;
+    }
+    
+    // Check if every assigned playbook in this milestone has isDeployed === true or 1
+    const allDeployed = m.playbookIds.every(id => {
+      const uc = appState.useCases.find(u => u.id === id);
+      return uc ? (uc.isDeployed === true || uc.isDeployed === 1) : false;
+    });
+
+    completionMap[m.id] = allDeployed;
+  });
+
+  // Clear existing items
+  container.innerHTML = "";
+
+  // Step 2: Render each milestone card
+  timelineMilestones.forEach(m => {
+    // Evaluate dependency
+    let isLocked = false;
+    if (m.dependency) {
+      isLocked = !completionMap[m.dependency];
+    }
+
+    // Determine current status label
+    const isCompleted = completionMap[m.id];
+    let statusClass = "active";
+    let statusLabel = "In Progress";
+    let statusIcon = "sync";
+
+    if (isLocked) {
+      statusClass = "locked";
+      statusLabel = "Locked";
+      statusIcon = "lock";
+    } else if (isCompleted) {
+      statusClass = "completed";
+      statusLabel = "Completed";
+      statusIcon = "check_circle";
+    }
+
+    // Translate labels based on activeLanguage
+    const isZh = appState.activeLanguage === "zh-TW" || appState.activeLanguage === "zh-CN";
+    let localizedStatusLabel = statusLabel;
+    if (isZh) {
+      if (statusLabel === "Locked") localizedStatusLabel = "已鎖定";
+      else if (statusLabel === "Completed") localizedStatusLabel = "已完成";
+      else localizedStatusLabel = "進行中";
+    }
+
+    // Calculate progress fraction & percentage
+    let deployedCount = 0;
+    m.playbookIds.forEach(id => {
+      const uc = appState.useCases.find(u => u.id === id);
+      if (uc && (uc.isDeployed === true || uc.isDeployed === 1)) {
+        deployedCount++;
+      }
+    });
+
+    const totalCount = m.playbookIds.length;
+    const progressPercent = totalCount > 0 ? Math.round((deployedCount / totalCount) * 100) : 0;
+
+    // Get localized progress text
+    const progressText = isZh 
+      ? `已部署 ${deployedCount} / ${totalCount} 個案例 (${progressPercent}%)` 
+      : `${deployedCount} of ${totalCount} playbooks deployed (${progressPercent}%)`;
+
+    // Compile playbook items inside this milestone
+    let playbooksHtml = "";
+    m.playbookIds.forEach(id => {
+      const uc = appState.useCases.find(u => u.id === id);
+      if (uc) {
+        const isUcDeployed = uc.isDeployed === true || uc.isDeployed === 1;
+        const ucTitle = uc.translations && uc.translations[appState.activeLanguage] && uc.translations[appState.activeLanguage].title 
+          ? uc.translations[appState.activeLanguage].title 
+          : uc.title;
+
+        playbooksHtml += `
+          <div class="milestone-playbook-item">
+            <div class="milestone-playbook-info">
+              <div class="milestone-playbook-status-dot ${isUcDeployed ? 'active' : ''}"></div>
+              <span class="milestone-playbook-title ${isUcDeployed ? 'completed' : ''}" title="${ucTitle}">
+                ${ucTitle}
+              </span>
+            </div>
+            <button class="btn-remove-playbook" data-milestone="${m.id}" data-playbook="${id}" title="Remove from milestone">
+              <span class="material-symbols-outlined" style="font-size: 16px;">close</span>
+            </button>
+          </div>
+        `;
+      }
+    });
+
+    if (m.playbookIds.length === 0) {
+      playbooksHtml = `<p style="font-size: 11px; color: var(--text-muted); text-align: center; padding: 12px 0;">${isZh ? '未分配任何案例' : 'No playbooks assigned yet.'}</p>`;
+    }
+
+    // Compile unassigned playbooks for the "Add Playbook" dropdown select
+    let dropdownOptionsHtml = `<option value="">${isZh ? '+ 分配新案例到此階段' : '+ Assign Playbook to Milestone...'}</option>`;
+    
+    // Sort all use cases alphabetically by localized title
+    const sortedUseCases = [...appState.useCases].sort((a, b) => {
+      const titleA = a.translations && a.translations[appState.activeLanguage] && a.translations[appState.activeLanguage].title 
+        ? a.translations[appState.activeLanguage].title 
+        : a.title;
+      const titleB = b.translations && b.translations[appState.activeLanguage] && b.translations[appState.activeLanguage].title 
+        ? b.translations[appState.activeLanguage].title 
+        : b.title;
+      return titleA.localeCompare(titleB);
+    });
+
+    sortedUseCases.forEach(uc => {
+      // Exclude playbooks already assigned to THIS specific milestone
+      if (!m.playbookIds.includes(uc.id)) {
+        const ucTitle = uc.translations && uc.translations[appState.activeLanguage] && uc.translations[appState.activeLanguage].title 
+          ? uc.translations[appState.activeLanguage].title 
+          : uc.title;
+        dropdownOptionsHtml += `<option value="${uc.id}">${ucTitle}</option>`;
+      }
+    });
+
+    // Translate milestone metadata
+    let localizedSemester = m.semester;
+    let localizedTitle = m.title;
+    let localizedDesc = m.description;
+
+    if (isZh) {
+      if (m.id === "m1") {
+        localizedSemester = "第一學期";
+        localizedTitle = "階段一：即裝即用獨立工具推廣";
+        localizedDesc = "引導教職員工與學生建立對 Standalone AI 工具（如 NotebookLM、Canvas 模式、Deep Research、圖像生成）的基礎熟練度，無需任何校園數據庫接口配置。";
+      } else if (m.id === "m2") {
+        localizedSemester = "第二學期";
+        localizedTitle = "階段二：校園互聯生態系統構建";
+        localizedDesc = "啟用安全校園數據連接器（Google Drive、Outlook 郵箱、LMS Canvas/Moodle 課程系統、Google 歷程），建立具備上下文感知能力的教學及研發工作流。";
+      } else if (m.id === "m3") {
+        localizedSemester = "第三學期 / 全學期允許";
+        localizedTitle = "階段三：智慧行政審計與合規治理";
+        localizedDesc = "全面標準化教務行政審批合規管理、財務採購輔助核數、全校安全應急與虛擬災害演練模型，鞏固全校數智化治理基礎。";
+      }
+    }
+
+    // Build dependency message
+    let dependencyHtml = "";
+    if (m.dependency) {
+      const depMilestone = timelineMilestones.find(x => x.id === m.dependency);
+      if (depMilestone) {
+        const depTitle = isZh 
+          ? (m.dependency === "m1" ? "階段一：即裝即用獨立工具推廣" : "階段二：校園互聯生態系統構建")
+          : depMilestone.title;
+        dependencyHtml = `
+          <div class="milestone-dep">
+            <span class="material-symbols-outlined" style="font-size: 14px;">schema</span>
+            <span>${isZh ? '依賴於' : 'Depends on'}: ${depTitle}</span>
+          </div>
+        `;
+      }
+    }
+
+    // Card card-frame classes
+    const cardClasses = `milestone-card ${isLocked ? 'locked' : ''} ${isCompleted ? 'completed' : ''}`;
+
+    // Construct final HTML block
+    const cardHtml = `
+      <div class="${cardClasses}" id="card-${m.id}">
+        <div class="milestone-badge-row">
+          <span class="milestone-semester">${localizedSemester}</span>
+          <span class="milestone-status ${statusClass}">
+            <span class="material-symbols-outlined" style="font-size: 14px;">${statusIcon}</span>
+            <span>${localizedStatusLabel}</span>
+          </span>
+        </div>
+
+        <h3 class="milestone-title">${localizedTitle}</h3>
+        <p class="milestone-desc">${localizedDesc}</p>
+        
+        ${dependencyHtml}
+
+        <div class="milestone-progress-wrapper">
+          <div class="milestone-progress-text">
+            <span>${isZh ? '部署進度' : 'Deployment Progress'}</span>
+            <span>${progressText}</span>
+          </div>
+          <div class="milestone-progress-bar">
+            <div class="milestone-progress-fill" style="width: ${progressPercent}%;"></div>
+          </div>
+        </div>
+
+        <div class="milestone-playbooks-section-title">${isZh ? '分配的場景案例' : 'Assigned Playbooks'}</div>
+        <div class="milestone-playbooks-list">
+          ${playbooksHtml}
+        </div>
+
+        <!-- Add Playbook Selector (interactive dropdown) -->
+        <div class="add-playbook-dropdown-wrapper">
+          <select class="select-add-playbook" data-milestone="${m.id}">
+            ${dropdownOptionsHtml}
+          </select>
+        </div>
+      </div>
+    `;
+
+    container.insertAdjacentHTML("beforeend", cardHtml);
+  });
+
+  // Step 3: Register Interactive Event Handlers
+  // 1. Remove playbook event
+  container.querySelectorAll(".btn-remove-playbook").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const mId = btn.getAttribute("data-milestone");
+      const ucId = btn.getAttribute("data-playbook");
+      removeUseCaseFromMilestone(mId, ucId);
+    });
+  });
+
+  // 2. Add playbook select event
+  container.querySelectorAll(".select-add-playbook").forEach(select => {
+    select.addEventListener("change", (e) => {
+      const mId = select.getAttribute("data-milestone");
+      const ucId = select.value;
+      if (ucId) {
+        addUseCaseToMilestone(mId, ucId);
+      }
+    });
+  });
+}
+
+// Assign a usecase to a milestone
+function addUseCaseToMilestone(milestoneId, useCaseId) {
+  // To keep clean state, ensure a playbook belongs to only one milestone at a time
+  timelineMilestones.forEach(m => {
+    m.playbookIds = m.playbookIds.filter(id => id !== useCaseId);
+  });
+
+  const milestone = timelineMilestones.find(m => m.id === milestoneId);
+  if (milestone) {
+    milestone.playbookIds.push(useCaseId);
+    saveTimeline();
+    renderTimeline();
+    showToast(appState.activeLanguage === "zh-TW" || appState.activeLanguage === "zh-CN" 
+      ? "案例分配成功！" 
+      : "Playbook assigned to milestone successfully!");
+  }
+}
+
+// Remove a usecase from a milestone
+function removeUseCaseFromMilestone(milestoneId, useCaseId) {
+  const milestone = timelineMilestones.find(m => m.id === milestoneId);
+  if (milestone) {
+    milestone.playbookIds = milestone.playbookIds.filter(id => id !== useCaseId);
+    saveTimeline();
+    renderTimeline();
+    showToast(appState.activeLanguage === "zh-TW" || appState.activeLanguage === "zh-CN" 
+      ? "案例移除成功！" 
+      : "Playbook removed from milestone!");
+  }
 }
 
 
