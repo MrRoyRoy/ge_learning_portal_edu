@@ -1014,6 +1014,29 @@ app.post('/api/admin/generate-gemini', requireAdmin, async (req, res) => {
   }
 
   try {
+    let originalCaseText = '';
+    if (id) {
+      const existing = await query('SELECT * FROM use_cases WHERE id = ?', [id]);
+      if (existing && existing.length > 0) {
+        const uc = existing[0];
+        const originalTranslations = JSON.parse(uc.translations || '{}');
+        originalCaseText = JSON.stringify({
+          id: uc.id,
+          category: uc.category,
+          title: uc.title,
+          summary: uc.summary,
+          features: JSON.parse(uc.features || '[]'),
+          connectors: JSON.parse(uc.connectors || '[]'),
+          role: uc.role,
+          level: JSON.parse(uc.level || '[]'),
+          steps: JSON.parse(uc.steps || '[]'),
+          prompt: uc.prompt,
+          proTip: uc.pro_tip,
+          translations: originalTranslations
+        }, null, 2);
+      }
+    }
+
     const token = await getGcpAccessToken();
     const url = 'https://aiplatform.googleapis.com/v1/projects/your-gcp-project-id/locations/global/publishers/google/models/gemini-3.5-flash:generateContent';
 
@@ -1029,7 +1052,18 @@ Generate a high-fidelity educational/operational playbook based on the following
 - Enable Dual-Mode Connectors Workflow: ${isDualMode ? 'Yes' : 'No'}
 `;
 
-    if (instruction && instruction.trim().length > 0) {
+    if (originalCaseText) {
+      promptText += `
+- EXISTING PLAYBOOK DETAILS (ORIGINAL DATA to refine):
+${originalCaseText}
+
+CRITICAL DIRECTIVE ON CASE INTEGRITY AND SELECTIVE REFINEMENT:
+The user is editing/refining an existing playbook. You MUST respect and maintain the structural integrity, core flow, steps, and prompts of this original playbook.
+Do NOT rewrite or alter any parts of the original playbook that are unrelated to the user's custom instructions/comments.
+ONLY apply precise modifications, updates, or additions that directly address the custom instructions inside: "${instruction ? instruction.trim() : ''}".
+Retain, preserve, and echo back all other original aspects, text blocks, titles, summaries, steps, and translation values.
+`;
+    } else if (instruction && instruction.trim().length > 0) {
       promptText += `
 - SPECIAL USER CUSTOM DRAFTING INSTRUCTIONS:
 "${instruction.trim()}"
