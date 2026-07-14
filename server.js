@@ -156,6 +156,7 @@ async function initializeSchemas() {
       pro_tip TEXT NOT NULL,
       connector_guide TEXT,
       translations TEXT NOT NULL,   -- JSON translations dictionary
+      is_verified BOOLEAN DEFAULT FALSE,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
   ` : `
@@ -173,6 +174,7 @@ async function initializeSchemas() {
       pro_tip TEXT NOT NULL,
       connector_guide TEXT,
       translations TEXT NOT NULL,
+      is_verified INTEGER DEFAULT 0,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
   `;
@@ -219,6 +221,18 @@ async function initializeSchemas() {
   await query(createUseCasesTable);
   await query(createPreferencesTable);
   await query(createAnalyticsTable);
+
+  // Dynamic schema migrations for existing databases
+  try {
+    if (dbType === 'postgres') {
+      await query('ALTER TABLE use_cases ADD COLUMN is_verified BOOLEAN DEFAULT FALSE;');
+    } else {
+      await query('ALTER TABLE use_cases ADD COLUMN is_verified INTEGER DEFAULT 0;');
+    }
+    console.log('🔄 Schema migration: Added "is_verified" column to "use_cases" table.');
+  } catch (err) {
+    // Column already exists, safe to ignore
+  }
 
   console.log('✅ All database tables verified / created.');
   await seedDatabase();
@@ -534,6 +548,7 @@ app.get('/api/use-cases', async (req, res) => {
         advancedProTip: enTrans.advancedProTip || null,
         connectorGuide: uc.connector_guide ? JSON.parse(uc.connector_guide) : null,
         translations: transObj,
+        isVerified: uc.is_verified === true || uc.is_verified === 1 || uc.is_verified === 'true',
         isLiked: false,
         isDeployed: false,
         totalLikes: likesMap[uc.id] || 0
@@ -868,9 +883,11 @@ app.post('/api/admin/use-cases', requireAdmin, async (req, res) => {
   }
 
   try {
+    const isVerifiedVal = dbType === 'postgres' ? (uc.isVerified ? true : false) : (uc.isVerified ? 1 : 0);
+
     const insertSql = `
-      INSERT INTO use_cases (id, category, title, summary, features, connectors, role, level, steps, prompt, pro_tip, connector_guide, translations)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO use_cases (id, category, title, summary, features, connectors, role, level, steps, prompt, pro_tip, connector_guide, translations, is_verified)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const params = [
@@ -886,7 +903,8 @@ app.post('/api/admin/use-cases', requireAdmin, async (req, res) => {
       uc.prompt,
       uc.proTip || '',
       uc.connectorGuide ? JSON.stringify(uc.connectorGuide) : null,
-      JSON.stringify(uc.translations || { en: uc, 'zh-TW': {}, 'zh-CN': {} })
+      JSON.stringify(uc.translations || { en: uc, 'zh-TW': {}, 'zh-CN': {} }),
+      isVerifiedVal
     ];
 
     await query(insertSql, params);
@@ -908,9 +926,11 @@ app.put('/api/admin/use-cases', requireAdmin, async (req, res) => {
   }
 
   try {
+    const isVerifiedVal = dbType === 'postgres' ? (uc.isVerified ? true : false) : (uc.isVerified ? 1 : 0);
+
     const updateSql = `
       UPDATE use_cases
-      SET category = ?, title = ?, summary = ?, features = ?, connectors = ?, role = ?, level = ?, steps = ?, prompt = ?, pro_tip = ?, connector_guide = ?, translations = ?
+      SET category = ?, title = ?, summary = ?, features = ?, connectors = ?, role = ?, level = ?, steps = ?, prompt = ?, pro_tip = ?, connector_guide = ?, translations = ?, is_verified = ?
       WHERE id = ?
     `;
 
@@ -927,6 +947,7 @@ app.put('/api/admin/use-cases', requireAdmin, async (req, res) => {
       uc.proTip || '',
       uc.connectorGuide ? JSON.stringify(uc.connectorGuide) : null,
       JSON.stringify(uc.translations || {}),
+      isVerifiedVal,
       uc.id
     ];
 

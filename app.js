@@ -2333,6 +2333,11 @@ function renderUseCases() {
 
       // Build Tag Pills HTML
       let tagsHtml = "";
+      if (uc.isVerified) {
+        const verifiedLabel = lang === 'en' ? 'Verified' : (lang === 'zh-TW' ? '已驗證' : '已验证');
+        tagsHtml += `<span class="tag" style="background: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.25); color: #10b981; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; text-transform: uppercase; font-size: 10px; letter-spacing: 0.5px;"><span class="material-symbols-outlined" style="font-size: 13px; font-weight: bold;">verified</span>${verifiedLabel}</span>`;
+      }
+
       uc.features.forEach(f => {
         tagsHtml += `<span class="tag tag-feature">${f}</span>`;
       });
@@ -2514,6 +2519,11 @@ function openUseCaseModal(useCase) {
 
   // Set metadata tags
   let tagsHtml = "";
+  if (useCase.isVerified) {
+    const verifiedLabel = lang === 'en' ? 'Verified' : (lang === 'zh-TW' ? '已驗證' : '已验证');
+    tagsHtml += `<span class="tag" style="background: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.25); color: #10b981; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; text-transform: uppercase; font-size: 10px; letter-spacing: 0.5px;"><span class="material-symbols-outlined" style="font-size: 13px; font-weight: bold;">verified</span>${verifiedLabel}</span>`;
+  }
+
   useCase.features.forEach(f => {
     tagsHtml += `<span class="tag tag-feature" style="font-size: 11px;">${f}</span>`;
   });
@@ -4559,6 +4569,12 @@ function openAdminEditModal(uc) {
       box.checked = levelArray.includes(box.value);
     });
 
+    // Set verified state
+    const verifiedBox = document.getElementById("formCaseVerified");
+    if (verifiedBox) {
+      verifiedBox.checked = !!uc.isVerified;
+    }
+
     // Translation values pre-population safely
     const trans = uc.translations || {};
     
@@ -4610,6 +4626,11 @@ function openAdminEditModal(uc) {
     document.getElementById("formCaseAdvancedPrompt").value = "";
     document.getElementById("formCaseAdvancedProTip").value = "";
     
+    const verifiedBox = document.getElementById("formCaseVerified");
+    if (verifiedBox) {
+      verifiedBox.checked = false;
+    }
+
     // Clear all translation inputs
     document.getElementById("formTransZhtwTitle").value = "";
     document.getElementById("formTransZhtwSummary").value = "";
@@ -4725,9 +4746,10 @@ async function saveAdminUseCase() {
 
   const isDualMode = document.getElementById("formCaseDualMode").checked;
   const connectorGuide = { connectorEssential: !isDualMode };
+  const isVerified = document.getElementById("formCaseVerified").checked;
 
   const payload = {
-    id, category, title, role, summary, features, connectors, level, steps, prompt, proTip, connectorGuide, translations
+    id, category, title, role, summary, features, connectors, level, steps, prompt, proTip, connectorGuide, translations, isVerified
   };
 
   try {

@@ -169,9 +169,16 @@ gcloud run deploy edu-ce-learning-portal --source . --region your-region --allow
 
 ---
 
-####### 7. App State & Progress
+######## 7. App State & Progress
  
 #### Accomplished Tasks (Latest Session Milestone)
+* **Preserved Client Error Reporting (100% Complete):** Overhauled error-handling inside [app.js](file:///path/to/home/Desktop/dev-projects/edu-ge-adoption-portal/app.js) to parse response bodies even on non-ok HTTP statuses, preventing the swallow of valuable Vertex AI API error telemetry and showing the precise root causes on-screen.
+* **Solid legible Diff Viewer Background (100% Complete):** Replaced the transparent background on the interactive `#adminDiffViewerModal` content card in [index.html](file:///path/to/home/Desktop/dev-projects/edu-ge-adoption-portal/index.html) by mapping it to the solid, premium design system variable `var(--bg-dark-modal)`. The panels are now high-contrast solid obsidian in dark mode and solid paper-white in light mode.
+* **English-First Translation Consistency Enforced (100% Complete):** Redesigned the Gemini 3.5 Flash system prompt inside [server.js](file:///path/to/home/Desktop/dev-projects/edu-ge-adoption-portal/server.js) to enforce an English-first playbook drafting flow. Gemini first generates the full high-fidelity English ("en") profile, and then translates every single field and list item exactly 1-to-1 into Traditional Chinese ("zh-TW") and Simplified Chinese ("zh-CN"), guaranteeing flawless linguistic and structural consistency across all profiles.
+* **Admin Verification Flag & Badge System (100% Complete):**
+  * **Dynamic DB Schema Migrations:** Added a database-backed `is_verified` column to the `use_cases` table schema (both SQLite and PostgreSQL dialects) and integrated an automated boot-time `ALTER TABLE` migration block that automatically upgrades pre-existing production databases without breaking.
+  * **Admin Toggle Form UI:** Integrated an elegant emerald dashed checkbox container "Mark Playbook as Verified by Admin" into [index.html](file:///path/to/home/Desktop/dev-projects/edu-ge-adoption-portal/index.html), synchronized with the playbook save controller in [app.js](file:///path/to/home/Desktop/dev-projects/edu-ge-adoption-portal/app.js) to manage the verification state seamlessly on creation and updates.
+  * **High-Fidelity Badges:** Designed dynamic, high-fidelity emerald checkmark checkbadges (`#10b981`) that render inside playbook cards in the main portal grid list and inside the detailed popup modals whenever `isVerified` is true, providing institutional credibility indicators.
 * **Master Admin Credentials Rebranded (100% Complete):** Rebranded master administrator bypass username to `edu_portal_s_admin` and password to `***REMOVED***`.
 * **Read-only "Admin Assist" Role (100% Complete):** Introduced the `edu_portal_admin / ***REMOVED***` credential block with an `isAssist` session state. Programmed specific Express backend query blocks to reject creates, updates, and deletes, and modified client-side forms to load as read-only (disabling fields, hiding submit/Gemini actions, rendering a non-disruptive "View" state).
 * **6-Month Adoption Chart Authentic Sync (100% Complete):** Disabled random historical seeds and deleted stale mock view/like/deploy history from `analytics` to guarantee that the portal statistics display authentic, genuine database actions, starting strictly from July (showing the active liked case).
@@ -181,6 +188,6 @@ gcloud run deploy edu-ce-learning-portal --source . --region your-region --allow
 * **Premium Theme Switicher & Sim Branding (100% Complete):** Integrated a theme toggle button `#btnAdminThemeToggle` in the portal header, fully synchronized with `initTheme()` and `applyTheme()` in `app.js` to persist themes in local storage across session views. Overhauled standard headers, sub-menus, role indicators, and browser title headers inside `updateUILanguage()` to display `"ADMIN SIMULATION VIEW"`, `"Administrator"`, and `"Simulation Mode"` when `appState.isAdmin === true`.
 
 ### Next Steps & Continuous Polish
-1. **Cloud Run Service Scales:** Validate connection pool scaling metrics on Google Cloud Run.
+1. **Verify Live Playbook Custom Verification States:** Validate toggle behavior on the live production environment on Google Cloud Run.
 2. **PostgreSQL Telemetry Indexes:** Ensure database query indices are maintained for optimal response times.
 
