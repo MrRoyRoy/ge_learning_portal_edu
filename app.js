@@ -2094,6 +2094,7 @@ async function handleOnboardingSubmit() {
   // Fetch use cases and render
   await loadUseCasesFromServer();
   renderUseCases();
+  renderTimeline();
   
   const welcomeText = uiTranslations[lang].profileSetSuccess;
   showToast(welcomeText, "success");
@@ -3936,6 +3937,7 @@ function setupProfileOnboardingHandlers() {
         // Fetch use cases and render
         await loadUseCasesFromServer();
         renderUseCases();
+        renderTimeline();
         showToast("Workspace fully configured!");
       }
     } catch (err) {
@@ -5401,39 +5403,50 @@ function escapeHtmlDiff(str) {
 }
 
 /* ==========================================================================
-   INTERACTIVE ADOPTION ROADMAP TIMELINE LOGIC (REDESIGNED)
+   INTERACTIVE ADOPTION ROADMAP TIMELINE LOGIC (REDESIGNED V2)
    ========================================================================== */
 
-const TIMELINE_STAGES_STORAGE_KEY = "ge_adoption_stages_v2";
-const VERIFICATION_STORAGE_KEY = "ge_verification_checkpoints_v1";
+const TIMELINE_STAGES_STORAGE_KEY = "ge_adoption_stages_v3";
+const VERIFICATION_STORAGE_KEY = "ge_verification_checkpoints_v3";
 
 const defaultTimelineStages = [
   {
+    id: "day0",
+    title: "Day 0 Configuration (IdP & connectors setup)",
+    titleZh: "Day 0 技術配置（IdP與連接器設定）",
+    subtitle: "Setup Phase",
+    subtitleZh: "基礎配置期",
+    color: "#6366f1", // Indigo
+    description: "Initialize backend environments, configure Identity Provider (IdP) authentication loops, and map baseline database structures before the academic year begins.",
+    descriptionZh: "初始化後端環境、配置身份提供商 (IdP) 認證迴路，並在學期前建立基礎資料庫結構。",
+    playbookIds: ["finance_compliance", "workforce_federation"]
+  },
+  {
     id: "pre",
-    title: "Tech Provisioning (OneDrive/Moodle configs)",
-    titleZh: "技術準備與配置（Drive/Moodle 整合）",
+    title: "Tech Provisioning & Prep (Syllabi & documents preparation)",
+    titleZh: "學期準備（課程大綱與教材編寫）",
     subtitle: "Pre-Semester (Aug)",
     subtitleZh: "學期前（八月）",
     color: "#f59e0b", // Amber
-    description: "Initialize backend environments, configure drive security permissions, and prepare LMS connection structures before classes begin.",
-    descriptionZh: "在開學前初始化後端環境、配置 Drive 安全權限並準備 LMS 連接結構。",
+    description: "Align core teaching materials, upload syllabus structures, and coordinate initial AI assistant designs ahead of active teaching cohorts.",
+    descriptionZh: "在開學前整理核心教材、上傳教學大綱結構，並協調 AI 輔助助理之基礎設計。",
     playbookIds: ["socratic_tutor", "lab_manual_creator"]
   },
   {
     id: "sem1",
-    title: "Launch & Onboard (Deploy Support Agent to Portal)",
-    titleZh: "正式啟動與引導（部署輔助 Agent 至門戶）",
+    title: "Launch & Onboard (Onboard faculty and cohorts)",
+    titleZh: "正式啟動與引導（教職員工與學生引導）",
     subtitle: "Sem 1 (Sep)",
     subtitleZh: "第一學期（九月）",
     color: "#10b981", // Emerald
-    description: "Onboard students and faculty, deploy student support helpers, and establish baseline Gemini familiarity.",
-    descriptionZh: "引導學生與教職員工、部署學生支援助手並建立對 Gemini 的基礎熟練度。",
+    description: "Onboard students and faculty, establish baseline AI familiarity, and register support queues.",
+    descriptionZh: "引導學生與教職員工、建立對 AI 的基礎熟練度並登記服務支援佇列。",
     playbookIds: ["curriculum_design", "su_helpdesk"]
   },
   {
     id: "mid",
-    title: "Evaluation Pilot (Roll out NotebookLM for mid-terms)",
-    titleZh: "期中試點評估（期中考試推廣 NotebookLM）",
+    title: "Evaluation Pilot (Roll out learning evaluations)",
+    titleZh: "期中試點評估（期中考試推廣與學習表現試點）",
     subtitle: "Mid-Semester (Oct-Nov 15)",
     subtitleZh: "期中（十月至十一月十五）",
     color: "#3b82f6", // Blue
@@ -5443,83 +5456,214 @@ const defaultTimelineStages = [
   },
   {
     id: "end",
-    title: "Exam Prep & Audit (Admin audits, model tuning for Sem 2)",
-    titleZh: "期末準備與審計（行政審核及第二學期模型微調）",
+    title: "Exam Prep & Audit (Admin audits, secure repositories)",
+    titleZh: "期末準備與審計（行政審核與高安全儲存庫清掃）",
     subtitle: "End-of-Semester (Nov 16-Jan 15)",
     subtitleZh: "期末（十一月十六至一月十五）",
     color: "#ef4444", // Coral/Red
-    description: "Secure data repository sweeps, audit exam papers, compile accreditation data, and tune models for the upcoming semester.",
-    descriptionZh: "執行安全數據儲存庫清理、審計考卷、編譯認證數據並為下學期微調模型。",
+    description: "Secure data repository sweeps, audit exam papers, compile accreditation data, and lock assessment portals.",
+    descriptionZh: "執行安全數據儲存庫清理、審計考卷、編譯認證數據並鎖定評估門戶。",
     playbookIds: ["sao_scavenger_hunt"]
   },
   {
     id: "track2",
-    title: "Certified Co-Curricular Courses, Student Club Agents, Continuous ITU Auditing",
-    titleZh: "認證共建課程、學生社團 Agent、持續資訊科技處審計",
-    subtitle: "Track 2: Continuous Anytime-Proceeded Initiatives",
-    subtitleZh: "軌道二：持續滾動式推進計畫",
-    color: "#a855f7", // Purple/Indigo
-    description: "Ongoing non-semester restricted milestones, student-led developer clubs, and high-security compliance audits.",
-    descriptionZh: "持續進行的非學期限制里程碑、學生主導的開發者社團以及高安全性合規審計。",
-    playbookIds: ["club_funding", "finance_compliance", "security_simulator", "workforce_federation"]
+    title: "Continuous Initiatives (Student developer hubs, ongoing audits)",
+    titleZh: "持續推進（學生社團與滾動式優化）",
+    subtitle: "Continuous (Track 2)",
+    subtitleZh: "軌道二：滾動式推進",
+    color: "#a855f7", // Purple
+    description: "Ongoing non-semester restricted milestones, student-led co-curricular development, and constant optimization reviews.",
+    descriptionZh: "持續進行的非學期限制里程碑、學生主導的共建計畫以及持續的安全與運營優化審查。",
+    playbookIds: ["club_funding", "security_simulator"]
   }
 ];
 
-const defaultVerificationCheckpoints = [
-  {
-    id: "vc1",
-    phase: "Phase 1",
-    title: "Phase 1 (Pre-Semester)",
-    titleZh: "階段一（學期前）",
-    tasks: [
-      { id: "vc1_t1", text: "Validate Microsoft Entra auth loop with ITU", textZh: "驗證與資訊科技處（ITU）的 Microsoft Entra 驗證迴路", done: false },
-      { id: "vc1_t2", text: "Ensure Moodle REST endpoints are accessible", textZh: "確保 Moodle REST 端點可正常存取", done: false }
+const roleVerificationCheckpoints = {
+  "IT Admin": {
+    day0: [
+      { id: "ita_d0_1", text: "Configure federated IdP single sign-on (SSO) loops with university directories", textZh: "與學校帳號目錄配置 IdP 聯邦單一登入 (SSO) 整合" },
+      { id: "ita_d0_2", text: "Establish enterprise workspace secure tenant boundaries for cloud data", textZh: "為雲端數據與 AI 工作空間建立企業級安全租戶隔離邊界" }
+    ],
+    pre: [
+      { id: "ita_pre_1", text: "Validate LMS REST API endpoints and webhooks connectivity", textZh: "驗證與測試 LMS 系統 REST API 端點與 Webhooks 連接性" },
+      { id: "ita_pre_2", text: "Verify core cloud drive connector sharing permissions and scope rules", textZh: "審查與驗證雲端硬碟連接器的共用存取規則與範圍設定" }
+    ],
+    sem1: [
+      { id: "ita_sem1_1", text: "Monitor system performance and API quota usage logs in cloud console", textZh: "在雲端控制台監控系統效能、請求延遲與 API 配額使用日誌" },
+      { id: "ita_sem1_2", text: "Review onboarding group provisioning metrics for faculty and student bodies", textZh: "審查教職員與學生群體之自動化帳號配置與群組導入指標" }
+    ],
+    mid: [
+      { id: "ita_mid_1", text: "Audit active workspace sharing metrics and restrict public access links", textZh: "審計活動中的工作區共享指標並限制公開存取連結" },
+      { id: "ita_mid_2", text: "Verify automated LMS enrollment synchronization scripts", textZh: "驗證 LMS 選課名單與 AI 平台之自動化同步排程腳本" }
+    ],
+    end: [
+      { id: "ita_end_1", text: "Coordinate database administrative audit locks on assessment materials", textZh: "協調並鎖定評估與期末考卷檔案之管理稽核權限" },
+      { id: "ita_end_2", text: "Compile platform API usage metrics and generate usage reports", textZh: "彙整平台 API 與運算資源之使用指標並產生使用分析報告" }
+    ],
+    track2: [
+      { id: "ita_t2_1", text: "Conduct rolling security and network routing vulnerability scans", textZh: "定期執行滾動式安全與網路路由弱點掃描" },
+      { id: "ita_t2_2", text: "Maintain and update connector integration frameworks for cloud resources", textZh: "維護並更新各項雲端資源連接器整合框架" }
     ]
   },
-  {
-    id: "vc2",
-    phase: "Phase 2",
-    title: "Phase 2 (Onboarding)",
-    titleZh: "階段二（導入期）",
-    tasks: [
-      { id: "vc2_t1", text: "Monitor real-time performance logs in GCP", textZh: "監控 Google Cloud Platform（GCP）實時效能日誌", done: false },
-      { id: "vc2_t2", text: "Review user feedback for routing gaps", textZh: "審查使用者關於路由缺口的意見回饋", done: false }
+  "Lecturer": {
+    day0: [
+      { id: "lec_d0_1", text: "Acquire role-based instructor access tokens and verify sign-in loops", textZh: "取得授課教師權限 Token 並驗證登入整合迴路" },
+      { id: "lec_d0_2", text: "Complete teacher-level platform onboarding tutorials", textZh: "完成教師級 AI 平台應用導入教學與教程" }
+    ],
+    pre: [
+      { id: "lec_pre_1", text: "Prepare and review lecture slides, readings, and syllabi for LMS upload", textZh: "在 LMS 中整理並審查教學大綱、投影片與課程材料" },
+      { id: "lec_pre_2", text: "Draft classroom prompt recipes and custom Agent instructions in Canvas Mode", textZh: "在 Canvas Mode 中編寫教學專用 Prompt 配方與客製化 Agent 指令" }
+    ],
+    sem1: [
+      { id: "lec_sem1_1", text: "Publish Socratic Tutor Agent links on the LMS platform", textZh: "在 LMS 平台顯著位置發布 Socratic 導師 Agent 存取連結" },
+      { id: "lec_sem1_2", text: "Deliver introductory classroom lectures on AI safety and prompting", textZh: "向學生講授關於 AI 使用倫理、限制與 Prompt 技巧之導論課" }
+    ],
+    mid: [
+      { id: "lec_mid_1", text: "Deploy Rubric-Feedback agents to help students review mid-term outlines", textZh: "部署 Rubric-Feedback 評分助理協助學生審查期中作業大綱" },
+      { id: "lec_mid_2", text: "Review student feedback reports regarding Tutor Agent helpfulness", textZh: "收集並審查學生關於 Socratic Tutor 導師助理實用性之問卷" }
+    ],
+    end: [
+      { id: "lec_end_1", text: "Create structured practice examination study-guides inside NotebookLM", textZh: "在 NotebookLM 中建立結構化的期末溫習與備考學習指南" },
+      { id: "lec_end_2", text: "Audit secure document folders to ensure zero exam-prep leakages", textZh: "稽核安全檔案目錄夾，確保備考資訊零外洩" }
+    ],
+    track2: [
+      { id: "lec_t2_1", text: "Analyze course enrollment and final student participation metrics", textZh: "分析課程註冊、AI 互動率與學生成就轉化指標" },
+      { id: "lec_t2_2", text: "Attend end-of-semester academic AI adoption roundtables", textZh: "出席學期末教職員學術 AI 導入與成效分享圓桌會議" }
     ]
   },
-  {
-    id: "vc3",
-    phase: "Phase 3",
-    title: "Phase 3 (Mid-Semester)",
-    titleZh: "階段三（期中）",
-    tasks: [
-      { id: "vc3_t1", text: "Audit notebook sharing settings (restrict access)", textZh: "審計筆記共享設定（限制外部存取）", done: false },
-      { id: "vc3_t2", text: "Verify Moodle enrollment syncing", textZh: "驗證 Moodle 學生選課名單同步", done: false }
+  "TA": {
+    day0: [
+      { id: "ta_d0_1", text: "Confirm instructor-assistant account provisioning on the platform", textZh: "確認助教帳號權限已在平台上成功配置" },
+      { id: "ta_d0_2", text: "Establish secure collaborative folders for laboratory guidelines", textZh: "為實驗教學與評分建立安全協作雲端目錄" }
+    ],
+    pre: [
+      { id: "ta_pre_1", text: "Draft comprehensive grading rubrics and safety instruction manuals", textZh: "編寫詳細評分量規指南與實驗室安全操作手冊" },
+      { id: "ta_pre_2", text: "Test custom lab manual illustration prompt parameters inside Canvas Mode", textZh: "在 Canvas Mode 中測試實驗手冊專用插圖 Prompt 產生參數" }
+    ],
+    sem1: [
+      { id: "ta_sem1_1", text: "Distribute interactive laboratory guides to students", textZh: "向學生分發互動式實驗指南與觀察記錄表" },
+      { id: "ta_sem1_2", text: "Setup active weekly office hour AI assistance support queues", textZh: "建立每週助教 AI 答疑服務佇列與線上諮詢時間" }
+    ],
+    mid: [
+      { id: "ta_mid_1", text: "Utilize secure NotebookLM instances to aggregate student mid-term progress", textZh: "利用安全 NotebookLM 彙整學生的期中學習表現趨勢" },
+      { id: "ta_mid_2", text: "Calibrate rubric assistant prompt guidelines to align feedback consistency", textZh: "校準評分助理 Prompt 指令，確保多位評分助教反饋一致性" }
+    ],
+    end: [
+      { id: "ta_end_1", text: "Generate student performance dashboards for teacher evaluations", textZh: "生成學生整體表現儀表板供授課教師教學評估參考" },
+      { id: "ta_end_2", text: "Clean and purge personal TA storage workspaces of student submissions", textZh: "清理與封存個人助教工作空間中的學生作業檔案" }
+    ],
+    track2: [
+      { id: "ta_t2_1", text: "Document course AI assistance best practices for departmental handovers", textZh: "撰寫課程 AI 輔導實務指南，留作院系經驗傳承文檔" },
+      { id: "ta_t2_2", text: "Monitor ongoing student compliance with safety and integrity guides", textZh: "持續監控學生在作業中對學術誠信與 AI 引用規則之遵循情況" }
     ]
   },
-  {
-    id: "vc4",
-    phase: "Phase 4",
-    title: "Phase 4 (Winter Assessment)",
-    titleZh: "階段四（冬季評估）",
-    tasks: [
-      { id: "vc4_t1", text: "Perform security audits on data repositories", textZh: "對數據儲存庫進行安全審計", done: false },
-      { id: "vc4_t2", text: "Confirm zero assessment leakage", textZh: "確認評估題目零洩漏", done: false }
+  "Student": {
+    day0: [
+      { id: "stu_d0_1", text: "Confirm registration and activate school-issued platform account", textZh: "確認註冊並啟用學校發放之 AI 平台帳戶" },
+      { id: "stu_d0_2", text: "Register student-led clubs and interest groups in the main directory", textZh: "在學生社團目錄中登記本學期學生活動或社團資訊" }
+    ],
+    pre: [
+      { id: "stu_pre_1", text: "Establish secure collaborative cloud folders for club operations", textZh: "為社團日常運營建立安全協作雲端資料夾" },
+      { id: "stu_pre_2", text: "Set up study portals with links to uploaded syllabus guides", textZh: "建立個人學習入口，彙整學科大綱與參考指南" }
+    ],
+    sem1: [
+      { id: "stu_sem1_1", text: "Complete student introductory prompt engineering tutorial videos", textZh: "完成學生入門級 Prompt 提示工程與 AI 倫理微課程" },
+      { id: "stu_sem1_2", text: "Link personal course notebooks to verified cloud storage directories", textZh: "將個人學科筆記與校端雲端安全硬碟連結" }
+    ],
+    mid: [
+      { id: "stu_mid_1", text: "Utilize collaborative NotebookLM study hubs for mid-term group study sessions", textZh: "利用 NotebookLM 小組共享學習空間進行期中考小組複習" },
+      { id: "stu_mid_2", text: "Compile student feedback surveys regarding platform utility", textZh: "填寫並整理學生對於平台軟硬體與 AI 助理功能之滿意度問卷" }
+    ],
+    end: [
+      { id: "stu_end_1", text: "Verify cloud folders contain correct materials for year-end club audits", textZh: "確認社團雲端資料夾已彙整期末稽核與評鑑所需文檔" },
+      { id: "stu_end_2", text: "Synthesize personal study summaries from verified lecture recordings", textZh: "利用 AI 筆記摘要期末重點，建立學科備考專題" }
+    ],
+    track2: [
+      { id: "stu_t2_1", text: "Track and log certificate completions for co-curricular workshops", textZh: "登錄並存檔個人在共建 AI 工作坊中取得之證書" },
+      { id: "stu_t2_2", text: "Participate in student-led hackathons or custom agent competitions", textZh: "參加學生會主導之校園黑客松或客製化 AI 應用競賽" }
     ]
   },
-  {
-    id: "vc5",
-    phase: "Phase 5",
-    title: "Phase 5 (Rolling)",
-    titleZh: "階段五（持續滾動）",
-    tasks: [
-      { id: "vc5_t1", text: "Track certification completion rates", textZh: "追蹤證照/認證課程完成率", done: false },
-      { id: "vc5_t2", text: "Optimize Custom Tool integrations", textZh: "優化客製化工具（Custom Tool）整合", done: false }
+  "Security": {
+    day0: [
+      { id: "sec_d0_1", text: "Initialize active security credentials for safety response teams", textZh: "啟用校園安全應變團隊專用安全登入憑證" },
+      { id: "sec_d0_2", text: "Map secure communications and dispatcher roles in the command system", textZh: "在指揮系統中配置各項緊急安全通訊與值班調度角色" }
+    ],
+    pre: [
+      { id: "sec_pre_1", text: "Draft emergency simulator guidelines inside Gemini Canvas Mode", textZh: "在 Gemini Canvas Mode 中編寫緊急狀況模擬訓練大綱" },
+      { id: "sec_pre_2", text: "Establish secure data parameters for campus crisis reference playbooks", textZh: "為校園應變與安全防護操作手冊設定安全邊界" }
+    ],
+    sem1: [
+      { id: "sec_sem1_1", text: "Run crisis dispatcher roleplay simulations with incoming personnel", textZh: "與新進人員開展緊急應變調度角色扮演與 AI 互動模擬訓練" },
+      { id: "sec_sem1_2", text: "Distribute emergency reference guidelines on the support portal", textZh: "在校端支援門戶發布更新後之緊急事故通報指引" }
+    ],
+    mid: [
+      { id: "sec_mid_1", text: "Conduct mid-term physical drills and coordinate AI safety logging", textZh: "進行期中實地演練，並配合 AI 自動化安全事故通報與紀錄" },
+      { id: "sec_mid_2", text: "Extract safety incident trends using secure text summary tools", textZh: "使用安全文本分析工具，彙整分析期中安全事故通報趨勢" }
+    ],
+    end: [
+      { id: "sec_end_1", text: "Audit physical security systems during winter examination schedules", textZh: "在期末冬季考試週期間加強校園各大考場與設施之實體巡邏安全審計" },
+      { id: "sec_end_2", text: "Audit command hub network routing and verify lines are active", textZh: "對安全指揮中心與警衛通訊網路進行通訊測試與線路稽核" }
+    ],
+    track2: [
+      { id: "sec_t2_1", text: "Collaborate on campus-safety training reviews", textZh: "共同參與校園防護應變教育訓練與案例回顧會議" },
+      { id: "sec_t2_2", text: "Optimize emergency logging custom Agents for faster dispatch", textZh: "優化安全調度 Agent 指令，提高報案分類與派單速度" }
+    ]
+  },
+  "Finance": {
+    day0: [
+      { id: "fin_d0_1", text: "Establish finance-grade credentials and verify local storage boundaries", textZh: "建立財務等級之安全登入憑證並確認本地數據邊界" },
+      { id: "fin_d0_2", text: "Set audit rules for departmental spending ledger checks", textZh: "設定各部門學科建設經費之自動化審計與預算稽核規則" }
+    ],
+    pre: [
+      { id: "fin_pre_1", text: "Draft pre-semester budget spreadsheets inside Gemini Canvas Mode", textZh: "在 Gemini Canvas Mode 中編寫新學年預算籌劃與科目配置表" },
+      { id: "fin_pre_2", text: "Verify approved status of student club and co-curricular projects", textZh: "審查與確認各項社團活動與共建項目之經費核撥許可" }
+    ],
+    sem1: [
+      { id: "fin_sem1_1", text: "Distribute standard procurement checklists on the admin portal", textZh: "在行政系統發布新版採購與經費報銷電子核對清單" },
+      { id: "fin_sem1_2", text: "Onboard student club treasurers to standard spending forms", textZh: "對學生社團財務負責人開展標準化預算與核銷流程引導" }
+    ],
+    mid: [
+      { id: "fin_mid_1", text: "Conduct midterm budget spending audits across major departments", textZh: "進行期中經費支用與預算執行進度中期稽核" },
+      { id: "fin_mid_2", text: "Compile expenditure summaries and audit logs with data models", textZh: "使用數據模型彙整各類經費支出報表並分析核銷異常值" }
+    ],
+    end: [
+      { id: "fin_end_1", text: "Verify spending logs match internal compliance mandates", textZh: "查核各項報銷經費，確保其完全符合校端財務內控制度" },
+      { id: "fin_end_2", text: "Publish year-end budget reconciliation reports", textZh: "彙整並發布年終預算執行與績效審查報告" }
+    ],
+    track2: [
+      { id: "fin_t2_1", text: "Run continuous spending audits to check for billing outliers", textZh: "常態化執行經費審查，偵測重複報銷或異常採購數據" },
+      { id: "fin_t2_2", text: "Optimize next-semester budget prediction models", textZh: "優化下學期預算預測模型，提升資金調度效率" }
+    ]
+  },
+  "SAO": {
+    day0: [
+      { id: "sao_d0_1", text: "Initialize counselor accounts with high-security privacy controls", textZh: "啟用學務與心理輔導專用高隱私安全等級登入帳戶" },
+      { id: "sao_d0_2", text: "Verify secure student-activity storage repositories are active", textZh: "驗證學生活動檔案與敏感名單安全存儲目錄已正常啟用" }
+    ],
+    pre: [
+      { id: "sao_pre_1", text: "Draft student orientation guidance packages inside Gemini Canvas Mode", textZh: "在 Gemini Canvas Mode 中編寫新生生活指引與輔導指南手冊" },
+      { id: "sao_pre_2", text: "Upload scavenger hunt interactive check-point rules and clues", textZh: "上傳新生迎新宿營 scavenger hunt 互動關卡規則與提示線索" }
+    ],
+    sem1: [
+      { id: "sao_sem1_1", text: "Activate Campus Scavenger Hunt Agent for freshman onboarding", textZh: "發布並啟用新生專用校園探索解謎 Scavenger Hunt 導覽 Agent" },
+      { id: "sao_sem1_2", text: "Deploy active support hotline contacts on the counselor page", textZh: "在學務輔導網頁發布最新的心理與生活支援熱線聯絡資訊" }
+    ],
+    mid: [
+      { id: "sao_mid_1", text: "Review counselor service engagement statistics using text-summary metrics", textZh: "利用學務數據工具摘要分析期中輔導個案與活動反饋趨勢" },
+      { id: "sao_mid_2", text: "Verify orientation event log archives and compile feedback responses", textZh: "歸檔迎新活動之問卷調查與互動指標數據" }
+    ],
+    end: [
+      { id: "sao_end_1", text: "Coordinate stress-relief resources for student final examination periods", textZh: "協調並提供期末考週減壓資源與心理諮詢急診服務" },
+      { id: "sao_end_2", text: "Audit and purge sensitive orientation personal detail temporary logs", textZh: "清理與刪除迎新活動暫存檔案中涉及學生個人隱私之臨時紀錄" }
+    ],
+    track2: [
+      { id: "sao_t2_1", text: "Analyze co-curricular workshop and club certificate completion stats", textZh: "統計並分析通識教育工作坊與社團幹部認證完成率" },
+      { id: "sao_t2_2", text: "Maintain custom student mental wellness supportive bots", textZh: "維護並微調客製化學生生活支持與暖心輔導 AI 機器人" }
     ]
   }
-];
+};
 
 let timelineStages = [];
-let verificationCheckpoints = [];
 
 // Initialize or load configuration
 function initTimeline() {
@@ -5534,241 +5678,182 @@ function initTimeline() {
     timelineStages = JSON.parse(JSON.stringify(defaultTimelineStages));
   }
 
-  const savedCheckpoints = localStorage.getItem(VERIFICATION_STORAGE_KEY);
-  if (savedCheckpoints) {
-    try {
-      verificationCheckpoints = JSON.parse(savedCheckpoints);
-    } catch (e) {
-      verificationCheckpoints = JSON.parse(JSON.stringify(defaultVerificationCheckpoints));
-    }
-  } else {
-    verificationCheckpoints = JSON.parse(JSON.stringify(defaultVerificationCheckpoints));
-  }
-
-  if (!appState.roadmapActiveTab) {
-    appState.roadmapActiveTab = localStorage.getItem("ge_roadmap_active_tab_v1") || "timeline";
-  }
   if (!appState.roadmapActiveStage) {
-    appState.roadmapActiveStage = localStorage.getItem("ge_roadmap_active_stage_v1") || "pre";
+    appState.roadmapActiveStage = localStorage.getItem("ge_roadmap_active_stage_v2") || "day0";
+    if (!timelineStages.some(s => s.id === appState.roadmapActiveStage)) {
+      appState.roadmapActiveStage = "day0";
+    }
   }
 }
 
 // Save states to local storage
 function saveTimeline() {
   localStorage.setItem(TIMELINE_STAGES_STORAGE_KEY, JSON.stringify(timelineStages));
-  localStorage.setItem(VERIFICATION_STORAGE_KEY, JSON.stringify(verificationCheckpoints));
+}
+
+// Dynamic role-related use case filter helper
+function isUsecaseRelatedToRole(useCase, role) {
+  if (!role) return true;
+  if (appState.isAdmin === true) return true;
+  
+  // IT Admins have administrative rights to map all cases
+  if (role === "IT Admin") return true;
+  
+  // Lecturer has academic-level supervisor responsibilities (includes TAs)
+  if (role === "Lecturer") {
+    return useCase.role === "Lecturer" || useCase.role === "TA" || useCase.category === "academic";
+  }
+  // TAs see their own and academic tasks
+  if (role === "TA") {
+    return useCase.role === "TA" || useCase.role === "Lecturer" || useCase.category === "academic";
+  }
+  // Student sees Student & club operations
+  if (role === "Student") {
+    return useCase.role === "Student" || useCase.category === "student";
+  }
+  // Support roles see their exact roles
+  return useCase.role === role;
 }
 
 // Core Roadmap Rendering Router
 function renderTimeline() {
   initTimeline();
-
-  // Setup main view buttons and states
-  const btnShowTimeline = document.getElementById("btnShowTimeline");
-  const btnShowCheckpoints = document.getElementById("btnShowCheckpoints");
-  const timelineDashboardSection = document.getElementById("timelineDashboardSection");
-  const verificationDashboardSection = document.getElementById("verificationDashboardSection");
-
-  if (btnShowTimeline && !btnShowTimeline.dataset.listenerBound) {
-    btnShowTimeline.dataset.listenerBound = "true";
-    btnShowTimeline.addEventListener("click", () => {
-      appState.roadmapActiveTab = "timeline";
-      localStorage.setItem("ge_roadmap_active_tab_v1", "timeline");
-      btnShowTimeline.classList.add("active");
-      btnShowCheckpoints.classList.remove("active");
-      renderTimeline();
-    });
-  }
-
-  if (btnShowCheckpoints && !btnShowCheckpoints.dataset.listenerBound) {
-    btnShowCheckpoints.dataset.listenerBound = "true";
-    btnShowCheckpoints.addEventListener("click", () => {
-      appState.roadmapActiveTab = "checkpoints";
-      localStorage.setItem("ge_roadmap_active_tab_v1", "checkpoints");
-      btnShowTimeline.classList.remove("active");
-      btnShowCheckpoints.classList.add("active");
-      renderTimeline();
-    });
-  }
-
-  // Handle Tab Displays
-  if (appState.roadmapActiveTab === "timeline") {
-    if (btnShowTimeline) btnShowTimeline.classList.add("active");
-    if (btnShowCheckpoints) btnShowCheckpoints.classList.remove("active");
-    if (timelineDashboardSection) timelineDashboardSection.style.display = "block";
-    if (verificationDashboardSection) verificationDashboardSection.style.display = "none";
-    renderTimelineDashboard();
-  } else {
-    if (btnShowTimeline) btnShowTimeline.classList.remove("active");
-    if (btnShowCheckpoints) btnShowCheckpoints.classList.add("active");
-    if (timelineDashboardSection) timelineDashboardSection.style.display = "none";
-    if (verificationDashboardSection) verificationDashboardSection.style.display = "block";
-    renderCheckpointsDashboard();
-  }
-}
-
-// 1. RENDER CHRONOLOGICAL TIMELINE VIEW (timeline.jpg)
-function renderTimelineDashboard() {
-  const container = document.getElementById("timelineDashboardSection");
+  const container = document.getElementById("unifiedRoadmapContainer");
   if (!container) return;
 
   const isZh = appState.activeLanguage === "zh-TW" || appState.activeLanguage === "zh-CN";
+  const role = appState.userRole || "Lecturer";
 
-  // Pre-calculate deployment count and status for each stage
+  // Calculate stats for each stage
   const stageStats = {};
   timelineStages.forEach(stage => {
-    let deployedCount = 0;
-    stage.playbookIds.forEach(id => {
-      const uc = useCasesDb.find(u => u.id === id);
-      if (uc && (uc.isDeployed === true || uc.isDeployed === 1)) {
-        deployedCount++;
+    // Checklist Stats
+    const tasks = roleVerificationCheckpoints[role]?.[stage.id] || [];
+    const totalTasks = tasks.length;
+    let completedTasks = 0;
+    tasks.forEach(t => {
+      const key = `ge_roadmap_chk_${role}_${stage.id}_${t.id}`;
+      if (localStorage.getItem(key) === "true") {
+        completedTasks++;
       }
     });
-    const totalCount = stage.playbookIds.length;
+    const isCompleted = totalTasks > 0 ? (completedTasks === totalTasks) : true;
+    const checklistPercent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 100;
+
+    // Playbook stats
+    let totalPlaybooks = 0;
+    let deployedPlaybooks = 0;
+    stage.playbookIds.forEach(id => {
+      const uc = useCasesDb.find(u => u.id === id);
+      if (uc && isUsecaseRelatedToRole(uc, role)) {
+        totalPlaybooks++;
+        if (uc.isDeployed === true || uc.isDeployed === 1) {
+          deployedPlaybooks++;
+        }
+      }
+    });
+    const playbookPercent = totalPlaybooks > 0 ? Math.round((deployedPlaybooks / totalPlaybooks) * 100) : 0;
+
     stageStats[stage.id] = {
-      deployedCount,
-      totalCount,
-      percent: totalCount > 0 ? Math.round((deployedCount / totalCount) * 100) : 0
+      totalTasks,
+      completedTasks,
+      isCompleted,
+      checklistPercent,
+      totalPlaybooks,
+      deployedPlaybooks,
+      playbookPercent
     };
   });
 
-  // Build Desktop/Laptop Dual-Track Chronological Timeline Layout
-  let desktopHtml = `
-    <div class="chronological-timeline-desktop">
-      <!-- Row 1: Academic Calendar Header Axis -->
-      <div class="timeline-row calendar-header-row">
-        <div class="track-label-col">
-          <div class="track-label-card calendar-label">
-            <span class="material-symbols-outlined">calendar_month</span>
-            <span>${isZh ? '學術行事曆' : 'Academic Calendar'}</span>
-          </div>
-        </div>
-        <div class="timeline-tracks-col">
-          <div class="timeline-arrow-axis">
-            <div class="timeline-axis-point" style="left: 12.5%;">
-              <div class="axis-tick"></div>
-              <div class="axis-label">${isZh ? '學期前（八月）' : 'Pre-Semester<br>(Aug)'}</div>
-            </div>
-            <div class="timeline-axis-point" style="left: 37.5%;">
-              <div class="axis-tick"></div>
-              <div class="axis-label">${isZh ? '第一學期（九月）' : 'Sem 1<br>(Sep)'}</div>
-            </div>
-            <div class="timeline-axis-point" style="left: 62.5%;">
-              <div class="axis-tick"></div>
-              <div class="axis-label">${isZh ? '期中（十月至十一月十五）' : 'Mid-Semester<br>(Oct-Nov 15)'}</div>
-            </div>
-            <div class="timeline-axis-point" style="left: 87.5%;">
-              <div class="axis-tick"></div>
-              <div class="axis-label">${isZh ? '期末（十一月十六至一月十五）' : 'End-of-Semester<br>(Nov 16-Jan 15)'}</div>
-            </div>
-          </div>
-        </div>
-      </div>
+  // Calculate Alternating Timeline Progress Width (Inspired by timeline2.webp)
+  const stageOrder = ["day0", "pre", "sem1", "mid", "end", "track2"];
+  const positions = [5, 23, 41, 59, 77, 95];
+  let progressWidth = 5; // starting node 0 is day 0
+  for (let i = 0; i < stageOrder.length; i++) {
+    if (stageStats[stageOrder[i]].isCompleted) {
+      progressWidth = positions[i];
+    } else {
+      break;
+    }
+  }
 
-      <!-- Row 2: Track 1 - Semester-Restricted Implementations -->
-      <div class="timeline-row track-row">
-        <div class="track-label-col">
-          <div class="track-label-card">
-            <div class="track-badge red-accent">${isZh ? '軌道一' : 'Track 1'}</div>
-            <div class="track-name">${isZh ? '學期限制性部署' : 'Semester-Restricted<br>Implementations'}</div>
-          </div>
-        </div>
-        <div class="timeline-tracks-col cards-grid-col">
+  // 1. Desktop Alternating Horizontal Timeline
+  let desktopHtml = `
+    <div class="alternating-timeline-container">
+      <div class="timeline-horizontal-track">
+        <div class="timeline-track-progress" style="width: ${progressWidth}%;"></div>
   `;
 
-  // Render the 4 chronological Track 1 cards
-  const track1StageIds = ["pre", "sem1", "mid", "end"];
-  track1StageIds.forEach(id => {
+  stageOrder.forEach((id, index) => {
     const stage = timelineStages.find(s => s.id === id);
     const stats = stageStats[id];
     const isActive = appState.roadmapActiveStage === id;
-    const stageTitle = isZh ? stage.titleZh : stage.title;
+    const isCompleted = stats.isCompleted;
+    const isUp = index % 2 === 0; // Alternating height layouts! Even UP, Odd DOWN
+    const pos = positions[index];
+
     const stageSubtitle = isZh ? stage.subtitleZh : stage.subtitle;
+    
+    // Custom label inside card
+    let shortName = id === "day0" ? (isZh ? "Day 0 配置" : "Day 0 Setup")
+                  : id === "pre" ? (isZh ? "學期準備" : "Pre-Semester")
+                  : id === "sem1" ? (isZh ? "正式啟動" : "Sem 1 Launch")
+                  : id === "mid" ? (isZh ? "期中試點" : "Mid-Term Pilot")
+                  : id === "end" ? (isZh ? "期末審計" : "Exam Audit")
+                  : (isZh ? "滾動項目" : "Rolling Projects");
 
     desktopHtml += `
-      <div class="timeline-card-node ${isActive ? 'active' : ''}" 
-           style="--node-accent: ${stage.color};" 
-           data-stage-id="${id}"
+      <!-- Node Joint ${index} -->
+      <div class="timeline-node-joint ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}" 
+           style="left: ${pos}%;" 
            onclick="selectRoadmapStage('${id}')">
-        <div class="node-border-accent"></div>
-        <div class="node-header">
-          <span class="node-badge" style="background: ${stage.color}15; color: ${stage.color};">${stageSubtitle}</span>
-          ${stats.percent === 100 ? '<span class="material-symbols-outlined node-done-icon">verified</span>' : ''}
-        </div>
-        <h4 class="node-title">${stageTitle}</h4>
-        <div class="node-progress-mini">
-          <div class="node-progress-mini-bar" style="width: ${stats.percent}%; background: ${stage.color};"></div>
-        </div>
+        <span class="material-symbols-outlined node-joint-icon">
+          ${isCompleted ? 'check' : (id === 'day0' ? 'settings' : 'pending')}
+        </span>
+      </div>
+
+      <!-- Connector line -->
+      <div class="alternating-marker-pin ${isUp ? 'pin-up' : 'pin-down'}" style="left: ${pos}%;"></div>
+
+      <!-- Floating Schedule Flag -->
+      <div class="floating-schedule-flag ${isUp ? 'flag-up' : 'flag-down'} ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}" 
+           style="left: ${pos}%;"
+           onclick="selectRoadmapStage('${id}')">
+        <div class="flag-date-label">${stageSubtitle}</div>
+        <div class="flag-title-label">${shortName}</div>
+        <div class="flag-subtitle-label">${stats.completedTasks}/${stats.totalTasks} ${isZh ? '已驗證' : 'Verified'}</div>
       </div>
     `;
   });
 
   desktopHtml += `
-        </div>
-      </div>
-
-      <!-- Row 3: Track 2 - Continuous Anytime-Proceeded Initiatives -->
-      <div class="timeline-row track-row" style="margin-top: 12px;">
-        <div class="track-label-col">
-          <div class="track-label-card">
-            <div class="track-badge indigo-accent">${isZh ? '軌道二' : 'Track 2'}</div>
-            <div class="track-name">${isZh ? '持續滾動式項目' : 'Continuous Anytime-<br>Proceeded Initiatives'}</div>
-          </div>
-        </div>
-        <div class="timeline-tracks-col">
-  `;
-
-  // Render Track 2 full-width chevron arrow banner
-  const track2Stage = timelineStages.find(s => s.id === "track2");
-  const track2Stats = stageStats["track2"];
-  const isTrack2Active = appState.roadmapActiveStage === "track2";
-  const track2Title = isZh ? track2Stage.titleZh : track2Stage.title;
-
-  desktopHtml += `
-          <div class="continuous-arrow-bar ${isTrack2Active ? 'active' : ''}" 
-               data-stage-id="track2"
-               onclick="selectRoadmapStage('track2')">
-            <div class="arrow-chevron-tail"></div>
-            <div class="arrow-content">
-              <span class="material-symbols-outlined arrow-icon">all_inclusive</span>
-              <span class="arrow-text">${track2Title}</span>
-              <div class="arrow-progress-wrapper">
-                <span class="arrow-progress-label">${track2Stats.deployedCount}/${track2Stats.totalCount} ${isZh ? '已部署' : 'Deployed'}</span>
-                <div class="arrow-progress-bar">
-                  <div class="arrow-progress-fill" style="width: ${track2Stats.percent}%;"></div>
-                </div>
-              </div>
-            </div>
-            <div class="arrow-pointer-tip"></div>
-          </div>
-        </div>
       </div>
     </div>
   `;
 
-  // Build Mobile Stream Layout (<= 1024px)
+  // 2. Mobile vertical stream layout
   let mobileHtml = `<div class="chronological-timeline-mobile">`;
-  
-  timelineStages.forEach(stage => {
-    const stats = stageStats[stage.id];
-    const isActive = appState.roadmapActiveStage === stage.id;
+  stageOrder.forEach(id => {
+    const stage = timelineStages.find(s => s.id === id);
+    const stats = stageStats[id];
+    const isActive = appState.roadmapActiveStage === id;
+    const isCompleted = stats.isCompleted;
+
     const stageTitle = isZh ? stage.titleZh : stage.title;
     const stageSubtitle = isZh ? stage.subtitleZh : stage.subtitle;
 
     mobileHtml += `
-      <div class="mobile-timeline-item ${isActive ? 'active' : ''}" 
-           style="--node-accent: ${stage.color};"
-           onclick="selectRoadmapStage('${stage.id}')">
+      <div class="mobile-timeline-item ${isActive ? 'active' : ''}" onclick="selectRoadmapStage('${id}')">
         <div class="mobile-timeline-connector"></div>
         <div class="mobile-timeline-badge" style="background: ${stage.color};"></div>
         <div class="mobile-timeline-content-card">
           <div class="mobile-card-header">
             <span class="mobile-card-subtitle" style="color: ${stage.color};">${stageSubtitle}</span>
-            ${stats.percent === 100 ? '<span class="material-symbols-outlined node-done-icon">verified</span>' : ''}
+            ${isCompleted ? '<span class="material-symbols-outlined" style="color: #10b981; font-size:18px;">verified</span>' : ''}
           </div>
           <h4 class="mobile-card-title">${stageTitle}</h4>
           <div class="mobile-card-progress">
-            <div class="mobile-card-progress-bar" style="width: ${stats.percent}%; background: ${stage.color};"></div>
+            <div class="mobile-card-progress-bar" style="width: ${stats.checklistPercent}%; background: ${stage.color};"></div>
           </div>
         </div>
       </div>
@@ -5776,71 +5861,114 @@ function renderTimelineDashboard() {
   });
   mobileHtml += `</div>`;
 
-  // Combine View A Structures and Append Details Panel Holder
+  // Write base layout structure into DOM
   container.innerHTML = `
     ${desktopHtml}
     ${mobileHtml}
-    <div id="timelineDetailsPanel" class="timeline-details-panel-card">
-      <!-- Updated dynamically via JavaScript -->
+    <div class="roadmap-split-dashboard">
+      <!-- Left Column: Verification Checklists -->
+      <div class="roadmap-dashboard-card" id="roadmapChecklistCard"></div>
+      
+      <!-- Right Column: Role-Specific Use-Case Playbooks -->
+      <div class="roadmap-dashboard-card" id="roadmapPlaybookCard"></div>
     </div>
   `;
 
-  // Render the selected phase's details
-  renderStageDetails();
+  renderRoadmapDashboardDetails();
 }
 
-// Selected phase controller
+// Select milestone trigger
 window.selectRoadmapStage = function(stageId) {
   appState.roadmapActiveStage = stageId;
-  localStorage.setItem("ge_roadmap_active_stage_v1", stageId);
+  localStorage.setItem("ge_roadmap_active_stage_v2", stageId);
 
-  // Sync class selections in DOM without full reload
-  document.querySelectorAll(".timeline-card-node, .continuous-arrow-bar, .mobile-timeline-item").forEach(el => {
-    if (el.getAttribute("data-stage-id") === stageId) {
+  // Quick state sync without full rebuilds
+  document.querySelectorAll(".timeline-node-joint, .floating-schedule-flag, .mobile-timeline-item").forEach(el => {
+    if (el.getAttribute("onclick") && el.getAttribute("onclick").includes(`'${stageId}'`)) {
       el.classList.add("active");
     } else {
       el.classList.remove("active");
     }
   });
 
-  renderStageDetails();
+  renderRoadmapDashboardDetails();
 };
 
-// Render Selected Stage Detail and Playbook assignment dashboard
-function renderStageDetails() {
-  const panel = document.getElementById("timelineDetailsPanel");
-  if (!panel) return;
+// Render Stage Details dual-column dashboards
+function renderRoadmapDashboardDetails() {
+  const checkCard = document.getElementById("roadmapChecklistCard");
+  const playCard = document.getElementById("roadmapPlaybookCard");
+  if (!checkCard || !playCard) return;
 
-  const stageId = appState.roadmapActiveStage || "pre";
+  const stageId = appState.roadmapActiveStage || "day0";
   const stage = timelineStages.find(s => s.id === stageId);
   if (!stage) return;
 
   const isZh = appState.activeLanguage === "zh-TW" || appState.activeLanguage === "zh-CN";
+  const role = appState.userRole || "Lecturer";
 
-  // Pre-calculate statistics
-  let deployedCount = 0;
-  stage.playbookIds.forEach(id => {
-    const uc = useCasesDb.find(u => u.id === id);
-    if (uc && (uc.isDeployed === true || uc.isDeployed === 1)) {
-      deployedCount++;
-    }
-  });
-  const totalCount = stage.playbookIds.length;
-  const progressPercent = totalCount > 0 ? Math.round((deployedCount / totalCount) * 100) : 0;
-
-  // Localize text variables
   const stageTitle = isZh ? stage.titleZh : stage.title;
   const stageDesc = isZh ? stage.descriptionZh : stage.description;
-  const progressText = isZh 
-    ? `已部署 ${deployedCount} / ${totalCount} 個案例 (${progressPercent}%)` 
-    : `${deployedCount} of ${totalCount} playbooks deployed (${progressPercent}%)`;
 
-  // Compile assigned playbooks HTML list
+  // Render Left Column: Checkbox Checklist
+  const tasks = roleVerificationCheckpoints[role]?.[stageId] || [];
+  let checkedCount = 0;
+  let checklistHtml = "";
+
+  tasks.forEach(t => {
+    const key = `ge_roadmap_chk_${role}_${stageId}_${t.id}`;
+    const isChecked = localStorage.getItem(key) === "true";
+    if (isChecked) checkedCount++;
+
+    const taskText = isZh ? t.textZh : t.text;
+
+    checklistHtml += `
+      <label class="roadmap-task-label ${isChecked ? 'checked' : ''}">
+        <input type="checkbox" 
+               onchange="handleRoadmapTaskToggle('${stageId}', '${t.id}', this)" 
+               ${isChecked ? 'checked' : ''} />
+        <div class="roadmap-checkbox-indicator"></div>
+        <span class="roadmap-task-text">${taskText}</span>
+      </label>
+    `;
+  });
+
+  if (tasks.length === 0) {
+    checklistHtml = `<p class="empty-playbook-msg">${isZh ? '此階段對您的角色無特定驗證項目。' : 'No verification items for your role in this phase.'}</p>`;
+  }
+
+  const checklistPercent = tasks.length > 0 ? Math.round((checkedCount / tasks.length) * 100) : 100;
+  const isChecklistCompleted = checklistPercent === 100;
+
+  checkCard.innerHTML = `
+    <div class="roadmap-card-header-bar" style="background: ${stage.color};"></div>
+    <div class="roadmap-card-body">
+      <div class="roadmap-section-meta-row">
+        <h4 class="roadmap-section-title">${isZh ? '階段驗證檢查清單' : 'Phase Verification Checklist'}</h4>
+        <span class="roadmap-section-badge ${isChecklistCompleted ? 'verified' : 'pending'}">
+          ${isChecklistCompleted ? (isZh ? '已完全驗證' : 'Verified') : (isZh ? '待驗證' : 'Pending Verification')} (${checklistPercent}%)
+        </span>
+      </div>
+      <p class="roadmap-section-desc">${stageDesc}</p>
+      <div class="roadmap-checklist-container">
+        ${checklistHtml}
+      </div>
+    </div>
+  `;
+
+  // Render Right Column: Associated Use Cases Playbooks
+  let deployedCount = 0;
   let playbooksHtml = "";
+  let rolePlaybookCount = 0;
+
   stage.playbookIds.forEach(id => {
     const uc = useCasesDb.find(u => u.id === id);
-    if (uc) {
+    // Filter strictly based on active user role
+    if (uc && isUsecaseRelatedToRole(uc, role)) {
+      rolePlaybookCount++;
       const isUcDeployed = uc.isDeployed === true || uc.isDeployed === 1;
+      if (isUcDeployed) deployedCount++;
+
       const ucTitle = uc.translations && uc.translations[appState.activeLanguage] && uc.translations[appState.activeLanguage].title 
         ? uc.translations[appState.activeLanguage].title 
         : uc.title;
@@ -5856,10 +5984,10 @@ function renderStageDetails() {
           <div style="display: flex; gap: 8px; align-items: center;">
             <button class="btn-toggle-deploy-mini ${isUcDeployed ? 'active' : ''}" 
                     onclick="toggleTimelinePlaybookDeploy('${stageId}', '${id}', ${isUcDeployed})"
-                    title="${isUcDeployed ? (isZh ? '取消部署' : 'Mark Inactive') : (isZh ? '標記為已部署' : 'Mark Active')}">
+                    title="${isUcDeployed ? (isZh ? '停用部署' : 'Mark Inactive') : (isZh ? '啟用部署' : 'Mark Active')}">
               <span class="material-symbols-outlined" style="font-size: 15px;">rocket_launch</span>
             </button>
-            <button class="btn-remove-playbook" onclick="removePlaybookFromStage('${stageId}', '${id}')" title="${isZh ? '移除此關聯' : 'Remove from stage'}">
+            <button class="btn-remove-playbook" onclick="removePlaybookFromStage('${stageId}', '${id}')" title="${isZh ? '解除關聯' : 'Remove play'}">
               <span class="material-symbols-outlined" style="font-size: 15px;">close</span>
             </button>
           </div>
@@ -5868,25 +5996,34 @@ function renderStageDetails() {
     }
   });
 
-  if (stage.playbookIds.length === 0) {
-    playbooksHtml = `<p class="empty-playbook-msg">${isZh ? '目前未分配任何案例。' : 'No playbooks assigned yet.'}</p>`;
+  if (rolePlaybookCount === 0) {
+    playbooksHtml = `<p class="empty-playbook-msg">${isZh ? '此階段對您的角色目前無關聯使用案例。' : 'No playbooks mapped to your role in this phase.'}</p>`;
   }
 
-  // Compile option dropdown select for assigning unassigned playbooks
-  let dropdownOptionsHtml = `<option value="">${isZh ? '+ 分配新案例到此階段' : '+ Assign Playbook to Stage...'}</option>`;
-  
-  const sortedUseCases = [...useCasesDb].sort((a, b) => {
-    const titleA = a.translations && a.translations[appState.activeLanguage] && a.translations[appState.activeLanguage].title 
-      ? a.translations[appState.activeLanguage].title 
-      : a.title;
-    const titleB = b.translations && b.translations[appState.activeLanguage] && b.translations[appState.activeLanguage].title 
-      ? b.translations[appState.activeLanguage].title 
-      : b.title;
-    return titleA.localeCompare(titleB);
-  });
+  const progressPercent = rolePlaybookCount > 0 ? Math.round((deployedCount / rolePlaybookCount) * 100) : 0;
+  const progressText = isZh 
+    ? `已部署 ${deployedCount} / ${rolePlaybookCount} 個案例 (${progressPercent}%)` 
+    : `${deployedCount} of ${rolePlaybookCount} playbooks deployed (${progressPercent}%)`;
 
+  // Compile strictly filtered dropdown selection option list
+  let dropdownOptionsHtml = `<option value="">${isZh ? '+ 關聯新場景案例到此階段' : '+ Assign Playbook to Phase...'}</option>`;
+  
+  const sortedUseCases = [...useCasesDb]
+    .filter(uc => isUsecaseRelatedToRole(uc, role))
+    .sort((a, b) => {
+      const titleA = a.translations && a.translations[appState.activeLanguage] && a.translations[appState.activeLanguage].title 
+        ? a.translations[appState.activeLanguage].title 
+        : a.title;
+      const titleB = b.translations && b.translations[appState.activeLanguage] && b.translations[appState.activeLanguage].title 
+        ? b.translations[appState.activeLanguage].title 
+        : b.title;
+      return titleA.localeCompare(titleB);
+    });
+
+  let hasUnassigned = false;
   sortedUseCases.forEach(uc => {
     if (!stage.playbookIds.includes(uc.id)) {
+      hasUnassigned = true;
       const ucTitle = uc.translations && uc.translations[appState.activeLanguage] && uc.translations[appState.activeLanguage].title 
         ? uc.translations[appState.activeLanguage].title 
         : uc.title;
@@ -5894,38 +6031,35 @@ function renderStageDetails() {
     }
   });
 
-  // Inner Panel layout HTML
-  panel.innerHTML = `
-    <div class="panel-header-accent" style="background: ${stage.color};"></div>
-    <div class="panel-body">
-      <div class="panel-meta-row">
-        <h3 class="panel-stage-title">${stageTitle}</h3>
-        <span class="panel-percentage-tag" style="background: ${stage.color}15; color: ${stage.color};">${progressPercent}%</span>
+  playCard.innerHTML = `
+    <div class="roadmap-card-header-bar" style="background: ${stage.color};"></div>
+    <div class="roadmap-card-body">
+      <div class="roadmap-section-meta-row">
+        <h4 class="roadmap-section-title">${isZh ? '角色關聯使用場景' : 'Role-Specific Playbooks'}</h4>
+        <span class="roadmap-section-badge verified" style="background: ${stage.color}15; color: ${stage.color};">
+          ${progressPercent}%
+        </span>
       </div>
-      <p class="panel-stage-desc">${stageDesc}</p>
       
-      <!-- Progress Bar Meter -->
-      <div class="milestone-progress-wrapper" style="margin-top: 16px;">
-        <div class="milestone-progress-text">
+      <!-- Progress meter -->
+      <div class="milestone-progress-wrapper" style="margin-top: 14px; margin-bottom: 24px;">
+        <div class="milestone-progress-text" style="display: flex; justify-content: space-between; font-size: 11px; font-weight:700; color: var(--text-secondary); margin-bottom:6px;">
           <span>${isZh ? '部署進度' : 'Deployment Progress'}</span>
           <span>${progressText}</span>
         </div>
-        <div class="milestone-progress-bar">
-          <div class="milestone-progress-fill" style="width: ${progressPercent}%; background: ${stage.color};"></div>
+        <div class="milestone-progress-bar" style="height:6px; background: rgba(0,0,0,0.05); border-radius:3px; overflow:hidden;">
+          <div class="milestone-progress-fill" style="width: ${progressPercent}%; height:100%; background: ${stage.color}; transition: width 0.3s ease;"></div>
         </div>
       </div>
 
       <!-- Playbook assignments list -->
-      <div class="milestone-playbooks-section-title" style="margin-top: 24px;">
-        ${isZh ? '階段分配場景案例' : 'Assigned Phase Playbooks'}
-      </div>
-      <div class="milestone-playbooks-list" style="margin-bottom: 20px;">
+      <div class="milestone-playbooks-list">
         ${playbooksHtml}
       </div>
 
-      <!-- Assignment selector input -->
+      <!-- Assignment dropdown -->
       <div class="add-playbook-dropdown-wrapper">
-        <select class="select-add-playbook" style="border-color: ${stage.color}30;" onchange="handleAssignPlaybook(this, '${stageId}')">
+        <select class="select-add-playbook" style="border-color: ${stage.color}40;" onchange="handleAssignPlaybook(this, '${stageId}')" ${!hasUnassigned ? 'disabled' : ''}>
           ${dropdownOptionsHtml}
         </select>
       </div>
@@ -5933,7 +6067,17 @@ function renderStageDetails() {
   `;
 }
 
-// Mini deploy status toggler inside detail card
+// Checkbox change handler
+window.handleRoadmapTaskToggle = function(stageId, taskId, checkboxEl) {
+  const role = appState.userRole || "Lecturer";
+  const key = `ge_roadmap_chk_${role}_${stageId}_${taskId}`;
+  localStorage.setItem(key, checkboxEl.checked ? "true" : "false");
+
+  // Re-run entire rendering loop to fill timeline segments and re-calculate percents instantly
+  renderTimeline();
+};
+
+// Toggle playbook deployment status
 window.toggleTimelinePlaybookDeploy = async function(stageId, playbookId, currentStatus) {
   const uc = useCasesDb.find(u => u.id === playbookId);
   if (!uc) return;
@@ -5943,340 +6087,44 @@ window.toggleTimelinePlaybookDeploy = async function(stageId, playbookId, curren
   if (success) {
     uc.isDeployed = newStatus;
     showToast(newStatus 
-      ? (appState.activeLanguage === "zh-TW" || appState.activeLanguage === "zh-CN" ? "部署狀態已啟用！" : "Deployment marked as active!") 
-      : (appState.activeLanguage === "zh-TW" || appState.activeLanguage === "zh-CN" ? "部署狀態已停用" : "Deployment marked as inactive")
+      ? (appState.activeLanguage === "zh-TW" || appState.activeLanguage === "zh-CN" ? "部署場景已啟用！" : "Deployment marked active!") 
+      : (appState.activeLanguage === "zh-TW" || appState.activeLanguage === "zh-CN" ? "部署場景已停用" : "Deployment marked inactive")
     );
     
-    // Re-render both views
-    renderTimelineDashboard();
+    renderTimeline();
   }
 };
 
-// Dropdown change trigger
+// Assign unassigned playbook to phase
 window.handleAssignPlaybook = function(selectEl, stageId) {
   const ucId = selectEl.value;
   if (ucId) {
-    addPlaybookToStage(stageId, ucId);
+    // Ensure playbook only belongs to one stage
+    timelineStages.forEach(stage => {
+      stage.playbookIds = stage.playbookIds.filter(id => id !== ucId);
+    });
+
+    const stage = timelineStages.find(s => s.id === stageId);
+    if (stage) {
+      stage.playbookIds.push(ucId);
+      saveTimeline();
+      renderTimeline();
+      showToast(appState.activeLanguage === "zh-TW" || appState.activeLanguage === "zh-CN" 
+        ? "案例分配成功！" 
+        : "Playbook assigned to phase!");
+    }
   }
 };
 
-// Assign a usecase playbook to a stage
-function addPlaybookToStage(stageId, useCaseId) {
-  // Ensure a playbook belongs to only one stage at a time
-  timelineStages.forEach(stage => {
-    stage.playbookIds = stage.playbookIds.filter(id => id !== useCaseId);
-  });
-
-  const stage = timelineStages.find(s => s.id === stageId);
-  if (stage) {
-    stage.playbookIds.push(useCaseId);
-    saveTimeline();
-    renderTimelineDashboard();
-    showToast(appState.activeLanguage === "zh-TW" || appState.activeLanguage === "zh-CN" 
-      ? "案例分配成功！" 
-      : "Playbook assigned to stage successfully!");
-  }
-}
-
-// Remove playbook from a stage
+// Remove playbook association
 window.removePlaybookFromStage = function(stageId, useCaseId) {
   const stage = timelineStages.find(s => s.id === stageId);
   if (stage) {
     stage.playbookIds = stage.playbookIds.filter(id => id !== useCaseId);
     saveTimeline();
-    renderTimelineDashboard();
+    renderTimeline();
     showToast(appState.activeLanguage === "zh-TW" || appState.activeLanguage === "zh-CN" 
-      ? "案例移除成功！" 
-      : "Playbook removed from stage!");
+      ? "已解除此關聯" 
+      : "Playbook association removed!");
   }
 };
-
-// 2. RENDER VERIFICATION CHECKPOINTS VIEW (milestons.jpg)
-function renderCheckpointsDashboard() {
-  const container = document.getElementById("verificationDashboardSection");
-  if (!container) return;
-
-  const isZh = appState.activeLanguage === "zh-TW" || appState.activeLanguage === "zh-CN";
-
-  // Pre-calculate status for each checkpoint (whether all of its tasks are complete)
-  const checkpointStates = {};
-  verificationCheckpoints.forEach(cp => {
-    const isCompleted = cp.tasks.every(t => t.done === true);
-    checkpointStates[cp.id] = isCompleted;
-  });
-
-  // Compile checklists HTML stack (Right column of view B)
-  let cardsHtml = `<div class="checkpoint-cards-stack">`;
-  
-  verificationCheckpoints.forEach(cp => {
-    const isCompleted = checkpointStates[cp.id];
-    const cpTitle = isZh ? cp.titleZh : cp.title;
-
-    let tasksHtml = `<div class="checkpoint-tasks-list">`;
-    cp.tasks.forEach(task => {
-      const taskText = isZh ? task.textZh : task.text;
-      tasksHtml += `
-        <label class="checkpoint-task-label ${task.done ? 'checked' : ''}">
-          <input type="checkbox" 
-                 class="verification-task-checkbox" 
-                 ${task.done ? 'checked' : ''} 
-                 onchange="toggleVerificationItem('${cp.id}', '${task.id}', this.checked)">
-          <span class="custom-checkbox-indicator"></span>
-          <span class="task-text">${taskText}</span>
-        </label>
-      `;
-    });
-    tasksHtml += `</div>`;
-
-    cardsHtml += `
-      <div class="checkpoint-checklist-card ${isCompleted ? 'completed' : ''}" 
-           id="checkpoint-card-${cp.id}"
-           onmouseenter="highlightPipelineNode('${cp.id}', true)"
-           onmouseleave="highlightPipelineNode('${cp.id}', false)">
-        <div class="checkpoint-card-accent"></div>
-        <div class="checkpoint-card-header">
-          <span class="checkpoint-phase-badge">${cp.phase}</span>
-          <span class="checkpoint-status-text ${isCompleted ? 'verified' : 'pending'}">
-            <span class="material-symbols-outlined" style="font-size: 15px;">
-              ${isCompleted ? 'verified' : 'pending_actions'}
-            </span>
-            <span>${isCompleted ? (isZh ? '已驗證' : 'Verified') : (isZh ? '待驗證' : 'Pending')}</span>
-          </span>
-        </div>
-        <h3 class="checkpoint-card-title">${cpTitle}</h3>
-        ${tasksHtml}
-      </div>
-    `;
-  });
-  cardsHtml += `</div>`;
-
-  // Draw the high-fidelity inline SVG 3D pipeline winding corridor
-  const svgPipeline = `
-    <div class="pipeline-visual-container">
-      <svg class="svg-pipeline" viewBox="0 0 500 450" width="100%" height="100%">
-        <!-- Define linear gradients for rich metallic pipeline rendering -->
-        <defs>
-          <linearGradient id="pipeMetalGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#3f3f46" />
-            <stop offset="30%" stop-color="#71717a" />
-            <stop offset="50%" stop-color="#a1a1aa" />
-            <stop offset="70%" stop-color="#71717a" />
-            <stop offset="100%" stop-color="#27272a" />
-          </linearGradient>
-          <linearGradient id="pipeShineGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stop-color="#ffffff" stop-opacity="0.5" />
-            <stop offset="20%" stop-color="#ffffff" stop-opacity="0.1" />
-            <stop offset="80%" stop-color="#000000" stop-opacity="0.3" />
-            <stop offset="100%" stop-color="#000000" stop-opacity="0.6" />
-          </linearGradient>
-          
-          <filter id="nodeGlow" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="5" result="blur" />
-            <feComposite in="SourceGraphic" in2="blur" operator="over" />
-          </filter>
-        </defs>
-
-        <!-- GRID GUIDELINES (Isometric reference lines for premium engineering look) -->
-        <g stroke="var(--grid-line)" stroke-width="1">
-          <line x1="0" y1="50" x2="500" y2="300" />
-          <line x1="0" y1="150" x2="500" y2="400" />
-          <line x1="0" y1="250" x2="500" y2="450" />
-          <line x1="100" y1="0" x2="100" y2="450" />
-          <line x1="200" y1="0" x2="200" y2="450" />
-          <line x1="300" y1="0" x2="300" y2="450" />
-          <line x1="400" y1="0" x2="400" y2="450" />
-        </g>
-
-        <!-- 3D METALLIC PIPE CORRIDOR PATHWAYS -->
-        <!-- Main heavy pipeline path -->
-        <path d="M 0,20 L 110,55 L 110,145 L 175,145 L 240,205 L 280,285 L 345,365 L 500,410" 
-              fill="none" 
-              stroke="url(#pipeMetalGrad)" 
-              stroke-width="18" 
-              stroke-linecap="round" 
-              stroke-linejoin="round" />
-              
-        <!-- Highlight gloss layer on pipe -->
-        <path d="M 0,20 L 110,55 L 110,145 L 175,145 L 240,205 L 280,285 L 345,365 L 500,410" 
-              fill="none" 
-              stroke="url(#pipeShineGrad)" 
-              stroke-width="18" 
-              stroke-linecap="round" 
-              stroke-linejoin="round" />
-
-        <!-- Inner glow/core line of the pipeline -->
-        <path d="M 0,20 L 110,55 L 110,145 L 175,145 L 240,205 L 280,285 L 345,365 L 500,410" 
-              fill="none" 
-              stroke="#52525b" 
-              stroke-width="2" 
-              stroke-linecap="round" 
-              stroke-linejoin="round" 
-              stroke-dasharray="4, 4" />
-
-        <!-- Pipe coupling joints sleeves -->
-        <circle cx="50" cy="35" r="11" fill="none" stroke="#27272a" stroke-width="3" />
-        <circle cx="110" cy="100" r="11" fill="none" stroke="#27272a" stroke-width="3" />
-        <circle cx="210" cy="177" r="11" fill="none" stroke="#27272a" stroke-width="3" />
-        <circle cx="310" cy="322" r="11" fill="none" stroke="#27272a" stroke-width="3" />
-        <circle cx="420" cy="387" r="11" fill="none" stroke="#27272a" stroke-width="3" />
-
-        <!-- INTERACTIVE VERIFICATION CHECKPOINT PIN NODES -->
-        
-        <!-- Node 1: Phase 1 (Pre-Semester) -->
-        <g class="pipeline-node ${checkpointStates['vc1'] ? 'completed' : ''}" 
-           id="svg-node-vc1"
-           onclick="scrollToCheckpointCard('vc1')"
-           onmouseenter="highlightCheckpointCard('vc1', true)"
-           onmouseleave="highlightCheckpointCard('vc1', false)">
-          <circle class="pipeline-node-pulse c1-pulse" cx="110" cy="55" r="12" fill="#ef4444" opacity="0.4" />
-          <circle class="pipeline-node-core c1-core" cx="110" cy="55" r="7" fill="#ef4444" />
-          <text class="pipeline-node-text" x="110" y="59" text-anchor="middle" font-size="10" fill="white" font-weight="bold">1</text>
-        </g>
-
-        <!-- Node 2: Phase 2 (Onboarding) -->
-        <g class="pipeline-node ${checkpointStates['vc2'] ? 'completed' : ''}" 
-           id="svg-node-vc2"
-           onclick="scrollToCheckpointCard('vc2')"
-           onmouseenter="highlightCheckpointCard('vc2', true)"
-           onmouseleave="highlightCheckpointCard('vc2', false)">
-          <circle class="pipeline-node-pulse c2-pulse" cx="175" cy="145" r="12" fill="#f59e0b" opacity="0.4" />
-          <circle class="pipeline-node-core c2-core" cx="175" cy="145" r="7" fill="#f59e0b" />
-          <text class="pipeline-node-text" x="175" y="149" text-anchor="middle" font-size="10" fill="white" font-weight="bold">2</text>
-        </g>
-
-        <!-- Node 3: Phase 3 (Mid-Semester) -->
-        <g class="pipeline-node ${checkpointStates['vc3'] ? 'completed' : ''}" 
-           id="svg-node-vc3"
-           onclick="scrollToCheckpointCard('vc3')"
-           onmouseenter="highlightCheckpointCard('vc3', true)"
-           onmouseleave="highlightCheckpointCard('vc3', false)">
-          <circle class="pipeline-node-pulse c3-pulse" cx="240" cy="205" r="12" fill="#10b981" opacity="0.4" />
-          <circle class="pipeline-node-core c3-core" cx="240" cy="205" r="7" fill="#10b981" />
-          <text class="pipeline-node-text" x="240" y="209" text-anchor="middle" font-size="10" fill="white" font-weight="bold">3</text>
-        </g>
-
-        <!-- Node 4: Phase 4 (Winter Assessment) -->
-        <g class="pipeline-node ${checkpointStates['vc4'] ? 'completed' : ''}" 
-           id="svg-node-vc4"
-           onclick="scrollToCheckpointCard('vc4')"
-           onmouseenter="highlightCheckpointCard('vc4', true)"
-           onmouseleave="highlightCheckpointCard('vc4', false)">
-          <circle class="pipeline-node-pulse c4-pulse" cx="280" cy="285" r="12" fill="#3b82f6" opacity="0.4" />
-          <circle class="pipeline-node-core c4-core" cx="280" cy="285" r="7" fill="#3b82f6" />
-          <text class="pipeline-node-text" x="280" y="289" text-anchor="middle" font-size="10" fill="white" font-weight="bold">4</text>
-        </g>
-
-        <!-- Node 5: Phase 5 (Rolling) -->
-        <g class="pipeline-node ${checkpointStates['vc5'] ? 'completed' : ''}" 
-           id="svg-node-vc5"
-           onclick="scrollToCheckpointCard('vc5')"
-           onmouseenter="highlightCheckpointCard('vc5', true)"
-           onmouseleave="highlightCheckpointCard('vc5', false)">
-          <circle class="pipeline-node-pulse c5-pulse" cx="345" cy="365" r="12" fill="#6366f1" opacity="0.4" />
-          <circle class="pipeline-node-core c5-core" cx="345" cy="365" r="7" fill="#6366f1" />
-          <text class="pipeline-node-text" x="345" y="369" text-anchor="middle" font-size="10" fill="white" font-weight="bold">5</text>
-        </g>
-      </svg>
-    </div>
-  `;
-
-  // Assembly View B Elements into split layout
-  container.innerHTML = `
-    <div class="verification-view-split-layout">
-      ${svgPipeline}
-      ${cardsHtml}
-    </div>
-  `;
-}
-
-// Toggle individual task within a checkpoint
-window.toggleVerificationItem = function(cpId, taskId, isChecked) {
-  const cp = verificationCheckpoints.find(x => x.id === cpId);
-  if (cp) {
-    const task = cp.tasks.find(t => t.id === taskId);
-    if (task) {
-      task.done = isChecked;
-      saveTimeline();
-      
-      // Update task label visual state in DOM
-      const labelEl = event.target.closest(".checkpoint-task-label");
-      if (labelEl) {
-        if (isChecked) labelEl.classList.add("checked");
-        else labelEl.classList.remove("checked");
-      }
-
-      // Check if this entire phase is now complete
-      const isCompleted = cp.tasks.every(t => t.done === true);
-      const cardEl = document.getElementById(`checkpoint-card-${cpId}`);
-      if (cardEl) {
-        if (isCompleted) {
-          cardEl.classList.add("completed");
-          const statusText = cardEl.querySelector(".checkpoint-status-text");
-          if (statusText) {
-            statusText.className = "checkpoint-status-text verified";
-            statusText.querySelector(".material-symbols-outlined").textContent = "verified";
-            statusText.querySelector("span:not(.material-symbols-outlined)").textContent = 
-              appState.activeLanguage === "zh-TW" || appState.activeLanguage === "zh-CN" ? "已驗證" : "Verified";
-          }
-        } else {
-          cardEl.classList.remove("completed");
-          const statusText = cardEl.querySelector(".checkpoint-status-text");
-          if (statusText) {
-            statusText.className = "checkpoint-status-text pending";
-            statusText.querySelector(".material-symbols-outlined").textContent = "pending_actions";
-            statusText.querySelector("span:not(.material-symbols-outlined)").textContent = 
-              appState.activeLanguage === "zh-TW" || appState.activeLanguage === "zh-CN" ? "待驗證" : "Pending";
-          }
-        }
-      }
-
-      // Update SVG Node Core style immediately in the DOM
-      const svgNode = document.getElementById(`svg-node-${cpId}`);
-      if (svgNode) {
-        if (isCompleted) {
-          svgNode.classList.add("completed");
-        } else {
-          svgNode.classList.remove("completed");
-        }
-      }
-    }
-  }
-};
-
-// SVG interactions highlighting checklists
-window.highlightCheckpointCard = function(cpId, isHighlight) {
-  const card = document.getElementById(`checkpoint-card-${cpId}`);
-  if (card) {
-    if (isHighlight) {
-      card.classList.add("highlight");
-    } else {
-      card.classList.remove("highlight");
-    }
-  }
-};
-
-window.highlightPipelineNode = function(cpId, isHighlight) {
-  const node = document.getElementById(`svg-node-${cpId}`);
-  if (node) {
-    if (isHighlight) {
-      node.classList.add("highlight");
-    } else {
-      node.classList.remove("highlight");
-    }
-  }
-};
-
-window.scrollToCheckpointCard = function(cpId) {
-  const card = document.getElementById(`checkpoint-card-${cpId}`);
-  if (card) {
-    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    card.classList.add("pulse-highlight");
-    setTimeout(() => {
-      card.classList.remove("pulse-highlight");
-    }, 1500);
-  }
-};
-
-
-
-

@@ -1693,386 +1693,411 @@ textarea:focus::placeholder {
 }
 
 /* ==========================================================================
-   ADOPTION ROADMAP TIMELINE STYLING (REDESIGNED)
+   ADOPTION ROADMAP TIMELINE STYLING (REDESIGNED V2)
    ========================================================================== */
 
-/* Toggle Switch / View Switcher (Tab segmented controller) */
-.roadmap-toggle-container {
-  display: inline-flex;
+/* 1. DESKTOP ALTERNATING FLAG TIMELINE CONTAINER (Inspired by timeline2.webp) */
+.alternating-timeline-container {
+  position: relative;
+  width: 100%;
+  padding: 140px 24px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-glass);
+  border-radius: 20px;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.04);
+  margin-bottom: 32px;
+  overflow: visible; /* Crucial to let floating flags display without clipping */
+}
+
+@media (max-width: 1024px) {
+  .alternating-timeline-container {
+    display: none; /* Collapse into vertical stream timeline on mobile */
+  }
+}
+
+/* Horizontal Track Baseline */
+.timeline-horizontal-track {
+  position: relative;
+  width: 100%;
+  height: 8px;
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 4px;
+}
+
+/* Dynamic Progress Fill Bar */
+.timeline-track-progress {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background: linear-gradient(90deg, #6366f1 0%, #10b981 100%);
+  border-radius: 4px;
+  width: 0%;
+  transition: width 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* Joint Nodes along track */
+.timeline-node-joint {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--bg-card);
+  border: 4px solid var(--border-glass-focused);
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.node-joint-icon {
+  font-size: 15px;
+  color: var(--text-secondary);
+  font-variation-settings: 'FILL' 1;
+}
+
+.timeline-node-joint:hover {
+  transform: translate(-50%, -50%) scale(1.15);
+  border-color: var(--color-accent);
+}
+
+.timeline-node-joint.active {
+  border-color: var(--color-accent) !important;
+  background: var(--bg-card) !important;
+  transform: translate(-50%, -50%) scale(1.25);
+  box-shadow: 0 0 15px rgba(99, 102, 241, 0.35);
+}
+
+.timeline-node-joint.active .node-joint-icon {
+  color: var(--color-accent) !important;
+}
+
+/* Completed Node State (Emerald ring) */
+.timeline-node-joint.completed {
+  background: #10b981 !important;
+  border-color: #10b981 !important;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
+}
+
+.timeline-node-joint.completed .node-joint-icon {
+  color: white !important;
+}
+
+.timeline-node-joint.completed.active {
+  transform: translate(-50%, -50%) scale(1.25);
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.7);
+}
+
+/* Alternating Vertical Guidelines Connector Pins */
+.alternating-marker-pin {
+  position: absolute;
+  left: 50%;
+  width: 2px;
+  z-index: 2;
+  pointer-events: none;
+  transition: all 0.35s ease;
+}
+
+/* UP markers (Even indexes: Day 0, Sem 1, End-Sem) */
+.alternating-marker-pin.pin-up {
+  bottom: 16px;
+  height: 80px;
+  border-left: 2px dashed var(--border-glass-focused);
+}
+
+/* DOWN markers (Odd indexes: Pre-Sem, Mid-Sem, Track 2) */
+.alternating-marker-pin.pin-down {
+  top: 16px;
+  height: 80px;
+  border-left: 2px dashed var(--border-glass-focused);
+}
+
+.timeline-node-joint.active ~ .alternating-marker-pin {
+  border-left-style: solid;
+  border-left-color: var(--color-accent);
+}
+
+.timeline-node-joint.completed ~ .alternating-marker-pin {
+  border-left-color: rgba(16, 185, 129, 0.5);
+}
+
+/* Floating Flag Schedule Cards */
+.floating-schedule-flag {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 175px;
   background: var(--bg-sidebar);
   border: 1px solid var(--border-glass);
-  padding: 4px;
   border-radius: 12px;
-  margin-bottom: 28px;
-  position: relative;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
-.roadmap-toggle-btn {
-  background: transparent;
-  border: none;
-  padding: 8px 18px;
-  border-radius: 9px;
-  color: var(--text-secondary);
-  font-family: 'Outfit', 'Inter', sans-serif;
-  font-size: 13px;
-  font-weight: 600;
+  padding: 12px 14px;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+  text-align: center;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 5;
 }
 
-.roadmap-toggle-btn span.material-symbols-outlined {
-  font-size: 18px;
-  transition: transform 0.25s ease;
+.floating-schedule-flag.flag-up {
+  bottom: 104px;
 }
 
-.roadmap-toggle-btn:hover {
-  color: var(--text-primary);
+.floating-schedule-flag.flag-down {
+  top: 104px;
 }
 
-.roadmap-toggle-btn:hover span.material-symbols-outlined {
-  transform: scale(1.1);
+/* Flag Pointer triangles */
+.floating-schedule-flag::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
 }
 
-.roadmap-toggle-btn.active {
+.floating-schedule-flag.flag-up::after {
+  bottom: -6px;
+  border-top: 6px solid var(--border-glass);
+}
+
+.floating-schedule-flag.flag-down::after {
+  top: -6px;
+  border-bottom: 6px solid var(--border-glass);
+}
+
+/* Hover effects */
+.floating-schedule-flag.flag-up:hover {
+  transform: translateX(-50%) translateY(-6px);
+  border-color: var(--color-accent);
   background: var(--bg-card);
-  color: var(--color-accent);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 2px var(--border-glass);
-  border: 1px solid var(--border-glass);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
-/* 1. VIEW A: CHRONOLOGICAL TIMELINE STYLES */
-.chronological-timeline-desktop {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+.floating-schedule-flag.flag-down:hover {
+  transform: translateX(-50%) translateY(6px);
+  border-color: var(--color-accent);
   background: var(--bg-card);
-  border: 1px solid var(--border-glass);
-  border-radius: 16px;
-  padding: 32px;
-  margin-bottom: 24px;
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
-.timeline-row {
-  display: grid;
-  grid-template-columns: 200px 1fr;
-  align-items: center;
-  gap: 32px;
+/* Active node flag */
+.floating-schedule-flag.active {
+  background: var(--bg-card);
+  border-color: var(--color-accent) !important;
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.1);
+  transform: translateX(-50%) scale(1.04);
+  z-index: 6;
 }
 
-.track-label-col {
-  display: flex;
-  align-items: center;
+.floating-schedule-flag.completed {
+  border-color: #10b981;
 }
 
-.track-label-card {
-  width: 100%;
-  padding-right: 16px;
-}
-
-.track-label-card.calendar-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--text-primary);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.track-label-card.calendar-label span.material-symbols-outlined {
-  color: var(--color-accent);
-}
-
-.track-badge {
-  display: inline-block;
+/* Flag inner labels */
+.flag-date-label {
   font-size: 10px;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  padding: 3px 8px;
-  border-radius: 6px;
-  margin-bottom: 6px;
+  color: var(--color-accent);
+  margin-bottom: 4px;
+  transition: color 0.3s ease;
 }
 
-.track-badge.red-accent {
-  background: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
+.floating-schedule-flag.completed .flag-date-label {
+  color: #10b981;
 }
 
-.track-badge.indigo-accent {
-  background: rgba(168, 85, 247, 0.1);
-  color: #a855f7;
-}
-
-.track-name {
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 1.4;
-  color: var(--text-secondary);
-}
-
-.timeline-tracks-col {
-  position: relative;
-  width: 100%;
-}
-
-/* Horizontal Timeline Arrow Axis Line */
-.timeline-arrow-axis {
-  position: relative;
-  height: 48px;
-  border-bottom: 2px dashed var(--border-glass);
-  margin-bottom: 12px;
-}
-
-.timeline-arrow-axis::after {
-  content: "";
-  position: absolute;
-  right: -2px;
-  bottom: -6px;
-  width: 0;
-  height: 0;
-  border-top: 5px solid transparent;
-  border-bottom: 5px solid transparent;
-  border-left: 8px solid var(--text-muted);
-}
-
-.timeline-axis-point {
-  position: absolute;
-  bottom: 0;
-  transform: translateX(-50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.axis-tick {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--bg-sidebar);
-  border: 2px solid var(--border-glass-focused);
-  margin-bottom: -6px;
-  z-index: 2;
-}
-
-.axis-label {
-  position: absolute;
-  top: 14px;
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  text-align: center;
-  white-space: nowrap;
-}
-
-/* Cards Grid Container */
-.cards-grid-col {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-}
-
-/* Timeline Interactive Stage Card Nodes */
-.timeline-card-node {
-  background: var(--bg-sidebar);
-  border: 1px solid var(--border-glass);
-  border-radius: 12px;
-  padding: 18px;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  cursor: pointer;
-  overflow: hidden;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.timeline-card-node:hover {
-  transform: translateY(-4px) scale(1.02);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
-  border-color: var(--node-accent);
-}
-
-.timeline-card-node.active {
-  background: var(--bg-card);
-  border-color: var(--node-accent) !important;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
-}
-
-.node-border-accent {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 4px;
-  background: var(--node-accent);
-}
-
-.node-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-}
-
-.node-badge {
-  font-size: 10px;
-  font-weight: 700;
-  padding: 3px 6px;
-  border-radius: 4px;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
-}
-
-.node-done-icon {
-  font-size: 18px;
-  color: var(--color-success);
-  font-variation-settings: 'FILL' 1;
-}
-
-.node-title {
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 1.35;
-  color: var(--text-primary);
-  margin-bottom: 14px;
-  flex-grow: 1;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.node-progress-mini {
-  width: 100%;
-  height: 4px;
-  background: rgba(0, 0, 0, 0.05);
-  border-radius: 2px;
-  overflow: hidden;
-}
-
-.node-progress-mini-bar {
-  height: 100%;
-  border-radius: 2px;
-  transition: width 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-/* Track 2: Continuous Pointer Chevron Arrow Banner Style (Replicating timeline.jpg) */
-.continuous-arrow-bar {
-  display: flex;
-  align-items: center;
-  position: relative;
-  background: var(--bg-sidebar);
-  border: 1px solid var(--border-glass);
-  border-radius: 12px 0 0 12px;
-  height: 60px;
-  cursor: pointer;
-  padding: 0 40px 0 24px;
-  overflow: hidden;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.continuous-arrow-bar::after {
-  content: "";
-  position: absolute;
-  top: -1px;
-  right: -1px;
-  height: calc(100% + 2px);
-  width: 30px;
-  background: var(--bg-card);
-  clip-path: polygon(0% 0%, 100% 50%, 0% 100%);
-  z-index: 10;
-}
-
-.continuous-arrow-bar:hover {
-  border-color: var(--color-accent);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
-}
-
-.continuous-arrow-bar.active {
-  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
-  border-color: #4f46e5;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 8px 24px rgba(79, 70, 229, 0.15);
-}
-
-.continuous-arrow-bar.active::after {
-  background: var(--bg-card); /* Keep the cutout transparently revealing page bg */
-}
-
-.continuous-arrow-bar.active .arrow-icon,
-.continuous-arrow-bar.active .arrow-text,
-.continuous-arrow-bar.active .arrow-progress-label {
-  color: #e0e7ff;
-}
-
-.continuous-arrow-bar.active .arrow-progress-bar {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.continuous-arrow-bar.active .arrow-progress-fill {
-  background: #818cf8;
-}
-
-.arrow-content {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  z-index: 5;
-}
-
-.arrow-icon {
-  font-size: 20px;
-  color: var(--text-secondary);
-  margin-right: 12px;
-}
-
-.arrow-text {
-  font-size: 13px;
+.flag-title-label {
+  font-size: 11.5px;
   font-weight: 700;
   color: var(--text-primary);
-  flex-grow: 1;
-  white-space: nowrap;
+  line-height: 1.3;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.arrow-progress-wrapper {
+.flag-subtitle-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+
+/* 2. DUAL-COLUMN ROADMAP SPLIT DASHBOARD PANEL */
+.roadmap-split-dashboard {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  margin-top: 12px;
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .roadmap-split-dashboard {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+}
+
+.roadmap-dashboard-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-glass);
+  border-radius: 16px;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
+  overflow: hidden;
   display: flex;
+  flex-direction: column;
+  min-height: 480px;
+}
+
+.roadmap-card-header-bar {
+  height: 6px;
+  width: 100%;
+}
+
+.roadmap-card-body {
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.roadmap-section-meta-row {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
+  margin-bottom: 14px;
+}
+
+.roadmap-section-title {
+  font-family: 'Outfit', 'Inter', sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.roadmap-section-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+
+.roadmap-section-badge.verified {
+  background: rgba(16, 185, 129, 0.08);
+  color: #10b981;
+}
+
+.roadmap-section-badge.pending {
+  background: rgba(245, 158, 11, 0.08);
+  color: #f59e0b;
+}
+
+.roadmap-section-desc {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  margin-bottom: 24px;
+}
+
+/* Verification list styles */
+.roadmap-checklist-container {
+  display: flex;
+  flex-direction: column;
   gap: 12px;
 }
 
-.arrow-progress-label {
-  font-size: 11px;
-  font-weight: 600;
+.roadmap-task-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  cursor: pointer;
+  padding: 12px 16px;
+  border-radius: 8px;
+  background: var(--bg-sidebar);
+  border: 1px solid var(--border-glass);
+  transition: all 0.2s ease;
+}
+
+.roadmap-task-label:hover {
+  background: var(--bg-card);
+  border-color: var(--border-glass-focused);
+}
+
+.roadmap-task-label.checked {
+  background: var(--bg-card);
+  border-color: rgba(16, 185, 129, 0.15);
+}
+
+.roadmap-task-label input[type="checkbox"] {
+  display: none; /* Hide native checkbox */
+}
+
+/* Beautiful custom checkbox square */
+.roadmap-checkbox-indicator {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  border: 2px solid var(--text-muted);
+  background: var(--bg-card);
+  flex-shrink: 0;
+  margin-top: 1px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.roadmap-task-label:hover .roadmap-checkbox-indicator {
+  border-color: var(--text-secondary);
+}
+
+.roadmap-task-label input[type="checkbox"]:checked + .roadmap-checkbox-indicator {
+  background: #10b981;
+  border-color: #10b981;
+}
+
+.roadmap-checkbox-indicator::after {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 2px;
+  width: 4px;
+  height: 8px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg) scale(0);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: center;
+}
+
+.roadmap-task-label input[type="checkbox"]:checked + .roadmap-checkbox-indicator::after {
+  transform: rotate(45deg) scale(1);
+}
+
+.roadmap-task-text {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.45;
   color: var(--text-secondary);
-  white-space: nowrap;
+  transition: all 0.2s ease;
 }
 
-.arrow-progress-bar {
-  width: 80px;
-  height: 5px;
-  background: rgba(0, 0, 0, 0.05);
-  border-radius: 3px;
-  overflow: hidden;
+.roadmap-task-label.checked .roadmap-task-text {
+  color: var(--text-muted);
+  text-decoration: line-through;
+  text-decoration-color: var(--border-glass-focused);
 }
 
-.arrow-progress-fill {
-  height: 100%;
-  background: var(--color-accent);
-  border-radius: 3px;
-  transition: width 0.4s ease;
-}
 
-/* Mobile Timeline Streams */
+/* 3. MOBILE RESPONSIVE ROADMAP STREAM STYLES */
 .chronological-timeline-mobile {
   display: none;
   flex-direction: column;
@@ -2082,9 +2107,6 @@ textarea:focus::placeholder {
 }
 
 @media (max-width: 1024px) {
-  .chronological-timeline-desktop {
-    display: none;
-  }
   .chronological-timeline-mobile {
     display: flex;
   }
@@ -2176,66 +2198,78 @@ textarea:focus::placeholder {
   border-radius: 2px;
 }
 
-/* Timeline Playbook Assignment Details Panel */
-.timeline-details-panel-card {
-  position: relative;
-  background: var(--bg-card);
-  border: 1px solid var(--border-glass);
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.04);
-}
 
-.panel-header-accent {
-  height: 6px;
-  width: 100%;
-}
-
-.panel-body {
-  padding: 28px;
-}
-
-.panel-meta-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 16px;
-}
-
-.panel-stage-title {
-  font-family: 'Outfit', 'Inter', sans-serif;
-  font-size: 20px;
-  font-weight: 600;
-  color: var(--text-primary);
-  line-height: 1.3;
-}
-
-.panel-percentage-tag {
-  font-size: 12px;
+/* 4. PLAYBOOK SECTOR ASSIGNMENTS LIST STYLES */
+.milestone-playbooks-section-title {
+  font-size: 11px;
+  text-transform: uppercase;
   font-weight: 700;
-  padding: 4px 10px;
-  border-radius: 6px;
-}
-
-.panel-stage-desc {
-  font-size: 13px;
-  line-height: 1.6;
-  color: var(--text-secondary);
-  margin-top: 10px;
-  max-width: 800px;
-}
-
-.empty-playbook-msg {
-  font-size: 12px;
+  letter-spacing: 0.05em;
   color: var(--text-muted);
-  text-align: center;
-  padding: 24px 0;
-  border: 1px dashed var(--border-glass);
-  border-radius: 8px;
-  background: var(--bg-sidebar);
+  margin-bottom: 10px;
 }
 
-/* Playbook assigned sub-nodes style */
+.milestone-playbooks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+  max-height: 250px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.milestone-playbook-item {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  transition: all 0.2s ease;
+}
+
+.milestone-playbook-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.milestone-playbook-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-grow: 1;
+  min-width: 0;
+}
+
+.milestone-playbook-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.milestone-playbook-status-dot.active {
+  background: var(--color-success);
+  box-shadow: 0 0 6px var(--color-success);
+}
+
+.milestone-playbook-title {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.milestone-playbook-title.completed {
+  color: var(--text-secondary);
+}
+
 .btn-toggle-deploy-mini {
   background: var(--bg-sidebar);
   border: 1px solid var(--border-glass);
@@ -2262,327 +2296,57 @@ textarea:focus::placeholder {
   border-color: #10b98130;
 }
 
-
-/* ==========================================================================
-   2. VIEW B: VERIFICATION CHECKPOINTS STYLING (milestons.jpg)
-   ========================================================================== */
-.verification-view-split-layout {
-  display: grid;
-  grid-template-columns: 45% 55%;
-  gap: 40px;
-  align-items: start;
-}
-
-@media (max-width: 1024px) {
-  .verification-view-split-layout {
-    grid-template-columns: 1fr;
-    gap: 32px;
-  }
-}
-
-.pipeline-visual-column {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-}
-
-.pipeline-visual-container {
-  position: sticky;
-  top: 100px;
-  background: var(--bg-card);
-  border: 1px solid var(--border-glass);
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.04);
-}
-
-/* SVG Pipeline elements, nodes, and high-fidelity pulsating animations */
-.svg-pipeline {
-  display: block;
-}
-
-.pipeline-node {
-  cursor: pointer;
-  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-.pipeline-node:hover {
-  transform: scale(1.15);
-}
-
-/* Pulsating indicator keyframes */
-@keyframes pipelinePulse {
-  0% {
-    r: 9px;
-    opacity: 0.6;
-  }
-  50% {
-    r: 16px;
-    opacity: 0.15;
-  }
-  100% {
-    r: 9px;
-    opacity: 0.6;
-  }
-}
-
-.pipeline-node-pulse {
-  animation: pipelinePulse 2s infinite ease-in-out;
-  transform-origin: center;
-}
-
-/* Stagger animation start times for nodes */
-.c1-pulse { animation-delay: 0s; }
-.c2-pulse { animation-delay: 0.4s; }
-.c3-pulse { animation-delay: 0.8s; }
-.c4-pulse { animation-delay: 1.2s; }
-.c5-pulse { animation-delay: 1.6s; }
-
-.pipeline-node-core {
-  stroke: var(--bg-card);
-  stroke-width: 2px;
-  transition: all 0.3s ease;
-}
-
-.pipeline-node-text {
-  font-family: 'Outfit', 'Inter', sans-serif;
-  pointer-events: none;
-  user-select: none;
-}
-
-/* Glowing Completed Green checkmark visual inside SVG node */
-.pipeline-node.completed .pipeline-node-pulse {
-  fill: #10b981 !important;
-  animation: pipelinePulse 2.5s infinite ease-in-out;
-}
-
-.pipeline-node.completed .pipeline-node-core {
-  fill: #10b981 !important;
-  stroke: var(--bg-card);
-  stroke-width: 2px;
-}
-
-/* Hover highlights syncing node to card */
-.pipeline-node.highlight {
-  transform: scale(1.2);
-}
-
-.pipeline-node.highlight .pipeline-node-pulse {
-  r: 18px;
-  opacity: 0.8;
-}
-
-/* Checkpoint Checklist Cards Stack Styles */
-.checkpoint-cards-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.checkpoint-checklist-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-glass);
-  border-radius: 16px;
-  padding: 24px;
-  position: relative;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
-}
-
-.checkpoint-checklist-card:hover {
-  transform: translateX(4px);
-  border-color: var(--border-glass-focused);
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.04);
-}
-
-/* Highlighting card when matching SVG joint is hovered */
-.checkpoint-checklist-card.highlight {
-  border-color: var(--color-accent-dim);
-  box-shadow: 0 8px 30px rgba(99, 102, 241, 0.08);
-  background: var(--bg-sidebar);
-}
-
-.checkpoint-checklist-card.completed {
-  border-color: #10b981 !important;
-  box-shadow: 0 8px 30px rgba(16, 185, 129, 0.08);
-}
-
-.checkpoint-checklist-card.completed::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: radial-gradient(circle at top right, rgba(16, 185, 129, 0.03) 0%, transparent 60%);
-  pointer-events: none;
-  border-radius: 16px;
-}
-
-.checkpoint-card-accent {
-  position: absolute;
-  left: 0;
-  top: 24px;
-  bottom: 24px;
-  width: 4px;
-  background: var(--border-glass-focused);
-  border-radius: 0 2px 2px 0;
-}
-
-.checkpoint-checklist-card.completed .checkpoint-card-accent {
-  background: #10b981;
-}
-
-.checkpoint-card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-  padding-left: 8px;
-}
-
-.checkpoint-phase-badge {
-  font-size: 10px;
-  font-weight: 800;
+.btn-remove-playbook {
+  background: transparent;
+  border: none;
   color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.checkpoint-status-text {
-  font-size: 11px;
-  font-weight: 700;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 8px;
-  border-radius: 6px;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
-}
-
-.checkpoint-status-text.pending {
-  background: rgba(245, 158, 11, 0.08);
-  color: #f59e0b;
-}
-
-.checkpoint-status-text.verified {
-  background: rgba(16, 185, 129, 0.08);
-  color: #10b981;
-}
-
-.checkpoint-card-title {
-  font-family: 'Outfit', 'Inter', sans-serif;
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 18px;
-  padding-left: 8px;
-}
-
-/* Premium Checklist Item / Task Label styling */
-.checkpoint-tasks-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding-left: 8px;
-}
-
-.checkpoint-task-label {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
   cursor: pointer;
-  padding: 10px 14px;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.btn-remove-playbook:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.add-playbook-dropdown-wrapper {
+  margin-top: auto;
+  position: relative;
+}
+
+.select-add-playbook {
+  width: 100%;
+  height: 38px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px dashed var(--border-glass-focused);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 0 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.select-add-playbook:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--color-accent);
+  color: var(--text-primary);
+}
+
+.empty-playbook-msg {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 24px 0;
+  border: 1px dashed var(--border-glass-focused);
   border-radius: 8px;
   background: var(--bg-sidebar);
-  border: 1px solid var(--border-glass);
-  transition: all 0.2s ease;
-}
-
-.checkpoint-task-label:hover {
-  background: var(--bg-card);
-  border-color: var(--border-glass-focused);
-}
-
-.checkpoint-task-label.checked {
-  background: var(--bg-card);
-  border-color: rgba(16, 185, 129, 0.15);
-}
-
-.checkpoint-task-label input[type="checkbox"] {
-  display: none; /* Hide real checkmark to render beautiful modern indicator */
-}
-
-.custom-checkbox-indicator {
-  position: relative;
-  width: 18px;
-  height: 18px;
-  border-radius: 5px;
-  border: 2px solid var(--text-muted);
-  background: var(--bg-card);
-  flex-shrink: 0;
-  margin-top: 1px;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.checkpoint-task-label:hover .custom-checkbox-indicator {
-  border-color: var(--text-secondary);
-}
-
-.checkpoint-task-label input[type="checkbox"]:checked + .custom-checkbox-indicator {
-  background: #10b981;
-  border-color: #10b981;
-}
-
-.custom-checkbox-indicator::after {
-  content: "";
-  position: absolute;
-  left: 5px;
-  top: 2px;
-  width: 4px;
-  height: 8px;
-  border: solid white;
-  border-width: 0 2px 2px 0;
-  transform: rotate(45deg) scale(0);
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  transform-origin: center;
-}
-
-.checkpoint-task-label input[type="checkbox"]:checked + .custom-checkbox-indicator::after {
-  transform: rotate(45deg) scale(1);
-}
-
-.task-text {
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 1.45;
-  color: var(--text-secondary);
-  transition: all 0.2s ease;
-}
-
-.checkpoint-task-label.checked .task-text {
-  color: var(--text-muted);
-  text-decoration: line-through;
-  text-decoration-color: var(--border-glass-focused);
-}
-
-/* Pulsating Scroll focus indicator on click SVG joint */
-@keyframes pulseHighlight {
-  0% {
-    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4);
-    border-color: var(--color-accent);
-  }
-  70% {
-    box-shadow: 0 0 0 10px rgba(99, 102, 241, 0);
-    border-color: var(--color-accent);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0);
-  }
-}
-
-.checkpoint-checklist-card.pulse-highlight {
-  animation: pulseHighlight 1.2s ease-out;
 }
 
