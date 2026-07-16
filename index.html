@@ -443,6 +443,9 @@
             <li class="filter-menu-item admin-tab-item" data-tab="cases" id="adminTabCasesNav">
               <span class="material-symbols-outlined">edit_note</span> <span id="adminTabCasesText">Use Cases CRUD</span>
             </li>
+            <li class="filter-menu-item admin-tab-item" data-tab="checklists" id="adminTabChecklistsNav">
+              <span class="material-symbols-outlined">playlist_add_check</span> <span id="adminTabChecklistsText">Verification Checklists</span>
+            </li>
             <li class="filter-menu-item admin-tab-item" data-tab="feedbacks" id="adminTabFeedbacksNav" style="display: none;">
               <span class="material-symbols-outlined">rate_review</span> <span id="adminTabFeedbacksText">User Feedbacks</span>
             </li>
@@ -492,16 +495,16 @@
         <section class="admin-tab-content" id="adminTabUsers">
           <div class="glass-panel" style="padding: 24px; margin-bottom: 24px;">
             <h2 id="adminProvisionTitle" style="font-size: 16px; margin-bottom: 8px;">Provision New Account</h2>
-            <p id="adminProvisionDesc" style="font-size: 12px; color: var(--text-secondary); margin-bottom: 16px;">This generates a random 10-character temporary password. Users are forced to reset it upon their first login.</p>
+            <p id="adminProvisionDesc" style="font-size: 12px; color: var(--text-secondary); margin-bottom: 16px;">This generates a random 10-character temporary password. You can provision multiple accounts at once by separating email addresses with commas; in that case, the default temporary password for all of them will be <strong>"ChangeMe"</strong>. All users are forced to reset their password on first login.</p>
             
             <div id="userActionFeedback" style="display: none; margin-bottom: 16px;"></div>
 
             <form id="formAddUser" style="display: flex; gap: 12px; align-items: flex-end; max-width: 500px;">
               <div class="form-group" style="flex-grow: 1;">
                 <label id="adminProvisionLabelEmail" class="form-label">User Email Address</label>
-                <input type="email" class="select-control" id="inputNewUserEmail" placeholder="e.g. professor@edu.hk" required>
+                <input type="text" class="select-control" id="inputNewUserEmail" placeholder="e.g. prof1@edu.hk, prof2@edu.hk" required style="width: 100%;">
               </div>
-              <button id="adminBtnProvision" class="nav-button nav-button-primary" type="submit" style="height: 40px;">
+              <button id="adminBtnProvision" class="nav-button nav-button-primary" type="submit" style="height: 40px; flex-shrink: 0;">
                 Provision <span class="material-symbols-outlined">person_add</span>
               </button>
             </form>
@@ -592,6 +595,10 @@
               <button class="nav-button" id="btnAdminExportCases">
                 <span class="material-symbols-outlined">download</span> <span id="adminBtnExportText">Extract All (JSON)</span>
               </button>
+              <button class="nav-button" id="btnAdminImportCases">
+                <span class="material-symbols-outlined">upload</span> <span id="adminBtnImportText">Import JSON</span>
+              </button>
+              <input type="file" id="inputAdminImportFile" accept=".json" style="display: none;">
               <button class="nav-button nav-button-primary" id="btnAdminCreateCase">
                 <span class="material-symbols-outlined">add_box</span> <span id="adminBtnCreateCaseText">Add Use Case</span>
               </button>
@@ -607,6 +614,7 @@
                   <th id="adminCrudThTitle" style="padding: 12px 8px;">Title</th>
                   <th id="adminCrudThCategory" style="padding: 12px 8px;">Category Hub</th>
                   <th id="adminCrudThRole" style="padding: 12px 8px;">Primary Role</th>
+                  <th id="adminCrudThVerified" style="padding: 12px 8px;">Verified</th>
                   <th id="adminCrudThActions" style="padding: 12px 8px; text-align: right;">Actions</th>
                 </tr>
               </thead>
@@ -635,6 +643,37 @@
                 </tr>
               </thead>
               <tbody id="adminFeedbacksTableBody">
+                <!-- Injected dynamically by app.js -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- TAB 5: PHASE VERIFICATION CHECKLISTS PANEL -->
+        <section class="admin-tab-content" id="adminTabChecklists" style="display: none;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2 id="adminChecklistsTitle" style="font-size: 16px;">Phase Verification Checklist Management</h2>
+            <div style="display: flex; gap: 10px;">
+              <button class="nav-button nav-button-primary" id="btnAdminCreateCheckpoint">
+                <span class="material-symbols-outlined">add_box</span> <span>Add Checklist Item</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Checkpoint List Table -->
+          <div class="glass-panel" style="padding: 24px; overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
+              <thead>
+                <tr style="border-bottom: 1px solid var(--border-glass); color: var(--text-secondary); font-weight: 600;">
+                  <th style="padding: 12px 8px; width: 120px;">ID</th>
+                  <th style="padding: 12px 8px; width: 140px;">User Role</th>
+                  <th style="padding: 12px 8px; width: 120px;">Phase</th>
+                  <th style="padding: 12px 8px;">Checkpoint Text (EN)</th>
+                  <th style="padding: 12px 8px;">Checkpoint Text (ZH-TW)</th>
+                  <th style="padding: 12px 8px; text-align: right; width: 150px;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="adminCheckpointsTableBody">
                 <!-- Injected dynamically by app.js -->
               </tbody>
             </table>
@@ -982,6 +1021,73 @@
           <button class="nav-button nav-button-primary" type="submit" style="background: linear-gradient(135deg, #a855f7 0%, #6366f1 100%); border: none;">Submit Feedback</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- CHECKPOINT EDIT / CREATE MODAL OVERLAY (ADMIN CONTROLLED) -->
+  <div class="modal-overlay" id="adminCheckpointEditModal" aria-modal="true" role="dialog" style="z-index: 2020;">
+    <div class="modal-content-card" style="max-height: 90vh; height: 500px; max-width: 600px; padding: 24px;">
+      <div class="modal-header" style="padding-bottom: 16px; border-bottom: 1px solid var(--border-glass); margin-bottom: 16px;">
+        <div class="modal-header-left">
+          <span class="material-symbols-outlined" style="color: var(--color-primary); font-size: 24px;">playlist_add_check</span>
+          <h3 id="adminCheckpointModalTitle" class="modal-title" style="margin-left: 8px;">Add/Edit Checklist Item</h3>
+        </div>
+        <button class="close-btn" id="adminCheckpointModalClose" aria-label="Close modal">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <div class="modal-body" style="padding: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; height: calc(100% - 130px);">
+        <div id="adminCheckpointFormFeedback" style="display: none; padding: 10px; background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239,68,68,0.2); border-radius: 4px; color: var(--color-danger); font-size: 12px;"></div>
+        
+        <form id="formAdminSaveCheckpoint" style="display: flex; flex-direction: column; gap: 16px;">
+          <div class="form-group" style="display: flex; flex-direction: column; gap: 6px;">
+            <label class="form-label" style="text-transform: uppercase;">Checkpoint ID (Unique, e.g. ita_d0_3)</label>
+            <input type="text" id="formCheckpointId" class="select-control" placeholder="ita_d0_3" style="font-family: monospace;">
+          </div>
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div class="form-group" style="display: flex; flex-direction: column; gap: 6px;">
+              <label class="form-label" style="text-transform: uppercase;">User Role</label>
+              <select id="formCheckpointRole" class="select-control">
+                <option value="IT Admin">IT Admin</option>
+                <option value="Lecturer">Lecturer</option>
+                <option value="TA">TA</option>
+                <option value="Student">Student</option>
+                <option value="Security">Security</option>
+                <option value="Finance">Finance</option>
+                <option value="SAO">SAO</option>
+                <option value="Program Leader">Program Leader</option>
+                <option value="Dean">Dean</option>
+              </select>
+            </div>
+            <div class="form-group" style="display: flex; flex-direction: column; gap: 6px;">
+              <label class="form-label" style="text-transform: uppercase;">Timeline Phase</label>
+              <select id="formCheckpointPhase" class="select-control">
+                <option value="day0">Day 0 (Onboarding)</option>
+                <option value="pre">Pre-Semester (Planning)</option>
+                <option value="sem1">Semester Start (Introduction)</option>
+                <option value="mid">Mid-Semester (Midterm Review)</option>
+                <option value="end">Semester End (Final Exam)</option>
+                <option value="track2">Track 2 (Continuous Polish)</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="form-group" style="display: flex; flex-direction: column; gap: 6px;">
+            <label class="form-label" style="text-transform: uppercase;">Checkpoint Text (English)</label>
+            <input type="text" id="formCheckpointText" class="select-control" placeholder="Configure sso integrations...">
+          </div>
+          
+          <div class="form-group" style="display: flex; flex-direction: column; gap: 6px;">
+            <label class="form-label" style="text-transform: uppercase;">Checkpoint Text (Traditional Chinese)</label>
+            <input type="text" id="formCheckpointTextZh" class="select-control" placeholder="配置單一登入整合...">
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 12px; padding-top: 16px; border-top: 1px solid var(--border-glass); margin-top: auto;">
+        <button class="nav-button" id="btnAdminCheckpointCancel">Cancel</button>
+        <button class="nav-button nav-button-primary" id="btnAdminCheckpointSave">Save Checkpoint</button>
+      </div>
     </div>
   </div>
 
