@@ -125,8 +125,8 @@ To ensure highly targeted adoptions, the portal dynamically adapts its roadmaps,
 ### Installation
 1. Clone the repository and navigate to the project directory:
    ```bash
-   git clone <YOUR_REPOSITORY_URL>
-   cd <YOUR_REPOSITORY_DIR_NAME>
+   git clone https://github.com/MrRoyRoy/ge_learning_portal_edu.git
+   cd ge_learning_portal_edu
    ```
 2. Install package dependencies:
    ```bash
@@ -142,53 +142,150 @@ To ensure highly targeted adoptions, the portal dynamically adapts its roadmaps,
 
 ### Local Testing Accounts
 * **Super-Admin**:
-  * *Username/Email*: `<SUPER_ADMIN_USERNAME>`
-  * *Password*: `<SUPER_ADMIN_PASSWORD>`
+  * *Username/Email*: `edu_portal_s_admin`
+  * *Password*: `<YOUR_SUPER_ADMIN_PASSWORD>` (configured via environment or defaults to fallback)
 * **Assistant Admin**:
-  * *Username/Email*: `<ASSISTANT_ADMIN_USERNAME>`
-  * *Password*: `<ASSISTANT_ADMIN_PASSWORD>`
+  * *Username/Email*: `edu_portal_admin`
+  * *Password*: `<YOUR_ASSISTANT_ADMIN_PASSWORD>` (configured via environment or defaults to fallback)
+
+> [!WARNING]
+> **No Password Recovery Mechanism**: There is currently no automated password recovery flow for admin or super-admin accounts on the portal. Make sure you securely document and do not lose your customized administrative passwords during deployment!
+
+---
+
+## 📊 Database Schema & Entity-Relationship (ER) Diagram
+
+The application implements a robust relational schema supported natively by both PostgreSQL (production) and SQLite (development fallback). Multi-row data metrics and checklist states are completely synchronized.
+
+Below is the structured data architecture representing the relational connections between users, preferences, and checklist templates:
+
+```mermaid
+erDiagram
+    USERS {
+        string email PK "User unique identifier (lowercase)"
+        string password_hash "Bcrypt salted credentials digest"
+        boolean is_temp_password "Force reset flag on first login"
+        string role "Assigned organizational role code"
+        string institution_level "Targeted school segment"
+        timestamp created_at "Account creation datetime"
+    }
+    USE_CASES {
+        string id PK "System playbook alphanumeric key"
+        string category "Vertical category grouping"
+        boolean is_verified "Content validation audit flag"
+        text translations "Dynamic internationalized JSON dictionary"
+        integer likes "Aggregated user bookmark counter"
+        integer deployments "Active deployment indicator counter"
+        timestamp created_at "Insertion datetime"
+        timestamp updated_at "Latest modification timestamp"
+    }
+    FEEDBACKS {
+        integer id PK "Auto-increment serial ID"
+        string user_email "Submitter context email address"
+        text feedback_text "User suggestion raw string content"
+        timestamp created_at "Submission timestamp"
+    }
+    VERIFICATION_CHECKPOINTS {
+        string id PK "Checkpoint unique alphanumeric key"
+        string role "Targeted organizational role code"
+        string stage_id "Timeline milestone identifier"
+        text text "English checklist requirement"
+        text text_zh "Traditional Chinese translation fallback"
+        text text_cn "Simplified Chinese translation fallback"
+        timestamp created_at "Creation timestamp"
+        timestamp updated_at "Update timestamp"
+    }
+    USER_PREFERENCES {
+        string email PK "User context identifier"
+        string use_case_id PK "Bookmarked playbook identifier"
+        boolean is_liked "Dynamic bookmark status flag"
+        boolean is_deployed "Dynamic active installation status flag"
+        timestamp updated_at "Interaction update timestamp"
+    }
+    ANALYTICS {
+        integer id PK "Telemetry sequence auto-increment"
+        string user_email "Performer identification context"
+        string use_case_id "Targeted playbook key (nullable)"
+        string action "Action identifier (view | like | deploy)"
+        timestamp timestamp "Event logging datetime"
+    }
+
+    USERS ||--o{ FEEDBACKS : "submits"
+    USERS ||--o{ USER_PREFERENCES : "customizes"
+    USERS ||--o{ ANALYTICS : "triggers"
+    USE_CASES ||--o{ USER_PREFERENCES : "receives"
+    USE_CASES ||--o{ ANALYTICS : "tracks"
+```
 
 ---
 
 ## ☁️ Cloud Production Deployment
 
-The project can be deployed to **Google Cloud Run** for serverless container auto-scaling:
+The portal is scale-optimized for serverless execution on **Google Cloud Run** connected securely to a **Google Cloud SQL PostgreSQL** instance.
 
-1. **Service Identity**: `<YOUR_CLOUD_RUN_SERVICE_NAME>`
-2. **Project ID**: `<YOUR_GCP_PROJECT_ID>`
-3. **Serving Region**: `<YOUR_GCP_REGION>`
-
-To build and deploy new production releases, execute:
-```bash
-gcloud run deploy <YOUR_CLOUD_RUN_SERVICE_NAME> --source . --region <YOUR_GCP_REGION> --allow-unauthenticated --project <YOUR_GCP_PROJECT_ID>
-```
-*Note: This command builds your container using the root `Dockerfile` via Google Cloud Build and uploads the compiled image directly to Google Artifact Registry.*
+### Production Environment Requirements:
+* **Cloud Run Service Service Account**: Needs the **Cloud SQL Client** (`roles/cloudsql.client`) permission to access the serverless instance sockets.
+* **Environment Variables**:
+  * `DATABASE_URL`: Connection string in Unix socket syntax (`postgres://<user>:<pwd>@/<db_name>?host=/cloudsql/<instance_connection_name>`).
+  * `DISABLE_PG_SSL`: Set to `true` (SSL must be bypassed on local Cloud Run Unix sockets).
+  * `NODE_ENV`: Set to `production` (enforces secure session cookies).
 
 ---
 
-## 📈 Version Control & Release Workflow
+## 🛠️ Automated Infrastructure Provisioning (Terraform)
 
-Development modifications are committed directly to the upstream repository. Use the following structured lifecycle to issue releases:
+We provide modular, production-grade **Terraform** configurations to automate spinning up completely fresh environments (dev, staging, or production) in minutes.
 
-### Step 1: Version Control Sync
-Stage, commit, and push your tested updates:
+The scripts reside in the `/terraform` subdirectory and provision:
+1. **Google Cloud APIs**: Automatically activates Cloud Run, Cloud SQL, and Artifact Registry.
+2. **Cloud SQL Instance**: Sets up a PostgreSQL 15 database (`db-f1-micro` tier) in your region.
+3. **Database & Master Credentials**: Provisions the schema database `edu_portal` and secures credentials.
+4. **IAM Permissions Binding**: Grants Cloud SQL Client access to your Cloud Run service identity.
+5. **Cloud Run Service**: Deploys the service linked with connection sockets and correct environment configurations.
+6. **Public Ingress Access Binding**: Configures `allUsers` IAM member for public website viewing.
+
+### How to Deploy a New Environment with Terraform:
+
+#### 1. Navigate to the Terraform Directory:
 ```bash
-# Stage changes
-git add .
-
-# Create a professional commit message
-git commit -m "feat: [Detailed change description]"
-
-# Push commits to remote origin branch
-git push
+cd terraform
 ```
 
-### Step 2: Live Serverless Deploy
-Re-compile the application and launch the updated revision on Google Cloud Run:
+#### 2. Initialize the Providers & Modules:
+```bash
+terraform init
+```
+
+#### 3. Customize Your Variables:
+Create a custom `terraform.tfvars` file to override default settings (GCP project, region, database password):
+```hcl
+project_id           = "<YOUR_GCP_PROJECT_ID>"
+region               = "<YOUR_GCP_REGION>"
+service_name         = "edu-ge-learning-portal"
+db_instance_name     = "edu-portal-db"
+db_password          = "YOUR_SECURE_POSTGRES_PASSWORD"
+super_admin_password = "<YOUR_DESIRED_SUPER_ADMIN_PASSWORD>"
+admin_password       = "<YOUR_DESIRED_ASSISTANT_ADMIN_PASSWORD>"
+```
+
+#### 4. Preview the Provisioning Infrastructure Plan:
+```bash
+terraform plan
+```
+
+#### 5. Apply and Provision Infrastructure:
+```bash
+terraform apply -auto-approve
+```
+Upon successful provisioning, Terraform will display your active **Service URL** and **Database Connection Name** inside outputs.
+
+---
+
+## 📈 Release & Code Update Workflows
+
+To compile and re-deploy your container image via Google Cloud Build and deploy it to Cloud Run, execute:
 ```bash
 gcloud run deploy <YOUR_CLOUD_RUN_SERVICE_NAME> --source . --region <YOUR_GCP_REGION> --allow-unauthenticated --project <YOUR_GCP_PROJECT_ID>
 ```
 
----
-
-*Made with 💜 for advanced agentic software deployments.*
+*Made with 💜 for advanced agentic software deployments and persistent educational portals.*

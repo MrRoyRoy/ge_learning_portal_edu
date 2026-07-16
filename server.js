@@ -484,14 +484,17 @@ app.post('/api/auth/login', async (req, res) => {
     return res.status(400).json({ success: false, message: 'Please provide both email and password.' });
   }
 
+  const superAdminPassword = process.env.SUPER_ADMIN_PASSWORD || 'HKEduDemo2026';
+  const adminPassword = process.env.ADMIN_PASSWORD || 'HKEduDemo';
+
   // Admin bypass credentials
-  if (email.trim() === 'edu_portal_s_admin' && password === 'HKEduDemo2026') {
+  if (email.trim() === 'edu_portal_s_admin' && password === superAdminPassword) {
     req.session.user = { email: 'edu_portal_s_admin', isAdmin: true, isAssist: false };
     return res.json({ success: true, isAdmin: true });
   }
 
   // Admin Assist bypass credentials
-  if (email.trim() === 'edu_portal_admin' && password === 'HKEduDemo') {
+  if (email.trim() === 'edu_portal_admin' && password === adminPassword) {
     req.session.user = { email: 'edu_portal_admin', isAdmin: true, isAssist: true };
     return res.json({ success: true, isAdmin: true });
   }

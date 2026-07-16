@@ -164,6 +164,18 @@ Once version control has been synced, the agent triggers a live source-deploymen
 gcloud run deploy edu-ge-learning-portal --source . --region asia-east2 --allow-unauthenticated --project ge-edu-demo
 ```
 
+#### Step 3: Post-Deployment Documentation & Anonymization Checks
+Following any deployment of modifications, enhancements, or bug fixes:
+1. **Assess README Relevance**: Review the `README.md` file completely to determine if any setup instructions, schemas, commands, or feature descriptions need updating to reflect the new state.
+2. **Anonymize Environment-Specific Details**: Before staging and pushing changes, double-check that **no custom environment-specific parameters, identifiers, or password credentials** are saved inside `README.md`. Replace the following with generic `<PLACEHOLDERS>` in `README.md`:
+   * Project ID (e.g. use `<YOUR_GCP_PROJECT_ID>` instead of `ge-edu-demo`)
+   * Region (e.g. use `<YOUR_GCP_REGION>` instead of `asia-east2`)
+   * Service Identity (e.g. use `<YOUR_CLOUD_RUN_SERVICE_NAME>` instead of `edu-ge-learning-portal`)
+   * Database Instance Name (e.g. use `<YOUR_DATABASE_INSTANCE_NAME>` instead of `edu-portal-db`)
+   * Custom administrative and super-admin passwords (always use placeholder tags and never store actual secrets in plain-text inside git).
+   * Personal workspace emails, account tokens, or custom IP addresses.
+3. **Password Recovery Warning**: Ensure that any credentials setup guide contains a warning noting that there is **no recovery mechanism** for customized administrative passwords, and that they must be documented and kept secure.
+
 #### GitHub Token & Secrets Storage
 * **GitHub Personal Access Token (PAT):** Saved securely in the local project workspace in the [gp](file:///Users/roycheung/Desktop/dev-projects/edu-ge-adoption-portal/gp) file. This token authorizes push workflows and repository management actions.
 
