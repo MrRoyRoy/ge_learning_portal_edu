@@ -183,29 +183,14 @@ Following any deployment of modifications, enhancements, or bug fixes:
 
 ############ 7. App State & Progress
  
-#### Accomplished Tasks (Latest Session Milestone)
-* **Selective Playbook Export Selection Mechanism (100% Complete):**
-  * Added a master `#chkAdminSelectAllCases` checkbox header and individual row checkboxes next to each playbook in the Admin Portal table list (`index.html`).
-  * Wired up a dynamic listener in `loadAdminUseCases()` (`app.js`) to handle checking and unchecking all playbook rows instantly.
-  * Refactored `#btnAdminExportCases` (`app.js`) to query checked row IDs, filter the active cached playbooks list (`appState.loadedAdminUseCases`), format into clean exportable JSON, and trigger a client-side download of only the selected entries.
-* **Simplified Chinese (`zh-CN`) Roadmaps & Checklists Integration (100% Complete):**
-  * Upgraded the database schema in `server.js` with `text_cn TEXT` columns for `verification_checkpoints` for both PostgreSQL and SQLite, and added dynamic startup column migrations with backfills to prevent empty values.
-  * Updated `POST` and `PUT` `/api/admin/checkpoints` REST APIs to receive, process, and save the Simplified Chinese translations.
-  * Extended the client-side Admin Checklist CRUD modal overlay (`index.html` & `app.js`) to feature a Simplified Chinese input field, populating and saving `text_cn` parameters in checkpoint payloads.
-  * Injected localized text checks inside standard user roadmap dashboard builders (`app.js`), loading `t.textCn` (with fallback to `t.textZh` and `t.text`) seamlessly if the active session language is set to `zh-CN`.
-* **Standard Admin & Super Admin Import/Export Support (100% Complete):**
-  * Confirmed regular administrative assistants can import and export playbooks seamlessly from both the client UI panels and backend endpoints by removing restrictive authorization barriers.
-* **Provision Multiple New Accounts at Once (100% Complete):**
-  * Configured `formAddUser` input field type as `text` in `index.html` to allow entering multiple comma-separated email addresses, and clearly detailed the default password `"ChangeMe"` in the UI description.
-  * Handled splitting, trimming, and validation of multiple emails in `server.js` (`POST /api/admin/users`).
-  * Integrated custom rendering in `app.js` to show the list of successfully provisioned accounts, duplicate skips, failure lists, and the default temporary password `"ChangeMe"`.
-* **"New" and "Updated" Use Case Indicators (100% Complete):**
-  * Configured dynamic `updated_at` column migrations in `server.js` for both PostgreSQL and SQLite, ensuring compatibility.
-  * Updated the `PUT /api/admin/use-cases` endpoint to refresh the `updated_at` timestamp on playbook modifications.
-  * Built a custom `getUsecaseBadgeHtml` utility in `app.js` to label any usecase created or imported within 30 days as **"New"** (red badge) and any modified within 30 days as **"Updated"** (blue badge).
-  * Displayed these premium badges next to the cards on the main User Portal and inline with titles in the Admin Portal table.
+##### Accomplished Tasks (Latest Session Milestone)
+* **Granular Assistant Admin Authorization Controls (100% Complete):**
+  * **Blocked User Provisioning Access:** Restricted Assistant Admin users (`isAssist: true`) from loading, creating, deleting, or resetting user accounts on both the backend API layers (`GET`, `POST`, `DELETE`, `PUT` `/api/admin/users`) and frontend UI layers (completely hid the "Users Provisioning" sidebar menu tab).
+  * **Restricted Use Case Modification & Import:** Blocked Assistant Admin from creating, updating, importing, or deleting playbooks on the backend endpoints (`POST`, `PUT`, `DELETE` `/api/admin/use-cases`), while keeping standard export capabilities fully active (`GET /api/admin/use-cases/export`). Disabled all inputs, save buttons, and AI-generation actions on the client-side Use Case CRUD modals to provide a clean view-only dashboard.
+  * **View-Only Phase Verification Checklist Management:** Confirmed Assistant Admin can only view phase verification checkpoints but cannot add, edit, or delete them. Hid the "Add Checklist Item" button and the delete row buttons, and altered "Edit" buttons to "View" inside the checkpoints list panel.
+  * **Allowed Feedbacks List Access (Without Dismissal):** Upgraded `GET /api/feedbacks` permissions to allow both Super Admin and Assistant Admin users to fetch feedback suggestions, but strictly locked down deletion/dismissal (`POST /api/feedbacks/delete`) to Super Admin only. Removed the "close" buttons on the feedbacks grid for Assistant Admin.
 
 ### Next Steps & Continuous Polish
-1. **GitHub Version Synchronization:** Trigger git staging, commit, and remote push for all the latest selective export checkboxes and Simplified Chinese checklist additions.
-2. **Production Container Re-deployment:** Run source-deployment on Google Cloud Run to push the fully updated features live to Asia-East2.
-3. **Continuous Domain Testing:** Validate multiple account creation and checkpoints editing with academic system administrators in live staging environments.
+1. **Local Test Environment Checks:** Log in as the Assistant Admin `edu_portal_admin` and verify that the sidebar tabs, create buttons, and delete buttons are correctly hidden or view-only.
+2. **Production Container Re-deployment:** Re-build and re-deploy the updated Express backend to Google Cloud Run to roll out the updated authorization model live.
+3. **Database Schema Backups:** Monitor the persistent Cloud SQL instance for correct log persistence.

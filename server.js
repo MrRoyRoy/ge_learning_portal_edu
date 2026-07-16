@@ -799,11 +799,11 @@ app.post('/api/feedbacks', async (req, res) => {
   }
 });
 
-// List Feedbacks (Strictly Super-Admin ONLY)
+// List Feedbacks (Admin and Super-Admin)
 app.get('/api/feedbacks', async (req, res) => {
   try {
-    if (!req.session.user || req.session.user.email !== 'edu_portal_s_admin') {
-      return res.status(403).json({ error: 'Unauthorized access. Super-admin role required.' });
+    if (!req.session.user || !req.session.user.isAdmin) {
+      return res.status(403).json({ error: 'Unauthorized access. Administrator role required.' });
     }
     const feedbacks = await query('SELECT * FROM feedbacks ORDER BY created_at DESC');
     res.json({ success: true, feedbacks });
@@ -846,6 +846,10 @@ function requireAdmin(req, res, next) {
 
 // User CRUD: Fetch all users
 app.get('/api/admin/users', requireAdmin, async (req, res) => {
+  if (req.session.user.isAssist) {
+    return res.status(403).json({ success: false, message: 'Access denied. Administrative assistants are not authorized to manage user accounts.' });
+  }
+
   try {
     const users = await query('SELECT email, is_temp_password, created_at FROM users ORDER BY created_at DESC');
     const formattedUsers = users.map(u => ({
@@ -861,6 +865,10 @@ app.get('/api/admin/users', requireAdmin, async (req, res) => {
 
 // User CRUD: Add / Provision User
 app.post('/api/admin/users', requireAdmin, async (req, res) => {
+  if (req.session.user.isAssist) {
+    return res.status(403).json({ success: false, message: 'Access denied. Administrative assistants are not authorized to manage user accounts.' });
+  }
+
   const { email } = req.body;
   if (!email) {
     return res.status(400).json({ success: false, message: 'Please provide at least one valid email address.' });
@@ -949,6 +957,10 @@ app.post('/api/admin/users', requireAdmin, async (req, res) => {
 
 // User CRUD: Revoke / Delete User
 app.delete('/api/admin/users', requireAdmin, async (req, res) => {
+  if (req.session.user.isAssist) {
+    return res.status(403).json({ success: false, message: 'Access denied. Administrative assistants are not authorized to manage user accounts.' });
+  }
+
   const { email } = req.body;
   if (!email) {
     return res.status(400).json({ success: false, message: 'Please specify the email to revoke.' });
@@ -964,6 +976,10 @@ app.delete('/api/admin/users', requireAdmin, async (req, res) => {
 
 // User CRUD: Reset User password to a new temporary password
 app.put('/api/admin/users/reset', requireAdmin, async (req, res) => {
+  if (req.session.user.isAssist) {
+    return res.status(403).json({ success: false, message: 'Access denied. Administrative assistants are not authorized to manage user accounts.' });
+  }
+
   const { email } = req.body;
   if (!email) {
     return res.status(400).json({ success: false, message: 'Please specify an email address.' });
@@ -1071,6 +1087,10 @@ app.get('/api/admin/stats', requireAdmin, async (req, res) => {
 
 // Use Case CRUD: Add or Modify
 app.post('/api/admin/use-cases', requireAdmin, async (req, res) => {
+  if (req.session.user.isAssist) {
+    return res.status(403).json({ success: false, message: 'Access denied. Administrative assistants are not authorized to create or import playbooks.' });
+  }
+
   const uc = req.body;
   if (!uc.id || !uc.title || !uc.category) {
     return res.status(400).json({ success: false, message: 'Missing required use case parameter fields.' });
@@ -1110,6 +1130,10 @@ app.post('/api/admin/use-cases', requireAdmin, async (req, res) => {
 
 // Use Case CRUD: Update
 app.put('/api/admin/use-cases', requireAdmin, async (req, res) => {
+  if (req.session.user.isAssist) {
+    return res.status(403).json({ success: false, message: 'Access denied. Administrative assistants are not authorized to edit or replace playbooks.' });
+  }
+
   const uc = req.body;
   if (!uc.id || !uc.title) {
     return res.status(400).json({ success: false, message: 'ID and Title are mandatory.' });

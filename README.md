@@ -140,7 +140,21 @@ To ensure highly targeted adoptions, the portal dynamically adapts its roadmaps,
    ```
 4. Open your web browser and navigate to `http://localhost:3000`.
 
-### Local Testing Accounts
+### Local Testing Accounts & RBAC Matrix
+
+The system enforces a granular **Role-Based Access Control (RBAC)** security matrix between the two administration levels:
+
+| Administrative Feature | 👑 Super-Admin (`edu_portal_s_admin`) | 🧑‍💼 Assistant Admin (`edu_portal_admin`) |
+| :--- | :---: | :---: |
+| **View Telemetry Analytics** | ✅ Yes | ✅ Yes |
+| **Export Use Cases (JSON)** | ✅ Yes | ✅ Yes |
+| **View Verification Checkpoints** | ✅ Yes | ✅ Yes (View-Only) |
+| **View User Feedbacks** | ✅ Yes | ✅ Yes (View-Only) |
+| **Manage (Add/Edit/Delete) Checkpoints** | ✅ Yes | ❌ Blocked |
+| **Manage (Add/Edit/Import) Use Cases** | ✅ Yes | ❌ Blocked |
+| **User Provisioning & Password Resets** | ✅ Yes | ❌ Blocked |
+| **Dismiss/Delete Feedbacks** | ✅ Yes | ❌ Blocked |
+
 * **Super-Admin**:
   * *Username/Email*: `edu_portal_s_admin`
   * *Password*: `<YOUR_SUPER_ADMIN_PASSWORD>` (configured via environment or defaults to fallback)
