@@ -169,24 +169,27 @@ gcloud run deploy edu-ge-learning-portal --source . --region asia-east2 --allow-
 
 ---
 
-########## 7. App State & Progress
+########### 7. App State & Progress
  
 #### Accomplished Tasks (Latest Session Milestone)
-* **Horizontal Timeline Vertical Spacing Adjustments (100% Complete):**
-  * Shifted the Track 1 baseline coordinates, horizontal connector lines, alternate joint pins, and floating cards downward inside an expanded `290px` container with a generous **`62px` clearance gap** below the Section Title.
-* **Administrative Role Localizations & Milestones (100% Complete):**
-  * Added missing dictionaries translations for `Program Leader` and `Dean` across all three locale schemas.
-  * Formulated and integrated rich, high-fidelity milestone checklists for both academic administrative roles, supporting dual-language rendering (English and Traditional Chinese).
-* **Feedback Modal Click Handler Debug (100% Complete):**
-  * Patched the modal open/close trigger handler to toggle the core design system's `.active` transition class, making the form fully visible and interactive.
-* **Navigation Header & Select Option Simplification (100% Complete):**
-  * Simplified welcome headers inside the navigation bar to display only the dynamic role text or "Admin View", cleaning up excess template branding.
-  * Replaced "+ Assign Playbook to Phase" placeholder label inside the timeline details dropdown with standard, minimal select prompts.
-* **Workspace Typo Sanitizations (100% Complete):**
-  * Corrected all "CE" feature typos to "GE" feature.
-  * Re-deployed the entire workspace container under the newly corrected Cloud Run service: **`edu-ge-learning-portal`**.
+* **Provision Multiple New Accounts at Once (100% Complete):**
+  * Configured `formAddUser` input field type as `text` in `index.html` to allow entering multiple comma-separated email addresses, and clearly detailed the default password `"ChangeMe"` in the UI description.
+  * Handled splitting, trimming, and validation of multiple emails in `server.js` (`POST /api/admin/users`).
+  * Integrated custom rendering in `app.js` to show the list of successfully provisioned accounts, duplicate skips, failure lists, and the default temporary password `"ChangeMe"`.
+* **"New" and "Updated" Use Case Indicators (100% Complete):**
+  * Configured dynamic `updated_at` column migrations in `server.js` for both PostgreSQL and SQLite, ensuring compatibility.
+  * Updated the `PUT /api/admin/use-cases` endpoint to refresh the `updated_at` timestamp on playbook modifications.
+  * Built a custom `getUsecaseBadgeHtml` utility in `app.js` to label any usecase created or imported within 30 days as **"New"** (red badge) and any modified within 30 days as **"Updated"** (blue badge).
+  * Displayed these premium badges next to the cards on the main User Portal and inline with titles in the Admin Portal table.
+* **Phase Verification Checklist Editor (100% Complete):**
+  * Created robust backend APIs (`GET /api/checkpoints`, `POST /api/admin/checkpoints`, `PUT /api/admin/checkpoints`, `DELETE /api/admin/checkpoints`) to support CRUD operations on checkpoints.
+  * Injected checklists tab views, table layouts, and custom creation/edit forms directly inside `index.html`.
+  * Wired up dynamic controller routing (`loadAdminChecklists()`, `openAdminCheckpointModal()`, `saveAdminCheckpoint()`, `deleteAdminCheckpoint()`) and active state syncing inside `app.js`.
+* **Use Case Import and Overwrite/Prompt Confirmations (100% Complete):**
+  * Bound upload listeners to `#btnAdminImportCases` and `#inputAdminImportFile` in `app.js`.
+  * Implemented standard JSON file reading, validation, duplicate lookup, and recursive confirmation prompt cascades to optionally overwrite existing playbook IDs via POST/PUT API calls.
 
 ### Next Steps & Continuous Polish
-1. **Domain Access Audits:** Work with administrators to verify active organization policy bounds on the newly deployed service.
-2. **Review User Feedback Submissions**: Routinely check user suggestions inside the super-admin feedback dashboard.
-
+1. **GitHub Version Synchronization:** Trigger git staging, commit, and remote push for all the latest dynamic administration additions.
+2. **Production Container Re-deployment:** Run source-deployment on Google Cloud Run to push the fully updated features live to Asia-East2.
+3. **Continuous Domain Testing:** Validate multiple account creation and checkpoints editing with academic system administrators in live staging environments.

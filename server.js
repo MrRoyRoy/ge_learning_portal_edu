@@ -157,7 +157,8 @@ async function initializeSchemas() {
       connector_guide TEXT,
       translations TEXT NOT NULL,   -- JSON translations dictionary
       is_verified BOOLEAN DEFAULT FALSE,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
   ` : `
     CREATE TABLE IF NOT EXISTS use_cases (
@@ -175,7 +176,8 @@ async function initializeSchemas() {
       connector_guide TEXT,
       translations TEXT NOT NULL,
       is_verified INTEGER DEFAULT 0,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
   `;
 
@@ -233,11 +235,30 @@ async function initializeSchemas() {
     );
   `;
 
+  const createCheckpointsTable = dbType === 'postgres' ? `
+    CREATE TABLE IF NOT EXISTS verification_checkpoints (
+      id VARCHAR(100) PRIMARY KEY,
+      role VARCHAR(100) NOT NULL,
+      phase VARCHAR(50) NOT NULL,
+      text TEXT NOT NULL,
+      text_zh TEXT NOT NULL
+    );
+  ` : `
+    CREATE TABLE IF NOT EXISTS verification_checkpoints (
+      id TEXT PRIMARY KEY,
+      role TEXT NOT NULL,
+      phase TEXT NOT NULL,
+      text TEXT NOT NULL,
+      text_zh TEXT NOT NULL
+    );
+  `;
+
   await query(createUsersTable);
   await query(createUseCasesTable);
   await query(createPreferencesTable);
   await query(createAnalyticsTable);
   await query(createFeedbacksTable);
+  await query(createCheckpointsTable);
 
   // Dynamic schema migrations for existing databases
   try {
@@ -247,6 +268,17 @@ async function initializeSchemas() {
       await query('ALTER TABLE use_cases ADD COLUMN is_verified INTEGER DEFAULT 0;');
     }
     console.log('🔄 Schema migration: Added "is_verified" column to "use_cases" table.');
+  } catch (err) {
+    // Column already exists, safe to ignore
+  }
+
+  try {
+    if (dbType === 'postgres') {
+      await query('ALTER TABLE use_cases ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;');
+    } else {
+      await query('ALTER TABLE use_cases ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP;');
+    }
+    console.log('🔄 Schema migration: Added "updated_at" column to "use_cases" table.');
   } catch (err) {
     // Column already exists, safe to ignore
   }
@@ -287,12 +319,14 @@ async function seedDatabase() {
       ;
       globalThis.seed_useCasesDb = useCasesDb;
       globalThis.seed_useCasesTranslations = useCasesTranslations;
+      globalThis.seed_roleVerificationCheckpoints = roleVerificationCheckpoints;
     `;
 
     vm.runInNewContext(seedExtractScript, sandbox);
 
     const useCases = sandbox.seed_useCasesDb;
     const translations = sandbox.seed_useCasesTranslations;
+    const checkpointsData = sandbox.seed_roleVerificationCheckpoints;
 
     if (!useCases || !translations) {
       throw new Error('Failed to extract useCasesDb or useCasesTranslations from sandbox context.');
@@ -312,6 +346,25 @@ async function seedDatabase() {
         await insertUseCase(suHelpdesk, translations['su_helpdesk']);
         console.log('✅ "su_helpdesk" dual-mode prompt configurations synchronized successfully.');
       }
+    }
+
+    // Seed verification checkpoints if empty
+    const existingCheckpoints = await query('SELECT count(*) as count FROM verification_checkpoints');
+    const checkpointCount = parseInt(existingCheckpoints[0].count || existingCheckpoints[0]['count(*)'] || 0);
+
+    if (checkpointsData && checkpointCount === 0) {
+      console.log('🌱 Seeding verification checkpoints database from app.js...');
+      for (const [role, phases] of Object.entries(checkpointsData)) {
+        for (const [phase, items] of Object.entries(phases)) {
+          for (const item of items) {
+            await query(
+              'INSERT INTO verification_checkpoints (id, role, phase, text, text_zh) VALUES (?, ?, ?, ?, ?)',
+              [item.id, role, phase, item.text, item.textZh || item.text]
+            );
+          }
+        }
+      }
+      console.log('✅ Verification checkpoints database seeded successfully.');
     }
 
     // Clean up any previously pre-seeded mock analytics data to reflect actual adoption metrics
@@ -568,7 +621,9 @@ app.get('/api/use-cases', async (req, res) => {
         isVerified: uc.is_verified === true || uc.is_verified === 1 || uc.is_verified === 'true',
         isLiked: false,
         isDeployed: false,
-        totalLikes: likesMap[uc.id] || 0
+        totalLikes: likesMap[uc.id] || 0,
+        createdAt: uc.created_at,
+        updatedAt: uc.updated_at
       };
     });
 
@@ -784,33 +839,84 @@ app.get('/api/admin/users', requireAdmin, async (req, res) => {
 // User CRUD: Add / Provision User
 app.post('/api/admin/users', requireAdmin, async (req, res) => {
   const { email } = req.body;
-  if (!email || !email.includes('@')) {
-    return res.status(400).json({ success: false, message: 'Please provide a valid email address.' });
+  if (!email) {
+    return res.status(400).json({ success: false, message: 'Please provide at least one valid email address.' });
+  }
+
+  // Check if multiple emails are provided (separated by commas)
+  const isMultiple = email.includes(',');
+  const emailList = email
+    .split(',')
+    .map(e => e.trim().toLowerCase())
+    .filter(e => e.length > 0 && e.includes('@'));
+
+  if (emailList.length === 0) {
+    return res.status(400).json({ success: false, message: 'Please provide at least one valid email address.' });
   }
 
   try {
-    // Check duplication
-    const checkUser = await query('SELECT * FROM users WHERE email = ?', [email.trim().toLowerCase()]);
-    if (checkUser.length > 0) {
-      return res.status(400).json({ success: false, message: 'This email address is already provisioned.' });
-    }
-
-    // Generate a secure, copyable 10-char password
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
-    let tempPassword = '';
-    for (let i = 0; i < 10; i++) {
-      tempPassword += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-
     const salt = await bcrypt.genSalt(10);
-    const passwordHash = await bcrypt.hash(tempPassword, salt);
 
-    await query(
-      'INSERT INTO users (email, password_hash, is_temp_password) VALUES (?, ?, ?)',
-      [email.trim().toLowerCase(), passwordHash, dbType === 'postgres' ? true : 1]
-    );
+    if (isMultiple) {
+      // Multiple user provisioning with default password "ChangeMe"
+      const defaultPassword = 'ChangeMe';
+      const passwordHash = await bcrypt.hash(defaultPassword, salt);
+      const tempFlag = dbType === 'postgres' ? true : 1;
 
-    res.json({ success: true, email: email.trim().toLowerCase(), tempPassword: tempPassword });
+      const results = {
+        success: [],
+        duplicates: [],
+        errors: []
+      };
+
+      for (const singleEmail of emailList) {
+        try {
+          const checkUser = await query('SELECT * FROM users WHERE email = ?', [singleEmail]);
+          if (checkUser.length > 0) {
+            results.duplicates.push(singleEmail);
+            continue;
+          }
+
+          await query(
+            'INSERT INTO users (email, password_hash, is_temp_password) VALUES (?, ?, ?)',
+            [singleEmail, passwordHash, tempFlag]
+          );
+          results.success.push(singleEmail);
+        } catch (err) {
+          console.error(`Error provisioning ${singleEmail}:`, err);
+          results.errors.push(singleEmail);
+        }
+      }
+
+      res.json({
+        success: true,
+        multiple: true,
+        summary: results,
+        defaultPassword: defaultPassword
+      });
+
+    } else {
+      // Single email flow: retain existing logic with secure 10-char password generator
+      const singleEmail = emailList[0];
+      const checkUser = await query('SELECT * FROM users WHERE email = ?', [singleEmail]);
+      if (checkUser.length > 0) {
+        return res.status(400).json({ success: false, message: 'This email address is already provisioned.' });
+      }
+
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+      let tempPassword = '';
+      for (let i = 0; i < 10; i++) {
+        tempPassword += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+
+      const passwordHash = await bcrypt.hash(tempPassword, salt);
+      await query(
+        'INSERT INTO users (email, password_hash, is_temp_password) VALUES (?, ?, ?)',
+        [singleEmail, passwordHash, dbType === 'postgres' ? true : 1]
+      );
+
+      res.json({ success: true, multiple: false, email: singleEmail, tempPassword: tempPassword });
+    }
 
   } catch (error) {
     console.error('Error adding user:', error);
@@ -999,7 +1105,7 @@ app.put('/api/admin/use-cases', requireAdmin, async (req, res) => {
 
     const updateSql = `
       UPDATE use_cases
-      SET category = ?, title = ?, summary = ?, features = ?, connectors = ?, role = ?, level = ?, steps = ?, prompt = ?, pro_tip = ?, connector_guide = ?, translations = ?, is_verified = ?
+      SET category = ?, title = ?, summary = ?, features = ?, connectors = ?, role = ?, level = ?, steps = ?, prompt = ?, pro_tip = ?, connector_guide = ?, translations = ?, is_verified = ?, updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `;
 
@@ -1241,6 +1347,83 @@ Brand Guidelines & Localisation Boundaries:
     res.json({ success: true, result: parsedResult });
   } catch (error) {
     console.error('Gemini content generation error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ==========================================
+// 5b. Phase Verification Checkpoints REST API
+// ==========================================
+
+// Get all verification checkpoints (Accessible to all authenticated users)
+app.get('/api/checkpoints', async (req, res) => {
+  try {
+    const rows = await query('SELECT * FROM verification_checkpoints ORDER BY role ASC, phase ASC, id ASC');
+    res.json(rows);
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Add a verification checkpoint (Admin only)
+app.post('/api/admin/checkpoints', requireAdmin, async (req, res) => {
+  if (req.session.user.isAssist) {
+    return res.status(403).json({ success: false, message: 'Access denied. Administrative assistants are not authorized to modify verification checklists.' });
+  }
+
+  const { id, role, phase, text, text_zh } = req.body;
+  if (!id || !role || !phase || !text) {
+    return res.status(400).json({ success: false, message: 'Missing required parameters.' });
+  }
+
+  try {
+    await query(
+      'INSERT INTO verification_checkpoints (id, role, phase, text, text_zh) VALUES (?, ?, ?, ?, ?)',
+      [id, role, phase, text, text_zh || text]
+    );
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Update a verification checkpoint (Admin only)
+app.put('/api/admin/checkpoints', requireAdmin, async (req, res) => {
+  if (req.session.user.isAssist) {
+    return res.status(403).json({ success: false, message: 'Access denied. Administrative assistants are not authorized to modify verification checklists.' });
+  }
+
+  const { id, role, phase, text, text_zh } = req.body;
+  if (!id || !role || !phase || !text) {
+    return res.status(400).json({ success: false, message: 'Missing required parameters.' });
+  }
+
+  try {
+    await query(
+      'UPDATE verification_checkpoints SET role = ?, phase = ?, text = ?, text_zh = ? WHERE id = ?',
+      [role, phase, text, text_zh || text, id]
+    );
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Delete a verification checkpoint (Admin only)
+app.delete('/api/admin/checkpoints', requireAdmin, async (req, res) => {
+  if (req.session.user.isAssist) {
+    return res.status(403).json({ success: false, message: 'Access denied. Administrative assistants are not authorized to modify verification checklists.' });
+  }
+
+  const { id } = req.body;
+  if (!id) {
+    return res.status(400).json({ success: false, message: 'Missing required ID parameter.' });
+  }
+
+  try {
+    await query('DELETE FROM verification_checkpoints WHERE id = ?', [id]);
+    res.json({ success: true });
+  } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
 });

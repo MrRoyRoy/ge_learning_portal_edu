@@ -2196,6 +2196,41 @@ function handleSearchInput(e) {
   renderUseCases();
 }
 
+// Helper to render New and Updated badges for Use Cases created/updated within 30 days
+function getUsecaseBadgeHtml(uc, lang) {
+  if (!uc.createdAt) return "";
+
+  const now = new Date();
+  const createdDate = new Date(uc.createdAt);
+  const diffTimeCreated = Math.abs(now - createdDate);
+  const diffDaysCreated = Math.ceil(diffTimeCreated / (1000 * 60 * 60 * 24));
+
+  let isNew = diffDaysCreated <= 30;
+  let isUpdated = false;
+
+  if (uc.updatedAt) {
+    const updatedDate = new Date(uc.updatedAt);
+    const diffTimeUpdated = Math.abs(now - updatedDate);
+    const diffDaysUpdated = Math.ceil(diffTimeUpdated / (1000 * 60 * 60 * 24));
+    // It's only marked "updated" if it's NOT already marked "new" (to avoid cluttering)
+    if (!isNew && diffDaysUpdated <= 30 && updatedDate > createdDate) {
+      isUpdated = true;
+    }
+  }
+
+  if (isNew) {
+    const newLabel = lang === 'en' ? 'New' : (lang === 'zh-TW' ? '新' : '新');
+    return `<span class="tag" style="background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.25); color: #ef4444; font-weight: 700; font-size: 10px; padding: 4px 8px; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 4px;">${newLabel}</span>`;
+  }
+
+  if (isUpdated) {
+    const updatedLabel = lang === 'en' ? 'Updated' : (lang === 'zh-TW' ? '已更新' : '已更新');
+    return `<span class="tag" style="background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.25); color: #3b82f6; font-weight: 700; font-size: 10px; padding: 4px 8px; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 4px;">${updatedLabel}</span>`;
+  }
+
+  return "";
+}
+
 // Main Render Loop for Use Cases Grid
 function renderUseCases() {
   const container = document.getElementById("useCasesContainer");
@@ -2346,6 +2381,11 @@ function renderUseCases() {
 
       // Build Tag Pills HTML
       let tagsHtml = "";
+      const badgeHtml = getUsecaseBadgeHtml(uc, lang);
+      if (badgeHtml) {
+        tagsHtml += badgeHtml;
+      }
+
       if (uc.isVerified) {
         const verifiedLabel = lang === 'en' ? 'Verified' : (lang === 'zh-TW' ? '已驗證' : '已验证');
         tagsHtml += `<span class="tag" style="background: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.25); color: #10b981; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; text-transform: uppercase; font-size: 10px; letter-spacing: 0.5px;"><span class="material-symbols-outlined" style="font-size: 13px; font-weight: bold;">verified</span>${verifiedLabel}</span>`;
@@ -3495,6 +3535,7 @@ function injectAdminBackButton() {
 async function initApp() {
   // Execute base configs
   enhanceUseCasesDatabase();
+  await loadVerificationCheckpoints();
   initTheme();
   initLanguage();
   initTimeline();
@@ -4003,10 +4044,16 @@ function initAdminPortal() {
     tabFeedbacks.style.display = savedTab === 'feedbacks' ? 'block' : 'none';
   }
 
+  const tabChecklists = document.getElementById("adminTabChecklists");
+  if (tabChecklists) {
+    tabChecklists.style.display = savedTab === 'checklists' ? 'block' : 'none';
+  }
+
   if (savedTab === 'users') loadAdminUsers();
   else if (savedTab === 'analytics') loadAdminStats();
   else if (savedTab === 'cases') loadAdminUseCases();
   else if (savedTab === 'feedbacks' && isSuperAdmin) loadAdminFeedbacks();
+  else if (savedTab === 'checklists') loadAdminChecklists();
 
   tabs.forEach(tab => {
     tab.addEventListener("click", () => {
@@ -4023,11 +4070,15 @@ function initAdminPortal() {
       if (tabFeedbacks) {
         tabFeedbacks.style.display = target === 'feedbacks' ? 'block' : 'none';
       }
+      if (tabChecklists) {
+        tabChecklists.style.display = target === 'checklists' ? 'block' : 'none';
+      }
 
       if (target === 'users') loadAdminUsers();
       else if (target === 'analytics') loadAdminStats();
       else if (target === 'cases') loadAdminUseCases();
       else if (target === 'feedbacks' && isSuperAdmin) loadAdminFeedbacks();
+      else if (target === 'checklists') loadAdminChecklists();
     });
   });
 
@@ -4068,14 +4119,38 @@ function initAdminPortal() {
 
       if (data.success) {
         formAddUser.reset();
-        feedback.innerHTML = `
-          <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 4px; padding: 12px; font-size: 13px; color: var(--color-success);">
-            <strong>✅ User Account Provisioned!</strong><br>
-            Email: <code>${data.email}</code><br>
-            Temporary Password: <strong style="font-family: monospace; background: var(--bg-prompt-box); padding: 2px 6px; border-radius: 4px; color: var(--text-prompt-box); border: 1px solid var(--border-glass);">${data.tempPassword}</strong>
-            <p style="font-size: 11px; margin-top: 4px; color: var(--text-secondary);">Share this credentials with the user. They will be prompted to reset it immediately on sign-in.</p>
-          </div>
-        `;
+        if (data.multiple) {
+          const succList = data.summary.success.map(e => `<li><code>${e}</code></li>`).join('');
+          const dupList = data.summary.duplicates.length > 0 
+            ? `<div style="margin-top: 8px; font-size: 11px; color: var(--text-secondary);"><strong>Skipped Duplicates:</strong><br>${data.summary.duplicates.join(', ')}</div>` 
+            : '';
+          const errList = data.summary.errors.length > 0 
+            ? `<div style="margin-top: 8px; font-size: 11px; color: var(--color-danger);"><strong>Failed Accounts:</strong><br>${data.summary.errors.join(', ')}</div>` 
+            : '';
+
+          feedback.innerHTML = `
+            <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 4px; padding: 12px; font-size: 13px; color: var(--color-success);">
+              <strong>✅ Multiple User Accounts Provisioned!</strong><br>
+              <div style="margin-top: 6px; font-size: 12px;">
+                Successfully created accounts:
+                <ul style="margin: 4px 0; padding-left: 20px; text-align: left;">${succList || '<li>None</li>'}</ul>
+              </div>
+              Default Temporary Password for all: <strong style="font-family: monospace; background: var(--bg-prompt-box); padding: 2px 6px; border-radius: 4px; color: var(--text-prompt-box); border: 1px solid var(--border-glass);">${data.defaultPassword}</strong>
+              <p style="font-size: 11px; margin-top: 6px; color: var(--text-secondary);">The provisioned users will be prompted to reset their password immediately on their first login.</p>
+              ${dupList}
+              ${errList}
+            </div>
+          `;
+        } else {
+          feedback.innerHTML = `
+            <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 4px; padding: 12px; font-size: 13px; color: var(--color-success);">
+              <strong>✅ User Account Provisioned!</strong><br>
+              Email: <code>${data.email}</code><br>
+              Temporary Password: <strong style="font-family: monospace; background: var(--bg-prompt-box); padding: 2px 6px; border-radius: 4px; color: var(--text-prompt-box); border: 1px solid var(--border-glass);">${data.tempPassword}</strong>
+              <p style="font-size: 11px; margin-top: 4px; color: var(--text-secondary);">Share this credentials with the user. They will be prompted to reset it immediately on sign-in.</p>
+            </div>
+          `;
+        }
         feedback.style.display = "block";
         loadAdminUsers();
       } else {
@@ -4092,6 +4167,107 @@ function initAdminPortal() {
   document.getElementById("btnAdminExportCases").onclick = () => {
     window.open('/api/admin/use-cases/export', '_blank');
   };
+
+  document.getElementById("btnAdminImportCases").onclick = () => {
+    document.getElementById("inputAdminImportFile").click();
+  };
+
+  document.getElementById("inputAdminImportFile").onchange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (evt) => {
+      try {
+        const importData = JSON.parse(evt.target.result);
+        const importedArray = Array.isArray(importData) ? importData : [importData];
+
+        if (importedArray.length === 0) {
+          alert("Selected JSON file does not contain any valid playbooks.");
+          return;
+        }
+
+        // Fetch the very latest use cases list from server for lookup
+        const checkRes = await fetch('/api/use-cases');
+        const existingList = await checkRes.json();
+        const existingIds = existingList.map(uc => uc.id);
+
+        let createdCount = 0;
+        let updatedCount = 0;
+        let skippedCount = 0;
+
+        for (const uc of importedArray) {
+          if (!uc.id || !uc.title || !uc.category) {
+            console.warn("Skipping imported use case with missing parameters:", uc);
+            skippedCount++;
+            continue;
+          }
+
+          const alreadyExists = existingIds.includes(uc.id);
+          let shouldOverwrite = true;
+
+          if (alreadyExists) {
+            shouldOverwrite = confirm(`Use case ID "${uc.id}" ("${uc.title}") already exists in the system.\n\nDo you want to overwrite and replace it?`);
+          }
+
+          if (shouldOverwrite) {
+            const method = alreadyExists ? 'PUT' : 'POST';
+            const url = '/api/admin/use-cases';
+
+            // Ensure expected fields are structured
+            const payload = {
+              id: uc.id,
+              category: uc.category,
+              title: uc.title,
+              summary: uc.summary || "",
+              features: uc.features || [],
+              connectors: uc.connectors || [],
+              role: uc.role || "Lecturer",
+              level: uc.level || ["Generic"],
+              steps: uc.steps || [],
+              prompt: uc.prompt || "",
+              proTip: uc.proTip || uc.pro_tip || "",
+              connectorGuide: uc.connectorGuide || uc.connector_guide || null,
+              translations: uc.translations || {},
+              isVerified: uc.isVerified !== undefined ? uc.isVerified : false
+            };
+
+            const res = await fetch(url, {
+              method: method,
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+            });
+            const resData = await res.json();
+
+            if (resData.success) {
+              if (alreadyExists) updatedCount++;
+              else createdCount++;
+            } else {
+              console.error(`Failed to import playbook ${uc.id}:`, resData.message || resData.error);
+              skippedCount++;
+            }
+          } else {
+            skippedCount++;
+          }
+        }
+
+        alert(`Playbook import completed!\n\nSuccessfully Imported: ${createdCount}\nSuccessfully Overwritten: ${updatedCount}\nSkipped/Failed: ${skippedCount}`);
+        
+        // Reload all data arrays and render lists
+        loadAdminUseCases();
+        loadUseCasesFromServer().then(() => renderUseCases());
+
+      } catch (err) {
+        console.error("Failed to parse or import file:", err);
+        alert("An error occurred. Make sure you selected a valid playbook JSON backup file.");
+      } finally {
+        // Reset the file selector so the user can select the same file again if needed
+        e.target.value = "";
+      }
+    };
+    reader.readAsText(file);
+  };
+
   document.getElementById("adminCaseModalClose").onclick = () => {
     document.getElementById("adminCaseEditModal").classList.remove("active");
   };
@@ -4112,6 +4288,31 @@ function initAdminPortal() {
     e.preventDefault();
     await saveAdminUseCase();
   };
+
+  // Phase Verification Checkpoint listeners
+  const btnCreateCheckpoint = document.getElementById("btnAdminCreateCheckpoint");
+  if (btnCreateCheckpoint) {
+    btnCreateCheckpoint.onclick = () => openAdminCheckpointModal(null);
+  }
+  const closeCheckpointModalBtn = document.getElementById("adminCheckpointModalClose");
+  if (closeCheckpointModalBtn) {
+    closeCheckpointModalBtn.onclick = () => {
+      document.getElementById("adminCheckpointEditModal").classList.remove("active");
+    };
+  }
+  const cancelCheckpointBtn = document.getElementById("btnAdminCheckpointCancel");
+  if (cancelCheckpointBtn) {
+    cancelCheckpointBtn.onclick = () => {
+      document.getElementById("adminCheckpointEditModal").classList.remove("active");
+    };
+  }
+  const saveCheckpointBtn = document.getElementById("btnAdminCheckpointSave");
+  if (saveCheckpointBtn) {
+    saveCheckpointBtn.onclick = async (e) => {
+      e.preventDefault();
+      await saveAdminCheckpoint();
+    };
+  }
 
   // Default load
   loadAdminUsers();
@@ -4505,7 +4706,7 @@ function renderAdminStatsChart(history) {
 // Admin Tab 3: Load Use Cases CRUD
 async function loadAdminUseCases() {
   const tbody = document.getElementById("adminCasesTableBody");
-  tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 20px; color: var(--text-muted);">Loading use cases...</td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 20px; color: var(--text-muted);">Loading use cases...</td></tr>`;
 
   try {
     const res = await fetch('/api/use-cases');
@@ -4520,12 +4721,28 @@ async function loadAdminUseCases() {
       const trans = uc.translations ? uc.translations[activeLang] : null;
       const titleText = (trans && trans.title) ? trans.title : uc.title;
 
+      let badgeMarkup = "";
+      const badgeHtml = getUsecaseBadgeHtml(uc, activeLang);
+      if (badgeHtml) {
+        badgeMarkup = `<span style="margin-left: 6px;">${badgeHtml}</span>`;
+      }
+
+      const verifiedLabel = uc.isVerified 
+        ? `<span class="tag" style="background: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.25); color: #10b981; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; padding: 2px 6px; text-transform: uppercase; font-size: 10px; letter-spacing: 0.5px; border-radius: 4px;"><span class="material-symbols-outlined" style="font-size: 12px; font-weight: bold;">verified</span>${activeLang === 'en' ? 'Yes' : (activeLang === 'zh-TW' ? '是' : '是')}</span>`
+        : `<span class="tag" style="background: rgba(255,255,255,0.02); border-color: rgba(255,255,255,0.05); color: var(--text-muted); font-size: 10px; padding: 2px 6px; border-radius: 4px;">${activeLang === 'en' ? 'No' : (activeLang === 'zh-TW' ? '否' : '否')}</span>`;
+
       const isAssist = appState.isAssist === true;
       tr.innerHTML = `
         <td style="padding: 12px 8px; font-family: monospace; font-size: 11px; color: var(--color-primary); font-weight: 700;">${uc.id}</td>
-        <td style="padding: 12px 8px; font-weight: 500;">${titleText}</td>
+        <td style="padding: 12px 8px; font-weight: 500;">
+          <div style="display: flex; align-items: center; gap: 4px; flex-wrap: wrap;">
+            <span>${titleText}</span>
+            ${badgeMarkup}
+          </div>
+        </td>
         <td style="padding: 12px 8px; text-transform: capitalize; color: var(--text-secondary);">${uc.category}</td>
         <td style="padding: 12px 8px; color: var(--text-muted);">${uc.role}</td>
+        <td style="padding: 12px 8px;">${verifiedLabel}</td>
         <td style="padding: 12px 8px; text-align: right; display: flex; gap: 8px; justify-content: flex-end;">
           <button class="nav-button btn-edit-case" style="height: 28px; padding: 0 10px; font-size: 11px;">${isAssist ? 'View' : 'Edit'}</button>
           ${isAssist ? '' : '<button class="nav-button btn-delete-case" style="height: 28px; padding: 0 10px; font-size: 11px; background: var(--color-danger); border-color: var(--color-danger); color: #ffffff !important;">Delete</button>'}
@@ -5502,7 +5719,7 @@ const defaultTimelineStages = [
   }
 ];
 
-const roleVerificationCheckpoints = {
+let roleVerificationCheckpoints = {
   "IT Admin": {
     day0: [
       { id: "ita_d0_1", text: "Configure federated IdP single sign-on (SSO) loops with university directories", textZh: "與學校帳號目錄配置 IdP 聯邦單一登入 (SSO) 整合" },
@@ -6394,3 +6611,188 @@ window.deleteFeedback = async function(id) {
     alert("Server connection failure.");
   }
 };
+
+// ==========================================
+// Phase Verification Checklist CRUD Engine
+// ==========================================
+
+async function loadVerificationCheckpoints() {
+  try {
+    const res = await fetch('/api/checkpoints');
+    if (!res.ok) throw new Error("Failed to load checkpoints");
+    const checkpoints = await res.json();
+    
+    // Reconstruct the roleVerificationCheckpoints structure!
+    const newCheckpoints = {};
+    checkpoints.forEach(cp => {
+      if (!newCheckpoints[cp.role]) {
+        newCheckpoints[cp.role] = {};
+      }
+      if (!newCheckpoints[cp.role][cp.phase]) {
+        newCheckpoints[cp.role][cp.phase] = [];
+      }
+      newCheckpoints[cp.role][cp.phase].push({
+        id: cp.id,
+        text: cp.text,
+        textZh: cp.text_zh
+      });
+    });
+    
+    // Assign to our global variable
+    roleVerificationCheckpoints = newCheckpoints;
+  } catch (err) {
+    console.error("Error loading verification checkpoints from server, keeping local fallbacks:", err);
+  }
+}
+
+async function loadAdminChecklists() {
+  const tbody = document.getElementById("adminCheckpointsTableBody");
+  if (!tbody) return;
+  tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 20px; color: var(--text-muted);">Loading checklist items...</td></tr>`;
+
+  try {
+    const res = await fetch('/api/checkpoints');
+    const checkpoints = await res.json();
+
+    tbody.innerHTML = "";
+    const isAssist = appState.isAssist === true;
+
+    if (checkpoints.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 20px; color: var(--text-muted);">No checkpoints found.</td></tr>`;
+      return;
+    }
+
+    checkpoints.forEach(cp => {
+      const tr = document.createElement("tr");
+      tr.style.borderBottom = "1px solid var(--border-glass)";
+
+      tr.innerHTML = `
+        <td style="padding: 12px 8px; font-family: monospace; font-size: 11px; color: var(--color-primary); font-weight: 700;">${cp.id}</td>
+        <td style="padding: 12px 8px; font-weight: 500;">${cp.role}</td>
+        <td style="padding: 12px 8px; text-transform: uppercase; font-size: 11px; font-weight: bold; color: var(--text-muted);">${cp.phase}</td>
+        <td style="padding: 12px 8px; line-height: 1.4;">${cp.text}</td>
+        <td style="padding: 12px 8px; line-height: 1.4; color: var(--text-secondary);">${cp.text_zh}</td>
+        <td style="padding: 12px 8px; text-align: right; display: flex; gap: 8px; justify-content: flex-end;">
+          <button class="nav-button btn-edit-checkpoint" style="height: 28px; padding: 0 10px; font-size: 11px;">${isAssist ? 'View' : 'Edit'}</button>
+          ${isAssist ? '' : '<button class="nav-button btn-delete-checkpoint" style="height: 28px; padding: 0 10px; font-size: 11px; background: var(--color-danger); border-color: var(--color-danger); color: #ffffff !important;">Delete</button>'}
+        </td>
+      `;
+
+      tbody.appendChild(tr);
+
+      tr.querySelector(".btn-edit-checkpoint").onclick = () => openAdminCheckpointModal(cp);
+      if (!isAssist) {
+        tr.querySelector(".btn-delete-checkpoint").onclick = () => deleteAdminCheckpoint(cp.id);
+      }
+    });
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+let editingCheckpointId = null;
+
+function openAdminCheckpointModal(cp = null) {
+  const modal = document.getElementById("adminCheckpointEditModal");
+  const modalTitle = document.getElementById("adminCheckpointModalTitle");
+  const form = document.getElementById("formAdminSaveCheckpoint");
+  const feedback = document.getElementById("adminCheckpointFormFeedback");
+
+  if (!modal || !modalTitle || !form) return;
+
+  feedback.style.display = "none";
+  form.reset();
+
+  const isAssist = appState.isAssist === true;
+  const isEditing = cp !== null;
+  editingCheckpointId = isEditing ? cp.id : null;
+
+  modalTitle.textContent = isEditing ? "Edit Checklist Item" : "Add Checklist Item";
+
+  const idInput = document.getElementById("formCheckpointId");
+  if (isEditing) {
+    idInput.value = cp.id;
+    idInput.disabled = true; // Immutable on edit
+    document.getElementById("formCheckpointRole").value = cp.role;
+    document.getElementById("formCheckpointPhase").value = cp.phase;
+    document.getElementById("formCheckpointText").value = cp.text;
+    document.getElementById("formCheckpointTextZh").value = cp.text_zh;
+  } else {
+    idInput.value = "";
+    idInput.disabled = false;
+  }
+
+  const saveBtn = document.getElementById("btnAdminCheckpointSave");
+  if (saveBtn) {
+    saveBtn.style.display = isAssist ? "none" : "block";
+  }
+
+  modal.classList.add("active");
+}
+
+async function saveAdminCheckpoint() {
+  const id = document.getElementById("formCheckpointId").value.trim();
+  const role = document.getElementById("formCheckpointRole").value;
+  const phase = document.getElementById("formCheckpointPhase").value;
+  const text = document.getElementById("formCheckpointText").value.trim();
+  const text_zh = document.getElementById("formCheckpointTextZh").value.trim();
+  const feedback = document.getElementById("adminCheckpointFormFeedback");
+
+  if (!id || !text || !text_zh) {
+    feedback.textContent = "All fields are mandatory.";
+    feedback.style.display = "block";
+    return;
+  }
+
+  const payload = { id, role, phase, text, text_zh };
+  const isEditing = editingCheckpointId !== null;
+  const url = '/api/admin/checkpoints';
+  const method = isEditing ? 'PUT' : 'POST';
+
+  try {
+    const res = await fetch(url, {
+      method: method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      document.getElementById("adminCheckpointEditModal").classList.remove("active");
+      await loadVerificationCheckpoints(); // Reload dynamic user roadmap structures!
+      loadAdminChecklists();               // Refresh checklist admin table!
+    } else {
+      feedback.textContent = data.message || "Failed to save checklist item.";
+      feedback.style.display = "block";
+    }
+  } catch (err) {
+    console.error(err);
+    feedback.textContent = "An error occurred while connecting to the database.";
+    feedback.style.display = "block";
+  }
+}
+
+async function deleteAdminCheckpoint(id) {
+  if (!confirm(`Are you sure you want to delete checklist item "${id}"?`)) {
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/admin/checkpoints', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id })
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      await loadVerificationCheckpoints(); // Reload dynamic user roadmap structures!
+      loadAdminChecklists();               // Refresh checklist admin table!
+    } else {
+      alert(data.message || "Failed to delete checklist item.");
+    }
+  } catch (err) {
+    console.error(err);
+    alert("An error occurred while deleting the checklist item.");
+  }
+}
