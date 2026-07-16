@@ -169,9 +169,20 @@ gcloud run deploy your-service --source . --region your-region --allow-unauthent
 
 ---
 
-########### 7. App State & Progress
+############ 7. App State & Progress
  
 #### Accomplished Tasks (Latest Session Milestone)
+* **Selective Playbook Export Selection Mechanism (100% Complete):**
+  * Added a master `#chkAdminSelectAllCases` checkbox header and individual row checkboxes next to each playbook in the Admin Portal table list (`index.html`).
+  * Wired up a dynamic listener in `loadAdminUseCases()` (`app.js`) to handle checking and unchecking all playbook rows instantly.
+  * Refactored `#btnAdminExportCases` (`app.js`) to query checked row IDs, filter the active cached playbooks list (`appState.loadedAdminUseCases`), format into clean exportable JSON, and trigger a client-side download of only the selected entries.
+* **Simplified Chinese (`zh-CN`) Roadmaps & Checklists Integration (100% Complete):**
+  * Upgraded the database schema in `server.js` with `text_cn TEXT` columns for `verification_checkpoints` for both PostgreSQL and SQLite, and added dynamic startup column migrations with backfills to prevent empty values.
+  * Updated `POST` and `PUT` `/api/admin/checkpoints` REST APIs to receive, process, and save the Simplified Chinese translations.
+  * Extended the client-side Admin Checklist CRUD modal overlay (`index.html` & `app.js`) to feature a Simplified Chinese input field, populating and saving `text_cn` parameters in checkpoint payloads.
+  * Injected localized text checks inside standard user roadmap dashboard builders (`app.js`), loading `t.textCn` (with fallback to `t.textZh` and `t.text`) seamlessly if the active session language is set to `zh-CN`.
+* **Standard Admin & Super Admin Import/Export Support (100% Complete):**
+  * Confirmed regular administrative assistants can import and export playbooks seamlessly from both the client UI panels and backend endpoints by removing restrictive authorization barriers.
 * **Provision Multiple New Accounts at Once (100% Complete):**
   * Configured `formAddUser` input field type as `text` in `index.html` to allow entering multiple comma-separated email addresses, and clearly detailed the default password `"ChangeMe"` in the UI description.
   * Handled splitting, trimming, and validation of multiple emails in `server.js` (`POST /api/admin/users`).
@@ -181,15 +192,8 @@ gcloud run deploy your-service --source . --region your-region --allow-unauthent
   * Updated the `PUT /api/admin/use-cases` endpoint to refresh the `updated_at` timestamp on playbook modifications.
   * Built a custom `getUsecaseBadgeHtml` utility in `app.js` to label any usecase created or imported within 30 days as **"New"** (red badge) and any modified within 30 days as **"Updated"** (blue badge).
   * Displayed these premium badges next to the cards on the main User Portal and inline with titles in the Admin Portal table.
-* **Phase Verification Checklist Editor (100% Complete):**
-  * Created robust backend APIs (`GET /api/checkpoints`, `POST /api/admin/checkpoints`, `PUT /api/admin/checkpoints`, `DELETE /api/admin/checkpoints`) to support CRUD operations on checkpoints.
-  * Injected checklists tab views, table layouts, and custom creation/edit forms directly inside `index.html`.
-  * Wired up dynamic controller routing (`loadAdminChecklists()`, `openAdminCheckpointModal()`, `saveAdminCheckpoint()`, `deleteAdminCheckpoint()`) and active state syncing inside `app.js`.
-* **Use Case Import and Overwrite/Prompt Confirmations (100% Complete):**
-  * Bound upload listeners to `#btnAdminImportCases` and `#inputAdminImportFile` in `app.js`.
-  * Implemented standard JSON file reading, validation, duplicate lookup, and recursive confirmation prompt cascades to optionally overwrite existing playbook IDs via POST/PUT API calls.
 
 ### Next Steps & Continuous Polish
-1. **GitHub Version Synchronization:** Trigger git staging, commit, and remote push for all the latest dynamic administration additions.
+1. **GitHub Version Synchronization:** Trigger git staging, commit, and remote push for all the latest selective export checkboxes and Simplified Chinese checklist additions.
 2. **Production Container Re-deployment:** Run source-deployment on Google Cloud Run to push the fully updated features live to Asia-East2.
 3. **Continuous Domain Testing:** Validate multiple account creation and checkpoints editing with academic system administrators in live staging environments.

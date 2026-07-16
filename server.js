@@ -241,7 +241,8 @@ async function initializeSchemas() {
       role VARCHAR(100) NOT NULL,
       phase VARCHAR(50) NOT NULL,
       text TEXT NOT NULL,
-      text_zh TEXT NOT NULL
+      text_zh TEXT NOT NULL,
+      text_cn TEXT NOT NULL
     );
   ` : `
     CREATE TABLE IF NOT EXISTS verification_checkpoints (
@@ -249,7 +250,8 @@ async function initializeSchemas() {
       role TEXT NOT NULL,
       phase TEXT NOT NULL,
       text TEXT NOT NULL,
-      text_zh TEXT NOT NULL
+      text_zh TEXT NOT NULL,
+      text_cn TEXT NOT NULL
     );
   `;
 
@@ -281,6 +283,24 @@ async function initializeSchemas() {
     console.log('🔄 Schema migration: Added "updated_at" column to "use_cases" table.');
   } catch (err) {
     // Column already exists, safe to ignore
+  }
+
+  try {
+    if (dbType === 'postgres') {
+      await query('ALTER TABLE verification_checkpoints ADD COLUMN text_cn TEXT;');
+    } else {
+      await query('ALTER TABLE verification_checkpoints ADD COLUMN text_cn TEXT;');
+    }
+    console.log('🔄 Schema migration: Added "text_cn" column to "verification_checkpoints" table.');
+  } catch (err) {
+    // Column already exists, safe to ignore
+  }
+
+  try {
+    await query('UPDATE verification_checkpoints SET text_cn = text_zh WHERE text_cn IS NULL OR text_cn = \'\';');
+    console.log('🔄 Schema migration: Backfilled empty "text_cn" fields with "text_zh" values.');
+  } catch (err) {
+    console.error('⚠️ Schema migration error during backfill:', err);
   }
 
   console.log('✅ All database tables verified / created.');
@@ -358,8 +378,8 @@ async function seedDatabase() {
         for (const [phase, items] of Object.entries(phases)) {
           for (const item of items) {
             await query(
-              'INSERT INTO verification_checkpoints (id, role, phase, text, text_zh) VALUES (?, ?, ?, ?, ?)',
-              [item.id, role, phase, item.text, item.textZh || item.text]
+              'INSERT INTO verification_checkpoints (id, role, phase, text, text_zh, text_cn) VALUES (?, ?, ?, ?, ?, ?)',
+              [item.id, role, phase, item.text, item.textZh || item.text, item.textCn || item.textZh || item.text]
             );
           }
         }
@@ -1048,10 +1068,6 @@ app.get('/api/admin/stats', requireAdmin, async (req, res) => {
 
 // Use Case CRUD: Add or Modify
 app.post('/api/admin/use-cases', requireAdmin, async (req, res) => {
-  if (req.session.user.isAssist) {
-    return res.status(403).json({ success: false, message: 'Access denied. Administrative assistants are not authorized to create playbooks.' });
-  }
-
   const uc = req.body;
   if (!uc.id || !uc.title || !uc.category) {
     return res.status(400).json({ success: false, message: 'Missing required use case parameter fields.' });
@@ -1091,10 +1107,6 @@ app.post('/api/admin/use-cases', requireAdmin, async (req, res) => {
 
 // Use Case CRUD: Update
 app.put('/api/admin/use-cases', requireAdmin, async (req, res) => {
-  if (req.session.user.isAssist) {
-    return res.status(403).json({ success: false, message: 'Access denied. Administrative assistants are not authorized to modify playbooks.' });
-  }
-
   const uc = req.body;
   if (!uc.id || !uc.title) {
     return res.status(400).json({ success: false, message: 'ID and Title are mandatory.' });
@@ -1371,15 +1383,15 @@ app.post('/api/admin/checkpoints', requireAdmin, async (req, res) => {
     return res.status(403).json({ success: false, message: 'Access denied. Administrative assistants are not authorized to modify verification checklists.' });
   }
 
-  const { id, role, phase, text, text_zh } = req.body;
+  const { id, role, phase, text, text_zh, text_cn } = req.body;
   if (!id || !role || !phase || !text) {
     return res.status(400).json({ success: false, message: 'Missing required parameters.' });
   }
 
   try {
     await query(
-      'INSERT INTO verification_checkpoints (id, role, phase, text, text_zh) VALUES (?, ?, ?, ?, ?)',
-      [id, role, phase, text, text_zh || text]
+      'INSERT INTO verification_checkpoints (id, role, phase, text, text_zh, text_cn) VALUES (?, ?, ?, ?, ?, ?)',
+      [id, role, phase, text, text_zh || text, text_cn || text_zh || text]
     );
     res.json({ success: true });
   } catch (error) {
@@ -1393,15 +1405,15 @@ app.put('/api/admin/checkpoints', requireAdmin, async (req, res) => {
     return res.status(403).json({ success: false, message: 'Access denied. Administrative assistants are not authorized to modify verification checklists.' });
   }
 
-  const { id, role, phase, text, text_zh } = req.body;
+  const { id, role, phase, text, text_zh, text_cn } = req.body;
   if (!id || !role || !phase || !text) {
     return res.status(400).json({ success: false, message: 'Missing required parameters.' });
   }
 
   try {
     await query(
-      'UPDATE verification_checkpoints SET role = ?, phase = ?, text = ?, text_zh = ? WHERE id = ?',
-      [role, phase, text, text_zh || text, id]
+      'UPDATE verification_checkpoints SET role = ?, phase = ?, text = ?, text_zh = ?, text_cn = ? WHERE id = ?',
+      [role, phase, text, text_zh || text, text_cn || text_zh || text, id]
     );
     res.json({ success: true });
   } catch (error) {

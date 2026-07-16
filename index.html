@@ -610,6 +610,9 @@
             <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
               <thead>
                 <tr style="border-bottom: 1px solid var(--border-glass); color: var(--text-secondary); font-weight: 600;">
+                  <th style="padding: 12px 8px; width: 40px; text-align: center;">
+                    <input type="checkbox" id="chkAdminSelectAllCases" style="cursor: pointer; width: 15px; height: 15px; accent-color: var(--color-primary);">
+                  </th>
                   <th id="adminCrudThId" style="padding: 12px 8px;">ID</th>
                   <th id="adminCrudThTitle" style="padding: 12px 8px;">Title</th>
                   <th id="adminCrudThCategory" style="padding: 12px 8px;">Category Hub</th>
@@ -673,12 +676,13 @@
             <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
               <thead>
                 <tr style="border-bottom: 1px solid var(--border-glass); color: var(--text-secondary); font-weight: 600;">
-                  <th style="padding: 12px 8px; width: 120px;">ID</th>
-                  <th style="padding: 12px 8px; width: 140px;">User Role</th>
-                  <th style="padding: 12px 8px; width: 120px;">Phase</th>
+                  <th style="padding: 12px 8px; width: 100px;">ID</th>
+                  <th style="padding: 12px 8px; width: 120px;">User Role</th>
+                  <th style="padding: 12px 8px; width: 100px;">Phase</th>
                   <th style="padding: 12px 8px;">Checkpoint Text (EN)</th>
                   <th style="padding: 12px 8px;">Checkpoint Text (ZH-TW)</th>
-                  <th style="padding: 12px 8px; text-align: right; width: 150px;">Actions</th>
+                  <th style="padding: 12px 8px;">Checkpoint Text (ZH-CN)</th>
+                  <th style="padding: 12px 8px; text-align: right; width: 140px;">Actions</th>
                 </tr>
               </thead>
               <tbody id="adminCheckpointsTableBody">
@@ -1034,7 +1038,7 @@
 
   <!-- CHECKPOINT EDIT / CREATE MODAL OVERLAY (ADMIN CONTROLLED) -->
   <div class="modal-overlay" id="adminCheckpointEditModal" aria-modal="true" role="dialog" style="z-index: 2020;">
-    <div class="modal-content-card" style="max-height: 90vh; height: 500px; max-width: 600px; padding: 24px;">
+    <div class="modal-content-card" style="max-height: 95vh; height: 580px; max-width: 600px; padding: 24px;">
       <div class="modal-header" style="padding-bottom: 16px; border-bottom: 1px solid var(--border-glass); margin-bottom: 16px;">
         <div class="modal-header-left">
           <span class="material-symbols-outlined" style="color: var(--color-primary); font-size: 24px;">playlist_add_check</span>
@@ -1089,6 +1093,11 @@
           <div class="form-group" style="display: flex; flex-direction: column; gap: 6px;">
             <label class="form-label" style="text-transform: uppercase;">Checkpoint Text (Traditional Chinese)</label>
             <input type="text" id="formCheckpointTextZh" class="select-control" placeholder="配置單一登入整合...">
+          </div>
+
+          <div class="form-group" style="display: flex; flex-direction: column; gap: 6px;">
+            <label class="form-label" style="text-transform: uppercase;">Checkpoint Text (Simplified Chinese)</label>
+            <input type="text" id="formCheckpointTextCn" class="select-control" placeholder="配置单一登录整合...">
           </div>
         </form>
       </div>

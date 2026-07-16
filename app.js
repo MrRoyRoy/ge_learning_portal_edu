@@ -4165,7 +4165,40 @@ function initAdminPortal() {
   // Case CRUD create/export hooks
   document.getElementById("btnAdminCreateCase").onclick = () => openAdminEditModal(null);
   document.getElementById("btnAdminExportCases").onclick = () => {
-    window.open('/api/admin/use-cases/export', '_blank');
+    const checkedBoxes = document.querySelectorAll(".admin-case-checkbox:checked");
+    if (checkedBoxes.length === 0) {
+      alert("Please select at least one use case to export by checking the boxes in the table rows.");
+      return;
+    }
+
+    const selectedIds = Array.from(checkedBoxes).map(cb => cb.value);
+    const allCases = appState.loadedAdminUseCases || [];
+    const exportData = allCases.filter(uc => selectedIds.includes(uc.id)).map(uc => {
+      return {
+        id: uc.id,
+        category: uc.category,
+        title: uc.title,
+        summary: uc.summary || "",
+        features: typeof uc.features === 'string' ? JSON.parse(uc.features) : (uc.features || []),
+        connectors: typeof uc.connectors === 'string' ? JSON.parse(uc.connectors) : (uc.connectors || []),
+        role: uc.role || "Lecturer",
+        level: typeof uc.level === 'string' ? JSON.parse(uc.level) : (uc.level || ["Generic"]),
+        steps: typeof uc.steps === 'string' ? JSON.parse(uc.steps) : (uc.steps || []),
+        prompt: uc.prompt || "",
+        proTip: uc.proTip || uc.pro_tip || "",
+        connectorGuide: typeof uc.connectorGuide === 'string' ? JSON.parse(uc.connectorGuide) : (uc.connectorGuide || uc.connector_guide || null),
+        translations: typeof uc.translations === 'string' ? JSON.parse(uc.translations) : (uc.translations || {}),
+        isVerified: uc.isVerified !== undefined ? uc.isVerified : false
+      };
+    });
+
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData, null, 2));
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute("href", dataStr);
+    downloadAnchor.setAttribute("download", `gemini_playbooks_export_${new Date().toISOString().slice(0, 10)}.json`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
   };
 
   document.getElementById("btnAdminImportCases").onclick = () => {
@@ -4713,11 +4746,24 @@ function renderAdminStatsChart(history) {
 // Admin Tab 3: Load Use Cases CRUD
 async function loadAdminUseCases() {
   const tbody = document.getElementById("adminCasesTableBody");
-  tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 20px; color: var(--text-muted);">Loading use cases...</td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 20px; color: var(--text-muted);">Loading use cases...</td></tr>`;
 
   try {
     const res = await fetch('/api/use-cases');
     const cases = await res.json();
+    appState.loadedAdminUseCases = cases;
+
+    // Reset select all checkbox
+    const selectAllCheckbox = document.getElementById("chkAdminSelectAllCases");
+    if (selectAllCheckbox) {
+      selectAllCheckbox.checked = false;
+      selectAllCheckbox.onchange = (e) => {
+        const isChecked = e.target.checked;
+        document.querySelectorAll(".admin-case-checkbox").forEach(cb => {
+          cb.checked = isChecked;
+        });
+      };
+    }
 
     tbody.innerHTML = "";
     const activeLang = appState.activeLanguage || "en";
@@ -4740,6 +4786,9 @@ async function loadAdminUseCases() {
 
       const isAssist = appState.isAssist === true;
       tr.innerHTML = `
+        <td style="padding: 12px 8px; text-align: center;">
+          <input type="checkbox" class="admin-case-checkbox" value="${uc.id}" style="cursor: pointer; width: 15px; height: 15px; accent-color: var(--color-primary);">
+        </td>
         <td style="padding: 12px 8px; font-family: monospace; font-size: 11px; color: var(--color-primary); font-weight: 700;">${uc.id}</td>
         <td style="padding: 12px 8px; font-weight: 500;">
           <div style="display: flex; align-items: center; gap: 4px; flex-wrap: wrap;">
@@ -6288,7 +6337,11 @@ function renderRoadmapDashboardDetails() {
     const isChecked = localStorage.getItem(key) === "true";
     if (isChecked) checkedCount++;
 
-    const taskText = isZh ? t.textZh : t.text;
+    const taskText = appState.activeLanguage === "zh-TW" 
+      ? (t.textZh || t.text) 
+      : (appState.activeLanguage === "zh-CN" 
+          ? (t.textCn || t.textZh || t.text) 
+          : t.text);
 
     checklistHtml += `
       <label class="roadmap-task-label ${isChecked ? 'checked' : ''}">
@@ -6302,19 +6355,35 @@ function renderRoadmapDashboardDetails() {
   });
 
   if (tasks.length === 0) {
-    checklistHtml = `<p class="empty-playbook-msg">${isZh ? '此階段對您的角色無特定驗證項目。' : 'No verification items for your role in this phase.'}</p>`;
+    checklistHtml = `<p class="empty-playbook-msg">${appState.activeLanguage === 'zh-TW' ? '此階段對您的角色無特定驗證項目。' : (appState.activeLanguage === 'zh-CN' ? '此阶段对您的角色无特定验证项目。' : 'No verification items for your role in this phase.')}</p>`;
   }
 
   const checklistPercent = tasks.length > 0 ? Math.round((checkedCount / tasks.length) * 100) : 100;
   const isChecklistCompleted = checklistPercent === 100;
 
+  const cardTitle = appState.activeLanguage === "zh-TW" 
+    ? '階段驗證檢查清單' 
+    : (appState.activeLanguage === "zh-CN" 
+        ? '阶段验证检查清单' 
+        : 'Phase Verification Checklist');
+  const cardStatusVerified = appState.activeLanguage === "zh-TW" 
+    ? '已完全驗證' 
+    : (appState.activeLanguage === "zh-CN" 
+        ? '已完全验证' 
+        : 'Verified');
+  const cardStatusPending = appState.activeLanguage === "zh-TW" 
+    ? '待驗證' 
+    : (appState.activeLanguage === "zh-CN" 
+        ? '待验证' 
+        : 'Pending Verification');
+
   checkCard.innerHTML = `
     <div class="roadmap-card-header-bar" style="background: ${stage.color};"></div>
     <div class="roadmap-card-body">
       <div class="roadmap-section-meta-row">
-        <h4 class="roadmap-section-title">${isZh ? '階段驗證檢查清單' : 'Phase Verification Checklist'}</h4>
+        <h4 class="roadmap-section-title">${cardTitle}</h4>
         <span class="roadmap-section-badge ${isChecklistCompleted ? 'verified' : 'pending'}">
-          ${isChecklistCompleted ? (isZh ? '已完全驗證' : 'Verified') : (isZh ? '待驗證' : 'Pending Verification')} (${checklistPercent}%)
+          ${isChecklistCompleted ? cardStatusVerified : cardStatusPending} (${checklistPercent}%)
         </span>
       </div>
       <p class="roadmap-section-desc">${stageDesc}</p>
@@ -6655,7 +6724,7 @@ async function loadVerificationCheckpoints() {
 async function loadAdminChecklists() {
   const tbody = document.getElementById("adminCheckpointsTableBody");
   if (!tbody) return;
-  tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 20px; color: var(--text-muted);">Loading checklist items...</td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 20px; color: var(--text-muted);">Loading checklist items...</td></tr>`;
 
   try {
     const res = await fetch('/api/checkpoints');
@@ -6670,7 +6739,7 @@ async function loadAdminChecklists() {
     const isAssist = appState.isAssist === true;
 
     if (checkpoints.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 20px; color: var(--text-muted);">No checkpoints found for the selected filter.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 20px; color: var(--text-muted);">No checkpoints found for the selected filter.</td></tr>`;
       return;
     }
 
@@ -6684,6 +6753,7 @@ async function loadAdminChecklists() {
         <td style="padding: 12px 8px; text-transform: uppercase; font-size: 11px; font-weight: bold; color: var(--text-muted);">${cp.phase}</td>
         <td style="padding: 12px 8px; line-height: 1.4;">${cp.text}</td>
         <td style="padding: 12px 8px; line-height: 1.4; color: var(--text-secondary);">${cp.text_zh}</td>
+        <td style="padding: 12px 8px; line-height: 1.4; color: var(--text-secondary);">${cp.text_cn || cp.text_zh || cp.text}</td>
         <td style="padding: 12px 8px; text-align: right; display: flex; gap: 8px; justify-content: flex-end;">
           <button class="nav-button btn-edit-checkpoint" style="height: 28px; padding: 0 10px; font-size: 11px;">${isAssist ? 'View' : 'Edit'}</button>
           ${isAssist ? '' : '<button class="nav-button btn-delete-checkpoint" style="height: 28px; padding: 0 10px; font-size: 11px; background: var(--color-danger); border-color: var(--color-danger); color: #ffffff !important;">Delete</button>'}
@@ -6729,9 +6799,11 @@ function openAdminCheckpointModal(cp = null) {
     document.getElementById("formCheckpointPhase").value = cp.phase;
     document.getElementById("formCheckpointText").value = cp.text;
     document.getElementById("formCheckpointTextZh").value = cp.text_zh;
+    document.getElementById("formCheckpointTextCn").value = cp.text_cn || cp.text_zh || "";
   } else {
     idInput.value = "";
     idInput.disabled = false;
+    document.getElementById("formCheckpointTextCn").value = "";
   }
 
   const saveBtn = document.getElementById("btnAdminCheckpointSave");
@@ -6748,15 +6820,16 @@ async function saveAdminCheckpoint() {
   const phase = document.getElementById("formCheckpointPhase").value;
   const text = document.getElementById("formCheckpointText").value.trim();
   const text_zh = document.getElementById("formCheckpointTextZh").value.trim();
+  const text_cn = document.getElementById("formCheckpointTextCn").value.trim();
   const feedback = document.getElementById("adminCheckpointFormFeedback");
 
-  if (!id || !text || !text_zh) {
+  if (!id || !text || !text_zh || !text_cn) {
     feedback.textContent = "All fields are mandatory.";
     feedback.style.display = "block";
     return;
   }
 
-  const payload = { id, role, phase, text, text_zh };
+  const payload = { id, role, phase, text, text_zh, text_cn };
   const isEditing = editingCheckpointId !== null;
   const url = '/api/admin/checkpoints';
   const method = isEditing ? 'PUT' : 'POST';
