@@ -181,7 +181,7 @@ Following any deployment of modifications, enhancements, or bug fixes:
 
 ---
 
-############ 7. App State & Progress
+############# 7. App State & Progress
  
 ##### Accomplished Tasks (Latest Session Milestone)
 * **Granular Assistant Admin Authorization Controls (100% Complete):**
@@ -189,8 +189,12 @@ Following any deployment of modifications, enhancements, or bug fixes:
   * **Restricted Use Case Modification & Import:** Blocked Assistant Admin from creating, updating, importing, or deleting playbooks on the backend endpoints (`POST`, `PUT`, `DELETE` `/api/admin/use-cases`), while keeping standard export capabilities fully active (`GET /api/admin/use-cases/export`). Disabled all inputs, save buttons, and AI-generation actions on the client-side Use Case CRUD modals to provide a clean view-only dashboard.
   * **View-Only Phase Verification Checklist Management:** Confirmed Assistant Admin can only view phase verification checkpoints but cannot add, edit, or delete them. Hid the "Add Checklist Item" button and the delete row buttons, and altered "Edit" buttons to "View" inside the checkpoints list panel.
   * **Allowed Feedbacks List Access (Without Dismissal):** Upgraded `GET /api/feedbacks` permissions to allow both Super Admin and Assistant Admin users to fetch feedback suggestions, but strictly locked down deletion/dismissal (`POST /api/feedbacks/delete`) to Super Admin only. Removed the "close" buttons on the feedbacks grid for Assistant Admin.
+* **Streamlined Login & Default Admin Dashboard Landing (100% Complete):**
+  * **Removed Admin Sign In Link:** Excised the redundant administrative sign-in toggle link from the login gateway overlay card to avoid UX confusion, since administrative logins share the single uniform form fields.
+  * **Default Admin Landing:** Configured the post-login routing engine to dynamically inspect the authentication payload on success, setting `sessionStorage` view preference to `admin` if an administrator (`isAdmin: true`) or assistant administrator signs in. This ensures automatic direct entry into the Swiss Minimalist Administration dashboard instead of the standard standard-user dashboard view.
+  * **Stale Session Prevention:** Automatically clear view state cached preferences from `sessionStorage` upon manual logout to guarantee fresh landing views on successive sign-ins.
 
 ### Next Steps & Continuous Polish
-1. **Local Test Environment Checks:** Log in as the Assistant Admin `edu_portal_admin` and verify that the sidebar tabs, create buttons, and delete buttons are correctly hidden or view-only.
-2. **Production Container Re-deployment:** Re-build and re-deploy the updated Express backend to Google Cloud Run to roll out the updated authorization model live.
+1. **Local Test Environment Checks:** Perform login flow with administrator profiles (`edu_portal_s_admin` and `edu_portal_admin`) to confirm frictionless direct routing to the Admin Dashboard without needing manual mode selection.
+2. **Production Container Re-deployment:** Re-build and re-deploy the updated Express backend to Google Cloud Run to roll out the updated authorization and login UX live.
 3. **Database Schema Backups:** Monitor the persistent Cloud SQL instance for correct log persistence.

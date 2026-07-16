@@ -3827,19 +3827,6 @@ function setupLoginHandlers() {
   const emailInput = document.getElementById("loginEmail");
   const passwordInput = document.getElementById("loginPassword");
   const errorMsg = document.getElementById("loginErrorMsg");
-  const adminToggle = document.getElementById("linkToggleAdminMode");
-
-  let isAdminMode = false;
-
-  adminToggle.addEventListener("click", (e) => {
-    e.preventDefault();
-    isAdminMode = !isAdminMode;
-    adminToggle.textContent = isAdminMode ? "Standard Sign In" : "Admin Sign In";
-    document.getElementById("loginTitle").textContent = isAdminMode ? "Admin Management Control" : "Google Gemini Enterprise";
-    emailInput.placeholder = isAdminMode ? "Enter Admin Username" : "e.g. academic@edu.hk";
-    document.getElementById("labelEmail").textContent = isAdminMode ? "Admin Username" : "Institutional Email";
-    errorMsg.style.display = "none";
-  });
 
   // Enable pressing Enter to log in
   const handleEnterKey = (e) => {
@@ -3871,6 +3858,9 @@ function setupLoginHandlers() {
       const data = await res.json();
 
       if (data.success) {
+        if (data.isAdmin) {
+          sessionStorage.setItem("ge_current_view", "admin");
+        }
         showToast("Access Granted. Redirecting...");
         setTimeout(() => {
           window.location.reload();
@@ -3996,6 +3986,7 @@ function setupProfileOnboardingHandlers() {
 
 async function triggerUserLogout() {
   try {
+    sessionStorage.removeItem("ge_current_view");
     await fetch('/api/auth/logout', { method: 'POST' });
     showToast("Logged out successfully.");
     setTimeout(() => {
