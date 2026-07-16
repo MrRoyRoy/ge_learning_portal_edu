@@ -653,8 +653,16 @@
         <section class="admin-tab-content" id="adminTabChecklists" style="display: none;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <h2 id="adminChecklistsTitle" style="font-size: 16px;">Phase Verification Checklist Management</h2>
-            <div style="display: flex; gap: 10px;">
-              <button class="nav-button nav-button-primary" id="btnAdminCreateCheckpoint">
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <select id="selectAdminCheckpointRoleFilter" class="nav-button" style="height: 38px; padding: 0 12px; background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border-glass); border-radius: 6px; font-size: 13px; font-weight: 500; outline: none; cursor: pointer; transition: border-color 0.2s ease;">
+                <option value="all">All Roles</option>
+                <option value="IT Admin">IT Admin</option>
+                <option value="Lecturer">Lecturer</option>
+                <option value="Student">Student</option>
+                <option value="Dean">Dean</option>
+                <option value="Program Leader">Program Leader</option>
+              </select>
+              <button class="nav-button nav-button-primary" id="btnAdminCreateCheckpoint" style="height: 38px;">
                 <span class="material-symbols-outlined">add_box</span> <span>Add Checklist Item</span>
               </button>
             </div>

@@ -4314,6 +4314,13 @@ function initAdminPortal() {
     };
   }
 
+  const selectCheckpointRoleFilter = document.getElementById("selectAdminCheckpointRoleFilter");
+  if (selectCheckpointRoleFilter) {
+    selectCheckpointRoleFilter.onchange = () => {
+      loadAdminChecklists();
+    };
+  }
+
   // Default load
   loadAdminUsers();
 }
@@ -6652,13 +6659,18 @@ async function loadAdminChecklists() {
 
   try {
     const res = await fetch('/api/checkpoints');
-    const checkpoints = await res.json();
+    let checkpoints = await res.json();
+
+    const roleFilter = document.getElementById("selectAdminCheckpointRoleFilter")?.value || "all";
+    if (roleFilter !== "all") {
+      checkpoints = checkpoints.filter(cp => cp.role === roleFilter);
+    }
 
     tbody.innerHTML = "";
     const isAssist = appState.isAssist === true;
 
     if (checkpoints.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 20px; color: var(--text-muted);">No checkpoints found.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 20px; color: var(--text-muted);">No checkpoints found for the selected filter.</td></tr>`;
       return;
     }
 
