@@ -517,7 +517,7 @@ const uiTranslations = {
     btnAdminBackToPortalText: "Learning Portal",
     btnAdminLogoutText: "Log Out",
     adminProvisionTitle: "Provision New Account",
-    adminProvisionDesc: "This generates a random 10-character temporary password. Users are forced to reset it upon their first login.",
+    adminProvisionDesc: "This generates a <strong>random 10-character</strong> temporary password. You can provision multiple accounts at once by separating email addresses with commas; in that case, the default temporary password for all of them will be <strong>\"ChangeMe\"</strong>. All users are forced to reset their password on first login.",
     adminProvisionLabelEmail: "User Email Address",
     adminBtnProvision: "Provision",
     adminRegisteredUsersTitle: "Registered Portal Users",
@@ -651,7 +651,7 @@ const uiTranslations = {
     btnAdminBackToPortalText: "返回學習中心",
     btnAdminLogoutText: "登出系統",
     adminProvisionTitle: "開通新帳戶",
-    adminProvisionDesc: "系統將自動生成一組 10 位字元的臨時隨機密碼。使用者於首次登入時必須強制重設密碼。",
+    adminProvisionDesc: "系統將自動生成一組 <strong>10 位字元</strong>的臨時隨機密碼。您可以通過用逗號分隔電子郵件地址來一次性開通多個帳戶；在這種情況下，所有帳戶的預設臨時密碼將為 <strong>\"ChangeMe\"</strong>。所有使用者於首次登入時必須強制重設密碼。",
     adminProvisionLabelEmail: "使用者電子郵件地址",
     adminBtnProvision: "開通帳戶",
     adminRegisteredUsersTitle: "已註冊門戶使用者",
@@ -786,7 +786,7 @@ const uiTranslations = {
     btnAdminBackToPortalText: "返回学习中心",
     btnAdminLogoutText: "登出系统",
     adminProvisionTitle: "开通新账户",
-    adminProvisionDesc: "系统将自动生成一组 10 位字符的临时随机密码。使用者于首次登录时必须强制重设密码。",
+    adminProvisionDesc: "系统将自动生成一组 <strong>10 位字符</strong>的临时随机密码。您可以通过用逗号分隔电子邮件地址来一次性开通多个账户；在这种情况下，所有账户的默认临时密码将为 <strong>\"ChangeMe\"</strong>。所有使用者于首次登录时必须强制重设密码。",
     adminProvisionLabelEmail: "使用者电子邮件地址",
     adminBtnProvision: "开通账户",
     adminRegisteredUsersTitle: "已注册门户使用者",
@@ -1940,7 +1940,7 @@ function updateUILanguage() {
 
     // Dynamic Admin Sub-labels and inputs
     safeSetText("adminProvisionTitle", t.adminProvisionTitle);
-    safeSetText("adminProvisionDesc", t.adminProvisionDesc);
+    safeSetHTML("adminProvisionDesc", t.adminProvisionDesc);
     safeSetText("adminProvisionLabelEmail", t.adminProvisionLabelEmail);
     const btnProvision = document.getElementById("adminBtnProvision");
     if (btnProvision) {
