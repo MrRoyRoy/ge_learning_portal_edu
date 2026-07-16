@@ -4010,19 +4010,42 @@ async function triggerUserLogout() {
 let currentAdminTab = 'users';
 
 function initAdminPortal() {
-  const savedTab = sessionStorage.getItem("ge_current_admin_tab") || "users";
+  const isAssist = appState.isAssist === true;
+  const isSuperAdmin = (appState.userEmail === 'edu_portal_s_admin');
+
+  let savedTab = sessionStorage.getItem("ge_current_admin_tab") || "users";
+  if (isAssist && savedTab === "users") {
+    savedTab = "cases";
+  }
   currentAdminTab = savedTab;
 
   const btnCreate = document.getElementById("btnAdminCreateCase");
   if (btnCreate) {
-    btnCreate.style.display = appState.isAssist ? "none" : "block";
+    btnCreate.style.display = isAssist ? "none" : "block";
   }
 
-  // Super admin ONLY display check
+  // Hide Users Provisioning sidebar navigation tab for Assist Admin completely
+  const usersNav = document.getElementById("adminTabUsersNav");
+  if (usersNav) {
+    usersNav.style.display = isAssist ? "none" : "flex";
+  }
+
+  // Hide Use Cases Import button for Assist Admin completely
+  const btnImport = document.getElementById("btnAdminImportCases");
+  if (btnImport) {
+    btnImport.style.display = isAssist ? "none" : "block";
+  }
+
+  // Hide "Add Checklist Item" button for Assist Admin completely
+  const btnCreateCheckpointNav = document.getElementById("btnAdminCreateCheckpoint");
+  if (btnCreateCheckpointNav) {
+    btnCreateCheckpointNav.style.display = isAssist ? "none" : "flex";
+  }
+
+  // Allow both Super Admin and Assist Admin to view Feedbacks list tab
   const feedbacksNav = document.getElementById("adminTabFeedbacksNav");
-  const isSuperAdmin = (appState.userEmail === 'edu_portal_s_admin');
   if (feedbacksNav) {
-    feedbacksNav.style.display = isSuperAdmin ? "flex" : "none";
+    feedbacksNav.style.display = (isSuperAdmin || isAssist) ? "flex" : "none";
   }
 
   const tabs = document.querySelectorAll(".admin-tab-item");
@@ -4052,7 +4075,7 @@ function initAdminPortal() {
   if (savedTab === 'users') loadAdminUsers();
   else if (savedTab === 'analytics') loadAdminStats();
   else if (savedTab === 'cases') loadAdminUseCases();
-  else if (savedTab === 'feedbacks' && isSuperAdmin) loadAdminFeedbacks();
+  else if (savedTab === 'feedbacks' && (isSuperAdmin || isAssist)) loadAdminFeedbacks();
   else if (savedTab === 'checklists') loadAdminChecklists();
 
   tabs.forEach(tab => {
@@ -4077,7 +4100,7 @@ function initAdminPortal() {
       if (target === 'users') loadAdminUsers();
       else if (target === 'analytics') loadAdminStats();
       else if (target === 'cases') loadAdminUseCases();
-      else if (target === 'feedbacks' && isSuperAdmin) loadAdminFeedbacks();
+      else if (target === 'feedbacks' && (isSuperAdmin || isAssist)) loadAdminFeedbacks();
       else if (target === 'checklists') loadAdminChecklists();
     });
   });
@@ -6645,6 +6668,7 @@ window.loadAdminFeedbacks = async function() {
       return;
     }
     
+    const isAssist = appState.isAssist === true;
     let html = '';
     data.feedbacks.forEach(fb => {
       const d = new Date(fb.created_at);
@@ -6655,9 +6679,11 @@ window.loadAdminFeedbacks = async function() {
           <td style="padding: 12px 8px; color: var(--text-secondary); line-height: 1.5; white-space: pre-wrap;">${fb.feedback_text}</td>
           <td style="padding: 12px 8px; color: var(--text-muted); font-size: 11px;">${dateStr}</td>
           <td style="padding: 12px 8px; text-align: right;">
+            ${isAssist ? '' : `
             <button class="nav-button" onclick="deleteFeedback(${fb.id})" style="padding: 4px; min-width: auto; border: none; background: transparent; color: var(--text-muted); transition: color 0.2s ease;" onmouseover="this.style.color='var(--color-danger)'" onmouseout="this.style.color='var(--text-muted)'">
               <span class="material-symbols-outlined" style="font-size: 18px;">close</span>
             </button>
+            `}
           </td>
         </tr>
       `;
