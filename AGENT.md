@@ -184,17 +184,21 @@ Following any deployment of modifications, enhancements, or bug fixes:
 ############# 7. App State & Progress
  
 ##### Accomplished Tasks (Latest Session Milestone)
-* **Granular Assistant Admin Authorization Controls (100% Complete):**
-  * **Blocked User Provisioning Access:** Restricted Assistant Admin users (`isAssist: true`) from loading, creating, deleting, or resetting user accounts on both the backend API layers (`GET`, `POST`, `DELETE`, `PUT` `/api/admin/users`) and frontend UI layers (completely hid the "Users Provisioning" sidebar menu tab).
-  * **Restricted Use Case Modification & Import:** Blocked Assistant Admin from creating, updating, importing, or deleting playbooks on the backend endpoints (`POST`, `PUT`, `DELETE` `/api/admin/use-cases`), while keeping standard export capabilities fully active (`GET /api/admin/use-cases/export`). Disabled all inputs, save buttons, and AI-generation actions on the client-side Use Case CRUD modals to provide a clean view-only dashboard.
-  * **View-Only Phase Verification Checklist Management:** Confirmed Assistant Admin can only view phase verification checkpoints but cannot add, edit, or delete them. Hid the "Add Checklist Item" button and the delete row buttons, and altered "Edit" buttons to "View" inside the checkpoints list panel.
-  * **Allowed Feedbacks List Access (Without Dismissal):** Upgraded `GET /api/feedbacks` permissions to allow both Super Admin and Assistant Admin users to fetch feedback suggestions, but strictly locked down deletion/dismissal (`POST /api/feedbacks/delete`) to Super Admin only. Removed the "close" buttons on the feedbacks grid for Assistant Admin.
-* **Streamlined Login & Default Admin Dashboard Landing (100% Complete):**
-  * **Removed Admin Sign In Link:** Excised the redundant administrative sign-in toggle link from the login gateway overlay card to avoid UX confusion, since administrative logins share the single uniform form fields.
-  * **Default Admin Landing:** Configured the post-login routing engine to dynamically inspect the authentication payload on success, setting `sessionStorage` view preference to `admin` if an administrator (`isAdmin: true`) or assistant administrator signs in. This ensures automatic direct entry into the Swiss Minimalist Administration dashboard instead of the standard standard-user dashboard view.
-  * **Stale Session Prevention:** Automatically clear view state cached preferences from `sessionStorage` upon manual logout to guarantee fresh landing views on successive sign-ins.
+* **Standardized Product-Agnostic Connectors (100% Complete):**
+  * **Restored Missing Connector Form Controls:** Added the missing **LMS Connector** and **Calendar Connector** checkboxes back to the admin Use Case edit/creation modal, giving admins full power to configure all four simulated integration lock-overlays.
+  * **Adopted Product-Agnostic Nomenclature:** Replaced old legacy vendor-specific checkboxes ("OneDrive", "Google Drive", "Email") with clean product-agnostic options: **Drive Connector**, **Email Connector**, **LMS Connector**, and **Calendar Connector** in perfect alignment with AGENT.md brand guidelines.
+  * **Robust Backward-Compatible Hydration:** Implemented case-insensitive mapping logic to translate legacy database fields safely (such as `"OneDrive"`, `"GoogleDrive"`, and `"Email"`) to our premium generic connectors upon form hydration, preventing form state data-loss when saving edited records.
+* **Structured Primary Role Context Dropdown (100% Complete):**
+  * **Converted Free-text to Select Dropdown:** Replaced the fragile free-text input field in the Use Case form with an elegant select dropdown containing standard institution roles (`Lecturer`, `TA`, `Student`, `Program Leader`, `Dean`, `IT Admin`, `SAO`, `Security`, `Finance`).
+  * **Bilingual Translation Support:** Integrated dynamic translation callbacks to automatically localize the options inside the admin role dropdown whenever the active portal language changes.
+  * **Intelligent AI Role Mapping:** Built an algorithmic setter to dynamically parse Vertex AI Gemini-assisted playbooks, case-insensitively mapping suggested text roles (including natural variations like "teacher", "sysadmin", "educator") to our precise predefined dropdown values.
+* **Boot-Time Database Synchronization (100% Complete):**
+  * **Automatic Seed Reconstruction:** Extended the sandboxed database seeding engine inside `server.js` to automatically synchronize and rebuild both the `"su_helpdesk"` and `"at_risk_cohort"` default configurations on boot. This ensures that the `"at_risk_cohort"` early-warning system's essential `LMS Connector` and `SIS Database Connector` definitions are safely reconstructed in existing SQLite/PostgreSQL instances.
+* **Continuous Integration & Cloud Run Releases (100% Complete):**
+  * **Automated Git Push:** Configured git identity and committed all changes securely, pushing code updates safely to the upstream repository.
+  * **Google Cloud Run Production Deployment:** Executed source-based container builds via Cloud Build, rolling out revision updates directly to the live production endpoint serving active student/faculty traffic.
 
 ### Next Steps & Continuous Polish
-1. **Local Test Environment Checks:** Perform login flow with administrator profiles (`edu_portal_s_admin` and `edu_portal_admin`) to confirm frictionless direct routing to the Admin Dashboard without needing manual mode selection.
-2. **Production Container Re-deployment:** Re-build and re-deploy the updated Express backend to Google Cloud Run to roll out the updated authorization and login UX live.
-3. **Database Schema Backups:** Monitor the persistent Cloud SQL instance for correct log persistence.
+1. **User Onboarding Validation:** Continuously monitor portal signups and onboarding wizard completions to confirm error-free role filter matches.
+2. **Dynamic Dashboard Verification:** Conduct visual checks on the admin playbook editor to ensure flawless select-to-save behavior for all generic connectors.
+3. **Log Analytics Backup:** Validate SVG trend charts for real-time Page View and Deployment tracking.
