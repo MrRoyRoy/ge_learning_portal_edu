@@ -197,8 +197,13 @@ Following any deployment of modifications, enhancements, or bug fixes:
 * **Continuous Integration & Cloud Run Releases (100% Complete):**
   * **Automated Git Push:** Configured git identity and committed all changes securely, pushing code updates safely to the upstream repository.
   * **Google Cloud Run Production Deployment:** Executed source-based container builds via Cloud Build, rolling out revision updates directly to the live production endpoint serving active student/faculty traffic.
+* **AI Playbook Suggestion & Comparison Enhancement (100% Complete):**
+  * **Gemini Metadata Suggestions Enabled:** Updated the backend prompt schema inside `server.js` to allow the Vertex AI Gemini model to update and recommend modifications to **Required Gemini Features**, **Required Connectors**, and the **Enable Dual-Mode Template with Advanced Prompt** flag based on user instructions.
+  * **Interactive Form Hydration:** Upgraded `applyGeminiSuggestions` in `app.js` to dynamically check/uncheck the features and connectors checkboxes and toggle the Dual-Mode form state when suggestions are accepted. Standardized form values are populated for both modes to ensure zero-field-loss on save.
+  * **Side-by-Side Metadata Diff Viewer:** Extended `showDiffViewer` inside `app.js` to compile and display comparative side-by-side diff comparisons for Features, Connectors, and Dual-Mode flags, making all structural revisions completely transparent.
+  * **Smart Multi-Mode Rendering:** Configured the diff viewer to render advanced prompt comparisons if Dual-Mode is active on either the current or the suggested version, preventing hidden field updates.
 
 ### Next Steps & Continuous Polish
 1. **User Onboarding Validation:** Continuously monitor portal signups and onboarding wizard completions to confirm error-free role filter matches.
-2. **Dynamic Dashboard Verification:** Conduct visual checks on the admin playbook editor to ensure flawless select-to-save behavior for all generic connectors.
+2. **AI Tuning Oversight:** Monitor prompt drafting response payloads to verify consistent product-agnostic naming under complex custom instructions.
 3. **Log Analytics Backup:** Validate SVG trend charts for real-time Page View and Deployment tracking.
