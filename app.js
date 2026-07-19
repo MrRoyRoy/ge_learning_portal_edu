@@ -1887,6 +1887,16 @@ function updateUILanguage() {
     });
   }
 
+  // Admin Form Role Dropdown
+  const adminRoleSelect = document.getElementById("formCaseRole");
+  if (adminRoleSelect) {
+    Array.from(adminRoleSelect.options).forEach(opt => {
+      if (t.roles[opt.value]) {
+        opt.textContent = t.roles[opt.value];
+      }
+    });
+  }
+
   // Onboarding Dropdown levels
   const levelSelect = document.getElementById("wizardLevel");
   if (levelSelect) {
@@ -4958,7 +4968,18 @@ function openAdminEditModal(uc) {
 
     document.getElementById("formCaseCategory").value = uc.category || "";
     document.getElementById("formCaseTitle").value = uc.title || "";
-    document.getElementById("formCaseRole").value = uc.role || "";
+    const roleVal = uc.role || "Lecturer";
+    const selectEl = document.getElementById("formCaseRole");
+    let optionExists = false;
+    if (selectEl) {
+      for (let i = 0; i < selectEl.options.length; i++) {
+        if (selectEl.options[i].value === roleVal) {
+          optionExists = true;
+          break;
+        }
+      }
+      selectEl.value = optionExists ? roleVal : "Lecturer";
+    }
     document.getElementById("formCaseSummary").value = uc.summary || "";
     
     const stepsArray = Array.isArray(uc.steps) ? uc.steps : [];
@@ -4979,11 +5000,19 @@ function openAdminEditModal(uc) {
       box.checked = featuresArray.includes(box.value);
     });
 
-    // Checkbox mapping Connectors safely
+    // Checkbox mapping Connectors safely (supporting case-insensitive legacy mappings)
     const connectorsArray = Array.isArray(uc.connectors) ? uc.connectors : [];
     const connBoxes = document.querySelectorAll("input[name='formConnectors']");
     connBoxes.forEach(box => {
-      box.checked = connectorsArray.includes(box.value) || connectorsArray.includes(box.value + " Connector");
+      const valLower = box.value.toLowerCase();
+      box.checked = connectorsArray.some(c => {
+        const cLower = c.toLowerCase();
+        if (valLower.includes("drive") && cLower.includes("drive")) return true;
+        if (valLower.includes("email") && cLower.includes("email")) return true;
+        if (valLower.includes("lms") && cLower.includes("lms")) return true;
+        if (valLower.includes("calendar") && (cLower.includes("calendar") || cLower.includes("google"))) return true;
+        return cLower === valLower;
+      });
     });
 
     // Checkbox mapping levels safely
@@ -5041,7 +5070,7 @@ function openAdminEditModal(uc) {
     // Clear all form text inputs
     document.getElementById("formCaseCategory").value = "academic";
     document.getElementById("formCaseTitle").value = "";
-    document.getElementById("formCaseRole").value = "";
+    document.getElementById("formCaseRole").value = "Lecturer";
     document.getElementById("formCaseSummary").value = "";
     document.getElementById("formCaseSteps").value = "";
     document.getElementById("formCasePrompt").value = "";
@@ -5364,7 +5393,42 @@ function applyGeminiSuggestions(aiRes, isDualMode) {
     document.getElementById("formCaseCategory").value = aiRes.category;
   }
   if (aiRes.role) {
-    document.getElementById("formCaseRole").value = aiRes.role;
+    const rVal = aiRes.role.trim();
+    const select = document.getElementById("formCaseRole");
+    if (select) {
+      let found = false;
+      for (let i = 0; i < select.options.length; i++) {
+        if (select.options[i].value.toLowerCase() === rVal.toLowerCase()) {
+          select.selectedIndex = i;
+          found = true;
+          break;
+        }
+      }
+      if (!found) {
+        const lower = rVal.toLowerCase();
+        if (lower.includes("lecturer") || lower.includes("teacher") || lower.includes("educator") || lower.includes("faculty")) {
+          select.value = "Lecturer";
+        } else if (lower.includes("assistant") || lower.includes("ta")) {
+          select.value = "TA";
+        } else if (lower.includes("student") || lower.includes("club")) {
+          select.value = "Student";
+        } else if (lower.includes("leader") || lower.includes("head") || lower.includes("director")) {
+          select.value = "Program Leader";
+        } else if (lower.includes("dean") || lower.includes("educational")) {
+          select.value = "Dean";
+        } else if (lower.includes("it") || lower.includes("admin") || lower.includes("sysadmin")) {
+          select.value = "IT Admin";
+        } else if (lower.includes("affairs") || lower.includes("sao")) {
+          select.value = "SAO";
+        } else if (lower.includes("security") || lower.includes("safety") || lower.includes("officer")) {
+          select.value = "Security";
+        } else if (lower.includes("finance") || lower.includes("audit") || lower.includes("accountant")) {
+          select.value = "Finance";
+        } else {
+          select.value = "Lecturer";
+        }
+      }
+    }
   }
   if (aiRes.id && !editingUseCaseId) {
     document.getElementById("formCaseId").value = aiRes.id;

@@ -359,12 +359,18 @@ async function seedDatabase() {
       }
       console.log('✅ Use cases database seeded successfully.');
     } else {
-      console.log('📊 Database already contains seeded use cases. Synchronizing "su_helpdesk" dual-mode prompt configurations...');
+      console.log('📊 Database already contains seeded use cases. Synchronizing "su_helpdesk" and "at_risk_cohort" configurations...');
       const suHelpdesk = useCases.find(uc => uc.id === 'su_helpdesk');
       if (suHelpdesk) {
         await query("DELETE FROM use_cases WHERE id = 'su_helpdesk'");
         await insertUseCase(suHelpdesk, translations['su_helpdesk']);
         console.log('✅ "su_helpdesk" dual-mode prompt configurations synchronized successfully.');
+      }
+      const atRiskCohort = useCases.find(uc => uc.id === 'at_risk_cohort');
+      if (atRiskCohort) {
+        await query("DELETE FROM use_cases WHERE id = 'at_risk_cohort'");
+        await insertUseCase(atRiskCohort, translations['at_risk_cohort']);
+        console.log('✅ "at_risk_cohort" configurations synchronized successfully.');
       }
     }
 

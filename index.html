@@ -754,7 +754,17 @@
             </div>
             <div class="form-group">
               <label id="adminFormLabelRole" class="form-label">Primary Role Context</label>
-              <input type="text" class="select-control" id="formCaseRole" required placeholder="e.g. Lecturer, Student">
+              <select class="select-control" id="formCaseRole" required>
+                <option value="Lecturer">Lecturer / Educator</option>
+                <option value="TA">Teaching Assistant (TA)</option>
+                <option value="Student">Student / Club Leader</option>
+                <option value="Program Leader">Program Leader / Department Head</option>
+                <option value="Dean">Dean / Educational Leader</option>
+                <option value="IT Admin">IT Administrator / SysAdmin</option>
+                <option value="SAO">Student Affairs Officer (SAO)</option>
+                <option value="Security">Campus Security Officer</option>
+                <option value="Finance">Financial Administrator</option>
+              </select>
             </div>
           </div>
 
@@ -801,9 +811,10 @@
             <div class="form-group">
               <label id="adminFormLabelConnectors" class="form-label">Required Connectors</label>
               <div class="glass-panel" style="padding: 10px; display: grid; grid-template-columns: 1fr; gap: 4px; font-size: 12px;">
-                <label style="display: flex; align-items: center; gap: 6px;"><input type="checkbox" name="formConnectors" value="OneDrive"> OneDrive</label>
-                <label style="display: flex; align-items: center; gap: 6px;"><input type="checkbox" name="formConnectors" value="GoogleDrive"> Google Drive</label>
-                <label style="display: flex; align-items: center; gap: 6px;"><input type="checkbox" name="formConnectors" value="Email"> Email</label>
+                <label style="display: flex; align-items: center; gap: 6px;"><input type="checkbox" name="formConnectors" value="Drive Connector"> Drive Connector</label>
+                <label style="display: flex; align-items: center; gap: 6px;"><input type="checkbox" name="formConnectors" value="Email Connector"> Email Connector</label>
+                <label style="display: flex; align-items: center; gap: 6px;"><input type="checkbox" name="formConnectors" value="LMS Connector"> LMS Connector</label>
+                <label style="display: flex; align-items: center; gap: 6px;"><input type="checkbox" name="formConnectors" value="Calendar Connector"> Calendar Connector</label>
               </div>
             </div>
           </div>
