@@ -5434,19 +5434,52 @@ function applyGeminiSuggestions(aiRes, isDualMode) {
     document.getElementById("formCaseId").value = aiRes.id;
   }
 
+  // Apply Features suggestions if returned by Gemini
+  if (Array.isArray(aiRes.features)) {
+    const featureBoxes = document.querySelectorAll("input[name='formFeatures']");
+    featureBoxes.forEach(box => {
+      box.checked = aiRes.features.includes(box.value);
+    });
+  }
+
+  // Apply Connectors suggestions if returned by Gemini
+  if (Array.isArray(aiRes.connectors)) {
+    const connBoxes = document.querySelectorAll("input[name='formConnectors']");
+    connBoxes.forEach(box => {
+      const valLower = box.value.toLowerCase();
+      // Case-insensitive / legacy compatible check
+      box.checked = aiRes.connectors.some(c => {
+        const cLower = c.toLowerCase();
+        if (valLower.includes("drive") && cLower.includes("drive")) return true;
+        if (valLower.includes("email") && cLower.includes("email")) return true;
+        if (valLower.includes("lms") && cLower.includes("lms")) return true;
+        if (valLower.includes("calendar") && (cLower.includes("calendar") || cLower.includes("google"))) return true;
+        return cLower === valLower;
+      });
+    });
+  }
+
+  // Apply Dual-Mode flag suggestions if returned by Gemini
+  const suggestedIsDualMode = typeof aiRes.isDualMode === "boolean" ? aiRes.isDualMode : isDualMode;
+  const dualCheckbox = document.getElementById("formCaseDualMode");
+  if (dualCheckbox) {
+    dualCheckbox.checked = suggestedIsDualMode;
+    toggleFormDualModeFields(suggestedIsDualMode);
+  }
+
   document.getElementById("formCaseSummary").value = en.summary || "";
   
-  if (isDualMode) {
-    const advSteps = Array.isArray(en.advancedSteps) ? en.advancedSteps : [];
-    document.getElementById("formCaseAdvancedSteps").value = advSteps.join("\n");
-    document.getElementById("formCaseAdvancedPrompt").value = en.advancedPrompt || "";
-    document.getElementById("formCaseAdvancedProTip").value = en.advancedProTip || "";
-  } else {
-    const steps = Array.isArray(en.steps) ? en.steps : [];
-    document.getElementById("formCaseSteps").value = steps.join("\n");
-    document.getElementById("formCasePrompt").value = en.prompt || "";
-    document.getElementById("formCaseProTip").value = en.proTip || "";
-  }
+  // Populate standard English steps/prompt/proTip
+  const steps = Array.isArray(en.steps) ? en.steps : [];
+  document.getElementById("formCaseSteps").value = steps.join("\n");
+  document.getElementById("formCasePrompt").value = en.prompt || "";
+  document.getElementById("formCaseProTip").value = en.proTip || "";
+
+  // Populate advanced English steps/prompt/proTip
+  const advSteps = Array.isArray(en.advancedSteps) ? en.advancedSteps : [];
+  document.getElementById("formCaseAdvancedSteps").value = advSteps.join("\n");
+  document.getElementById("formCaseAdvancedPrompt").value = en.advancedPrompt || "";
+  document.getElementById("formCaseAdvancedProTip").value = en.advancedProTip || "";
 
   // Traditional Chinese (zh-TW)
   const zhtw = aiRes["zh-TW"] || {};
@@ -5489,6 +5522,41 @@ function showDiffViewer(aiRes, isDualMode) {
   // Compile list of comparison elements
   const diffItems = [];
 
+  // Compile Current checked states
+  const currentFeatures = [];
+  document.querySelectorAll("input[name='formFeatures']:checked").forEach(b => currentFeatures.push(b.value));
+  
+  const currentConnectors = [];
+  document.querySelectorAll("input[name='formConnectors']:checked").forEach(b => currentConnectors.push(b.value));
+  
+  const currentIsDualMode = document.getElementById("formCaseDualMode").checked;
+
+  // Compile Proposed checked states
+  const proposedFeatures = Array.isArray(aiRes.features) ? aiRes.features : currentFeatures;
+  const proposedConnectors = Array.isArray(aiRes.connectors) ? aiRes.connectors : currentConnectors;
+  const proposedIsDualMode = typeof aiRes.isDualMode === "boolean" ? aiRes.isDualMode : currentIsDualMode;
+
+  // 1. Required Gemini Features
+  diffItems.push({
+    label: "Required Gemini Features",
+    current: currentFeatures.join(", ") || "(None)",
+    proposed: proposedFeatures.join(", ") || "(None)"
+  });
+
+  // 2. Required Connectors
+  diffItems.push({
+    label: "Required Connectors",
+    current: currentConnectors.join(", ") || "(None)",
+    proposed: proposedConnectors.join(", ") || "(None)"
+  });
+
+  // 3. Enable Dual-Mode Template
+  diffItems.push({
+    label: "Enable Dual-Mode Template with Advanced Prompt",
+    current: currentIsDualMode ? "Enabled (Dual-Mode)" : "Disabled (Standard Prompt Only)",
+    proposed: proposedIsDualMode ? "Enabled (Dual-Mode)" : "Disabled (Standard Prompt Only)"
+  });
+
   // English Summary
   diffItems.push({
     label: "English Summary Description",
@@ -5496,7 +5564,9 @@ function showDiffViewer(aiRes, isDualMode) {
     proposed: aiRes.en?.summary || ""
   });
 
-  if (isDualMode) {
+  const hasDualMode = currentIsDualMode || proposedIsDualMode;
+
+  if (hasDualMode) {
     // English Advanced Steps
     diffItems.push({
       label: "English Advanced Steps (Active-Integration Mode)",
@@ -5515,26 +5585,26 @@ function showDiffViewer(aiRes, isDualMode) {
       current: document.getElementById("formCaseAdvancedProTip").value,
       proposed: aiRes.en?.advancedProTip || ""
     });
-  } else {
-    // English Steps
-    diffItems.push({
-      label: "English Guide Steps",
-      current: document.getElementById("formCaseSteps").value,
-      proposed: Array.isArray(aiRes.en?.steps) ? aiRes.en.steps.join("\n") : ""
-    });
-    // English Prompt
-    diffItems.push({
-      label: "English Prompt Instruction",
-      current: document.getElementById("formCasePrompt").value,
-      proposed: aiRes.en?.prompt || ""
-    });
-    // English Pro Tip
-    diffItems.push({
-      label: "English Pro Tip",
-      current: document.getElementById("formCaseProTip").value,
-      proposed: aiRes.en?.proTip || ""
-    });
   }
+
+  // English Steps
+  diffItems.push({
+    label: "English Guide Steps",
+    current: document.getElementById("formCaseSteps").value,
+    proposed: Array.isArray(aiRes.en?.steps) ? aiRes.en.steps.join("\n") : ""
+  });
+  // English Prompt
+  diffItems.push({
+    label: "English Prompt Instruction",
+    current: document.getElementById("formCasePrompt").value,
+    proposed: aiRes.en?.prompt || ""
+  });
+  // English Pro Tip
+  diffItems.push({
+    label: "English Pro Tip",
+    current: document.getElementById("formCaseProTip").value,
+    proposed: aiRes.en?.proTip || ""
+  });
 
   // Traditional Chinese Translations
   diffItems.push({
@@ -5548,7 +5618,7 @@ function showDiffViewer(aiRes, isDualMode) {
     proposed: aiRes["zh-TW"]?.summary || ""
   });
 
-  if (isDualMode) {
+  if (hasDualMode) {
     diffItems.push({
       label: "Traditional Chinese Advanced Steps",
       current: document.getElementById("formTransZhtwAdvancedSteps").value,
@@ -5564,23 +5634,23 @@ function showDiffViewer(aiRes, isDualMode) {
       current: document.getElementById("formTransZhtwAdvancedProTip").value,
       proposed: aiRes["zh-TW"]?.advancedProTip || ""
     });
-  } else {
-    diffItems.push({
-      label: "Traditional Chinese Steps",
-      current: document.getElementById("formTransZhtwSteps").value,
-      proposed: Array.isArray(aiRes["zh-TW"]?.steps) ? aiRes["zh-TW"].steps.join("\n") : ""
-    });
-    diffItems.push({
-      label: "Traditional Chinese Prompt",
-      current: document.getElementById("formTransZhtwPrompt").value,
-      proposed: aiRes["zh-TW"]?.prompt || ""
-    });
-    diffItems.push({
-      label: "Traditional Chinese Pro Tip",
-      current: document.getElementById("formTransZhtwProTip").value,
-      proposed: aiRes["zh-TW"]?.proTip || ""
-    });
   }
+
+  diffItems.push({
+    label: "Traditional Chinese Steps",
+    current: document.getElementById("formTransZhtwSteps").value,
+    proposed: Array.isArray(aiRes["zh-TW"]?.steps) ? aiRes["zh-TW"].steps.join("\n") : ""
+  });
+  diffItems.push({
+    label: "Traditional Chinese Prompt",
+    current: document.getElementById("formTransZhtwPrompt").value,
+    proposed: aiRes["zh-TW"]?.prompt || ""
+  });
+  diffItems.push({
+    label: "Traditional Chinese Pro Tip",
+    current: document.getElementById("formTransZhtwProTip").value,
+    proposed: aiRes["zh-TW"]?.proTip || ""
+  });
 
   // Simplified Chinese Translations
   diffItems.push({
@@ -5594,7 +5664,7 @@ function showDiffViewer(aiRes, isDualMode) {
     proposed: aiRes["zh-CN"]?.summary || ""
   });
 
-  if (isDualMode) {
+  if (hasDualMode) {
     diffItems.push({
       label: "Simplified Chinese Advanced Steps",
       current: document.getElementById("formTransZhcnAdvancedSteps").value,
@@ -5610,23 +5680,23 @@ function showDiffViewer(aiRes, isDualMode) {
       current: document.getElementById("formTransZhcnAdvancedProTip").value,
       proposed: aiRes["zh-CN"]?.advancedProTip || ""
     });
-  } else {
-    diffItems.push({
-      label: "Simplified Chinese Steps",
-      current: document.getElementById("formTransZhcnSteps").value,
-      proposed: Array.isArray(aiRes["zh-CN"]?.steps) ? aiRes["zh-CN"].steps.join("\n") : ""
-    });
-    diffItems.push({
-      label: "Simplified Chinese Prompt",
-      current: document.getElementById("formTransZhcnPrompt").value,
-      proposed: aiRes["zh-CN"]?.prompt || ""
-    });
-    diffItems.push({
-      label: "Simplified Chinese Pro Tip",
-      current: document.getElementById("formTransZhcnProTip").value,
-      proposed: aiRes["zh-CN"]?.proTip || ""
-    });
   }
+
+  diffItems.push({
+    label: "Simplified Chinese Steps",
+    current: document.getElementById("formTransZhcnSteps").value,
+    proposed: Array.isArray(aiRes["zh-CN"]?.steps) ? aiRes["zh-CN"].steps.join("\n") : ""
+  });
+  diffItems.push({
+    label: "Simplified Chinese Prompt",
+    current: document.getElementById("formTransZhcnPrompt").value,
+    proposed: aiRes["zh-CN"]?.prompt || ""
+  });
+  diffItems.push({
+    label: "Simplified Chinese Pro Tip",
+    current: document.getElementById("formTransZhcnProTip").value,
+    proposed: aiRes["zh-CN"]?.proTip || ""
+  });
 
   // Render comparative items
   diffItems.forEach(item => {

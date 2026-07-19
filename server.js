@@ -1265,11 +1265,11 @@ You are the AI Playbook Architect for "Gemini Enterprise - Edu Portal".
 Generate a high-fidelity educational/operational playbook based on the following input parameters:
 - Playbook Title: "${title || 'Suggest a professional, high-fidelity playbook title based on instructions'}"
 - Category: "${category || 'academic'}"
-- Gemini Features: ${JSON.stringify(features || [])}
-- Connected Data Connectors: ${JSON.stringify(connectors || [])}
+- Gemini Features: ${JSON.stringify(features || [])} (You may update or add features based on custom instructions)
+- Connected Data Connectors: ${JSON.stringify(connectors || [])} (You may update or add connectors based on custom instructions)
 - Target User Role: "${role || 'Lecturer'}"
 - Target Institutional Levels: ${JSON.stringify(level || [])}
-- Enable Dual-Mode Connectors Workflow: ${isDualMode ? 'Yes' : 'No'}
+- Enable Dual-Mode Connectors Workflow: ${isDualMode ? 'Yes' : 'No'} (You may enable or disable this flag if instructions request/imply it)
 `;
 
     if (originalCaseText) {
@@ -1305,36 +1305,38 @@ The JSON object MUST EXACTLY follow this schema:
   "id": "suggested_lowercase_kebab_case_id_matching_the_title",
   "category": "academic",
   "role": "Lecturer",
-  "features": ${JSON.stringify(features || [])},
+  "features": ["NotebookLM", "Canvas Mode", "Deep Research", "Agent Designer", "Image Generation", "Video Generation"], // Choose recommended features based on instructions and input
+  "connectors": ["Drive Connector", "Email Connector", "LMS Connector", "Calendar Connector"], // Choose recommended connectors based on instructions and input, use product-agnostic naming exactly!
+  "isDualMode": true, // Boolean flag (true or false) indicating if this is a dual-mode playbook. Set true if the user's instruction asks for active connectors or dual mode template.
   "en": {
     "title": "Suggested High-Fidelity English Title",
     "summary": "Detailed summary describing how this playbook uses Gemini to solve the target challenge.",
     "steps": ["Step 1", "Step 2", "Step 3", "Step 4"],
-    "advancedSteps": ${isDualMode ? '["Advanced Step 1 using Connectors", "Advanced Step 2 using Connectors", "Advanced Step 3 using Connectors", "Advanced Step 4 using Connectors"]' : 'null'},
+    "advancedSteps": ["Advanced Step 1 using Connectors", "Advanced Step 2 using Connectors", "Advanced Step 3 using Connectors", "Advanced Step 4 using Connectors"], // Include advancedSteps if isDualMode is true, otherwise keep as null or empty array.
     "prompt": "Highly detailed model prompt that the user can copy and paste into Gemini.",
-    "advancedPrompt": ${isDualMode ? '"Detailed advanced integration prompt..."' : 'null'},
+    "advancedPrompt": "Detailed advanced integration prompt...", // Include advancedPrompt if isDualMode is true, otherwise keep as null or empty.
     "proTip": "Helpful pro-tip for getting the best outcome from Gemini.",
-    "advancedProTip": ${isDualMode ? '"Advanced pro-tip about data connectors..."' : 'null'}
+    "advancedProTip": "Advanced pro-tip about data connectors..." // Include advancedProTip if isDualMode is true, otherwise keep as null or empty.
   },
   "zh-TW": {
     "title": "繁體中文版高質量標題",
     "summary": "繁體中文版詳細描述...",
     "steps": ["繁體中文步驟 1", "繁體中文步驟 2", "繁體中文步驟 3", "繁體中文步驟 4"],
-    "advancedSteps": ${isDualMode ? '["繁體中文進階步驟 1", "繁體中文進階步驟 2", "繁體中文進階步驟 3", "繁體中文進階步驟 4"]' : 'null'},
+    "advancedSteps": ["繁體中文進階步驟 1", "繁體中文進階步驟 2", "繁體中文進階步驟 3", "繁體中文進階步驟 4"], // Only if isDualMode is true
     "prompt": "繁體中文詳細提示詞...",
-    "advancedPrompt": ${isDualMode ? '"繁體中文進階提示詞..."' : 'null'},
+    "advancedPrompt": "繁體中文進階提示詞...", // Only if isDualMode is true
     "proTip": "繁體中文實用技巧...",
-    "advancedProTip": ${isDualMode ? '"繁體中文進階實用技巧..."' : 'null'}
+    "advancedProTip": "繁體中文進階實用技巧..." // Only if isDualMode is true
   },
   "zh-CN": {
     "title": "简体中文版高质量标题",
     "summary": "简体中文版详细描述...",
     "steps": ["简体中文步骤 1", "简体中文步骤 2", "简体中文步骤 3", "简体中文步骤 4"],
-    "advancedSteps": ${isDualMode ? '["简体中文高级步骤 1", "简体中文高级步骤 2", "简体中文高级步骤 3", "简体中文高级步骤 4"]' : 'null'},
+    "advancedSteps": ["简体中文高级步骤 1", "简体中文高级步骤 2", "简体中文高级步骤 3", "简体中文高级步骤 4"], // Only if isDualMode is true
     "prompt": "简体中文详细提示词...",
-    "advancedPrompt": ${isDualMode ? '"简体中文高级提示词..."' : 'null'},
+    "advancedPrompt": "简体中文高级提示词...", // Only if isDualMode is true
     "proTip": "简体中文实用技巧...",
-    "advancedProTip": ${isDualMode ? '"简体中文高级实用技巧..."' : 'null'}
+    "advancedProTip": "简体中文高级实用技巧..." // Only if isDualMode is true
   }
 }
 
