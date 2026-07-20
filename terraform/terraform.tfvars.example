@@ -25,6 +25,10 @@ region           = "your-region"
 service_name     = "your-service"
 db_instance_name = "your-sql-instance"
 
+# Providing your project number is highly recommended as it completely
+# bypasses the need for the Cloud Resource Manager API in Terraform data queries.
+# project_number   = "123456789012"
+
 # DO NOT store passwords here! Set them as environment variables instead:
 # db_password          = "..."
 # super_admin_password = "..."

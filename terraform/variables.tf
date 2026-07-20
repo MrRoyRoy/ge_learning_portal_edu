@@ -39,3 +39,9 @@ variable "admin_password" {
   type        = string
   sensitive   = true
 }
+
+variable "project_number" {
+  description = "The numeric project number of your Google Cloud project. Providing this is highly recommended as it completely bypasses the need for the Cloud Resource Manager API, preventing common chicken-and-egg deployment errors."
+  type        = string
+  default     = ""
+}

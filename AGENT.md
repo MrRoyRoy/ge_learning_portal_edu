@@ -207,6 +207,8 @@ Following any deployment of modifications, enhancements, or bug fixes:
   * **Template Blueprint Creation:** Created `terraform/terraform.tfvars.example` specifying non-sensitive values while guiding users to supply database/admin passwords via zero-disk options.
   * **Secure Parameter Inject Documentation:** Added rich inline-documentation to `variables.tf` and modified `README.md` to instruct operators on secure environment variables injection (`TF_VAR_db_password` etc.) and interactive fallback prompts.
   * **State Boundary Resolution:** Documented why standard state-persisted resources (like SQL users and Cloud Run) cannot accept `ephemeral = true` variables, providing clear architectural guidance on resolving state-leaks.
+  * **Cloud Resource Manager Resolution:** Appended `"cloudresourcemanager.googleapis.com"` right inside our `google_project_service.apis` list in `main.tf` to enable CRM API within the resource apply flow itself.
+  * **Robust Project Number Bypass:** Added an optional `project_number` variable to `variables.tf` and modified `main.tf` to make the data lookup block (`data.google_project.project`) conditional. This completely bypasses the CRM lookup constraint if the numeric project number is supplied directly in tfvars/env vars.
 
 ### Next Steps & Continuous Polish
 1. **User Onboarding Validation:** Continuously monitor portal signups and onboarding wizard completions to confirm error-free role filter matches.
