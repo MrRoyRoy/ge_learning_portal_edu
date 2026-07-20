@@ -4,3 +4,12 @@ gp
 *.pdf
 test-*.js
 find-working-model.js
+
+# Terraform Workspace & Local Secrets Ignore list
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfvars.json
+.terraform.lock.hcl
+
