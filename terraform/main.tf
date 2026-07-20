@@ -10,7 +10,8 @@ resource "google_project_service" "apis" {
   for_each = toset([
     "run.googleapis.com",
     "sqladmin.googleapis.com",
-    "artifactregistry.googleapis.com"
+    "artifactregistry.googleapis.com",
+    "cloudresourcemanager.googleapis.com"
   ])
   project            = var.project_id
   service            = each.key
@@ -56,7 +57,12 @@ resource "google_sql_user" "db_user" {
 # ==========================================
 # Cloud Run Default Compute Service Account
 data "google_project" "project" {
+  count      = var.project_number == "" ? 1 : 0
   project_id = var.project_id
+}
+
+locals {
+  project_number = var.project_number != "" ? var.project_number : data.google_project.project[0].number
 }
 
 resource "google_project_iam_binding" "cloudsql_client" {
@@ -64,7 +70,7 @@ resource "google_project_iam_binding" "cloudsql_client" {
   role    = "roles/cloudsql.client"
 
   members = [
-    "serviceAccount:${data.google_project.project.number}-compute@developer.gserviceaccount.com"
+    "serviceAccount:${local.project_number}-compute@developer.gserviceaccount.com"
   ]
 }
 
@@ -125,7 +131,7 @@ resource "google_cloud_run_service" "portal_service" {
         }
       }
 
-      service_account_name = "${data.google_project.project.number}-compute@developer.gserviceaccount.com"
+      service_account_name = "${local.project_number}-compute@developer.gserviceaccount.com"
     }
 
     metadata {

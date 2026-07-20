@@ -25,6 +25,10 @@ region           = "asia-east2"
 service_name     = "edu-ge-learning-portal"
 db_instance_name = "edu-portal-db"
 
+# Providing your project number is highly recommended as it completely
+# bypasses the need for the Cloud Resource Manager API in Terraform data queries.
+# project_number   = "123456789012"
+
 # DO NOT store passwords here! Set them as environment variables instead:
 # db_password          = "..."
 # super_admin_password = "..."
