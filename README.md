@@ -278,13 +278,15 @@ cp terraform.tfvars.example terraform.tfvars
 Edit `terraform.tfvars` to set your project environment attributes:
 ```hcl
 project_id       = "<YOUR_GCP_PROJECT_ID>"
+project_number   = "<OPTIONAL_YOUR_GCP_PROJECT_NUMBER>" # Highly recommended: supply this to bypass Cloud Resource Manager API errors!
 region           = "asia-east2"
 service_name     = "edu-ge-learning-portal"
 db_instance_name = "edu-portal-db"
 ```
 
 > [!IMPORTANT]
-> **Credential Security Best Practices:**
+> **Credential Security & GCP API Best Practices:**
+> * **Bypass Cloud Resource Manager API Errors:** If your target GCP project has organization policies or permissions that prevent read queries to the project data (such as `data.google_project`), you may encounter a `SERVICE_DISABLED` or `403` error. To completely bypass this constraint, simply supply your numeric **`project_number`** inside your `terraform.tfvars` or set `export TF_VAR_project_number="YOUR_PROJECT_NUMBER"`. This skips the project data query entirely!
 > * **Do NOT store passwords on disk:** Never put passwords (like `db_password`, `super_admin_password`, or `admin_password`) in `terraform.tfvars`. This prevents credentials from being committed to Git or stored on disk in plaintext.
 > * **Use Environment Variables:** Instead, export them in your terminal before running Terraform commands. Terraform automatically detects these environment variables:
 >   ```bash
