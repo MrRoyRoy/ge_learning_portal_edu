@@ -270,17 +270,30 @@ cd terraform
 terraform init
 ```
 
-#### 3. Customize Your Variables:
-Create a custom `terraform.tfvars` file to override default settings (GCP project, region, database password):
-```hcl
-project_id           = "<YOUR_GCP_PROJECT_ID>"
-region               = "<YOUR_GCP_REGION>"
-service_name         = "edu-ge-learning-portal"
-db_instance_name     = "edu-portal-db"
-db_password          = "YOUR_SECURE_POSTGRES_PASSWORD"
-super_admin_password = "<YOUR_DESIRED_SUPER_ADMIN_PASSWORD>"
-admin_password       = "<YOUR_DESIRED_ASSISTANT_ADMIN_PASSWORD>"
+#### 3. Customize Your Variables securely:
+Create a custom `terraform.tfvars` file by copying the provided template:
+```bash
+cp terraform.tfvars.example terraform.tfvars
 ```
+Edit `terraform.tfvars` to set your project environment attributes:
+```hcl
+project_id       = "<YOUR_GCP_PROJECT_ID>"
+region           = "asia-east2"
+service_name     = "edu-ge-learning-portal"
+db_instance_name = "edu-portal-db"
+```
+
+> [!IMPORTANT]
+> **Credential Security Best Practices:**
+> * **Do NOT store passwords on disk:** Never put passwords (like `db_password`, `super_admin_password`, or `admin_password`) in `terraform.tfvars`. This prevents credentials from being committed to Git or stored on disk in plaintext.
+> * **Use Environment Variables:** Instead, export them in your terminal before running Terraform commands. Terraform automatically detects these environment variables:
+>   ```bash
+>   export TF_VAR_db_password="YOUR_SECURE_PASSWORD"
+>   export TF_VAR_super_admin_password="YOUR_SUPER_ADMIN_PASSWORD"
+>   export TF_VAR_admin_password="YOUR_ADMIN_PASSWORD"
+>   ```
+> * **Interactive Prompt Fallback:** If these environment variables are not set, Terraform will securely prompt you to type the password values in your terminal.
+> * **Note on `ephemeral = true` (Terraform v1.10+):** While Terraform v1.10+ supports ephemeral variables, standard cloud resources (such as `google_sql_user` or the Cloud Run environment variables) are state-tracked and do not support direct ephemeral injection. Therefore, keeping sensitive fields out of tfvars and utilizing terminal `TF_VAR_` environment variables or interactive prompt parameters is the best practice.
 
 #### 4. Preview the Provisioning Infrastructure Plan:
 ```bash

@@ -23,22 +23,19 @@ variable "db_instance_name" {
 }
 
 variable "db_password" {
-  description = "The password for the PostgreSQL master admin user."
+  description = "The password for the PostgreSQL master admin user. Note: Declared as sensitive to hide from CLI outputs. Since standard resources (google_sql_user) persist password state, do not set ephemeral=true as it would cause resource tracking errors in Terraform."
   type        = string
   sensitive   = true
-  default     = "HKEduDemo2026"
 }
 
 variable "super_admin_password" {
-  description = "The custom password for the edu_portal_s_admin account."
+  description = "The custom password for the edu_portal_s_admin account. Note: Declared as sensitive to hide from logs. Do not store in plain tfvars."
   type        = string
   sensitive   = true
-  default     = "HKEduDemo2026"
 }
 
 variable "admin_password" {
-  description = "The custom password for the edu_portal_admin assistant account."
+  description = "The custom password for the edu_portal_admin assistant account. Note: Declared as sensitive to prevent exposure."
   type        = string
   sensitive   = true
-  default     = "HKEduDemo"
 }

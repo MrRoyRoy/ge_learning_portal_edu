@@ -1,0 +1,31 @@
+# ==============================================================================
+# terraform.tfvars.example
+# ==============================================================================
+# Override default variable settings here. Copy this file to `terraform.tfvars`
+# and fill in your values.
+#
+# IMPORTANT SECURITY BEST PRACTICE:
+# To prevent secrets (like database and admin passwords) from being stored on
+# disk in your tfvars file, remove them from `terraform.tfvars`. Instead, let
+# Terraform prompt you interactively or use secure environment variables:
+#
+#   export TF_VAR_db_password="YOUR_SECURE_PASSWORD"
+#   export TF_VAR_super_admin_password="YOUR_SUPER_ADMIN_PASSWORD"
+#   export TF_VAR_admin_password="YOUR_ADMIN_PASSWORD"
+#
+# Note on "ephemeral = true" (Terraform v1.10+):
+# Standard resource attributes (such as google_sql_user.password or Cloud Run
+# environment variables) are state-persisted and cannot accept ephemeral values
+# directly. Therefore, using environment variables or interactive prompts remains
+# the best and most secure approach to supply secrets to standard resources.
+# ==============================================================================
+
+project_id       = "YOUR_GCP_PROJECT_ID"
+region           = "asia-east2"
+service_name     = "edu-ge-learning-portal"
+db_instance_name = "edu-portal-db"
+
+# DO NOT store passwords here! Set them as environment variables instead:
+# db_password          = "..."
+# super_admin_password = "..."
+# admin_password       = "..."

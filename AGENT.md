@@ -202,6 +202,11 @@ Following any deployment of modifications, enhancements, or bug fixes:
   * **Interactive Form Hydration:** Upgraded `applyGeminiSuggestions` in `app.js` to dynamically check/uncheck the features and connectors checkboxes and toggle the Dual-Mode form state when suggestions are accepted. Standardized form values are populated for both modes to ensure zero-field-loss on save.
   * **Side-by-Side Metadata Diff Viewer:** Extended `showDiffViewer` inside `app.js` to compile and display comparative side-by-side diff comparisons for Features, Connectors, and Dual-Mode flags, making all structural revisions completely transparent.
   * **Smart Multi-Mode Rendering:** Configured the diff viewer to render advanced prompt comparisons if Dual-Mode is active on either the current or the suggested version, preventing hidden field updates.
+* **Automated Infrastructure Hardening (100% Complete):**
+  * **Default Credentials Deletion:** Hardened Terraform configuration by removing hardcoded plain passwords (`"HKEduDemo2026"`, `"HKEduDemo"`) from `variables.tf`, enforcing secure input parameter overrides instead.
+  * **Template Blueprint Creation:** Created `terraform/terraform.tfvars.example` specifying non-sensitive values while guiding users to supply database/admin passwords via zero-disk options.
+  * **Secure Parameter Inject Documentation:** Added rich inline-documentation to `variables.tf` and modified `README.md` to instruct operators on secure environment variables injection (`TF_VAR_db_password` etc.) and interactive fallback prompts.
+  * **State Boundary Resolution:** Documented why standard state-persisted resources (like SQL users and Cloud Run) cannot accept `ephemeral = true` variables, providing clear architectural guidance on resolving state-leaks.
 
 ### Next Steps & Continuous Polish
 1. **User Onboarding Validation:** Continuously monitor portal signups and onboarding wizard completions to confirm error-free role filter matches.
