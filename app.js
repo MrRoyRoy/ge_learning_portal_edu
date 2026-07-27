@@ -2254,12 +2254,8 @@ function renderUseCases() {
     // A. Role match
     let matchesRole = false;
     const isSupportRole = ["Security", "Finance", "IT Admin", "SAO"].includes(appState.userRole);
-    
-    // In user portal simulation mode, appState.isAdmin is false unless user is strictly in admin portal view
-    const isUserPortalView = document.getElementById("adminPortal") && document.getElementById("adminPortal").style.display === "none";
-    const effectiveIsAdmin = isUserPortalView ? false : appState.isAdmin;
 
-    if (effectiveIsAdmin === true) {
+    if (appState.isAdmin === true) {
       matchesRole = true;
     } else if (appState.userRole === "Lecturer" || appState.userRole === "TA") {
       matchesRole = ["Lecturer", "TA"].includes(useCase.role) || ["academic", "operational", "administrative"].includes(useCase.category) || !useCase.role;
@@ -2276,7 +2272,7 @@ function renderUseCases() {
 
     // 2. Institution Level Filter: Support roles ignore this completely.
     let matchesLevel = true;
-    if (effectiveIsAdmin === true) {
+    if (appState.isAdmin === true) {
       matchesLevel = true;
     } else if (!isSupportRole && useCase.level && Array.isArray(useCase.level) && useCase.level.length > 0) {
       matchesLevel = useCase.level.includes("Generic") || useCase.level.includes(appState.institutionLevel) || useCase.level.length === 0;
