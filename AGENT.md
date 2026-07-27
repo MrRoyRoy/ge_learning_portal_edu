@@ -199,6 +199,7 @@ Following any deployment of modifications, enhancements, or bug fixes:
   * **Step & Wording Parity:** Configured generation directives to preserve identical step count, sequence, tone, and phrasing across basic and advanced modes, replacing only connector-automated steps with manual file upload/copy-paste processes in basic mode (and vice versa).
 * **Instant Admin-to-User Portal Use Case Synchronization (100% Complete):**
   * **Real-time In-Memory & DOM Re-rendering:** Updated `saveAdminUseCase()` and `deleteAdminUseCase()` in `app.js` to immediately trigger `loadUseCasesFromServer().then(() => renderUseCases())` upon successful admin save/delete/import operations, ensuring newly added or edited playbooks appear instantly in the user view without requiring a page refresh.
+  * **Role & Level Filtering Visibility Alignment:** Adjusted filtering rules in `renderUseCases` (`app.js`) to ensure `appState.isAdmin` is properly evaluated as `false` when viewing the User Portal view, and updated role/level matching so custom administrative, operational, and academic playbooks (such as *"Admissions Marketing Campaign & Applicant Engagement Strategy"*) created/imported with non-standard roles or generic levels are fully visible across all appropriate user roles and hubs.
 
 ### Next Steps & Continuous Polish
 1. **SSL Certificate Issuance Monitoring:** Check provisioning status of `edu-ge-learning-portal-cert` until it transitions from `PROVISIONING` to `ACTIVE` (typically 15-30 minutes).
