@@ -5221,6 +5221,7 @@ async function saveAdminUseCase() {
       document.getElementById("adminCaseEditModal").classList.remove("active");
       showToast(isEdit ? "Playbook template updated." : "New playbook template added!");
       loadAdminUseCases();
+      loadUseCasesFromServer().then(() => renderUseCases());
     } else {
       feedback.textContent = data.error || "Failed to save template. Please verify input ID is unique.";
       feedback.style.display = "block";
@@ -5243,6 +5244,7 @@ async function deleteAdminUseCase(id) {
       if (data.success) {
         showToast("Playbook template deleted.");
         loadAdminUseCases();
+        loadUseCasesFromServer().then(() => renderUseCases());
       }
     } catch (err) {
       console.error(err);
