@@ -2206,7 +2206,7 @@ function handleSearchInput(e) {
   renderUseCases();
 }
 
-// Helper to render New and Updated badges for Use Cases created/updated within 30 days
+// Helper to render New and Updated badges for Use Cases created/updated within 5 days
 function getUsecaseBadgeHtml(uc, lang) {
   if (!uc.createdAt) return "";
 
@@ -2215,7 +2215,7 @@ function getUsecaseBadgeHtml(uc, lang) {
   const diffTimeCreated = Math.abs(now - createdDate);
   const diffDaysCreated = Math.ceil(diffTimeCreated / (1000 * 60 * 60 * 24));
 
-  let isNew = diffDaysCreated <= 30;
+  let isNew = diffDaysCreated <= 5;
   let isUpdated = false;
 
   if (uc.updatedAt) {
@@ -2223,7 +2223,7 @@ function getUsecaseBadgeHtml(uc, lang) {
     const diffTimeUpdated = Math.abs(now - updatedDate);
     const diffDaysUpdated = Math.ceil(diffTimeUpdated / (1000 * 60 * 60 * 24));
     // It's only marked "updated" if it's NOT already marked "new" (to avoid cluttering)
-    if (!isNew && diffDaysUpdated <= 30 && updatedDate > createdDate) {
+    if (!isNew && diffDaysUpdated <= 5 && updatedDate > createdDate) {
       isUpdated = true;
     }
   }
