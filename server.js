@@ -1345,7 +1345,7 @@ Brand Guidelines & Localisation Boundaries:
 2. Never use the term "Gem" (always use "Agent"). Never use the term "Copilot".
 3. Avoid generic red/blue/green references. Ensure suggestions are premium and tailored for educational excellence.
 4. CRITICAL DUAL PROMPT MODE & DUAL WORKFLOW RULE: When "isDualMode" is true (or dual prompt mode is enabled), keep the advanced prompt ("advancedPrompt") closely similar to the basic prompt ("prompt"). Maintain the exact same step sequence, structure, tone, and wording across both basic and advanced versions. The ONLY change should be adapting steps that use automated connectors in advanced mode to manual file upload, copy-paste, or manual processes in basic mode (and vice versa).
-5. Output ONLY the raw JSON block. Do NOT surround it with markdown code blocks (such as ```json ... ```), HTML tags, or any other introductory or concluding commentary text.
+5. Output ONLY the raw JSON block. Do NOT surround it with markdown code blocks (such as \`\`\`json ... \`\`\`), HTML tags, or any other introductory or concluding commentary text.
 
 `;
 
