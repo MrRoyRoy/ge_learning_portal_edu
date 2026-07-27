@@ -197,6 +197,8 @@ Following any deployment of modifications, enhancements, or bug fixes:
 * **Dual Prompt Mode Generation & Modification Consistency (100% Complete):**
   * **System Prompt Constraint Alignment:** Enforced strict rules in `server.js` (`/api/admin/generate-gemini`) requiring Gemini to keep the advanced prompt (`advancedPrompt`) closely similar to the basic prompt (`prompt`) in dual prompt mode.
   * **Step & Wording Parity:** Configured generation directives to preserve identical step count, sequence, tone, and phrasing across basic and advanced modes, replacing only connector-automated steps with manual file upload/copy-paste processes in basic mode (and vice versa).
+* **Instant Admin-to-User Portal Use Case Synchronization (100% Complete):**
+  * **Real-time In-Memory & DOM Re-rendering:** Updated `saveAdminUseCase()` and `deleteAdminUseCase()` in `app.js` to immediately trigger `loadUseCasesFromServer().then(() => renderUseCases())` upon successful admin save/delete/import operations, ensuring newly added or edited playbooks appear instantly in the user view without requiring a page refresh.
 
 ### Next Steps & Continuous Polish
 1. **SSL Certificate Issuance Monitoring:** Check provisioning status of `edu-ge-learning-portal-cert` until it transitions from `PROVISIONING` to `ACTIVE` (typically 15-30 minutes).
