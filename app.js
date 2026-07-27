@@ -2255,29 +2255,31 @@ function renderUseCases() {
     let matchesRole = false;
     const isSupportRole = ["Security", "Finance", "IT Admin", "SAO"].includes(appState.userRole);
     
-    if (appState.isAdmin === true) {
+    // In user portal simulation mode, appState.isAdmin is false unless user is strictly in admin portal view
+    const isUserPortalView = document.getElementById("adminPortal") && document.getElementById("adminPortal").style.display === "none";
+    const effectiveIsAdmin = isUserPortalView ? false : appState.isAdmin;
+
+    if (effectiveIsAdmin === true) {
       matchesRole = true;
-    } else if (appState.userRole === "Lecturer") {
-      matchesRole = ["Lecturer", "TA"].includes(useCase.role) || useCase.category === "academic";
-    } else if (appState.userRole === "TA") {
-      matchesRole = ["Lecturer", "TA"].includes(useCase.role) || useCase.category === "academic";
+    } else if (appState.userRole === "Lecturer" || appState.userRole === "TA") {
+      matchesRole = ["Lecturer", "TA"].includes(useCase.role) || ["academic", "operational", "administrative"].includes(useCase.category) || !useCase.role;
     } else if (appState.userRole === "Student") {
-      matchesRole = useCase.role === "Student" || useCase.category === "student";
+      matchesRole = useCase.role === "Student" || useCase.category === "student" || !useCase.role;
     } else if (isSupportRole) {
       matchesRole = [appState.userRole, "IT Admin", "Program Leader", "Dean", "SAO"].includes(useCase.role) || 
-                    ["operational", "administrative"].includes(useCase.category);
+                    ["operational", "administrative"].includes(useCase.category) || !useCase.role;
     } else if (appState.userRole === "Program Leader" || appState.userRole === "Dean") {
-      matchesRole = ["Lecturer", "Program Leader", "Dean"].includes(useCase.role) || useCase.category === "operational";
+      matchesRole = ["Lecturer", "Program Leader", "Dean"].includes(useCase.role) || ["academic", "operational", "administrative"].includes(useCase.category) || !useCase.role;
     } else {
       matchesRole = true;
     }
 
     // 2. Institution Level Filter: Support roles ignore this completely.
     let matchesLevel = true;
-    if (appState.isAdmin === true) {
+    if (effectiveIsAdmin === true) {
       matchesLevel = true;
-    } else if (!isSupportRole && useCase.level && useCase.level.length > 0) {
-      matchesLevel = useCase.level.includes("Generic") || useCase.level.includes(appState.institutionLevel);
+    } else if (!isSupportRole && useCase.level && Array.isArray(useCase.level) && useCase.level.length > 0) {
+      matchesLevel = useCase.level.includes("Generic") || useCase.level.includes(appState.institutionLevel) || useCase.level.length === 0;
     }
 
     // 3. Feature Tags filter
