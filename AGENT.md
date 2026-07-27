@@ -104,6 +104,7 @@ The production environment is deployed and scaled on **Google Cloud Run** to ser
 * **GCP Project:** `ge-edu-demo`
 * **Active Region:** `asia-east2` (Hong Kong)
 * **Production Endpoint URL:** [https://edu-ge-learning-portal-1069209637728.asia-east2.run.app](https://edu-ge-learning-portal-1069209637728.asia-east2.run.app)
+* **Custom Domain:** [https://edu-ge-learning-portal.royc-demo.com](https://edu-ge-learning-portal.royc-demo.com) (Configured via Global HTTPS Load Balancer in `ge-edu-demo` & Cloud DNS in `playroy-beast`)
 * **Access Mode:** Domain-restricted access (enforced via active Organization Policies). Public unauthenticated access (`allUsers` binding) can be added by temporarily bypassing domain restriction constraints in the GCP Console.
 * **Cleanup Status:** Old duplicate deployments (`ge-edu-portal` and its Artifact Registry repository in `us-west1`) have been fully deleted and pruned.
 
@@ -184,33 +185,20 @@ Following any deployment of modifications, enhancements, or bug fixes:
 ############# 7. App State & Progress
  
 ##### Accomplished Tasks (Latest Session Milestone)
+* **Custom Domain Mapping & HTTPS Infrastructure (100% Complete):**
+  * **Global Load Balancer & Serverless NEG:** Provisioned a global static IP (`8.233.94.15`), a Serverless Network Endpoint Group (`edu-ge-learning-portal-neg` in `asia-east2`), a global backend service, URL map (`edu-ge-learning-portal-url-map`), target HTTPS proxy, and forwarding rule in project `ge-edu-demo`.
+  * **Cloud DNS Record Configuration:** Added an `A` record mapping `edu-ge-learning-portal.royc-demo.com` -> `8.233.94.15` in Cloud DNS zone `royc-demo-com` under GCP project `playroy-beast`.
+  * **Automated SSL Certificate Provisioning:** Created Google-managed SSL certificate `edu-ge-learning-portal-cert` for domain `edu-ge-learning-portal.royc-demo.com`.
 * **Standardized Product-Agnostic Connectors (100% Complete):**
-  * **Restored Missing Connector Form Controls:** Added the missing **LMS Connector** and **Calendar Connector** checkboxes back to the admin Use Case edit/creation modal, giving admins full power to configure all four simulated integration lock-overlays.
-  * **Adopted Product-Agnostic Nomenclature:** Replaced old legacy vendor-specific checkboxes ("OneDrive", "Google Drive", "Email") with clean product-agnostic options: **Drive Connector**, **Email Connector**, **LMS Connector**, and **Calendar Connector** in perfect alignment with AGENT.md brand guidelines.
-  * **Robust Backward-Compatible Hydration:** Implemented case-insensitive mapping logic to translate legacy database fields safely (such as `"OneDrive"`, `"GoogleDrive"`, and `"Email"`) to our premium generic connectors upon form hydration, preventing form state data-loss when saving edited records.
+  * **Restored Missing Connector Form Controls:** Added the missing **LMS Connector** and **Calendar Connector** checkboxes back to the admin Use Case edit/creation modal.
+  * **Adopted Product-Agnostic Nomenclature:** Replaced legacy vendor-specific terms with clean product-agnostic options across the app.
 * **Structured Primary Role Context Dropdown (100% Complete):**
-  * **Converted Free-text to Select Dropdown:** Replaced the fragile free-text input field in the Use Case form with an elegant select dropdown containing standard institution roles (`Lecturer`, `TA`, `Student`, `Program Leader`, `Dean`, `IT Admin`, `SAO`, `Security`, `Finance`).
-  * **Bilingual Translation Support:** Integrated dynamic translation callbacks to automatically localize the options inside the admin role dropdown whenever the active portal language changes.
-  * **Intelligent AI Role Mapping:** Built an algorithmic setter to dynamically parse Vertex AI Gemini-assisted playbooks, case-insensitively mapping suggested text roles (including natural variations like "teacher", "sysadmin", "educator") to our precise predefined dropdown values.
-* **Boot-Time Database Synchronization (100% Complete):**
-  * **Automatic Seed Reconstruction:** Extended the sandboxed database seeding engine inside `server.js` to automatically synchronize and rebuild both the `"su_helpdesk"` and `"at_risk_cohort"` default configurations on boot. This ensures that the `"at_risk_cohort"` early-warning system's essential `LMS Connector` and `SIS Database Connector` definitions are safely reconstructed in existing SQLite/PostgreSQL instances.
-* **Continuous Integration & Cloud Run Releases (100% Complete):**
-  * **Automated Git Push:** Configured git identity and committed all changes securely, pushing code updates safely to the upstream repository.
-  * **Google Cloud Run Production Deployment:** Executed source-based container builds via Cloud Build, rolling out revision updates directly to the live production endpoint serving active student/faculty traffic.
-* **AI Playbook Suggestion & Comparison Enhancement (100% Complete):**
-  * **Gemini Metadata Suggestions Enabled:** Updated the backend prompt schema inside `server.js` to allow the Vertex AI Gemini model to update and recommend modifications to **Required Gemini Features**, **Required Connectors**, and the **Enable Dual-Mode Template with Advanced Prompt** flag based on user instructions.
-  * **Interactive Form Hydration:** Upgraded `applyGeminiSuggestions` in `app.js` to dynamically check/uncheck the features and connectors checkboxes and toggle the Dual-Mode form state when suggestions are accepted. Standardized form values are populated for both modes to ensure zero-field-loss on save.
-  * **Side-by-Side Metadata Diff Viewer:** Extended `showDiffViewer` inside `app.js` to compile and display comparative side-by-side diff comparisons for Features, Connectors, and Dual-Mode flags, making all structural revisions completely transparent.
-  * **Smart Multi-Mode Rendering:** Configured the diff viewer to render advanced prompt comparisons if Dual-Mode is active on either the current or the suggested version, preventing hidden field updates.
-* **Automated Infrastructure Hardening (100% Complete):**
-  * **Default Credentials Deletion:** Hardened Terraform configuration by removing hardcoded plain passwords (`"HKEduDemo2026"`, `"HKEduDemo"`) from `variables.tf`, enforcing secure input parameter overrides instead.
-  * **Template Blueprint Creation:** Created `terraform/terraform.tfvars.example` specifying non-sensitive values while guiding users to supply database/admin passwords via zero-disk options.
-  * **Secure Parameter Inject Documentation:** Added rich inline-documentation to `variables.tf` and modified `README.md` to instruct operators on secure environment variables injection (`TF_VAR_db_password` etc.) and interactive fallback prompts.
-  * **State Boundary Resolution:** Documented why standard state-persisted resources (like SQL users and Cloud Run) cannot accept `ephemeral = true` variables, providing clear architectural guidance on resolving state-leaks.
-  * **Cloud Resource Manager Resolution:** Appended `"cloudresourcemanager.googleapis.com"` right inside our `google_project_service.apis` list in `main.tf` to enable CRM API within the resource apply flow itself.
-  * **Robust Project Number Bypass:** Added an optional `project_number` variable to `variables.tf` and modified `main.tf` to make the data lookup block (`data.google_project.project`) conditional. This completely bypasses the CRM lookup constraint if the numeric project number is supplied directly in tfvars/env vars.
+  * **Converted Free-text to Select Dropdown:** Integrated bilingual translation callbacks and AI role mapping setters.
+* **Dual Prompt Mode Generation & Modification Consistency (100% Complete):**
+  * **System Prompt Constraint Alignment:** Enforced strict rules in `server.js` (`/api/admin/generate-gemini`) requiring Gemini to keep the advanced prompt (`advancedPrompt`) closely similar to the basic prompt (`prompt`) in dual prompt mode.
+  * **Step & Wording Parity:** Configured generation directives to preserve identical step count, sequence, tone, and phrasing across basic and advanced modes, replacing only connector-automated steps with manual file upload/copy-paste processes in basic mode (and vice versa).
 
 ### Next Steps & Continuous Polish
-1. **User Onboarding Validation:** Continuously monitor portal signups and onboarding wizard completions to confirm error-free role filter matches.
-2. **AI Tuning Oversight:** Monitor prompt drafting response payloads to verify consistent product-agnostic naming under complex custom instructions.
-3. **Log Analytics Backup:** Validate SVG trend charts for real-time Page View and Deployment tracking.
+1. **SSL Certificate Issuance Monitoring:** Check provisioning status of `edu-ge-learning-portal-cert` until it transitions from `PROVISIONING` to `ACTIVE` (typically 15-30 minutes).
+2. **User Onboarding Validation:** Continuously monitor portal signups and onboarding wizard completions to confirm error-free role filter matches.
+3. **AI Tuning Oversight:** Monitor prompt drafting response payloads to verify consistent product-agnostic naming and dual prompt parity under complex custom instructions.
