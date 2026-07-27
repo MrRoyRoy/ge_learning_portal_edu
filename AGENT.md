@@ -200,6 +200,7 @@ Following any deployment of modifications, enhancements, or bug fixes:
 * **Instant Admin-to-User Portal Use Case Synchronization (100% Complete):**
   * **Real-time In-Memory & DOM Re-rendering:** Updated `saveAdminUseCase()` and `deleteAdminUseCase()` in `app.js` to immediately trigger `loadUseCasesFromServer().then(() => renderUseCases())` upon successful admin save/delete/import operations, ensuring newly added or edited playbooks appear instantly in the user view without requiring a page refresh.
   * **Admin View Full Visibility & Role/Level Filtering:** Restored `appState.isAdmin === true` override in `renderUseCases()` ([app.js](file:///Users/roycheung/Desktop/dev-projects/edu-ge-adoption-portal/app.js#L2255-L2285)) so administrators can see all use cases (including custom/imported playbooks like *"Admissions Marketing Campaign & Applicant Engagement Strategy"*) across both the Admin Portal and Learning Portal simulation views without restriction.
+  * **5-Day Badge Recency Window:** Updated `getUsecaseBadgeHtml()` in [app.js](file:///Users/roycheung/Desktop/dev-projects/edu-ge-adoption-portal/app.js#L2210-L2242) so that `New` and `Updated` status badges are strictly displayed for use cases created or modified within the last **5 days** (down from 30 days).
 
 ### Next Steps & Continuous Polish
 1. **SSL Certificate Issuance Monitoring:** Check provisioning status of `edu-ge-learning-portal-cert` until it transitions from `PROVISIONING` to `ACTIVE` (typically 15-30 minutes).
