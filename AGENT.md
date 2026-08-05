@@ -194,8 +194,9 @@ Following any deployment of modifications, enhancements, or bug fixes:
   * **Adopted Product-Agnostic Nomenclature:** Replaced legacy vendor-specific terms with clean product-agnostic options across the app.
 * **Structured Primary Role Context Dropdown (100% Complete):**
   * **Converted Free-text to Select Dropdown:** Integrated bilingual translation callbacks and AI role mapping setters.
-* **Website Icon Integration (100% Complete):**
-  * **Favicon & Apple Touch Icons:** Linked `ge-edu-portal.png` in `<head>` of [index.html](file:///Users/roycheung/Desktop/dev-projects/edu-ge-adoption-portal/index.html) as the primary website icon (`favicon`) and Apple Touch icon.
+* **Website Icon Optimization & Route Delivery (100% Complete):**
+  * **Multi-Format Favicon Suite:** Generated optimized `favicon.ico` (16x16, 32x32, 48x48, 64x64 multi-resolution ICO), `favicon-32x32.png`, `favicon-192x192.png`, and `apple-touch-icon.png` (180x180) from `ge-edu-portal.png`.
+  * **Explicit Express Route & HTML Links:** Configured explicit `GET /favicon.ico` route in [server.js](file:///Users/roycheung/Desktop/dev-projects/edu-ge-adoption-portal/server.js#L29-L32) and comprehensive icon link declarations in [index.html](file:///Users/roycheung/Desktop/dev-projects/edu-ge-adoption-portal/index.html#L9-L15) for cross-browser & mobile tab rendering.
 * **Dual Prompt Generation Architecture Enhancement (100% Complete):**
   * **Advanced-First Prompt Derivation:** Refined Gemini system prompt generation rules in [server.js](file:///Users/roycheung/Desktop/dev-projects/edu-ge-adoption-portal/server.js#L1344-L1350) to mandate generating the **Advanced Prompt** (`advancedPrompt`) FIRST with full connector workflows, and then modifying it to derive the **Basic Prompt** (`prompt`) without connectors.
   * **Instruction Integrity & Structural Parity:** Guaranteed identical tone, structure, bullet sequence, and core rules across dual prompts, ensuring basic and advanced prompts remain closely aligned.

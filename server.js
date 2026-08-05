@@ -26,6 +26,11 @@ app.use(session({
   }
 }));
 
+// Explicit Favicon Route Handler
+app.get('/favicon.ico', (req, res) => {
+  res.sendFile(path.join(__dirname, 'favicon.ico'));
+});
+
 // Serve static assets from project root and public subdirectories
 app.use(express.static(__dirname));
 
