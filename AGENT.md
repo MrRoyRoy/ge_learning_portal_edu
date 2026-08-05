@@ -194,13 +194,11 @@ Following any deployment of modifications, enhancements, or bug fixes:
   * **Adopted Product-Agnostic Nomenclature:** Replaced legacy vendor-specific terms with clean product-agnostic options across the app.
 * **Structured Primary Role Context Dropdown (100% Complete):**
   * **Converted Free-text to Select Dropdown:** Integrated bilingual translation callbacks and AI role mapping setters.
-* **Dual Prompt Mode Generation & Modification Consistency (100% Complete):**
-  * **System Prompt Constraint Alignment:** Enforced strict rules in `server.js` (`/api/admin/generate-gemini`) requiring Gemini to keep the advanced prompt (`advancedPrompt`) closely similar to the basic prompt (`prompt`) in dual prompt mode.
-  * **Step & Wording Parity:** Configured generation directives to preserve identical step count, sequence, tone, and phrasing across basic and advanced modes, replacing only connector-automated steps with manual file upload/copy-paste processes in basic mode (and vice versa).
-* **Instant Admin-to-User Portal Use Case Synchronization (100% Complete):**
-  * **Real-time In-Memory & DOM Re-rendering:** Updated `saveAdminUseCase()` and `deleteAdminUseCase()` in `app.js` to immediately trigger `loadUseCasesFromServer().then(() => renderUseCases())` upon successful admin save/delete/import operations, ensuring newly added or edited playbooks appear instantly in the user view without requiring a page refresh.
-  * **Admin View Full Visibility & Role/Level Filtering:** Restored `appState.isAdmin === true` override in `renderUseCases()` ([app.js](file:///Users/roycheung/Desktop/dev-projects/edu-ge-adoption-portal/app.js#L2255-L2285)) so administrators can see all use cases (including custom/imported playbooks like *"Admissions Marketing Campaign & Applicant Engagement Strategy"*) across both the Admin Portal and Learning Portal simulation views without restriction.
-  * **5-Day Badge Recency Window:** Updated `getUsecaseBadgeHtml()` in [app.js](file:///Users/roycheung/Desktop/dev-projects/edu-ge-adoption-portal/app.js#L2210-L2242) so that `New` and `Updated` status badges are strictly displayed for use cases created or modified within the last **5 days** (down from 30 days).
+* **Website Icon Integration (100% Complete):**
+  * **Favicon & Apple Touch Icons:** Linked `ge-edu-portal.png` in `<head>` of [index.html](file:///Users/roycheung/Desktop/dev-projects/edu-ge-adoption-portal/index.html) as the primary website icon (`favicon`) and Apple Touch icon.
+* **Dual Prompt Generation Architecture Enhancement (100% Complete):**
+  * **Advanced-First Prompt Derivation:** Refined Gemini system prompt generation rules in [server.js](file:///Users/roycheung/Desktop/dev-projects/edu-ge-adoption-portal/server.js#L1344-L1350) to mandate generating the **Advanced Prompt** (`advancedPrompt`) FIRST with full connector workflows, and then modifying it to derive the **Basic Prompt** (`prompt`) without connectors.
+  * **Instruction Integrity & Structural Parity:** Guaranteed identical tone, structure, bullet sequence, and core rules across dual prompts, ensuring basic and advanced prompts remain closely aligned.
 
 ### Next Steps & Continuous Polish
 1. **SSL Certificate Issuance Monitoring:** Check provisioning status of `edu-ge-learning-portal-cert` until it transitions from `PROVISIONING` to `ACTIVE` (typically 15-30 minutes).
