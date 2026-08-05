@@ -27,6 +27,9 @@ COPY server.js ./
 COPY app.js ./
 COPY index.html ./
 COPY style.css ./
+COPY ge-edu-portal.png ./
+COPY favicon* ./
+COPY apple-touch-icon.png ./
 
 # Expose standard routing port
 EXPOSE 8080
