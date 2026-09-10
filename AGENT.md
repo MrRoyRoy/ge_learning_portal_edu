@@ -16,6 +16,7 @@ The application is built as a high-fidelity, dynamic web application supported b
 * **Authentication Gateways:** Enforced via `express-session` cookies and `bcryptjs` hashing.
   * **Master Admin Account:** `edu_portal_s_admin` with password `HKEduDemo2026`.
   * **Admin Assist Account:** `edu_portal_admin` with password `HKEduDemo` (cannot Create, Update, or Delete use case playbooks).
+  * **Demo Admin Account:** `demo-admin` with password `12345678` (inherits identical assistant admin rights and permissions as `edu_portal_admin`).
   * **Standard Accounts:** Email-based provisioning with auto-generated 10-character temp passwords. Force-reset of credentials is strictly enforced on first login.
 * **Markup & Client Logic:** Vanilla HTML5 paired with modular ES6+ client-side logic (`app.js`). Hydrates page templates dynamically from `/api/use-cases` on session validation.
 * **Styles & Visual Identity:** Pure Swiss Minimalism Vanilla CSS (`style.css`), powered by CSS variable maps. **TailwindCSS is strictly avoided** to preserve precise typographic scale and structural grids.

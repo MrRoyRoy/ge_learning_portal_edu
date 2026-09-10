@@ -497,6 +497,7 @@ app.post('/api/auth/login', async (req, res) => {
 
   const superAdminPassword = process.env.SUPER_ADMIN_PASSWORD || 'HKEduDemo2026';
   const adminPassword = process.env.ADMIN_PASSWORD || 'HKEduDemo';
+  const demoAdminPassword = process.env.DEMO_ADMIN_PASSWORD || '12345678';
 
   // Admin bypass credentials
   if (email.trim() === 'edu_portal_s_admin' && password === superAdminPassword) {
@@ -507,6 +508,12 @@ app.post('/api/auth/login', async (req, res) => {
   // Admin Assist bypass credentials
   if (email.trim() === 'edu_portal_admin' && password === adminPassword) {
     req.session.user = { email: 'edu_portal_admin', isAdmin: true, isAssist: true };
+    return res.json({ success: true, isAdmin: true });
+  }
+
+  // Demo Admin credentials (cloning edu_portal_admin permissions)
+  if (email.trim() === 'demo-admin' && password === demoAdminPassword) {
+    req.session.user = { email: 'demo-admin', isAdmin: true, isAssist: true };
     return res.json({ success: true, isAdmin: true });
   }
 
