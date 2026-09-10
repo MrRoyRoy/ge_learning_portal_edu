@@ -185,6 +185,11 @@ Following any deployment of modifications, enhancements, or bug fixes:
 ############# 7. App State & Progress
  
 ##### Accomplished Tasks (Latest Session Milestone)
+* **Demo Instance & Data Isolation Provisioning (100% Complete):**
+  * **Dedicated Demo Database:** Created PostgreSQL database `demo_edu_ge_adoption_portal` in Cloud SQL instance `your-sql-instance` (Project: `your-gcp-project-id`, Region: `your-region`).
+  * **Dedicated Demo Cloud Run Instance:** Deployed `demo-edu-ge-adoption-portal` to Google Cloud Run in `your-region`, connected directly via Unix socket to `your-gcp-project-id:your-region:your-sql-instance` with database `demo_edu_ge_adoption_portal`.
+  * **Automated Table & Playbook Seeding:** Verified automatic schema setup and 14 playbook seeding upon first boot.
+  * **Demo Endpoint URL:** [https://demo-edu-ge-adoption-portal-PROJECT_NUMBER.your-region.run.app](https://demo-edu-ge-adoption-portal-PROJECT_NUMBER.your-region.run.app)
 * **Custom Domain Mapping & HTTPS Infrastructure (100% Complete):**
   * **Global Load Balancer & Serverless NEG:** Provisioned a global static IP (`203.0.113.10`), a Serverless Network Endpoint Group (`your-service-neg` in `your-region`), a global backend service, URL map (`your-service-url-map`), target HTTPS proxy, and forwarding rule in project `your-gcp-project-id`.
   * **Cloud DNS Record Configuration:** Added an `A` record mapping `portal.example.com` -> `203.0.113.10` in Cloud DNS zone `your-dns-zone` under GCP project `your-dns-project`.
@@ -203,6 +208,6 @@ Following any deployment of modifications, enhancements, or bug fixes:
   * **Instruction Integrity & Structural Parity:** Guaranteed identical tone, structure, bullet sequence, and core rules across dual prompts, ensuring basic and advanced prompts remain closely aligned.
 
 ### Next Steps & Continuous Polish
-1. **SSL Certificate Issuance Monitoring:** Check provisioning status of `your-service-cert` until it transitions from `PROVISIONING` to `ACTIVE` (typically 15-30 minutes).
-2. **User Onboarding Validation:** Continuously monitor portal signups and onboarding wizard completions to confirm error-free role filter matches.
+1. **Demo Instance Exploration:** Test demo playbooks, account creations, and analytics on `demo-edu-ge-adoption-portal`.
+2. **SSL Certificate Issuance Monitoring:** Check provisioning status of `your-service-cert` until it transitions from `PROVISIONING` to `ACTIVE`.
 3. **AI Tuning Oversight:** Monitor prompt drafting response payloads to verify consistent product-agnostic naming and dual prompt parity under complex custom instructions.
