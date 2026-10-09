@@ -788,7 +788,8 @@ input:checked + .slider:before {
 .card-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 6px;
+  align-items: center;
 }
 
 .tag {
@@ -799,6 +800,49 @@ input:checked + .slider:before {
   padding: 2px 6px;
   border-radius: 2px; /* Sharp look */
   border: 1px solid var(--border-tag);
+}
+
+.tag-icon-only {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  border: 1px solid var(--border-tag);
+  background: var(--bg-tag-feature);
+  color: var(--text-secondary);
+  transition: var(--transition-fast);
+  cursor: default;
+}
+
+.tag-icon-only .material-symbols-outlined {
+  font-size: 15px;
+}
+
+.tag-icon-only:hover {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+  background: var(--color-primary-glow);
+}
+
+.tag-full {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 4px 10px;
+  border-radius: 4px;
+  border: 1px solid var(--border-tag);
+  background: var(--bg-tag-feature);
+  color: var(--text-secondary);
+}
+
+.tag-full .material-symbols-outlined {
+  font-size: 15px;
 }
 
 .tag-feature {
@@ -813,10 +857,11 @@ input:checked + .slider:before {
 }
 
 .card-title {
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 1.22rem;
+  font-weight: 800;
   color: var(--text-primary);
-  line-height: 1.35;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
 }
 
 .card-summary {
@@ -992,12 +1037,14 @@ input:checked + .slider:before {
 }
 
 .modal-title {
-  font-size: 18px;
-  font-weight: 600;
+  font-size: 1.45rem;
+  font-weight: 800;
   color: var(--text-primary);
   background: none;
   -webkit-background-clip: unset;
   -webkit-text-fill-color: unset;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
 }
 
 .close-btn {
@@ -1036,7 +1083,7 @@ input:checked + .slider:before {
 .modal-section {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .section-label {
@@ -1052,7 +1099,149 @@ input:checked + .slider:before {
 }
 
 .section-label .material-symbols-outlined {
-  font-size: 14px;
+  font-size: 15px;
+}
+
+/* Claude Prompt Library Style Collapsible Accordion */
+.prompt-collapsible {
+  border: 1px solid var(--border-glass);
+  border-radius: 6px;
+  background: var(--bg-dark-card);
+  overflow: hidden;
+  transition: border-color 0.2s ease;
+}
+
+.prompt-collapsible[open] {
+  border-color: var(--border-glass-focused);
+}
+
+.prompt-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  cursor: pointer;
+  font-family: var(--font-heading);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-primary);
+  background: var(--bg-sidebar);
+  user-select: none;
+  list-style: none;
+  transition: background 0.15s ease;
+}
+
+.prompt-summary::-webkit-details-marker {
+  display: none;
+}
+
+.prompt-summary:hover {
+  background: var(--bg-nav-btn-hover);
+}
+
+.prompt-summary-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.prompt-summary-badge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: var(--color-primary-glow);
+  color: var(--color-primary);
+  border: 1px solid var(--color-primary);
+}
+
+.prompt-summary-chevron {
+  font-size: 18px;
+  transition: transform 0.2s ease;
+  color: var(--text-secondary);
+}
+
+.prompt-collapsible[open] .prompt-summary-chevron {
+  transform: rotate(180deg);
+}
+
+.prompt-content-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  border-top: 1px solid var(--border-glass);
+}
+
+/* Dynamic Fill in the Variables Panel */
+.prompt-variables-panel {
+  background: var(--bg-dark-surface);
+  border: 1px solid var(--border-glass);
+  border-radius: 6px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.prompt-variables-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.prompt-variables-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.prompt-variables-subtitle {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.prompt-variables-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.variable-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.variable-label {
+  font-family: monospace;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.variable-input {
+  background: var(--bg-card);
+  border: 1px solid var(--border-glass);
+  border-radius: 4px;
+  color: var(--text-primary);
+  font-size: 12px;
+  padding: 7px 10px;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.variable-input:focus {
+  border-color: var(--color-primary);
 }
 
 /* Prompt Box Sandbox Area */
@@ -1101,24 +1290,26 @@ input:checked + .slider:before {
   font-size: 12px;
 }
 
+/* Simplified Steps with Larger, Cleaner Typography */
 .steps-list {
   list-style-type: none;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
 .step-item {
   display: flex;
-  gap: 10px;
-  font-size: 13px;
-  color: var(--text-secondary);
-  line-height: 1.5;
+  gap: 12px;
+  font-size: 14px;
+  color: var(--text-primary);
+  line-height: 1.55;
+  align-items: flex-start;
 }
 
 .step-num {
-  width: 18px;
-  height: 18px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   background: var(--color-primary-glow);
   border: 1px solid var(--color-primary);
@@ -1127,9 +1318,34 @@ input:checked + .slider:before {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 10px;
+  font-size: 11px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* Manual Fallback Tip Box */
+.manual-tip-box {
+  background: rgba(245, 158, 11, 0.07);
+  border: 1px solid rgba(245, 158, 11, 0.22);
+  border-radius: 6px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.manual-tip-box .material-symbols-outlined {
+  font-size: 18px;
+  color: #f59e0b;
   flex-shrink: 0;
   margin-top: 1px;
+}
+
+.manual-tip-text strong {
+  color: var(--text-primary);
 }
 
 /* Pro Tip Boxes */

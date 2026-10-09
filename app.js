@@ -1796,12 +1796,6 @@ function initLanguage() {
     updateUILanguage();
     renderUseCases();
 
-    // Re-render timeline if currently active
-    const timelineView = document.getElementById("timelineView");
-    if (timelineView && timelineView.style.display !== "none") {
-      renderTimeline();
-    }
-
     // Also reload administrative use cases list if active
     const adminPortal = document.getElementById("adminPortal");
     if (adminPortal && adminPortal.style.display !== "none") {
@@ -2110,7 +2104,6 @@ async function handleOnboardingSubmit() {
   // Fetch use cases and render
   await loadUseCasesFromServer();
   renderUseCases();
-  renderTimeline();
   
   const welcomeText = uiTranslations[lang].profileSetSuccess;
   showToast(welcomeText, "success");
@@ -2204,6 +2197,53 @@ function setupConnectorToggles() {
 function handleSearchInput(e) {
   appState.searchQuery = e.target.value.toLowerCase();
   renderUseCases();
+}
+
+// Helper to get Material Symbol icon for feature tags and institution levels
+function getTagIcon(type, name) {
+  const n = (name || "").toLowerCase().trim();
+  if (type === "verified") return "verified";
+  if (type === "feature") {
+    if (n.includes("agent")) return "smart_toy";
+    if (n.includes("notebook")) return "menu_book";
+    if (n.includes("research")) return "travel_explore";
+    if (n.includes("canvas")) return "draw";
+    if (n.includes("image")) return "palette";
+    if (n.includes("video")) return "videocam";
+    if (n.includes("code")) return "terminal";
+    return "extension";
+  }
+  if (type === "level") {
+    if (n.includes("university") || n.includes("college")) return "account_balance";
+    if (n.includes("high school")) return "school";
+    if (n.includes("primary")) return "child_care";
+    if (n.includes("generic")) return "public";
+    if (n.includes("kindergarten")) return "toys";
+    return "domain";
+  }
+  return "label";
+}
+
+// Helper to extract bracketed prompt variables for dynamic 'Fill in the variables' panel
+function extractPromptVariables(promptText) {
+  if (!promptText) return [];
+  // Match [Course Code], [Variable Name], etc., excluding markdown links [text](url) and alerts [!ALERT]
+  const regex = /\[([A-Za-z][A-Za-z0-9\s/_\-']{1,40})\](?!\()/g;
+  const vars = [];
+  const seen = new Set();
+  let match;
+  while ((match = regex.exec(promptText)) !== null) {
+    const raw = match[1].trim();
+    if (!seen.has(raw)) {
+      seen.add(raw);
+      vars.push({
+        token: match[0],
+        key: raw,
+        label: raw
+      });
+    }
+  }
+  return vars;
 }
 
 // Helper to render New and Updated badges for Use Cases created/updated within 5 days
@@ -2387,7 +2427,7 @@ function renderUseCases() {
       const cardTitle = trans ? trans.title : uc.title;
       const cardSummary = trans ? trans.summary : uc.summary;
 
-      // Build Tag Pills HTML
+      // Build Tag Pills HTML - Icon-only tags for small cards with hover tooltips
       let tagsHtml = "";
       const badgeHtml = getUsecaseBadgeHtml(uc, lang);
       if (badgeHtml) {
@@ -2396,17 +2436,19 @@ function renderUseCases() {
 
       if (uc.isVerified) {
         const verifiedLabel = lang === 'en' ? 'Verified' : (lang === 'zh-TW' ? '已驗證' : '已验证');
-        tagsHtml += `<span class="tag" style="background: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.25); color: #10b981; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; text-transform: uppercase; font-size: 10px; letter-spacing: 0.5px;"><span class="material-symbols-outlined" style="font-size: 13px; font-weight: bold;">verified</span>${verifiedLabel}</span>`;
+        tagsHtml += `<span class="tag tag-icon-only" title="${verifiedLabel}" style="background: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.25); color: #10b981;"><span class="material-symbols-outlined" style="font-size: 14px; font-weight: bold;">verified</span></span>`;
       }
 
       uc.features.forEach(f => {
-        tagsHtml += `<span class="tag tag-feature">${f}</span>`;
+        const icon = getTagIcon('feature', f);
+        tagsHtml += `<span class="tag tag-feature tag-icon-only" title="${escapeHtml(f)}"><span class="material-symbols-outlined" style="font-size: 14px;">${icon}</span></span>`;
       });
       if (uc.level && uc.level.length > 0) {
         const displayLevels = uc.level.length > 1 ? ["Generic"] : uc.level;
         displayLevels.forEach(lvl => {
           const levelText = t.levels[lvl] || lvl;
-          tagsHtml += `<span class="tag tag-level">${levelText}</span>`;
+          const icon = getTagIcon('level', lvl);
+          tagsHtml += `<span class="tag tag-level tag-icon-only" title="${escapeHtml(levelText)}"><span class="material-symbols-outlined" style="font-size: 14px;">${icon}</span></span>`;
         });
       }
 
@@ -2578,21 +2620,23 @@ function openUseCaseModal(useCase) {
   // Set Title
   document.getElementById("modalTitle").textContent = title;
 
-  // Set metadata tags
+  // Set metadata tags - Icon with labels for enlarged cards
   let tagsHtml = "";
   if (useCase.isVerified) {
     const verifiedLabel = lang === 'en' ? 'Verified' : (lang === 'zh-TW' ? '已驗證' : '已验证');
-    tagsHtml += `<span class="tag" style="background: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.25); color: #10b981; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; text-transform: uppercase; font-size: 10px; letter-spacing: 0.5px;"><span class="material-symbols-outlined" style="font-size: 13px; font-weight: bold;">verified</span>${verifiedLabel}</span>`;
+    tagsHtml += `<span class="tag tag-full" style="background: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.25); color: #10b981; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px;"><span class="material-symbols-outlined" style="font-size: 14px; font-weight: bold;">verified</span><span>${verifiedLabel}</span></span>`;
   }
 
   useCase.features.forEach(f => {
-    tagsHtml += `<span class="tag tag-feature" style="font-size: 11px;">${f}</span>`;
+    const icon = getTagIcon('feature', f);
+    tagsHtml += `<span class="tag tag-feature tag-full" style="font-size: 11px;"><span class="material-symbols-outlined" style="font-size: 14px;">${icon}</span><span>${f}</span></span>`;
   });
   if (useCase.level && useCase.level.length > 0) {
     const displayLevels = useCase.level.length > 1 ? ["Generic"] : useCase.level;
     displayLevels.forEach(lvl => {
       const levelText = t.levels[lvl] || lvl;
-      tagsHtml += `<span class="tag tag-level" style="font-size: 11px;">${levelText}</span>`;
+      const icon = getTagIcon('level', lvl);
+      tagsHtml += `<span class="tag tag-level tag-full" style="font-size: 11px;"><span class="material-symbols-outlined" style="font-size: 14px;">${icon}</span><span>${levelText}</span></span>`;
     });
   }
   document.getElementById("modalTags").innerHTML = tagsHtml;
@@ -2612,187 +2656,215 @@ function openUseCaseModal(useCase) {
   `;
   body.appendChild(overviewSec);
 
-  // Check if this usecase has connectors
+  // 2. Integration / Connector Requirements (with manual fallback tips)
   const hasConnectors = useCase.connectors && useCase.connectors.length > 0;
-  const isEssential = useCase.connectorEssential !== false; // defaults to essential if not specified
+  if (hasConnectors) {
+    const hasMissing = checkMissingConnector(useCase);
+    const connectorGuide = trans ? trans.connectorGuide : useCase.connectorGuide;
+    
+    let guideHtml = "";
+    if (connectorGuide) {
+      let stepsLi = "";
+      connectorGuide.steps.forEach(s => {
+        stepsLi += `<li>${s}</li>`;
+      });
+      guideHtml = `
+        <div class="setup-guide-box" style="margin-top: 14px;">
+          <div class="setup-guide-header">
+            <span class="material-symbols-outlined">settings_suggest</span>
+            ${connectorGuide.name} ${lang === "en" ? "Setup Instructions" : "部署設定指南"}
+          </div>
+          <ol class="setup-steps">${stepsLi}</ol>
+        </div>
+      `;
+    }
 
-  // Initialize advanced mode based on current live connection state
-  let isAdvanced = false;
-  if (hasConnectors && !isEssential) {
-    const actualConnectorMissing = checkMissingConnector(useCase);
-    isAdvanced = !actualConnectorMissing; // default to true if already connected
+    const firstConnector = useCase.connectors[0];
+    const statusText = hasMissing ? t.inactiveAccessRestricted : t.linkedAndActive;
+
+    const integrationSec = document.createElement("div");
+    integrationSec.className = "modal-section";
+    integrationSec.style.marginBottom = "16px";
+    integrationSec.innerHTML = `
+      <h4 class="section-label" style="margin-bottom: 12px;">
+        <span class="material-symbols-outlined">api</span> ${t.enterpriseIntegrationLabel}
+      </h4>
+      <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.02); border: 1px solid var(--border-glass); border-radius: 12px; padding: 14px 18px;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="width: 10px; height: 10px; border-radius: 50%; background: ${hasMissing ? 'var(--color-danger)' : 'var(--color-success)'}; box-shadow: 0 0 10px ${hasMissing ? 'var(--color-danger)' : 'var(--color-success)'}"></div>
+          <span style="font-size: 13px; font-weight: 600; color: var(--text-primary)">
+            Connector: ${statusText}
+          </span>
+        </div>
+        ${hasMissing ? `
+          <button class="nav-button nav-button-primary" style="height: 32px; font-size: 12px; border-radius: 8px;" onclick="handleQuickUnlock('${firstConnector}'); openUseCaseModal(JSON.parse('${escapeQuotesForOnClick(JSON.stringify(useCase))}'));">${t.linkConnector}</button>
+        ` : `
+          <span style="font-size: 12px; color: var(--color-success); font-weight: 700; display: flex; align-items: center; gap: 4px;">
+            <span class="material-symbols-outlined" style="font-size: 18px;">cloud_done</span> ${t.encryptedFederatedActive}
+          </span>
+        `}
+      </div>
+      ${guideHtml}
+      <div class="manual-tip-box" style="margin-top: 14px;">
+        <span class="material-symbols-outlined manual-tip-icon">tips_and_updates</span>
+        <div class="manual-tip-content">
+          <div class="manual-tip-title">${lang === "en" ? "No Connector Active? Manual Upload Tip" : (lang === "zh-TW" ? "未啟用連接器？手動上傳提示" : "未启用连接器？手动上传提示")}</div>
+          <p class="manual-tip-text">${lang === "en" ? "If enterprise connectors are not configured or offline, you can directly upload and attach your reference files, rubrics, or lecture notes into the Gemini chat to achieve identical results." : (lang === "zh-TW" ? "若尚未配置企業連接器或處於離線狀態，您可以直接在 Gemini 對話框中手動上傳參考文件、評分規準或教材檔案，即可達到完全相同的分析成效。" : "若尚未配置企业连接器或处于离线状态，您可以直接在 Gemini 对话框中手动上传参考文档、评分规准或教材档案，即可达到完全相同的分析成效。")}</p>
+        </div>
+      </div>
+    `;
+    body.appendChild(integrationSec);
   }
 
-  // 2. Integration / Connector Requirements Container
-  const integrationContainer = document.createElement("div");
-  body.appendChild(integrationContainer);
+  // 3. Operational Steps (Clean & Simple)
+  const currentSteps = trans?.steps || useCase.steps;
+  const currentPrompt = trans?.prompt || useCase.prompt;
+  const currentProTip = trans?.proTip || useCase.proTip;
 
-  // 3. Dynamic Sections Container (for Steps, Prompt, and Pro Tip)
-  const dynamicContainer = document.createElement("div");
-  body.appendChild(dynamicContainer);
-
-  function renderDynamicParts() {
-    dynamicContainer.innerHTML = "";
-    integrationContainer.innerHTML = "";
-
-    // A. Render integration box if hasConnectors
-    if (hasConnectors) {
-      const hasMissing = checkMissingConnector(useCase);
-      const connectorGuide = trans ? trans.connectorGuide : useCase.connectorGuide;
-      
-      let guideHtml = "";
-      if (connectorGuide && (isEssential || isAdvanced)) {
-        let stepsLi = "";
-        connectorGuide.steps.forEach(s => {
-          stepsLi += `<li>${s}</li>`;
-        });
-        guideHtml = `
-          <div class="setup-guide-box" style="margin-top: 16px;">
-            <div class="setup-guide-header">
-              <span class="material-symbols-outlined">settings_suggest</span>
-              ${connectorGuide.name} ${lang === "en" ? "Setup Instructions" : "部署設定指南"}
-            </div>
-            <ol class="setup-steps">${stepsLi}</ol>
-          </div>
-        `;
-      }
-
-      const firstConnector = useCase.connectors[0];
-      const statusText = hasMissing ? t.inactiveAccessRestricted : t.linkedAndActive;
-
-      let innerContentHtml = "";
-      if (isEssential || isAdvanced) {
-        innerContentHtml = `
-          <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.02); border: 1px solid var(--border-glass); border-radius: 12px; padding: 16px 20px;">
-            <div style="display: flex; align-items: center; gap: 12px;">
-              <div style="width: 10px; height: 10px; border-radius: 50%; background: ${hasMissing ? 'var(--color-danger)' : 'var(--color-success)'}; box-shadow: 0 0 10px ${hasMissing ? 'var(--color-danger)' : 'var(--color-success)'}"></div>
-              <span style="font-size: 14px; font-weight: 600; color: var(--text-primary)">
-                Connector: ${statusText}
-              </span>
-            </div>
-            ${hasMissing ? `
-              <button class="nav-button nav-button-primary" style="height: 32px; font-size: 12px; border-radius: 8px;" onclick="handleQuickUnlock('${firstConnector}'); openUseCaseModal(JSON.parse('${escapeQuotesForOnClick(JSON.stringify(useCase))}'));">${t.linkConnector}</button>
-            ` : `
-              <span style="font-size: 12px; color: var(--color-success); font-weight: 700; display: flex; align-items: center; gap: 4px;">
-                <span class="material-symbols-outlined" style="font-size: 18px;">cloud_done</span> ${t.encryptedFederatedActive}
-              </span>
-            `}
-          </div>
-          ${guideHtml}
-        `;
-      } else {
-        innerContentHtml = `
-          <div style="display: flex; align-items: flex-start; gap: 12px; background: rgba(255, 255, 255, 0.01); border: 1px dashed var(--border-glass); border-radius: 12px; padding: 16px 20px;">
-            <span class="material-symbols-outlined" style="color: var(--text-muted); font-size: 20px;">cloud_off</span>
-            <div>
-              <div style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">${lang === "en" ? "Standalone Mode (Manual File Uploads)" : (lang === "zh-TW" ? "標準模式（手動上傳檔案）" : "标准模式（手动上传档案）")}</div>
-              <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">${lang === "en" ? "Currently showing manual workflow. Use the toggle above to enable real-time connector setup." : (lang === "zh-TW" ? "目前顯示手動作業流程。開啟上方切換器以啟用即時連接器整合部署設定。" : "目前显示手动作业流程。开启上方切换器以启用即时连接器整合部署设定。")}</div>
-            </div>
-          </div>
-        `;
-      }
-
-      const integrationSec = document.createElement("div");
-      integrationSec.className = "modal-section";
-      integrationSec.style.marginBottom = "8px";
-      integrationSec.innerHTML = `
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 12px;">
-          <h4 class="section-label" style="margin-bottom: 0;">
-            <span class="material-symbols-outlined">api</span> ${t.enterpriseIntegrationLabel}
-          </h4>
-          ${(!isEssential) ? `
-            <div style="display: flex; align-items: center; gap: 10px; background: rgba(79, 70, 229, 0.06); border: 1px dashed rgba(79, 70, 229, 0.2); border-radius: 20px; padding: 4px 12px;">
-              <span style="font-size: 12px; font-weight: 700; color: var(--color-primary);">${lang === "en" ? "Extend to Advanced Connector" : (lang === "zh-TW" ? "啟用進階連接器" : "启用进阶连接器")}</span>
-              <label class="switch">
-                <input type="checkbox" id="modalConnectorToggle" ${isAdvanced ? 'checked' : ''}>
-                <span class="slider round"></span>
-              </label>
-            </div>
-          ` : ''}
-        </div>
-        ${innerContentHtml}
+  if (currentSteps && currentSteps.length > 0) {
+    const stepsSec = document.createElement("div");
+    stepsSec.className = "modal-section";
+    let stepLiHtml = "";
+    currentSteps.forEach((step, idx) => {
+      stepLiHtml += `
+        <li class="step-item">
+          <div class="step-num">${idx + 1}</div>
+          <div>${step}</div>
+        </li>
       `;
-      integrationContainer.appendChild(integrationSec);
+    });
+    stepsSec.innerHTML = `
+      <h4 class="section-label">
+        <span class="material-symbols-outlined">route</span> ${t.operationalSteps}
+      </h4>
+      <ul class="steps-list">${stepLiHtml}</ul>
+    `;
+    body.appendChild(stepsSec);
+  }
 
-      // Bind listener
-      const toggleEl = document.getElementById("modalConnectorToggle");
-      if (toggleEl) {
-        toggleEl.addEventListener("change", (e) => {
-          isAdvanced = e.target.checked;
-          renderDynamicParts();
-        });
-      }
-    }
+  // 4. Sample Prompt with Claude-style Collapsible Disclosure & God of Prompt Variables Panel
+  if (currentPrompt) {
+    const promptSec = document.createElement("div");
+    promptSec.className = "modal-section";
+    promptSec.style.marginTop = "24px";
 
-    // B. Get active fields (Steps, Prompt, ProTip)
-    let currentSteps, currentPrompt, currentProTip;
-    if (hasConnectors && !isEssential && isAdvanced) {
-      currentSteps = trans ? (trans.advancedSteps || trans.steps) : (useCase.advancedSteps || useCase.steps);
-      currentPrompt = trans ? (trans.advancedPrompt || trans.prompt) : (useCase.advancedPrompt || useCase.prompt);
-      currentProTip = trans ? (trans.advancedProTip || trans.proTip) : (useCase.advancedProTip || useCase.proTip);
-    } else {
-      currentSteps = trans ? trans.steps : useCase.steps;
-      currentPrompt = trans ? trans.prompt : useCase.prompt;
-      currentProTip = trans ? trans.proTip : useCase.proTip;
-    }
+    // Extract dynamic variables from prompt
+    const promptVars = extractPromptVariables(currentPrompt);
 
-    // C. Render Steps List
-    if (currentSteps && currentSteps.length > 0) {
-      const stepsSec = document.createElement("div");
-      stepsSec.className = "modal-section";
-      let stepLiHtml = "";
-      currentSteps.forEach((step, idx) => {
-        stepLiHtml += `
-          <li class="step-item">
-            <div class="step-num">${idx + 1}</div>
-            <div>${step}</div>
-          </li>
+    let variablesPanelHtml = "";
+    if (promptVars.length > 0) {
+      let varInputsHtml = "";
+      promptVars.forEach((v, vIdx) => {
+        varInputsHtml += `
+          <div class="variable-input-group">
+            <label class="variable-label" for="promptVarInput_${vIdx}">${escapeHtml(v.label)}</label>
+            <input type="text" class="variable-input" id="promptVarInput_${vIdx}" data-token="${escapeHtml(v.token)}" placeholder="${escapeHtml(v.label)}..." />
+          </div>
         `;
       });
-      stepsSec.innerHTML = `
-        <h4 class="section-label">
-          <span class="material-symbols-outlined">route</span> ${t.operationalSteps}
-        </h4>
-        <ul class="steps-list">${stepLiHtml}</ul>
-      `;
-      dynamicContainer.appendChild(stepsSec);
-    }
 
-    // D. Render Prompt Box with padding from Operational Steps above
-    if (currentPrompt) {
-      const promptSec = document.createElement("div");
-      promptSec.className = "modal-section";
-      promptSec.style.marginTop = "28px"; // Spacing from last step of operational steps
-      promptSec.innerHTML = `
-        <h4 class="section-label">
-          <span class="material-symbols-outlined">terminal</span> ${t.promptSandbox}
-        </h4>
-        <div class="prompt-box" id="modalPromptText">${escapeHtml(currentPrompt)}<button class="copy-prompt-btn" onclick="copyPromptToClipboard()"><span class="material-symbols-outlined" style="font-size: 16px;">content_copy</span> ${t.copyPrompt}</button>
-        </div>
-      `;
-      dynamicContainer.appendChild(promptSec);
-    }
+      const varPanelTitle = lang === "zh-TW" ? "填寫變數參數" : (lang === "zh-CN" ? "填写变量参数" : "Fill in the variables");
+      const varPanelDesc = lang === "zh-TW" ? "輸入數值以即時替換提示詞變數" : (lang === "zh-CN" ? "输入数值以即时替换提示词变量" : "Customize variables in real-time");
 
-    // E. Render Pro Tip Box with padding from Prompt Box above
-    if (currentProTip) {
-      const proTipSec = document.createElement("div");
-      proTipSec.className = "modal-section";
-      proTipSec.style.marginTop = "28px"; // Spacing from Prompt Box above
-      proTipSec.innerHTML = `
-        <div class="pro-tip-box">
-          <span class="material-symbols-outlined pro-tip-icon">lightbulb</span>
-          <div class="pro-tip-content">
-            <div class="pro-tip-title">${t.adoptionProTip}</div>
-            <p class="pro-tip-text">${currentProTip}</p>
+      variablesPanelHtml = `
+        <div class="prompt-variables-panel">
+          <div class="prompt-variables-header">
+            <div class="prompt-variables-title">
+              <span class="material-symbols-outlined" style="font-size: 16px;">tune</span>
+              <span>${varPanelTitle}</span>
+            </div>
+            <span style="font-size: 11px; color: var(--text-muted);">${varPanelDesc}</span>
+          </div>
+          <div class="prompt-variables-grid">
+            ${varInputsHtml}
           </div>
         </div>
       `;
-      dynamicContainer.appendChild(proTipSec);
+    }
+
+    promptSec.innerHTML = `
+      <details class="prompt-collapsible" id="modalPromptCollapsible">
+        <summary class="prompt-summary">
+          <div class="prompt-summary-left">
+            <span class="material-symbols-outlined" style="font-size: 16px; color: var(--color-primary);">terminal</span>
+            <span class="prompt-summary-title">${t.promptSandbox || "Sample Prompt Template"}</span>
+            <span class="prompt-summary-badge">PROMPT</span>
+          </div>
+          <span class="material-symbols-outlined prompt-summary-chevron">expand_more</span>
+        </summary>
+        <div class="prompt-content-body">
+          ${variablesPanelHtml}
+          <div class="prompt-box" id="modalPromptText">
+            <span class="prompt-raw-text">${escapeHtml(currentPrompt)}</span>
+            <button class="copy-prompt-btn" onclick="copyPromptToClipboard()"><span class="material-symbols-outlined" style="font-size: 16px;">content_copy</span> ${t.copyPrompt}</button>
+          </div>
+        </div>
+      </details>
+    `;
+    body.appendChild(promptSec);
+
+    // Initialize interactive variable listeners
+    if (promptVars.length > 0) {
+      const varInputs = promptSec.querySelectorAll(".variable-input");
+      const rawPromptTemplate = currentPrompt;
+      const valuesMap = {};
+      promptVars.forEach(v => { valuesMap[v.token] = ""; });
+
+      const updateInterpolatedPrompt = () => {
+        let interpolated = rawPromptTemplate;
+        promptVars.forEach(v => {
+          const val = valuesMap[v.token]?.trim();
+          if (val) {
+            interpolated = interpolated.split(v.token).join(val);
+          }
+        });
+
+        const promptTextEl = promptSec.querySelector(".prompt-raw-text");
+        if (promptTextEl) {
+          promptTextEl.textContent = interpolated;
+        }
+        const promptBox = promptSec.querySelector("#modalPromptText");
+        if (promptBox) {
+          promptBox.dataset.currentPrompt = interpolated;
+        }
+      };
+
+      varInputs.forEach(inp => {
+        inp.addEventListener("input", (e) => {
+          const token = e.target.dataset.token;
+          valuesMap[token] = e.target.value;
+          updateInterpolatedPrompt();
+        });
+      });
+      // Store initial
+      const promptBox = promptSec.querySelector("#modalPromptText");
+      if (promptBox) {
+        promptBox.dataset.currentPrompt = currentPrompt;
+      }
+    } else {
+      const promptBox = promptSec.querySelector("#modalPromptText");
+      if (promptBox) {
+        promptBox.dataset.currentPrompt = currentPrompt;
+      }
     }
   }
 
-  // Render initial dynamic parts
-  renderDynamicParts();
+  // 5. Pro Tip Box
+  if (currentProTip) {
+    const proTipSec = document.createElement("div");
+    proTipSec.className = "modal-section";
+    proTipSec.style.marginTop = "24px";
+    proTipSec.innerHTML = `
+      <div class="pro-tip-box">
+        <span class="material-symbols-outlined pro-tip-icon">lightbulb</span>
+        <div class="pro-tip-content">
+          <div class="pro-tip-title">${t.adoptionProTip}</div>
+          <p class="pro-tip-text">${currentProTip}</p>
+        </div>
+      </div>
+    `;
+    body.appendChild(proTipSec);
+  }
 
   overlay.classList.add("active");
 }
@@ -2820,21 +2892,24 @@ function closeModal() {
 // Interactive Copy Button Logic
 window.copyPromptToClipboard = function() {
   const container = document.getElementById("modalPromptText");
+  if (!container) return;
   const lang = appState.activeLanguage || "en";
   const t = uiTranslations[lang];
 
-  // Extract text excluding the button element's innerText
-  const text = container.childNodes[0].nodeValue.trim();
-  
+  // Extract text from dataset or child text element (clean without copy button text)
+  const text = container.dataset.currentPrompt || container.querySelector(".prompt-raw-text")?.textContent?.trim() || "";
+
   navigator.clipboard.writeText(text).then(() => {
     const successCopiedText = t.promptCopiedSuccess;
     showToast(successCopiedText, "success");
     const copyBtn = container.querySelector(".copy-prompt-btn");
-    const originalText = copyBtn.innerHTML;
-    copyBtn.innerHTML = `<span class="material-symbols-outlined" style="font-size: 16px; color: var(--color-success)">check_circle</span> ${t.copied}`;
-    setTimeout(() => {
-      copyBtn.innerHTML = originalText;
-    }, 2000);
+    if (copyBtn) {
+      const originalText = copyBtn.innerHTML;
+      copyBtn.innerHTML = `<span class="material-symbols-outlined" style="font-size: 16px; color: var(--color-success)">check_circle</span> ${t.copied}`;
+      setTimeout(() => {
+        copyBtn.innerHTML = originalText;
+      }, 2000);
+    }
   });
 };
 
@@ -3543,10 +3618,8 @@ function injectAdminBackButton() {
 async function initApp() {
   // Execute base configs
   enhanceUseCasesDatabase();
-  await loadVerificationCheckpoints();
   initTheme();
   initLanguage();
-  initTimeline();
   initFeedbackSystem();
 
   // Establish base auth elements on start
@@ -3724,43 +3797,7 @@ async function initApp() {
     if (e.target === document.getElementById("modalOverlay")) closeModal();
   });
 
-  // Portal View Tab Switching (Explore Playbooks vs Adoption Roadmap)
-  const viewPlaybooksNav = document.getElementById("viewPlaybooksNav");
-  const viewTimelineNav = document.getElementById("viewTimelineNav");
-  const playbooksView = document.getElementById("playbooksView");
-  const timelineView = document.getElementById("timelineView");
-  const sidebarCategorySection = document.getElementById("sidebarCategorySection");
-  const sidebarFeatureSection = document.getElementById("sidebarFeatureSection");
-  const sidebarStatusSection = document.getElementById("sidebarStatusSection");
 
-  const switchPortalView = (viewName) => {
-    document.querySelectorAll(".portal-view-item").forEach(i => i.classList.remove("active"));
-    
-    if (viewName === "playbooks") {
-      if (viewPlaybooksNav) viewPlaybooksNav.classList.add("active");
-      if (playbooksView) playbooksView.style.display = "block";
-      if (timelineView) timelineView.style.display = "none";
-      if (sidebarCategorySection) sidebarCategorySection.style.display = "block";
-      if (sidebarFeatureSection) sidebarFeatureSection.style.display = "block";
-      if (sidebarStatusSection) sidebarStatusSection.style.display = "block";
-    } else {
-      if (viewTimelineNav) viewTimelineNav.classList.add("active");
-      if (playbooksView) playbooksView.style.display = "none";
-      if (timelineView) timelineView.style.display = "block";
-      if (sidebarCategorySection) sidebarCategorySection.style.display = "none";
-      if (sidebarFeatureSection) sidebarFeatureSection.style.display = "none";
-      if (sidebarStatusSection) sidebarStatusSection.style.display = "none";
-      
-      renderTimeline(); // render the interactive timeline elements
-    }
-  };
-
-  if (viewPlaybooksNav) {
-    viewPlaybooksNav.addEventListener("click", () => switchPortalView("playbooks"));
-  }
-  if (viewTimelineNav) {
-    viewTimelineNav.addEventListener("click", () => switchPortalView("timeline"));
-  }
 
   // Mobile responsive sidebar drawer hooks
   const btnMobileMenu = document.getElementById("btnMobileMenu");
@@ -3983,7 +4020,6 @@ function setupProfileOnboardingHandlers() {
         // Fetch use cases and render
         await loadUseCasesFromServer();
         renderUseCases();
-        renderTimeline();
         showToast("Workspace fully configured!");
       }
     } catch (err) {
@@ -4035,12 +4071,6 @@ function initAdminPortal() {
     btnImport.style.display = isAssist ? "none" : "block";
   }
 
-  // Hide "Add Checklist Item" button for Assist Admin completely
-  const btnCreateCheckpointNav = document.getElementById("btnAdminCreateCheckpoint");
-  if (btnCreateCheckpointNav) {
-    btnCreateCheckpointNav.style.display = isAssist ? "none" : "flex";
-  }
-
   // Allow both Super Admin and Assist Admin to view Feedbacks list tab
   const feedbacksNav = document.getElementById("adminTabFeedbacksNav");
   if (feedbacksNav) {
@@ -4066,16 +4096,10 @@ function initAdminPortal() {
     tabFeedbacks.style.display = savedTab === 'feedbacks' ? 'block' : 'none';
   }
 
-  const tabChecklists = document.getElementById("adminTabChecklists");
-  if (tabChecklists) {
-    tabChecklists.style.display = savedTab === 'checklists' ? 'block' : 'none';
-  }
-
   if (savedTab === 'users') loadAdminUsers();
   else if (savedTab === 'analytics') loadAdminStats();
   else if (savedTab === 'cases') loadAdminUseCases();
   else if (savedTab === 'feedbacks' && (isSuperAdmin || isAssist)) loadAdminFeedbacks();
-  else if (savedTab === 'checklists') loadAdminChecklists();
 
   tabs.forEach(tab => {
     tab.addEventListener("click", () => {
@@ -4092,15 +4116,11 @@ function initAdminPortal() {
       if (tabFeedbacks) {
         tabFeedbacks.style.display = target === 'feedbacks' ? 'block' : 'none';
       }
-      if (tabChecklists) {
-        tabChecklists.style.display = target === 'checklists' ? 'block' : 'none';
-      }
 
       if (target === 'users') loadAdminUsers();
       else if (target === 'analytics') loadAdminStats();
       else if (target === 'cases') loadAdminUseCases();
       else if (target === 'feedbacks' && (isSuperAdmin || isAssist)) loadAdminFeedbacks();
-      else if (target === 'checklists') loadAdminChecklists();
     });
   });
 
@@ -4343,38 +4363,6 @@ function initAdminPortal() {
     e.preventDefault();
     await saveAdminUseCase();
   };
-
-  // Phase Verification Checkpoint listeners
-  const btnCreateCheckpoint = document.getElementById("btnAdminCreateCheckpoint");
-  if (btnCreateCheckpoint) {
-    btnCreateCheckpoint.onclick = () => openAdminCheckpointModal(null);
-  }
-  const closeCheckpointModalBtn = document.getElementById("adminCheckpointModalClose");
-  if (closeCheckpointModalBtn) {
-    closeCheckpointModalBtn.onclick = () => {
-      document.getElementById("adminCheckpointEditModal").classList.remove("active");
-    };
-  }
-  const cancelCheckpointBtn = document.getElementById("btnAdminCheckpointCancel");
-  if (cancelCheckpointBtn) {
-    cancelCheckpointBtn.onclick = () => {
-      document.getElementById("adminCheckpointEditModal").classList.remove("active");
-    };
-  }
-  const saveCheckpointBtn = document.getElementById("btnAdminCheckpointSave");
-  if (saveCheckpointBtn) {
-    saveCheckpointBtn.onclick = async (e) => {
-      e.preventDefault();
-      await saveAdminCheckpoint();
-    };
-  }
-
-  const selectCheckpointRoleFilter = document.getElementById("selectAdminCheckpointRoleFilter");
-  if (selectCheckpointRoleFilter) {
-    selectCheckpointRoleFilter.onchange = () => {
-      loadAdminChecklists();
-    };
-  }
 
   // Default load
   loadAdminUsers();
@@ -4842,97 +4830,6 @@ async function loadAdminUseCases() {
 // CRUD Modal Manager
 let editingUseCaseId = null;
 
-function toggleFormDualModeFields(isDualMode) {
-  const dualIndicator = document.getElementById("adminFormDualModeIndicator");
-
-  // Standard groupings
-  const standardStepsGroup = document.getElementById("formCaseSteps") ? document.getElementById("formCaseSteps").closest(".form-group") : null;
-  const standardPromptGroup = document.getElementById("formCasePrompt") ? document.getElementById("formCasePrompt").closest(".form-group") : null;
-  const standardProTipGroup = document.getElementById("formCaseProTip") ? document.getElementById("formCaseProTip").closest(".form-group") : null;
-
-  const twStepsGroup = document.getElementById("formTransZhtwSteps") ? document.getElementById("formTransZhtwSteps").closest(".form-group") : null;
-  const twPromptGroup = document.getElementById("formTransZhtwPrompt") ? document.getElementById("formTransZhtwPrompt").closest(".form-group") : null;
-  const twProTipGroup = document.getElementById("formTransZhtwProTip") ? document.getElementById("formTransZhtwProTip").closest(".form-group") : null;
-
-  const cnStepsGroup = document.getElementById("formTransZhcnSteps") ? document.getElementById("formTransZhcnSteps").closest(".form-group") : null;
-  const cnPromptGroup = document.getElementById("formTransZhcnPrompt") ? document.getElementById("formTransZhcnPrompt").closest(".form-group") : null;
-  const cnProTipGroup = document.getElementById("formTransZhcnProTip") ? document.getElementById("formTransZhcnProTip").closest(".form-group") : null;
-
-  // Advanced groupings
-  const advStepsGroup = document.getElementById("formCaseAdvancedSteps") ? document.getElementById("formCaseAdvancedSteps").closest(".form-group") : null;
-  const advPromptGroup = document.getElementById("formCaseAdvancedPrompt") ? document.getElementById("formCaseAdvancedPrompt").closest(".form-group") : null;
-  const advProTipGroup = document.getElementById("formCaseAdvancedProTip") ? document.getElementById("formCaseAdvancedProTip").closest(".form-group") : null;
-
-  const twAdvStepsGroup = document.getElementById("formTransZhtwAdvancedSteps") ? document.getElementById("formTransZhtwAdvancedSteps").closest(".form-group") : null;
-  const twAdvPromptGroup = document.getElementById("formTransZhtwAdvancedPrompt") ? document.getElementById("formTransZhtwAdvancedPrompt").closest(".form-group") : null;
-  const twAdvProTipGroup = document.getElementById("formTransZhtwAdvancedProTip") ? document.getElementById("formTransZhtwAdvancedProTip").closest(".form-group") : null;
-
-  const cnAdvStepsGroup = document.getElementById("formTransZhcnAdvancedSteps") ? document.getElementById("formTransZhcnAdvancedSteps").closest(".form-group") : null;
-  const cnAdvPromptGroup = document.getElementById("formTransZhcnAdvancedPrompt") ? document.getElementById("formTransZhcnAdvancedPrompt").closest(".form-group") : null;
-  const cnAdvProTipGroup = document.getElementById("formTransZhcnAdvancedProTip") ? document.getElementById("formTransZhcnAdvancedProTip").closest(".form-group") : null;
-
-  if (isDualMode) {
-    if (dualIndicator) {
-      dualIndicator.style.display = "block";
-      const lang = appState.activeLanguage || "en";
-      if (lang === "zh-TW") {
-        dualIndicator.innerHTML = `
-          <div style="display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--color-primary); margin-bottom: 4px;">
-            <span class="material-symbols-outlined" style="font-size: 18px;">api</span> 
-            已啟用雙重模式範本 (標準手動 + 進階連接器整合)
-          </div>
-          <div style="font-size: 11px; color: var(--text-secondary);">
-            此學習案例同時支援手動檔案工作流程與進階連接器模式。在此雙重配置下，<strong>標準提示詞與步驟由系統自動對應，您僅需直接編輯進階整合提示詞與引導步驟。</strong>
-          </div>
-        `;
-      } else if (lang === "zh-CN") {
-        dualIndicator.innerHTML = `
-          <div style="display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--color-primary); margin-bottom: 4px;">
-            <span class="material-symbols-outlined" style="font-size: 18px;">api</span> 
-            已启用双重模式范本 (标准手动 + 进阶连接器整合)
-          </div>
-          <div style="font-size: 11px; color: var(--text-secondary);">
-            此学习案例同时支持手动档案工作流程与进阶连接器模式。在此双重配置下，<strong>标准提示词与步骤将由系统自动对应，您仅需直接编辑进阶整合提示词与引导步骤。</strong>
-          </div>
-        `;
-      } else {
-        dualIndicator.innerHTML = `
-          <div style="display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--color-primary); margin-bottom: 4px;">
-            <span class="material-symbols-outlined" style="font-size: 18px;">api</span> 
-            Dual-Mode Template Enabled (Standalone + Advanced)
-          </div>
-          <div style="font-size: 11px; color: var(--text-secondary);">
-            This playbook supports both standard manual file workflows and advanced integration modes. In this dual configuration, <strong>standard prompts are auto-managed, so you are editing the Advanced (Active-Integration) prompts directly.</strong>
-          </div>
-        `;
-      }
-    }
-
-    // Hide standard fields
-    [standardStepsGroup, standardPromptGroup, standardProTipGroup, twStepsGroup, twPromptGroup, twProTipGroup, cnStepsGroup, cnPromptGroup, cnProTipGroup].forEach(g => {
-      if (g) g.style.display = "none";
-    });
-
-    // Show advanced fields
-    [advStepsGroup, advPromptGroup, advProTipGroup, twAdvStepsGroup, twAdvPromptGroup, twAdvProTipGroup, cnAdvStepsGroup, cnAdvPromptGroup, cnAdvProTipGroup].forEach(g => {
-      if (g) g.style.display = "block";
-    });
-
-  } else {
-    if (dualIndicator) dualIndicator.style.display = "none";
-
-    // Show standard fields
-    [standardStepsGroup, standardPromptGroup, standardProTipGroup, twStepsGroup, twPromptGroup, twProTipGroup, cnStepsGroup, cnPromptGroup, cnProTipGroup].forEach(g => {
-      if (g) g.style.display = "block";
-    });
-
-    // Hide advanced fields
-    [advStepsGroup, advPromptGroup, advProTipGroup, twAdvStepsGroup, twAdvPromptGroup, twAdvProTipGroup, cnAdvStepsGroup, cnAdvPromptGroup, cnAdvProTipGroup].forEach(g => {
-      if (g) g.style.display = "none";
-    });
-  }
-}
-
 function openAdminEditModal(uc) {
   const modal = document.getElementById("adminCaseEditModal");
   const title = document.getElementById("adminCaseModalTitle");
@@ -4986,11 +4883,6 @@ function openAdminEditModal(uc) {
     document.getElementById("formCasePrompt").value = uc.prompt || "";
     document.getElementById("formCaseProTip").value = uc.proTip || "";
 
-    const advStepsArray = Array.isArray(uc.advancedSteps) ? uc.advancedSteps : (uc.translations && uc.translations.en && Array.isArray(uc.translations.en.advancedSteps) ? uc.translations.en.advancedSteps : []);
-    document.getElementById("formCaseAdvancedSteps").value = advStepsArray.join("\n");
-    document.getElementById("formCaseAdvancedPrompt").value = uc.advancedPrompt || (uc.translations && uc.translations.en && uc.translations.en.advancedPrompt) || "";
-    document.getElementById("formCaseAdvancedProTip").value = uc.advancedProTip || (uc.translations && uc.translations.en && uc.translations.en.advancedProTip) || "";
-
     // Checkbox mapping Features safely
     const featuresArray = Array.isArray(uc.features) ? uc.features : [];
     const featureBoxes = document.querySelectorAll("input[name='formFeatures']");
@@ -5036,22 +4928,12 @@ function openAdminEditModal(uc) {
     document.getElementById("formTransZhtwPrompt").value = zhtw.prompt || "";
     document.getElementById("formTransZhtwProTip").value = zhtw.proTip || "";
 
-    const zhtwAdvSteps = Array.isArray(zhtw.advancedSteps) ? zhtw.advancedSteps : [];
-    document.getElementById("formTransZhtwAdvancedSteps").value = zhtwAdvSteps.join("\n");
-    document.getElementById("formTransZhtwAdvancedPrompt").value = zhtw.advancedPrompt || "";
-    document.getElementById("formTransZhtwAdvancedProTip").value = zhtw.advancedProTip || "";
-
     const zhcn = trans["zh-CN"] || {};
     document.getElementById("formTransZhcnTitle").value = zhcn.title || "";
     document.getElementById("formTransZhcnSummary").value = zhcn.summary || "";
     document.getElementById("formTransZhcnSteps").value = Array.isArray(zhcn.steps) ? zhcn.steps.join("\n") : "";
     document.getElementById("formTransZhcnPrompt").value = zhcn.prompt || "";
     document.getElementById("formTransZhcnProTip").value = zhcn.proTip || "";
-
-    const zhcnAdvSteps = Array.isArray(zhcn.advancedSteps) ? zhcn.advancedSteps : [];
-    document.getElementById("formTransZhcnAdvancedSteps").value = zhcnAdvSteps.join("\n");
-    document.getElementById("formTransZhcnAdvancedPrompt").value = zhcn.advancedPrompt || "";
-    document.getElementById("formTransZhcnAdvancedProTip").value = zhcn.advancedProTip || "";
 
   } else {
     // CREATE MODE
@@ -5073,9 +4955,6 @@ function openAdminEditModal(uc) {
     document.getElementById("formCaseSteps").value = "";
     document.getElementById("formCasePrompt").value = "";
     document.getElementById("formCaseProTip").value = "";
-    document.getElementById("formCaseAdvancedSteps").value = "";
-    document.getElementById("formCaseAdvancedPrompt").value = "";
-    document.getElementById("formCaseAdvancedProTip").value = "";
     
     const verifiedBox = document.getElementById("formCaseVerified");
     if (verifiedBox) {
@@ -5088,29 +4967,14 @@ function openAdminEditModal(uc) {
     document.getElementById("formTransZhtwSteps").value = "";
     document.getElementById("formTransZhtwPrompt").value = "";
     document.getElementById("formTransZhtwProTip").value = "";
-    document.getElementById("formTransZhtwAdvancedSteps").value = "";
-    document.getElementById("formTransZhtwAdvancedPrompt").value = "";
-    document.getElementById("formTransZhtwAdvancedProTip").value = "";
 
     document.getElementById("formTransZhcnTitle").value = "";
     document.getElementById("formTransZhcnSummary").value = "";
     document.getElementById("formTransZhcnSteps").value = "";
     document.getElementById("formTransZhcnPrompt").value = "";
     document.getElementById("formTransZhcnProTip").value = "";
-    document.getElementById("formTransZhcnAdvancedSteps").value = "";
-    document.getElementById("formTransZhcnAdvancedPrompt").value = "";
-    document.getElementById("formTransZhcnAdvancedProTip").value = "";
   }
 
-  // Handle conditional displaying of standard/advanced prompt fields
-  const isDualMode = !!(uc && Array.isArray(uc.connectors) && uc.connectors.length > 0 && uc.connectorEssential === false);
-  const dualCheckbox = document.getElementById("formCaseDualMode");
-  if (dualCheckbox) {
-    dualCheckbox.checked = isDualMode;
-    dualCheckbox.onchange = (e) => toggleFormDualModeFields(e.target.checked);
-  }
-
-  toggleFormDualModeFields(isDualMode);
   modal.classList.add("active");
 }
 
@@ -5153,14 +5017,7 @@ async function saveAdminUseCase() {
 
   // Compile Translations
   const transZhtwSteps = document.getElementById("formTransZhtwSteps").value.split("\n").map(s => s.trim()).filter(s => s.length > 0);
-  const transZhtwAdvancedSteps = document.getElementById("formTransZhtwAdvancedSteps").value.split("\n").map(s => s.trim()).filter(s => s.length > 0);
   const transZhcnSteps = document.getElementById("formTransZhcnSteps").value.split("\n").map(s => s.trim()).filter(s => s.length > 0);
-  const transZhcnAdvancedSteps = document.getElementById("formTransZhcnAdvancedSteps").value.split("\n").map(s => s.trim()).filter(s => s.length > 0);
-
-  const advancedStepsRaw = document.getElementById("formCaseAdvancedSteps").value;
-  const advancedPrompt = document.getElementById("formCaseAdvancedPrompt").value.trim();
-  const advancedProTip = document.getElementById("formCaseAdvancedProTip").value.trim();
-  const advancedSteps = advancedStepsRaw.split("\n").map(s => s.trim()).filter(s => s.length > 0);
 
   const translations = {
     "en": { 
@@ -5168,39 +5025,28 @@ async function saveAdminUseCase() {
       summary, 
       steps, 
       prompt, 
-      proTip,
-      advancedSteps: advancedSteps.length > 0 ? advancedSteps : null,
-      advancedPrompt: advancedPrompt || null,
-      advancedProTip: advancedProTip || null
+      proTip
     },
     "zh-TW": {
       title: document.getElementById("formTransZhtwTitle").value.trim() || title,
       summary: document.getElementById("formTransZhtwSummary").value.trim() || summary,
       steps: transZhtwSteps.length > 0 ? transZhtwSteps : steps,
       prompt: document.getElementById("formTransZhtwPrompt").value.trim() || prompt,
-      proTip: document.getElementById("formTransZhtwProTip").value.trim() || proTip,
-      advancedSteps: transZhtwAdvancedSteps.length > 0 ? transZhtwAdvancedSteps : (advancedSteps.length > 0 ? advancedSteps : null),
-      advancedPrompt: document.getElementById("formTransZhtwAdvancedPrompt").value.trim() || (advancedPrompt || null),
-      advancedProTip: document.getElementById("formTransZhtwAdvancedProTip").value.trim() || (advancedProTip || null)
+      proTip: document.getElementById("formTransZhtwProTip").value.trim() || proTip
     },
     "zh-CN": {
       title: document.getElementById("formTransZhcnTitle").value.trim() || title,
       summary: document.getElementById("formTransZhcnSummary").value.trim() || summary,
       steps: transZhcnSteps.length > 0 ? transZhcnSteps : steps,
       prompt: document.getElementById("formTransZhcnPrompt").value.trim() || prompt,
-      proTip: document.getElementById("formTransZhcnProTip").value.trim() || proTip,
-      advancedSteps: transZhcnAdvancedSteps.length > 0 ? transZhcnAdvancedSteps : (advancedSteps.length > 0 ? advancedSteps : null),
-      advancedPrompt: document.getElementById("formTransZhcnAdvancedPrompt").value.trim() || (advancedPrompt || null),
-      advancedProTip: document.getElementById("formTransZhcnAdvancedProTip").value.trim() || (advancedProTip || null)
+      proTip: document.getElementById("formTransZhcnProTip").value.trim() || proTip
     }
   };
 
-  const isDualMode = document.getElementById("formCaseDualMode").checked;
-  const connectorGuide = { connectorEssential: !isDualMode };
   const isVerified = document.getElementById("formCaseVerified").checked;
 
   const payload = {
-    id, category, title, role, summary, features, connectors, level, steps, prompt, proTip, connectorGuide, translations, isVerified
+    id, category, title, role, summary, features, connectors, level, steps, prompt, proTip, translations, isVerified
   };
 
   try {
@@ -5278,7 +5124,6 @@ async function triggerGeminiPlaybookGeneration() {
   // Gather current inputs
   const category = document.getElementById("formCaseCategory").value;
   const role = document.getElementById("formCaseRole").value.trim() || "Lecturer";
-  const isDualMode = document.getElementById("formCaseDualMode").checked;
 
   const features = [];
   document.querySelectorAll("input[name='formFeatures']:checked").forEach(b => features.push(b.value));
@@ -5328,7 +5173,6 @@ async function triggerGeminiPlaybookGeneration() {
         connectors,
         role,
         level,
-        isDualMode,
         instruction
       })
     });
@@ -5359,11 +5203,11 @@ async function triggerGeminiPlaybookGeneration() {
 
     if (!editingUseCaseId) {
       // CREATION MODE: Apply suggestions directly!
-      applyGeminiSuggestions(aiRes, isDualMode);
+      applyGeminiSuggestions(aiRes);
       showToast("Gemini has successfully drafted your new playbook!");
     } else {
       // EDITING MODE: Show Side-by-Side Diff modal!
-      showDiffViewer(aiRes, isDualMode);
+      showDiffViewer(aiRes);
     }
 
   } catch (err) {
@@ -5383,7 +5227,7 @@ async function triggerGeminiPlaybookGeneration() {
   }
 }
 
-function applyGeminiSuggestions(aiRes, isDualMode) {
+function applyGeminiSuggestions(aiRes) {
   // English (en)
   const en = aiRes.en || {};
   if (en.title) {
@@ -5459,14 +5303,6 @@ function applyGeminiSuggestions(aiRes, isDualMode) {
     });
   }
 
-  // Apply Dual-Mode flag suggestions if returned by Gemini
-  const suggestedIsDualMode = typeof aiRes.isDualMode === "boolean" ? aiRes.isDualMode : isDualMode;
-  const dualCheckbox = document.getElementById("formCaseDualMode");
-  if (dualCheckbox) {
-    dualCheckbox.checked = suggestedIsDualMode;
-    toggleFormDualModeFields(suggestedIsDualMode);
-  }
-
   document.getElementById("formCaseSummary").value = en.summary || "";
   
   // Populate standard English steps/prompt/proTip
@@ -5474,12 +5310,6 @@ function applyGeminiSuggestions(aiRes, isDualMode) {
   document.getElementById("formCaseSteps").value = steps.join("\n");
   document.getElementById("formCasePrompt").value = en.prompt || "";
   document.getElementById("formCaseProTip").value = en.proTip || "";
-
-  // Populate advanced English steps/prompt/proTip
-  const advSteps = Array.isArray(en.advancedSteps) ? en.advancedSteps : [];
-  document.getElementById("formCaseAdvancedSteps").value = advSteps.join("\n");
-  document.getElementById("formCaseAdvancedPrompt").value = en.advancedPrompt || "";
-  document.getElementById("formCaseAdvancedProTip").value = en.advancedProTip || "";
 
   // Traditional Chinese (zh-TW)
   const zhtw = aiRes["zh-TW"] || {};
@@ -5491,11 +5321,6 @@ function applyGeminiSuggestions(aiRes, isDualMode) {
   document.getElementById("formTransZhtwPrompt").value = zhtw.prompt || "";
   document.getElementById("formTransZhtwProTip").value = zhtw.proTip || "";
 
-  const twAdvSteps = Array.isArray(zhtw.advancedSteps) ? zhtw.advancedSteps : [];
-  document.getElementById("formTransZhtwAdvancedSteps").value = twAdvSteps.join("\n");
-  document.getElementById("formTransZhtwAdvancedPrompt").value = zhtw.advancedPrompt || "";
-  document.getElementById("formTransZhtwAdvancedProTip").value = zhtw.advancedProTip || "";
-
   // Simplified Chinese (zh-CN)
   const zhcn = aiRes["zh-CN"] || {};
   document.getElementById("formTransZhcnTitle").value = zhcn.title || document.getElementById("formCaseTitle").value;
@@ -5505,14 +5330,9 @@ function applyGeminiSuggestions(aiRes, isDualMode) {
   document.getElementById("formTransZhcnSteps").value = cnSteps.join("\n");
   document.getElementById("formTransZhcnPrompt").value = zhcn.prompt || "";
   document.getElementById("formTransZhcnProTip").value = zhcn.proTip || "";
-
-  const cnAdvSteps = Array.isArray(zhcn.advancedSteps) ? zhcn.advancedSteps : [];
-  document.getElementById("formTransZhcnAdvancedSteps").value = cnAdvSteps.join("\n");
-  document.getElementById("formTransZhcnAdvancedPrompt").value = zhcn.advancedPrompt || "";
-  document.getElementById("formTransZhcnAdvancedProTip").value = zhcn.advancedProTip || "";
 }
 
-function showDiffViewer(aiRes, isDualMode) {
+function showDiffViewer(aiRes) {
   const modal = document.getElementById("adminDiffViewerModal");
   const scrollContainer = document.getElementById("adminDiffScrollContainer");
   if (!modal || !scrollContainer) return;
@@ -5528,13 +5348,10 @@ function showDiffViewer(aiRes, isDualMode) {
   
   const currentConnectors = [];
   document.querySelectorAll("input[name='formConnectors']:checked").forEach(b => currentConnectors.push(b.value));
-  
-  const currentIsDualMode = document.getElementById("formCaseDualMode").checked;
 
   // Compile Proposed checked states
   const proposedFeatures = Array.isArray(aiRes.features) ? aiRes.features : currentFeatures;
   const proposedConnectors = Array.isArray(aiRes.connectors) ? aiRes.connectors : currentConnectors;
-  const proposedIsDualMode = typeof aiRes.isDualMode === "boolean" ? aiRes.isDualMode : currentIsDualMode;
 
   // 1. Required Gemini Features
   diffItems.push({
@@ -5550,42 +5367,12 @@ function showDiffViewer(aiRes, isDualMode) {
     proposed: proposedConnectors.join(", ") || "(None)"
   });
 
-  // 3. Enable Dual-Mode Template
-  diffItems.push({
-    label: "Enable Dual-Mode Template with Advanced Prompt",
-    current: currentIsDualMode ? "Enabled (Dual-Mode)" : "Disabled (Standard Prompt Only)",
-    proposed: proposedIsDualMode ? "Enabled (Dual-Mode)" : "Disabled (Standard Prompt Only)"
-  });
-
   // English Summary
   diffItems.push({
     label: "English Summary Description",
     current: document.getElementById("formCaseSummary").value,
     proposed: aiRes.en?.summary || ""
   });
-
-  const hasDualMode = currentIsDualMode || proposedIsDualMode;
-
-  if (hasDualMode) {
-    // English Advanced Steps
-    diffItems.push({
-      label: "English Advanced Steps (Active-Integration Mode)",
-      current: document.getElementById("formCaseAdvancedSteps").value,
-      proposed: Array.isArray(aiRes.en?.advancedSteps) ? aiRes.en.advancedSteps.join("\n") : ""
-    });
-    // English Advanced Prompt
-    diffItems.push({
-      label: "English Advanced Prompt (Active-Integration Mode)",
-      current: document.getElementById("formCaseAdvancedPrompt").value,
-      proposed: aiRes.en?.advancedPrompt || ""
-    });
-    // English Advanced Pro Tip
-    diffItems.push({
-      label: "English Advanced Pro Tip (Active-Integration Mode)",
-      current: document.getElementById("formCaseAdvancedProTip").value,
-      proposed: aiRes.en?.advancedProTip || ""
-    });
-  }
 
   // English Steps
   diffItems.push({
@@ -5617,25 +5404,6 @@ function showDiffViewer(aiRes, isDualMode) {
     current: document.getElementById("formTransZhtwSummary").value,
     proposed: aiRes["zh-TW"]?.summary || ""
   });
-
-  if (hasDualMode) {
-    diffItems.push({
-      label: "Traditional Chinese Advanced Steps",
-      current: document.getElementById("formTransZhtwAdvancedSteps").value,
-      proposed: Array.isArray(aiRes["zh-TW"]?.advancedSteps) ? aiRes["zh-TW"].advancedSteps.join("\n") : ""
-    });
-    diffItems.push({
-      label: "Traditional Chinese Advanced Prompt",
-      current: document.getElementById("formTransZhtwAdvancedPrompt").value,
-      proposed: aiRes["zh-TW"]?.advancedPrompt || ""
-    });
-    diffItems.push({
-      label: "Traditional Chinese Advanced Pro Tip",
-      current: document.getElementById("formTransZhtwAdvancedProTip").value,
-      proposed: aiRes["zh-TW"]?.advancedProTip || ""
-    });
-  }
-
   diffItems.push({
     label: "Traditional Chinese Steps",
     current: document.getElementById("formTransZhtwSteps").value,
@@ -5663,25 +5431,6 @@ function showDiffViewer(aiRes, isDualMode) {
     current: document.getElementById("formTransZhcnSummary").value,
     proposed: aiRes["zh-CN"]?.summary || ""
   });
-
-  if (hasDualMode) {
-    diffItems.push({
-      label: "Simplified Chinese Advanced Steps",
-      current: document.getElementById("formTransZhcnAdvancedSteps").value,
-      proposed: Array.isArray(aiRes["zh-CN"]?.advancedSteps) ? aiRes["zh-CN"].advancedSteps.join("\n") : ""
-    });
-    diffItems.push({
-      label: "Simplified Chinese Advanced Prompt",
-      current: document.getElementById("formTransZhcnAdvancedPrompt").value,
-      proposed: aiRes["zh-CN"]?.advancedPrompt || ""
-    });
-    diffItems.push({
-      label: "Simplified Chinese Advanced Pro Tip",
-      current: document.getElementById("formTransZhcnAdvancedProTip").value,
-      proposed: aiRes["zh-CN"]?.advancedProTip || ""
-    });
-  }
-
   diffItems.push({
     label: "Simplified Chinese Steps",
     current: document.getElementById("formTransZhcnSteps").value,
@@ -5727,7 +5476,7 @@ function showDiffViewer(aiRes, isDualMode) {
 
   // Bind Accept / Reject buttons
   document.getElementById("btnDiffAccept").onclick = () => {
-    applyGeminiSuggestions(aiRes, isDualMode);
+    applyGeminiSuggestions(aiRes);
     modal.classList.remove("active");
     setTimeout(() => {
       modal.style.display = "none";
@@ -5847,872 +5596,7 @@ function escapeHtmlDiff(str) {
     .replace(/'/g, "&#039;");
 }
 
-/* ==========================================================================
-   INTERACTIVE ADOPTION ROADMAP TIMELINE LOGIC (REDESIGNED V2)
-   ========================================================================== */
 
-const TIMELINE_STAGES_STORAGE_KEY = "ge_adoption_stages_v3";
-const VERIFICATION_STORAGE_KEY = "ge_verification_checkpoints_v3";
-
-const defaultTimelineStages = [
-  {
-    id: "day0",
-    title: "Day 0 Configuration (IdP & connectors setup)",
-    titleZh: "Day 0 技術配置（IdP與連接器設定）",
-    subtitle: "Setup Phase",
-    subtitleZh: "基礎配置期",
-    color: "#6366f1", // Indigo
-    description: "Initialize backend environments, configure Identity Provider (IdP) authentication loops, and map baseline database structures before the academic year begins.",
-    descriptionZh: "初始化後端環境、配置身份提供商 (IdP) 認證迴路，並在學期前建立基礎資料庫結構。",
-    playbookIds: ["finance_compliance", "workforce_federation"]
-  },
-  {
-    id: "pre",
-    title: "Tech Provisioning & Prep (Syllabi & documents preparation)",
-    titleZh: "學期準備（課程大綱與教材編寫）",
-    subtitle: "Pre-Semester (Aug)",
-    subtitleZh: "學期前（八月）",
-    color: "#f59e0b", // Amber
-    description: "Align core teaching materials, upload syllabus structures, and coordinate initial AI assistant designs ahead of active teaching cohorts.",
-    descriptionZh: "在開學前整理核心教材、上傳教學大綱結構，並協調 AI 輔助助理之基礎設計。",
-    playbookIds: ["socratic_tutor", "lab_manual_creator"]
-  },
-  {
-    id: "sem1",
-    title: "Launch & Onboard (Onboard faculty and cohorts)",
-    titleZh: "正式啟動與引導（教職員工與學生引導）",
-    subtitle: "Sem 1 (Sep)",
-    subtitleZh: "第一學期（九月）",
-    color: "#10b981", // Emerald
-    description: "Onboard students and faculty, establish baseline AI familiarity, and register support queues.",
-    descriptionZh: "引導學生與教職員工、建立對 AI 的基礎熟練度並登記服務支援佇列。",
-    playbookIds: ["curriculum_design", "su_helpdesk"]
-  },
-  {
-    id: "mid",
-    title: "Evaluation Pilot (Roll out learning evaluations)",
-    titleZh: "期中試點評估（期中考試推廣與學習表現試點）",
-    subtitle: "Mid-Semester (Oct-Nov 15)",
-    subtitleZh: "期中（十月至十一月十五）",
-    color: "#3b82f6", // Blue
-    description: "Launch targeted pilots for course evaluations, rubric-based grading assistance, and classroom performance audits.",
-    descriptionZh: "啟動課程評估、基於量規的評分協助和課堂表現審計的針對性試點。",
-    playbookIds: ["rubric_grading", "at_risk_cohort", "accreditation_reports"]
-  },
-  {
-    id: "end",
-    title: "Exam Prep & Audit (Admin audits, secure repositories)",
-    titleZh: "期末準備與審計（行政審核與高安全儲存庫清掃）",
-    subtitle: "End-of-Semester (Nov 16-Jan 15)",
-    subtitleZh: "期末（十一月十六至一月十五）",
-    color: "#ef4444", // Coral/Red
-    description: "Secure data repository sweeps, audit exam papers, compile accreditation data, and lock assessment portals.",
-    descriptionZh: "執行安全數據儲存庫清理、審計考卷、編譯認證數據並鎖定評估門戶。",
-    playbookIds: ["sao_scavenger_hunt"]
-  },
-  {
-    id: "track2",
-    title: "Continuous Initiatives (Student developer hubs, ongoing audits)",
-    titleZh: "持續推進（學生社團與滾動式優化）",
-    subtitle: "Continuous (Track 2)",
-    subtitleZh: "軌道二：滾動式推進",
-    color: "#a855f7", // Purple
-    description: "Ongoing non-semester restricted milestones, student-led co-curricular development, and constant optimization reviews.",
-    descriptionZh: "持續進行的非學期限制里程碑、學生主導的共建計畫以及持續的安全與運營優化審查。",
-    playbookIds: ["club_funding", "security_simulator"]
-  }
-];
-
-let roleVerificationCheckpoints = {
-  "IT Admin": {
-    day0: [
-      { id: "ita_d0_1", text: "Configure federated IdP single sign-on (SSO) loops with university directories", textZh: "與學校帳號目錄配置 IdP 聯邦單一登入 (SSO) 整合" },
-      { id: "ita_d0_2", text: "Establish enterprise workspace secure tenant boundaries for cloud data", textZh: "為雲端數據與 AI 工作空間建立企業級安全租戶隔離邊界" }
-    ],
-    pre: [
-      { id: "ita_pre_1", text: "Validate LMS REST API endpoints and webhooks connectivity", textZh: "驗證與測試 LMS 系統 REST API 端點與 Webhooks 連接性" },
-      { id: "ita_pre_2", text: "Verify core cloud drive connector sharing permissions and scope rules", textZh: "審查與驗證雲端硬碟連接器的共用存取規則與範圍設定" }
-    ],
-    sem1: [
-      { id: "ita_sem1_1", text: "Monitor system performance and API quota usage logs in cloud console", textZh: "在雲端控制台監控系統效能、請求延遲與 API 配額使用日誌" },
-      { id: "ita_sem1_2", text: "Review onboarding group provisioning metrics for faculty and student bodies", textZh: "審查教職員與學生群體之自動化帳號配置與群組導入指標" }
-    ],
-    mid: [
-      { id: "ita_mid_1", text: "Audit active workspace sharing metrics and restrict public access links", textZh: "審計活動中的工作區共享指標並限制公開存取連結" },
-      { id: "ita_mid_2", text: "Verify automated LMS enrollment synchronization scripts", textZh: "驗證 LMS 選課名單與 AI 平台之自動化同步排程腳本" }
-    ],
-    end: [
-      { id: "ita_end_1", text: "Coordinate database administrative audit locks on assessment materials", textZh: "協調並鎖定評估與期末考卷檔案之管理稽核權限" },
-      { id: "ita_end_2", text: "Compile platform API usage metrics and generate usage reports", textZh: "彙整平台 API 與運算資源之使用指標並產生使用分析報告" }
-    ],
-    track2: [
-      { id: "ita_t2_1", text: "Conduct rolling security and network routing vulnerability scans", textZh: "定期執行滾動式安全與網路路由弱點掃描" },
-      { id: "ita_t2_2", text: "Maintain and update connector integration frameworks for cloud resources", textZh: "維護並更新各項雲端資源連接器整合框架" }
-    ]
-  },
-  "Lecturer": {
-    day0: [
-      { id: "lec_d0_1", text: "Acquire role-based instructor access tokens and verify sign-in loops", textZh: "取得授課教師權限 Token 並驗證登入整合迴路" },
-      { id: "lec_d0_2", text: "Complete teacher-level platform onboarding tutorials", textZh: "完成教師級 AI 平台應用導入教學與教程" }
-    ],
-    pre: [
-      { id: "lec_pre_1", text: "Prepare and review lecture slides, readings, and syllabi for LMS upload", textZh: "在 LMS 中整理並審查教學大綱、投影片與課程材料" },
-      { id: "lec_pre_2", text: "Draft classroom prompt recipes and custom Agent instructions in Canvas Mode", textZh: "在 Canvas Mode 中編寫教學專用 Prompt 配方與客製化 Agent 指令" }
-    ],
-    sem1: [
-      { id: "lec_sem1_1", text: "Publish Socratic Tutor Agent links on the LMS platform", textZh: "在 LMS 平台顯著位置發布 Socratic 導師 Agent 存取連結" },
-      { id: "lec_sem1_2", text: "Deliver introductory classroom lectures on AI safety and prompting", textZh: "向學生講授關於 AI 使用倫理、限制與 Prompt 技巧之導論課" }
-    ],
-    mid: [
-      { id: "lec_mid_1", text: "Deploy Rubric-Feedback agents to help students review mid-term outlines", textZh: "部署 Rubric-Feedback 評分助理協助學生審查期中作業大綱" },
-      { id: "lec_mid_2", text: "Review student feedback reports regarding Tutor Agent helpfulness", textZh: "收集並審查學生關於 Socratic Tutor 導師助理實用性之問卷" }
-    ],
-    end: [
-      { id: "lec_end_1", text: "Create structured practice examination study-guides inside NotebookLM", textZh: "在 NotebookLM 中建立結構化的期末溫習與備考學習指南" },
-      { id: "lec_end_2", text: "Audit secure document folders to ensure zero exam-prep leakages", textZh: "稽核安全檔案目錄夾，確保備考資訊零外洩" }
-    ],
-    track2: [
-      { id: "lec_t2_1", text: "Analyze course enrollment and final student participation metrics", textZh: "分析課程註冊、AI 互動率與學生成就轉化指標" },
-      { id: "lec_t2_2", text: "Attend end-of-semester academic AI adoption roundtables", textZh: "出席學期末教職員學術 AI 導入與成效分享圓桌會議" }
-    ]
-  },
-  "TA": {
-    day0: [
-      { id: "ta_d0_1", text: "Confirm instructor-assistant account provisioning on the platform", textZh: "確認助教帳號權限已在平台上成功配置" },
-      { id: "ta_d0_2", text: "Establish secure collaborative folders for laboratory guidelines", textZh: "為實驗教學與評分建立安全協作雲端目錄" }
-    ],
-    pre: [
-      { id: "ta_pre_1", text: "Draft comprehensive grading rubrics and safety instruction manuals", textZh: "編寫詳細評分量規指南與實驗室安全操作手冊" },
-      { id: "ta_pre_2", text: "Test custom lab manual illustration prompt parameters inside Canvas Mode", textZh: "在 Canvas Mode 中測試實驗手冊專用插圖 Prompt 產生參數" }
-    ],
-    sem1: [
-      { id: "ta_sem1_1", text: "Distribute interactive laboratory guides to students", textZh: "向學生分發互動式實驗指南與觀察記錄表" },
-      { id: "ta_sem1_2", text: "Setup active weekly office hour AI assistance support queues", textZh: "建立每週助教 AI 答疑服務佇列與線上諮詢時間" }
-    ],
-    mid: [
-      { id: "ta_mid_1", text: "Utilize secure NotebookLM instances to aggregate student mid-term progress", textZh: "利用安全 NotebookLM 彙整學生的期中學習表現趨勢" },
-      { id: "ta_mid_2", text: "Calibrate rubric assistant prompt guidelines to align feedback consistency", textZh: "校準評分助理 Prompt 指令，確保多位評分助教反饋一致性" }
-    ],
-    end: [
-      { id: "ta_end_1", text: "Generate student performance dashboards for teacher evaluations", textZh: "生成學生整體表現儀表板供授課教師教學評估參考" },
-      { id: "ta_end_2", text: "Clean and purge personal TA storage workspaces of student submissions", textZh: "清理與封存個人助教工作空間中的學生作業檔案" }
-    ],
-    track2: [
-      { id: "ta_t2_1", text: "Document course AI assistance best practices for departmental handovers", textZh: "撰寫課程 AI 輔導實務指南，留作院系經驗傳承文檔" },
-      { id: "ta_t2_2", text: "Monitor ongoing student compliance with safety and integrity guides", textZh: "持續監控學生在作業中對學術誠信與 AI 引用規則之遵循情況" }
-    ]
-  },
-  "Student": {
-    day0: [
-      { id: "stu_d0_1", text: "Confirm registration and activate school-issued platform account", textZh: "確認註冊並啟用學校發放之 AI 平台帳戶" },
-      { id: "stu_d0_2", text: "Register student-led clubs and interest groups in the main directory", textZh: "在學生社團目錄中登記本學期學生活動或社團資訊" }
-    ],
-    pre: [
-      { id: "stu_pre_1", text: "Establish secure collaborative cloud folders for club operations", textZh: "為社團日常運營建立安全協作雲端資料夾" },
-      { id: "stu_pre_2", text: "Set up study portals with links to uploaded syllabus guides", textZh: "建立個人學習入口，彙整學科大綱與參考指南" }
-    ],
-    sem1: [
-      { id: "stu_sem1_1", text: "Complete student introductory prompt engineering tutorial videos", textZh: "完成學生入門級 Prompt 提示工程與 AI 倫理微課程" },
-      { id: "stu_sem1_2", text: "Link personal course notebooks to verified cloud storage directories", textZh: "將個人學科筆記與校端雲端安全硬碟連結" }
-    ],
-    mid: [
-      { id: "stu_mid_1", text: "Utilize collaborative NotebookLM study hubs for mid-term group study sessions", textZh: "利用 NotebookLM 小組共享學習空間進行期中考小組複習" },
-      { id: "stu_mid_2", text: "Compile student feedback surveys regarding platform utility", textZh: "填寫並整理學生對於平台軟硬體與 AI 助理功能之滿意度問卷" }
-    ],
-    end: [
-      { id: "stu_end_1", text: "Verify cloud folders contain correct materials for year-end club audits", textZh: "確認社團雲端資料夾已彙整期末稽核與評鑑所需文檔" },
-      { id: "stu_end_2", text: "Synthesize personal study summaries from verified lecture recordings", textZh: "利用 AI 筆記摘要期末重點，建立學科備考專題" }
-    ],
-    track2: [
-      { id: "stu_t2_1", text: "Track and log certificate completions for co-curricular workshops", textZh: "登錄並存檔個人在共建 AI 工作坊中取得之證書" },
-      { id: "stu_t2_2", text: "Participate in student-led hackathons or custom agent competitions", textZh: "參加學生會主導之校園黑客松或客製化 AI 應用競賽" }
-    ]
-  },
-  "Security": {
-    day0: [
-      { id: "sec_d0_1", text: "Initialize active security credentials for safety response teams", textZh: "啟用校園安全應變團隊專用安全登入憑證" },
-      { id: "sec_d0_2", text: "Map secure communications and dispatcher roles in the command system", textZh: "在指揮系統中配置各項緊急安全通訊與值班調度角色" }
-    ],
-    pre: [
-      { id: "sec_pre_1", text: "Draft emergency simulator guidelines inside Gemini Canvas Mode", textZh: "在 Gemini Canvas Mode 中編寫緊急狀況模擬訓練大綱" },
-      { id: "sec_pre_2", text: "Establish secure data parameters for campus crisis reference playbooks", textZh: "為校園應變與安全防護操作手冊設定安全邊界" }
-    ],
-    sem1: [
-      { id: "sec_sem1_1", text: "Run crisis dispatcher roleplay simulations with incoming personnel", textZh: "與新進人員開展緊急應變調度角色扮演與 AI 互動模擬訓練" },
-      { id: "sec_sem1_2", text: "Distribute emergency reference guidelines on the support portal", textZh: "在校端支援門戶發布更新後之緊急事故通報指引" }
-    ],
-    mid: [
-      { id: "sec_mid_1", text: "Conduct mid-term physical drills and coordinate AI safety logging", textZh: "進行期中實地演練，並配合 AI 自動化安全事故通報與紀錄" },
-      { id: "sec_mid_2", text: "Extract safety incident trends using secure text summary tools", textZh: "使用安全文本分析工具，彙整分析期中安全事故通報趨勢" }
-    ],
-    end: [
-      { id: "sec_end_1", text: "Audit physical security systems during winter examination schedules", textZh: "在期末冬季考試週期間加強校園各大考場與設施之實體巡邏安全審計" },
-      { id: "sec_end_2", text: "Audit command hub network routing and verify lines are active", textZh: "對安全指揮中心與警衛通訊網路進行通訊測試與線路稽核" }
-    ],
-    track2: [
-      { id: "sec_t2_1", text: "Collaborate on campus-safety training reviews", textZh: "共同參與校園防護應變教育訓練與案例回顧會議" },
-      { id: "sec_t2_2", text: "Optimize emergency logging custom Agents for faster dispatch", textZh: "優化安全調度 Agent 指令，提高報案分類與派單速度" }
-    ]
-  },
-  "Finance": {
-    day0: [
-      { id: "fin_d0_1", text: "Establish finance-grade credentials and verify local storage boundaries", textZh: "建立財務等級之安全登入憑證並確認本地數據邊界" },
-      { id: "fin_d0_2", text: "Set audit rules for departmental spending ledger checks", textZh: "設定各部門學科建設經費之自動化審計與預算稽核規則" }
-    ],
-    pre: [
-      { id: "fin_pre_1", text: "Draft pre-semester budget spreadsheets inside Gemini Canvas Mode", textZh: "在 Gemini Canvas Mode 中編寫新學年預算籌劃與科目配置表" },
-      { id: "fin_pre_2", text: "Verify approved status of student club and co-curricular projects", textZh: "審查與確認各項社團活動與共建項目之經費核撥許可" }
-    ],
-    sem1: [
-      { id: "fin_sem1_1", text: "Distribute standard procurement checklists on the admin portal", textZh: "在行政系統發布新版採購與經費報銷電子核對清單" },
-      { id: "fin_sem1_2", text: "Onboard student club treasurers to standard spending forms", textZh: "對學生社團財務負責人開展標準化預算與核銷流程引導" }
-    ],
-    mid: [
-      { id: "fin_mid_1", text: "Conduct midterm budget spending audits across major departments", textZh: "進行期中經費支用與預算執行進度中期稽核" },
-      { id: "fin_mid_2", text: "Compile expenditure summaries and audit logs with data models", textZh: "使用數據模型彙整各類經費支出報表並分析核銷異常值" }
-    ],
-    end: [
-      { id: "fin_end_1", text: "Verify spending logs match internal compliance mandates", textZh: "查核各項報銷經費，確保其完全符合校端財務內控制度" },
-      { id: "fin_end_2", text: "Publish year-end budget reconciliation reports", textZh: "彙整並發布年終預算執行與績效審查報告" }
-    ],
-    track2: [
-      { id: "fin_t2_1", text: "Run continuous spending audits to check for billing outliers", textZh: "常態化執行經費審查，偵測重複報銷或異常採購數據" },
-      { id: "fin_t2_2", text: "Optimize next-semester budget prediction models", textZh: "優化下學期預算預測模型，提升資金調度效率" }
-    ]
-  },
-  "SAO": {
-    day0: [
-      { id: "sao_d0_1", text: "Initialize counselor accounts with high-security privacy controls", textZh: "啟用學務與心理輔導專用高隱私安全等級登入帳戶" },
-      { id: "sao_d0_2", text: "Verify secure student-activity storage repositories are active", textZh: "驗證學生活動檔案與敏感名單安全存儲目錄已正常啟用" }
-    ],
-    pre: [
-      { id: "sao_pre_1", text: "Draft student orientation guidance packages inside Gemini Canvas Mode", textZh: "在 Gemini Canvas Mode 中編寫新生生活指引與輔導指南手冊" },
-      { id: "sao_pre_2", text: "Upload scavenger hunt interactive check-point rules and clues", textZh: "上傳新生迎新宿營 scavenger hunt 互動關卡規則與提示線索" }
-    ],
-    sem1: [
-      { id: "sao_sem1_1", text: "Activate Campus Scavenger Hunt Agent for freshman onboarding", textZh: "發布並啟用新生專用校園探索解謎 Scavenger Hunt 導覽 Agent" },
-      { id: "sao_sem1_2", text: "Deploy active support hotline contacts on the counselor page", textZh: "在學務輔導網頁發布最新的心理與生活支援熱線聯絡資訊" }
-    ],
-    mid: [
-      { id: "sao_mid_1", text: "Review counselor service engagement statistics using text-summary metrics", textZh: "利用學務數據工具摘要分析期中輔導個案與活動反饋趨勢" },
-      { id: "sao_mid_2", text: "Verify orientation event log archives and compile feedback responses", textZh: "歸檔迎新活動之問卷調查與互動指標數據" }
-    ],
-    end: [
-      { id: "sao_end_1", text: "Coordinate stress-relief resources for student final examination periods", textZh: "協調並提供期末考週減壓資源與心理諮詢急診服務" },
-      { id: "sao_end_2", text: "Audit and purge sensitive orientation personal detail temporary logs", textZh: "清理與刪除迎新活動暫存檔案中涉及學生個人隱私之臨時紀錄" }
-    ],
-    track2: [
-      { id: "sao_t2_1", text: "Analyze co-curricular workshop and club certificate completion stats", textZh: "統計並分析通識教育工作坊與社團幹部認證完成率" },
-      { id: "sao_t2_2", text: "Maintain custom student mental wellness supportive bots", textZh: "維護並微調客製化學生生活支持與暖心輔導 AI 機器人" }
-    ]
-  },
-  "Program Leader": {
-    day0: [
-      { id: "pl_d0_1", text: "Confirm departmental platform licensing quotas and supervisor identities", textZh: "確認系所平台授權配額與管理人員識別" },
-      { id: "pl_d0_2", text: "Initialize curriculum templates and syllabus guidelines for the department", textZh: "初始化系所課程模板與大綱指引" }
-    ],
-    pre: [
-      { id: "pl_pre_1", text: "Draft course curriculum guidelines and alignment checklists inside Canvas Mode", textZh: "在 Canvas Mode 中撰寫課程大綱指引與對齊清單" },
-      { id: "pl_pre_2", text: "Organize teacher training workshops for departmental AI tools adoptions", textZh: "組織系所教師 AI 工具應用導入訓練工作坊" }
-    ],
-    sem1: [
-      { id: "pl_sem1_1", text: "Approve individual course playbook configurations and LMS links", textZh: "審查並核准個別課程之 AI 案例配置與 LMS 連結" },
-      { id: "pl_sem1_2", text: "Distribute student AI-use integrity manuals across all courses", textZh: "向所有學位課程分發學術誠信與 AI 引用規範" }
-    ],
-    mid: [
-      { id: "pl_mid_1", text: "Review mid-term course evaluation feedback and academic satisfaction logs", textZh: "審查系所期中教學意見調查與 AI 學習滿意度指標" },
-      { id: "pl_mid_2", text: "Audit alignment of course delivery with departmental guidelines", textZh: "查核課程教學進度與系所 AI 導入指引之對齊情況" }
-    ],
-    end: [
-      { id: "pl_end_1", text: "Review student performance data and compile course grade statistics", textZh: "審查學生學習表現數據並分析期末成績統計" },
-      { id: "pl_end_2", text: "Archive course portfolios and document successful adoption case-studies", textZh: "封存課程檔案並記錄成功的 AI 導入與應用案例" }
-    ],
-    track2: [
-      { id: "pl_t2_1", text: "Optimize department curriculum structure for future semesters", textZh: "優化下學期系所課程結構與教學大綱" },
-      { id: "pl_t2_2", text: "Facilitate cross-disciplinary research and teaching resource sharing", textZh: "促進跨學科 AI 協作、研究與教研資源共享" }
-    ]
-  },
-  "Dean": {
-    day0: [
-      { id: "dn_d0_1", text: "Establish college-wide strategic adoption indicators and data boundaries", textZh: "確立學院級 AI 戰略導入指標與數據合規邊界" },
-      { id: "dn_d0_2", text: "Confirm institutional budgets and verify funding lines are allocated", textZh: "確認學校專項經費與學院建設預算已核撥到位" }
-    ],
-    pre: [
-      { id: "dn_pre_1", text: "Draft college-wide strategic roadmap inside Gemini Canvas Mode", textZh: "在 Gemini Canvas Mode 中編寫學院 AI 發展戰略規劃" },
-      { id: "dn_pre_2", text: "Establish academic steering committees for quality assurance audits", textZh: "成立學術諮詢與審查委員會，推動教學質量保證" }
-    ],
-    sem1: [
-      { id: "dn_sem1_1", text: "Approve department adoption milestones and resource distribution schedules", textZh: "核定各學系之 AI 導入里程碑與軟硬體資源分配" },
-      { id: "dn_sem1_2", text: "Deliver college welcome address on educational innovation and AI ethics", textZh: "發表關於教育創新、AI 倫理與未來學術願景之院長迎新致詞" }
-    ],
-    mid: [
-      { id: "dn_mid_1", text: "Review college-wide adoption telemetry dashboards and budget executions", textZh: "審查學院 AI 導入數據儀表板與期中預算執行進度" },
-      { id: "dn_mid_2", text: "Conduct inter-departmental progress reviews with Program Leaders", textZh: "與各系主任召開期中工作協調會，評估導入成效" }
-    ],
-    end: [
-      { id: "dn_end_1", text: "Receive academic audit reports and verify compliance with standards", textZh: "審閱學術審計報告，確保各項教學完全符合質量標準" },
-      { id: "dn_end_2", text: "Publish annual college education innovation reports and success stories", textZh: "發布學院年度教育創新成果報告與最佳實務案例" }
-    ],
-    track2: [
-      { id: "dn_t2_1", text: "Maintain and update strategic collaboration frameworks with enterprise partners", textZh: "維護並更新與企業夥伴之產學合作與策略聯盟框架" },
-      { id: "dn_t2_2", text: "Drive continuous faculty capacity building and research center setups", textZh: "持續推動教職員 AI 能力提升與教學研究中心建設" }
-    ]
-  }
-};
-
-let timelineStages = [];
-
-// Initialize or load configuration
-function initTimeline() {
-  const savedStages = localStorage.getItem(TIMELINE_STAGES_STORAGE_KEY);
-  if (savedStages) {
-    try {
-      timelineStages = JSON.parse(savedStages);
-    } catch (e) {
-      timelineStages = JSON.parse(JSON.stringify(defaultTimelineStages));
-    }
-  } else {
-    timelineStages = JSON.parse(JSON.stringify(defaultTimelineStages));
-  }
-
-  if (!appState.roadmapActiveStage) {
-    appState.roadmapActiveStage = localStorage.getItem("ge_roadmap_active_stage_v2") || "day0";
-    if (!timelineStages.some(s => s.id === appState.roadmapActiveStage)) {
-      appState.roadmapActiveStage = "day0";
-    }
-  }
-}
-
-// Save states to local storage
-function saveTimeline() {
-  localStorage.setItem(TIMELINE_STAGES_STORAGE_KEY, JSON.stringify(timelineStages));
-}
-
-// Dynamic role-related use case filter helper
-function isUsecaseRelatedToRole(useCase, role) {
-  if (!role) return true;
-  if (appState.isAdmin === true) return true;
-  
-  // IT Admins have administrative rights to map all cases
-  if (role === "IT Admin") return true;
-  
-  // Lecturer has academic-level supervisor responsibilities (includes TAs)
-  if (role === "Lecturer") {
-    return useCase.role === "Lecturer" || useCase.role === "TA" || useCase.category === "academic";
-  }
-  // TAs see their own and academic tasks
-  if (role === "TA") {
-    return useCase.role === "TA" || useCase.role === "Lecturer" || useCase.category === "academic";
-  }
-  // Student sees Student & club operations
-  if (role === "Student") {
-    return useCase.role === "Student" || useCase.category === "student";
-  }
-  // Program Leader has departmental supervisor capabilities
-  if (role === "Program Leader") {
-    return useCase.role === "Program Leader" || useCase.role === "Lecturer" || useCase.role === "TA" || useCase.category === "academic";
-  }
-  // Dean has college-wide strategic oversight capabilities (sees academic and operational)
-  if (role === "Dean") {
-    return useCase.role === "Dean" || useCase.role === "Program Leader" || useCase.role === "Lecturer" || useCase.role === "TA" || useCase.category === "academic" || useCase.category === "operational";
-  }
-  // Support roles see their exact roles
-  return useCase.role === role;
-}
-
-// Core Roadmap Rendering Router
-function renderTimeline() {
-  initTimeline();
-  const container = document.getElementById("unifiedRoadmapContainer");
-  if (!container) return;
-
-  const isZh = appState.activeLanguage === "zh-TW" || appState.activeLanguage === "zh-CN";
-  const role = appState.userRole || "Lecturer";
-
-  // Calculate stats for each stage
-  const stageStats = {};
-  timelineStages.forEach(stage => {
-    // Checklist Stats
-    const tasks = roleVerificationCheckpoints[role]?.[stage.id] || [];
-    const totalTasks = tasks.length;
-    let completedTasks = 0;
-    tasks.forEach(t => {
-      const key = `ge_roadmap_chk_${role}_${stage.id}_${t.id}`;
-      if (localStorage.getItem(key) === "true") {
-        completedTasks++;
-      }
-    });
-    const isCompleted = totalTasks > 0 ? (completedTasks === totalTasks) : true;
-    const checklistPercent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 100;
-
-    // Playbook stats
-    let totalPlaybooks = 0;
-    let deployedPlaybooks = 0;
-    stage.playbookIds.forEach(id => {
-      const uc = useCasesDb.find(u => u.id === id);
-      if (uc && isUsecaseRelatedToRole(uc, role)) {
-        totalPlaybooks++;
-        if (uc.isDeployed === true || uc.isDeployed === 1) {
-          deployedPlaybooks++;
-        }
-      }
-    });
-    const playbookPercent = totalPlaybooks > 0 ? Math.round((deployedPlaybooks / totalPlaybooks) * 100) : 0;
-
-    stageStats[stage.id] = {
-      totalTasks,
-      completedTasks,
-      isCompleted,
-      checklistPercent,
-      totalPlaybooks,
-      deployedPlaybooks,
-      playbookPercent
-    };
-  });
-
-  const stageOrder = ["day0", "pre", "sem1", "mid", "end", "track2"];
-
-  // Calculate Track 1 progress fill
-  const track1Stages = ["day0", "pre", "sem1", "mid", "end"];
-  const positions1 = [10, 30, 50, 70, 90];
-  let progressWidth1 = 10;
-  for (let i = 0; i < track1Stages.length; i++) {
-    if (stageStats[track1Stages[i]].isCompleted) {
-      progressWidth1 = positions1[i];
-    } else {
-      break;
-    }
-  }
-
-  // Calculate Track 2 progress fill
-  const track2Stats = stageStats["track2"];
-  const progressWidth2 = 10 + (80 * (track2Stats.checklistPercent / 100));
-
-  // 1. Desktop Dual-Track Timeline (Track 1 is compressed horizontal, Track 2 is continuous interactive bar)
-  let desktopHtml = `
-    <div class="alternating-timeline-container">
-      
-      <!-- TRACK 1: ACADEMIC CALENDAR MILESTONES -->
-      <div class="timeline-track-block track-block-1">
-        <div class="timeline-track-header">
-          <span class="material-symbols-outlined track-header-icon" style="color: #6366f1;">calendar_month</span>
-          <span class="track-header-title">${isZh ? "軌道一：學期限制性部署" : "Track 1: Academic Calendar Milestones"}</span>
-        </div>
-        
-        <!-- Horizontal track baseline is a peer sibling -->
-        <div class="timeline-horizontal-track">
-          <div class="timeline-track-progress" style="width: ${progressWidth1}%;"></div>
-        </div>
-  `;
-
-  track1Stages.forEach((id, index) => {
-    const stage = timelineStages.find(s => s.id === id);
-    const stats = stageStats[id];
-    const isActive = appState.roadmapActiveStage === id;
-    const isCompleted = stats.isCompleted;
-    const isUp = index % 2 === 0; // Alternating height layouts! Even UP, Odd DOWN
-    const pos = positions1[index];
-
-    const stageSubtitle = isZh ? stage.subtitleZh : stage.subtitle;
-    
-    // Custom label inside card
-    let shortName = id === "day0" ? (isZh ? "Day 0 配置" : "Day 0 Setup")
-                  : id === "pre" ? (isZh ? "學期準備" : "Pre-Semester")
-                  : id === "sem1" ? (isZh ? "正式啟動" : "Sem 1 Launch")
-                  : id === "mid" ? (isZh ? "期中試點" : "Mid-Term Pilot")
-                  : (isZh ? "期末審計" : "Exam Audit");
-
-    desktopHtml += `
-      <!-- Node Joint ${id} -->
-      <div class="timeline-node-joint ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}" 
-           style="left: ${pos}%; --node-color: ${stage.color};" 
-           onclick="selectRoadmapStage('${id}')">
-        <span class="material-symbols-outlined node-joint-icon">
-          ${isCompleted ? 'check' : (id === 'day0' ? 'settings' : 'pending')}
-        </span>
-      </div>
-
-      <!-- Connector line -->
-      <div class="alternating-marker-pin ${isUp ? 'pin-up' : 'pin-down'}" style="left: ${pos}%; --node-color: ${stage.color};"></div>
-
-      <!-- Floating Schedule Flag -->
-      <div class="floating-schedule-flag ${isUp ? 'flag-up' : 'flag-down'} ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}" 
-           style="left: ${pos}%; --node-color: ${stage.color};"
-           onclick="selectRoadmapStage('${id}')">
-        <div class="flag-date-label">${stageSubtitle}</div>
-        <div class="flag-title-label">${shortName}</div>
-        <div class="flag-subtitle-label">${stats.completedTasks}/${stats.totalTasks} ${isZh ? '已驗證' : 'Verified'}</div>
-      </div>
-    `;
-  });
-
-  desktopHtml += `
-      </div>
-
-      <!-- Divider line -->
-      <div class="timeline-track-divider"></div>
-
-      <!-- TRACK 2: CONTINUOUS PIPELINE (Ultra-compact continuous bar) -->
-      <div class="timeline-track-block-continuous">
-        <div class="timeline-track-header">
-          <span class="material-symbols-outlined track-header-icon" style="color: #a855f7;">all_inclusive</span>
-          <span class="track-header-title">${isZh ? "軌道二：持續滾動式項目" : "Track 2: Continuous Anytime-Proceeded Initiatives"}</span>
-        </div>
-  `;
-
-  {
-    const id = "track2";
-    const stage = timelineStages.find(s => s.id === id);
-    const stats = stageStats[id];
-    const isActive = appState.roadmapActiveStage === id;
-    const isCompleted = stats.isCompleted;
-
-    const stageSubtitle = isZh ? stage.subtitleZh : stage.subtitle;
-
-    desktopHtml += `
-        <!-- Thick Clickable Arrow Progress Pipeline (No popups/flags) -->
-        <div class="continuous-pipeline-capsule ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}" 
-             onclick="selectRoadmapStage('track2')">
-          
-          <!-- Baseline track with pulsating arrow indicator -->
-          <div class="continuous-pipeline-track">
-            <div class="continuous-pipeline-progress" style="width: ${stats.checklistPercent}%;"></div>
-            <div class="continuous-pipeline-arrow">▶</div>
-          </div>
-          
-          <!-- Content Overlay labels -->
-          <div class="continuous-pipeline-overlay">
-            <span class="pipeline-badge" style="background: ${stage.color};">${isZh ? "滾動項目" : "Rolling Projects"}</span>
-            <span class="pipeline-subtitle">${stageSubtitle}</span>
-            <span class="pipeline-stats-pill">${stats.completedTasks}/${stats.totalTasks} ${isZh ? '已驗證' : 'Verified'} (${stats.checklistPercent}%)</span>
-          </div>
-        </div>
-    `;
-  }
-
-  desktopHtml += `
-      </div>
-
-    </div>
-  `;
-
-  // 2. Mobile vertical stream layout
-  let mobileHtml = `<div class="chronological-timeline-mobile">`;
-  stageOrder.forEach(id => {
-    const stage = timelineStages.find(s => s.id === id);
-    const stats = stageStats[id];
-    const isActive = appState.roadmapActiveStage === id;
-    const isCompleted = stats.isCompleted;
-
-    const stageTitle = isZh ? stage.titleZh : stage.title;
-    const stageSubtitle = isZh ? stage.subtitleZh : stage.subtitle;
-
-    mobileHtml += `
-      <div class="mobile-timeline-item ${isActive ? 'active' : ''}" onclick="selectRoadmapStage('${id}')">
-        <div class="mobile-timeline-connector"></div>
-        <div class="mobile-timeline-badge" style="background: ${stage.color};"></div>
-        <div class="mobile-timeline-content-card">
-          <div class="mobile-card-header">
-            <span class="mobile-card-subtitle" style="color: ${stage.color};">${stageSubtitle}</span>
-            ${isCompleted ? '<span class="material-symbols-outlined" style="color: #10b981; font-size:18px;">verified</span>' : ''}
-          </div>
-          <h4 class="mobile-card-title">${stageTitle}</h4>
-          <div class="mobile-card-progress">
-            <div class="mobile-card-progress-bar" style="width: ${stats.checklistPercent}%; background: ${stage.color};"></div>
-          </div>
-        </div>
-      </div>
-    `;
-  });
-  mobileHtml += `</div>`;
-
-  // Write base layout structure into DOM
-  container.innerHTML = `
-    ${desktopHtml}
-    ${mobileHtml}
-    <div class="roadmap-split-dashboard">
-      <!-- Left Column: Verification Checklists -->
-      <div class="roadmap-dashboard-card" id="roadmapChecklistCard"></div>
-      
-      <!-- Right Column: Role-Specific Use-Case Playbooks -->
-      <div class="roadmap-dashboard-card" id="roadmapPlaybookCard"></div>
-    </div>
-  `;
-
-  renderRoadmapDashboardDetails();
-}
-
-// Select milestone trigger
-window.selectRoadmapStage = function(stageId) {
-  appState.roadmapActiveStage = stageId;
-  localStorage.setItem("ge_roadmap_active_stage_v2", stageId);
-
-  // Quick state sync without full rebuilds
-  document.querySelectorAll(".timeline-node-joint, .floating-schedule-flag, .mobile-timeline-item").forEach(el => {
-    if (el.getAttribute("onclick") && el.getAttribute("onclick").includes(`'${stageId}'`)) {
-      el.classList.add("active");
-    } else {
-      el.classList.remove("active");
-    }
-  });
-
-  renderRoadmapDashboardDetails();
-};
-
-// Render Stage Details dual-column dashboards
-function renderRoadmapDashboardDetails() {
-  const checkCard = document.getElementById("roadmapChecklistCard");
-  const playCard = document.getElementById("roadmapPlaybookCard");
-  if (!checkCard || !playCard) return;
-
-  const stageId = appState.roadmapActiveStage || "day0";
-  const stage = timelineStages.find(s => s.id === stageId);
-  if (!stage) return;
-
-  const isZh = appState.activeLanguage === "zh-TW" || appState.activeLanguage === "zh-CN";
-  const role = appState.userRole || "Lecturer";
-
-  const stageTitle = isZh ? stage.titleZh : stage.title;
-  const stageDesc = isZh ? stage.descriptionZh : stage.description;
-
-  // Render Left Column: Checkbox Checklist
-  const tasks = roleVerificationCheckpoints[role]?.[stageId] || [];
-  let checkedCount = 0;
-  let checklistHtml = "";
-
-  tasks.forEach(t => {
-    const key = `ge_roadmap_chk_${role}_${stageId}_${t.id}`;
-    const isChecked = localStorage.getItem(key) === "true";
-    if (isChecked) checkedCount++;
-
-    const taskText = appState.activeLanguage === "zh-TW" 
-      ? (t.textZh || t.text) 
-      : (appState.activeLanguage === "zh-CN" 
-          ? (t.textCn || t.textZh || t.text) 
-          : t.text);
-
-    checklistHtml += `
-      <label class="roadmap-task-label ${isChecked ? 'checked' : ''}">
-        <input type="checkbox" 
-               onchange="handleRoadmapTaskToggle('${stageId}', '${t.id}', this)" 
-               ${isChecked ? 'checked' : ''} />
-        <div class="roadmap-checkbox-indicator"></div>
-        <span class="roadmap-task-text">${taskText}</span>
-      </label>
-    `;
-  });
-
-  if (tasks.length === 0) {
-    checklistHtml = `<p class="empty-playbook-msg">${appState.activeLanguage === 'zh-TW' ? '此階段對您的角色無特定驗證項目。' : (appState.activeLanguage === 'zh-CN' ? '此阶段对您的角色无特定验证项目。' : 'No verification items for your role in this phase.')}</p>`;
-  }
-
-  const checklistPercent = tasks.length > 0 ? Math.round((checkedCount / tasks.length) * 100) : 100;
-  const isChecklistCompleted = checklistPercent === 100;
-
-  const cardTitle = appState.activeLanguage === "zh-TW" 
-    ? '階段驗證檢查清單' 
-    : (appState.activeLanguage === "zh-CN" 
-        ? '阶段验证检查清单' 
-        : 'Phase Verification Checklist');
-  const cardStatusVerified = appState.activeLanguage === "zh-TW" 
-    ? '已完全驗證' 
-    : (appState.activeLanguage === "zh-CN" 
-        ? '已完全验证' 
-        : 'Verified');
-  const cardStatusPending = appState.activeLanguage === "zh-TW" 
-    ? '待驗證' 
-    : (appState.activeLanguage === "zh-CN" 
-        ? '待验证' 
-        : 'Pending Verification');
-
-  checkCard.innerHTML = `
-    <div class="roadmap-card-header-bar" style="background: ${stage.color};"></div>
-    <div class="roadmap-card-body">
-      <div class="roadmap-section-meta-row">
-        <h4 class="roadmap-section-title">${cardTitle}</h4>
-        <span class="roadmap-section-badge ${isChecklistCompleted ? 'verified' : 'pending'}">
-          ${isChecklistCompleted ? cardStatusVerified : cardStatusPending} (${checklistPercent}%)
-        </span>
-      </div>
-      <p class="roadmap-section-desc">${stageDesc}</p>
-      <div class="roadmap-checklist-container">
-        ${checklistHtml}
-      </div>
-    </div>
-  `;
-
-  // Render Right Column: Associated Use Cases Playbooks
-  let deployedCount = 0;
-  let playbooksHtml = "";
-  let rolePlaybookCount = 0;
-
-  stage.playbookIds.forEach(id => {
-    const uc = useCasesDb.find(u => u.id === id);
-    // Filter strictly based on active user role
-    if (uc && isUsecaseRelatedToRole(uc, role)) {
-      rolePlaybookCount++;
-      const isUcDeployed = uc.isDeployed === true || uc.isDeployed === 1;
-      if (isUcDeployed) deployedCount++;
-
-      const ucTitle = uc.translations && uc.translations[appState.activeLanguage] && uc.translations[appState.activeLanguage].title 
-        ? uc.translations[appState.activeLanguage].title 
-        : uc.title;
-
-      playbooksHtml += `
-        <div class="milestone-playbook-item">
-          <div class="milestone-playbook-info">
-            <div class="milestone-playbook-status-dot ${isUcDeployed ? 'active' : ''}"></div>
-            <span class="milestone-playbook-title ${isUcDeployed ? 'completed' : ''}" title="${ucTitle}">
-              ${ucTitle}
-            </span>
-          </div>
-          <div style="display: flex; gap: 8px; align-items: center;">
-            <button class="btn-toggle-deploy-mini ${isUcDeployed ? 'active' : ''}" 
-                    onclick="toggleTimelinePlaybookDeploy('${stageId}', '${id}', ${isUcDeployed})"
-                    title="${isUcDeployed ? (isZh ? '停用部署' : 'Mark Inactive') : (isZh ? '啟用部署' : 'Mark Active')}">
-              <span class="material-symbols-outlined" style="font-size: 15px;">rocket_launch</span>
-            </button>
-            <button class="btn-remove-playbook" onclick="removePlaybookFromStage('${stageId}', '${id}')" title="${isZh ? '解除關聯' : 'Remove play'}">
-              <span class="material-symbols-outlined" style="font-size: 15px;">close</span>
-            </button>
-          </div>
-        </div>
-      `;
-    }
-  });
-
-  if (rolePlaybookCount === 0) {
-    playbooksHtml = `<p class="empty-playbook-msg">${isZh ? '此階段對您的角色目前無關聯使用案例。' : 'No playbooks mapped to your role in this phase.'}</p>`;
-  }
-
-  const progressPercent = rolePlaybookCount > 0 ? Math.round((deployedCount / rolePlaybookCount) * 100) : 0;
-  const progressText = isZh 
-    ? `已部署 ${deployedCount} / ${rolePlaybookCount} 個案例 (${progressPercent}%)` 
-    : `${deployedCount} of ${rolePlaybookCount} playbooks deployed (${progressPercent}%)`;
-
-  // Compile strictly filtered dropdown selection option list
-  let dropdownOptionsHtml = `<option value="">${isZh ? '選擇學習案例...' : 'Select a Playbook...'}</option>`;
-  
-  const sortedUseCases = [...useCasesDb]
-    .filter(uc => isUsecaseRelatedToRole(uc, role))
-    .sort((a, b) => {
-      const titleA = a.translations && a.translations[appState.activeLanguage] && a.translations[appState.activeLanguage].title 
-        ? a.translations[appState.activeLanguage].title 
-        : a.title;
-      const titleB = b.translations && b.translations[appState.activeLanguage] && b.translations[appState.activeLanguage].title 
-        ? b.translations[appState.activeLanguage].title 
-        : b.title;
-      return titleA.localeCompare(titleB);
-    });
-
-  let hasUnassigned = false;
-  sortedUseCases.forEach(uc => {
-    if (!stage.playbookIds.includes(uc.id)) {
-      hasUnassigned = true;
-      const ucTitle = uc.translations && uc.translations[appState.activeLanguage] && uc.translations[appState.activeLanguage].title 
-        ? uc.translations[appState.activeLanguage].title 
-        : uc.title;
-      dropdownOptionsHtml += `<option value="${uc.id}">${ucTitle}</option>`;
-    }
-  });
-
-  playCard.innerHTML = `
-    <div class="roadmap-card-header-bar" style="background: ${stage.color};"></div>
-    <div class="roadmap-card-body">
-      <div class="roadmap-section-meta-row">
-        <h4 class="roadmap-section-title">${isZh ? '角色關聯使用場景' : 'Role-Specific Playbooks'}</h4>
-        <span class="roadmap-section-badge verified" style="background: ${stage.color}15; color: ${stage.color};">
-          ${progressPercent}%
-        </span>
-      </div>
-      
-      <!-- Progress meter -->
-      <div class="milestone-progress-wrapper" style="margin-top: 14px; margin-bottom: 24px;">
-        <div class="milestone-progress-text" style="display: flex; justify-content: space-between; font-size: 11px; font-weight:700; color: var(--text-secondary); margin-bottom:6px;">
-          <span>${isZh ? '部署進度' : 'Deployment Progress'}</span>
-          <span>${progressText}</span>
-        </div>
-        <div class="milestone-progress-bar" style="height:6px; background: rgba(0,0,0,0.05); border-radius:3px; overflow:hidden;">
-          <div class="milestone-progress-fill" style="width: ${progressPercent}%; height:100%; background: ${stage.color}; transition: width 0.3s ease;"></div>
-        </div>
-      </div>
-
-      <!-- Playbook assignments list -->
-      <div class="milestone-playbooks-list">
-        ${playbooksHtml}
-      </div>
-
-      <!-- Assignment dropdown -->
-      <div class="add-playbook-dropdown-wrapper">
-        <select class="select-add-playbook" style="border-color: ${stage.color}40;" onchange="handleAssignPlaybook(this, '${stageId}')" ${!hasUnassigned ? 'disabled' : ''}>
-          ${dropdownOptionsHtml}
-        </select>
-      </div>
-    </div>
-  `;
-}
-
-// Checkbox change handler
-window.handleRoadmapTaskToggle = function(stageId, taskId, checkboxEl) {
-  const role = appState.userRole || "Lecturer";
-  const key = `ge_roadmap_chk_${role}_${stageId}_${taskId}`;
-  localStorage.setItem(key, checkboxEl.checked ? "true" : "false");
-
-  // Re-run entire rendering loop to fill timeline segments and re-calculate percents instantly
-  renderTimeline();
-};
-
-// Toggle playbook deployment status
-window.toggleTimelinePlaybookDeploy = async function(stageId, playbookId, currentStatus) {
-  const uc = useCasesDb.find(u => u.id === playbookId);
-  if (!uc) return;
-
-  const newStatus = !currentStatus;
-  const success = await syncUserPreference(playbookId, 'deploy', newStatus);
-  if (success) {
-    uc.isDeployed = newStatus;
-    showToast(newStatus 
-      ? (appState.activeLanguage === "zh-TW" || appState.activeLanguage === "zh-CN" ? "部署場景已啟用！" : "Deployment marked active!") 
-      : (appState.activeLanguage === "zh-TW" || appState.activeLanguage === "zh-CN" ? "部署場景已停用" : "Deployment marked inactive")
-    );
-    
-    renderTimeline();
-  }
-};
-
-// Assign unassigned playbook to phase
-window.handleAssignPlaybook = function(selectEl, stageId) {
-  const ucId = selectEl.value;
-  if (ucId) {
-    // Ensure playbook only belongs to one stage
-    timelineStages.forEach(stage => {
-      stage.playbookIds = stage.playbookIds.filter(id => id !== ucId);
-    });
-
-    const stage = timelineStages.find(s => s.id === stageId);
-    if (stage) {
-      stage.playbookIds.push(ucId);
-      saveTimeline();
-      renderTimeline();
-      showToast(appState.activeLanguage === "zh-TW" || appState.activeLanguage === "zh-CN" 
-        ? "案例分配成功！" 
-        : "Playbook assigned to phase!");
-    }
-  }
-};
-
-// Remove playbook association
-window.removePlaybookFromStage = function(stageId, useCaseId) {
-  const stage = timelineStages.find(s => s.id === stageId);
-  if (stage) {
-    stage.playbookIds = stage.playbookIds.filter(id => id !== useCaseId);
-    saveTimeline();
-    renderTimeline();
-    showToast(appState.activeLanguage === "zh-TW" || appState.activeLanguage === "zh-CN" 
-      ? "已解除此關聯" 
-      : "Playbook association removed!");
-  }
-};
 
 // ==========================================
 // User Feedback System Client Engine
@@ -6838,197 +5722,3 @@ window.deleteFeedback = async function(id) {
     alert("Server connection failure.");
   }
 };
-
-// ==========================================
-// Phase Verification Checklist CRUD Engine
-// ==========================================
-
-async function loadVerificationCheckpoints() {
-  try {
-    const res = await fetch('/api/checkpoints');
-    if (!res.ok) throw new Error("Failed to load checkpoints");
-    const checkpoints = await res.json();
-    
-    // Reconstruct the roleVerificationCheckpoints structure!
-    const newCheckpoints = {};
-    checkpoints.forEach(cp => {
-      if (!newCheckpoints[cp.role]) {
-        newCheckpoints[cp.role] = {};
-      }
-      if (!newCheckpoints[cp.role][cp.phase]) {
-        newCheckpoints[cp.role][cp.phase] = [];
-      }
-      newCheckpoints[cp.role][cp.phase].push({
-        id: cp.id,
-        text: cp.text,
-        textZh: cp.text_zh
-      });
-    });
-    
-    // Assign to our global variable
-    roleVerificationCheckpoints = newCheckpoints;
-  } catch (err) {
-    console.error("Error loading verification checkpoints from server, keeping local fallbacks:", err);
-  }
-}
-
-async function loadAdminChecklists() {
-  const tbody = document.getElementById("adminCheckpointsTableBody");
-  if (!tbody) return;
-  tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 20px; color: var(--text-muted);">Loading checklist items...</td></tr>`;
-
-  try {
-    const res = await fetch('/api/checkpoints');
-    let checkpoints = await res.json();
-
-    const roleFilter = document.getElementById("selectAdminCheckpointRoleFilter")?.value || "all";
-    if (roleFilter !== "all") {
-      checkpoints = checkpoints.filter(cp => cp.role === roleFilter);
-    }
-
-    tbody.innerHTML = "";
-    const isAssist = appState.isAssist === true;
-
-    if (checkpoints.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 20px; color: var(--text-muted);">No checkpoints found for the selected filter.</td></tr>`;
-      return;
-    }
-
-    checkpoints.forEach(cp => {
-      const tr = document.createElement("tr");
-      tr.style.borderBottom = "1px solid var(--border-glass)";
-
-      tr.innerHTML = `
-        <td style="padding: 12px 8px; font-family: monospace; font-size: 11px; color: var(--color-primary); font-weight: 700;">${cp.id}</td>
-        <td style="padding: 12px 8px; font-weight: 500;">${cp.role}</td>
-        <td style="padding: 12px 8px; text-transform: uppercase; font-size: 11px; font-weight: bold; color: var(--text-muted);">${cp.phase}</td>
-        <td style="padding: 12px 8px; line-height: 1.4;">${cp.text}</td>
-        <td style="padding: 12px 8px; line-height: 1.4; color: var(--text-secondary);">${cp.text_zh}</td>
-        <td style="padding: 12px 8px; line-height: 1.4; color: var(--text-secondary);">${cp.text_cn || cp.text_zh || cp.text}</td>
-        <td style="padding: 12px 8px; text-align: right; display: flex; gap: 8px; justify-content: flex-end;">
-          <button class="nav-button btn-edit-checkpoint" style="height: 28px; padding: 0 10px; font-size: 11px;">${isAssist ? 'View' : 'Edit'}</button>
-          ${isAssist ? '' : '<button class="nav-button btn-delete-checkpoint" style="height: 28px; padding: 0 10px; font-size: 11px; background: var(--color-danger); border-color: var(--color-danger); color: #ffffff !important;">Delete</button>'}
-        </td>
-      `;
-
-      tbody.appendChild(tr);
-
-      tr.querySelector(".btn-edit-checkpoint").onclick = () => openAdminCheckpointModal(cp);
-      if (!isAssist) {
-        tr.querySelector(".btn-delete-checkpoint").onclick = () => deleteAdminCheckpoint(cp.id);
-      }
-    });
-  } catch (error) {
-    console.error(error);
-  }
-}
-
-let editingCheckpointId = null;
-
-function openAdminCheckpointModal(cp = null) {
-  const modal = document.getElementById("adminCheckpointEditModal");
-  const modalTitle = document.getElementById("adminCheckpointModalTitle");
-  const form = document.getElementById("formAdminSaveCheckpoint");
-  const feedback = document.getElementById("adminCheckpointFormFeedback");
-
-  if (!modal || !modalTitle || !form) return;
-
-  feedback.style.display = "none";
-  form.reset();
-
-  const isAssist = appState.isAssist === true;
-  const isEditing = cp !== null;
-  editingCheckpointId = isEditing ? cp.id : null;
-
-  modalTitle.textContent = isEditing ? "Edit Checklist Item" : "Add Checklist Item";
-
-  const idInput = document.getElementById("formCheckpointId");
-  if (isEditing) {
-    idInput.value = cp.id;
-    idInput.disabled = true; // Immutable on edit
-    document.getElementById("formCheckpointRole").value = cp.role;
-    document.getElementById("formCheckpointPhase").value = cp.phase;
-    document.getElementById("formCheckpointText").value = cp.text;
-    document.getElementById("formCheckpointTextZh").value = cp.text_zh;
-    document.getElementById("formCheckpointTextCn").value = cp.text_cn || cp.text_zh || "";
-  } else {
-    idInput.value = "";
-    idInput.disabled = false;
-    document.getElementById("formCheckpointTextCn").value = "";
-  }
-
-  const saveBtn = document.getElementById("btnAdminCheckpointSave");
-  if (saveBtn) {
-    saveBtn.style.display = isAssist ? "none" : "block";
-  }
-
-  modal.classList.add("active");
-}
-
-async function saveAdminCheckpoint() {
-  const id = document.getElementById("formCheckpointId").value.trim();
-  const role = document.getElementById("formCheckpointRole").value;
-  const phase = document.getElementById("formCheckpointPhase").value;
-  const text = document.getElementById("formCheckpointText").value.trim();
-  const text_zh = document.getElementById("formCheckpointTextZh").value.trim();
-  const text_cn = document.getElementById("formCheckpointTextCn").value.trim();
-  const feedback = document.getElementById("adminCheckpointFormFeedback");
-
-  if (!id || !text || !text_zh || !text_cn) {
-    feedback.textContent = "All fields are mandatory.";
-    feedback.style.display = "block";
-    return;
-  }
-
-  const payload = { id, role, phase, text, text_zh, text_cn };
-  const isEditing = editingCheckpointId !== null;
-  const url = '/api/admin/checkpoints';
-  const method = isEditing ? 'PUT' : 'POST';
-
-  try {
-    const res = await fetch(url, {
-      method: method,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    const data = await res.json();
-
-    if (data.success) {
-      document.getElementById("adminCheckpointEditModal").classList.remove("active");
-      await loadVerificationCheckpoints(); // Reload dynamic user roadmap structures!
-      loadAdminChecklists();               // Refresh checklist admin table!
-    } else {
-      feedback.textContent = data.message || "Failed to save checklist item.";
-      feedback.style.display = "block";
-    }
-  } catch (err) {
-    console.error(err);
-    feedback.textContent = "An error occurred while connecting to the database.";
-    feedback.style.display = "block";
-  }
-}
-
-async function deleteAdminCheckpoint(id) {
-  if (!confirm(`Are you sure you want to delete checklist item "${id}"?`)) {
-    return;
-  }
-
-  try {
-    const res = await fetch('/api/admin/checkpoints', {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id })
-    });
-    const data = await res.json();
-
-    if (data.success) {
-      await loadVerificationCheckpoints(); // Reload dynamic user roadmap structures!
-      loadAdminChecklists();               // Refresh checklist admin table!
-    } else {
-      alert(data.message || "Failed to delete checklist item.");
-    }
-  } catch (err) {
-    console.error(err);
-    alert("An error occurred while deleting the checklist item.");
-  }
-}

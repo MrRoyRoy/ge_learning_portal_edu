@@ -56,18 +56,23 @@ The portal is designed with a premium, state-of-the-art aesthetic that shifts dy
 
 ---
 
-## 4. Connector & Dynamic State Logic
+## 4. Connector & Dynamic Variable Logic
 
-The portal supports intelligent integration simulation via simulated enterprise connector toggles:
+The portal supports intelligent integration simulation and dynamic prompt customization:
 
 * **Nomenclature:**
-  * All connector components are named generically in user-facing toasts and badges to ensure product agnosticism (e.g., **Drive Connector**, **Email Connector**, **Calendar Connector**, **LMS Connector**) rather than referencing vendor-specific software (like *Outlook* or *OneDrive*).
+  * All connector components are named generically in user-facing toasts and badges to ensure product agnosticism (e.g., **Drive Connector**, **Email Connector**, **Calendar Connector**, **LMS Connector**) rather than referencing vendor-specific software.
 * **Essential Connectors vs. Optional Connectors:**
-  * Use cases that strictly require an active integration (e.g., **Daily Academic Email Digest & Priority Planner**) carry a `connectorEssential: true` tag. These cards strictly show a locked overlay on the dashboard when their corresponding connector is toggled off.
-  * Use cases where integrations are secondary enhancements (e.g. *Sentiment Feedback*, *Activities Calendar*) are tagged with `connectorEssential: false`. These cards remain **unlocked** on the dashboard and accessible to click at all times.
-* **Modal Advanced Toggle:**
-  * Inside the detailed modal view for non-essential connector use cases, an interactive slider checkbox ("Extend to Advanced Usage with Connectors") is rendered.
-  * Toggling this checkbox instantly swaps the steps, prompts, and pro-tips between standard manual file upload variants and active cloud connector workflows.
+  * Use cases that strictly require an active integration carry a `connectorEssential: true` tag and show a locked overlay when their corresponding connector is toggled off.
+  * Use cases where integrations are secondary enhancements are tagged with `connectorEssential: false` and remain unlocked at all times.
+* **Manual Workflow Tips Box (Replaced Dual-Mode Toggle):**
+  * Rather than complex dual-prompt switches, playbook detail views feature a streamlined, clean prompt container accompanied by a non-intrusive manual tips box (`.manual-tip-box`) recommending the manual file upload fallback workflow if institutional connectors are inactive or unavailable.
+* **Dynamic "Fill in the Variables" Engine:**
+  * Prompts automatically scan for variable tokens (e.g. `[COURSE_NAME]`, `[ASSIGNMENT_TOPIC]`).
+  * An interactive variable panel renders real-time input fields directly above the prompt.
+  * Editing variable values dynamically interpolates into both the highlighted prompt preview and the instant clipboard copy action.
+* **Collapsible Prompt (Default Closed):**
+  * Step instructions display prompts inside a `<details class="prompt-collapsible">` container, collapsed by default to maintain a clean, compact view per modern prompt library standards.
 
 ---
 
@@ -97,119 +102,49 @@ graph TD
 * **SVG Vector Graph Charts:** The admin statistics view aggregates database events and paints high-contrast line charts showing Page Views, Likes, and Deployments over the last 6 months.
 
 ---
-## 6. Cloud Run Production Deployment
+## 6. Cloud Run Production & Dev Deployments
 
-The production environment is deployed and scaled on **Google Cloud Run** to serve the active user base with high-availability:
+* **Production Environment:**
+  * **Service Name:** `your-service`
+  * **GCP Project:** `your-gcp-project-id`
+  * **Active Region:** `your-region` (Hong Kong)
+  * **Production Endpoint URL:** [https://your-service-PROJECT_NUMBER.your-region.run.app](https://your-service-PROJECT_NUMBER.your-region.run.app)
+  * **Custom Domain:** [https://portal.example.com](https://portal.example.com)
 
-* **Service Name:** `your-service`
-* **GCP Project:** `your-gcp-project-id`
-* **Active Region:** `your-region` (Hong Kong)
-* **Production Endpoint URL:** [https://your-service-PROJECT_NUMBER.your-region.run.app](https://your-service-PROJECT_NUMBER.your-region.run.app)
-* **Custom Domain:** [https://portal.example.com](https://portal.example.com) (Configured via Global HTTPS Load Balancer in `your-gcp-project-id` & Cloud DNS in `your-dns-project`)
-* **Access Mode:** Domain-restricted access (enforced via active Organization Policies). Public unauthenticated access (`allUsers` binding) can be added by temporarily bypassing domain restriction constraints in the GCP Console.
-* **Cleanup Status:** Old duplicate deployments (`ge-edu-portal` and its Artifact Registry repository in `us-west1`) have been fully deleted and pruned.
-
-### Standard Deployment & Release Workflow
-
-To compile and deploy updates or new releases of the portal to the live production environment, follow this standardized step-by-step workflow:
-
-1. **Verify Local Assets & Configuration:**
-   * Ensure that `style.css`, `app.js`, `index.html`, and `server.js` contain no syntax errors and all dynamic references are correct.
-   * Verify that local testing configurations do not override the production database environment values.
-
-2. **Authenticate with Google Cloud SDK:**
-   * Ensure you are authenticated with your authorized Google Cloud developer account:
-     ```bash
-     gcloud auth login
-     ```
-
-3. **Deploy Codebase to Google Cloud Run:**
-   * Execute the standardized source-deployment command in your terminal within the root directory of the repository:
-     ```bash
-     gcloud run deploy your-service --source . --region your-region --allow-unauthenticated --project your-gcp-project-id
-     ```
-   * *Note on builds:* Google Cloud Run automatically leverages the root `Dockerfile` to compile and containerize the environment via Cloud Build, saving the resulting artifact within Artifact Registry in `your-region`.
-
-4. **Verify Access & Organization Policies:**
-    * If organization policies block public unauthenticated access, log in using your workspace domain credentials to access the production URL.
-    * If public unauthenticated access is permitted by your organization policies, override the invoker role binding via:
-      ```bash
-      gcloud run services add-iam-policy-binding your-service --region=your-region --member=allUsers --role=roles/run.invoker --project=your-gcp-project-id
-      ```
-
-### Agent-Driven Deployment & Version Control Workflow
-
-To streamline development, ensure version history consistency, and automate production releases, the following **Agent-Driven Deployment & Version Control Workflow** is followed:
-
-#### Step 1: Git Commit & Push (Version Control)
-Whenever the AI coding agent successfully implements code modifications, bug fixes, or enhancements, the agent must immediately stage, commit, and push the revisions to the remote GitHub repository under the user account **MrRoyRoy**:
-
-1. Configure the Git author credentials locally:
-   ```bash
-   git config user.name "MrRoyRoy"
-   git config user.email "you@example.com"
-   ```
-2. Stage and commit the modified files with a descriptive, professional commit message:
-   ```bash
-   git add .
-   git commit -m "feat: [Descriptive Title of Accomplished Revisions]"
-   ```
-3. Push the local commits to the upstream repository branch:
-   ```bash
-   git push
-   ```
-
-#### Step 2: Live Cloud Run Production Deployment
-Once version control has been synced, the agent triggers a live source-deployment to update the production container environment:
-
-```bash
-gcloud run deploy your-service --source . --region your-region --allow-unauthenticated --project your-gcp-project-id
-```
-
-#### Step 3: Post-Deployment Documentation & Anonymization Checks
-Following any deployment of modifications, enhancements, or bug fixes:
-1. **Assess README Relevance**: Review the `README.md` file completely to determine if any setup instructions, schemas, commands, or feature descriptions need updating to reflect the new state.
-2. **Anonymize Environment-Specific Details**: Before staging and pushing changes, double-check that **no custom environment-specific parameters, identifiers, or password credentials** are saved inside `README.md`. Replace the following with generic `<PLACEHOLDERS>` in `README.md`:
-   * Project ID (e.g. use `<YOUR_GCP_PROJECT_ID>` instead of `your-gcp-project-id`)
-   * Region (e.g. use `<YOUR_GCP_REGION>` instead of `your-region`)
-   * Service Identity (e.g. use `<YOUR_CLOUD_RUN_SERVICE_NAME>` instead of `your-service`)
-   * Database Instance Name (e.g. use `<YOUR_DATABASE_INSTANCE_NAME>` instead of `your-sql-instance`)
-   * Custom administrative and super-admin passwords (always use placeholder tags and never store actual secrets in plain-text inside git).
-   * Personal workspace emails, account tokens, or custom IP addresses.
-3. **Password Recovery Warning**: Ensure that any credentials setup guide contains a warning noting that there is **no recovery mechanism** for customized administrative passwords, and that they must be documented and kept secure.
-
-#### GitHub Token & Secrets Storage
-* **GitHub Personal Access Token (PAT):** Saved securely in the local project workspace in the [gp](file:///path/to/home/Desktop/dev-projects/edu-ge-adoption-portal/gp) file. This token authorizes push workflows and repository management actions.
+* **Dev Environment:**
+  * **Service Name:** `your-dev-service`
+  * **GCP Project:** `your-gcp-project-id`
+  * **Active Region:** `your-region` (Hong Kong)
+  * **Database:** `your_dev_db` on Cloud SQL instance `your-sql-instance`
+  * **Dev Endpoint URL:** [https://your-dev-service-PROJECT_NUMBER.your-region.run.app](https://your-dev-service-PROJECT_NUMBER.your-region.run.app)
 
 ---
 
 ############# 7. App State & Progress
  
 ##### Accomplished Tasks (Latest Session Milestone)
-* **Dev Instance & Data Isolation Provisioning (100% Complete):**
-  * **Dedicated Dev Database:** Created PostgreSQL database `your_dev_db` in Cloud SQL instance `your-sql-instance` (Project: `your-gcp-project-id`, Region: `your-region`).
-  * **Dedicated Dev Cloud Run Instance:** Deployed `your-dev-service` to Google Cloud Run in `your-region`, connected directly via Unix socket to `your-gcp-project-id:your-region:your-sql-instance` with database `your_dev_db`.
-  * **Automated Table & Playbook Seeding:** Verified automatic schema setup and 14 playbook seeding upon first boot.
-  * **Dev Endpoint URL:** [https://your-dev-service-PROJECT_NUMBER.your-region.run.app](https://your-dev-service-PROJECT_NUMBER.your-region.run.app)
-* **Custom Domain Mapping & HTTPS Infrastructure (100% Complete):**
-  * **Global Load Balancer & Serverless NEG:** Provisioned a global static IP (`203.0.113.10`), a Serverless Network Endpoint Group (`your-service-neg` in `your-region`), a global backend service, URL map (`your-service-url-map`), target HTTPS proxy, and forwarding rule in project `your-gcp-project-id`.
-  * **Cloud DNS Record Configuration:** Added an `A` record mapping `portal.example.com` -> `203.0.113.10` in Cloud DNS zone `your-dns-zone` under GCP project `your-dns-project`.
-  * **Automated SSL Certificate Provisioning:** Created Google-managed SSL certificate `your-service-cert` for domain `portal.example.com`.
-* **Standardized Product-Agnostic Connectors (100% Complete):**
-  * **Restored Missing Connector Form Controls:** Added the missing **LMS Connector** and **Calendar Connector** checkboxes back to the admin Use Case edit/creation modal.
-  * **Adopted Product-Agnostic Nomenclature:** Replaced legacy vendor-specific terms with clean product-agnostic options across the app.
-* **Structured Primary Role Context Dropdown (100% Complete):**
-  * **Converted Free-text to Select Dropdown:** Integrated bilingual translation callbacks and AI role mapping setters.
-* **Website Icon Optimization & Container Asset Delivery (100% Complete):**
-  * **Multi-Format Favicon Suite:** Generated optimized `favicon.ico` (16x16, 32x32, 48x48, 64x64 multi-resolution ICO), `favicon-32x32.png`, `favicon-192x192.png`, and `apple-touch-icon.png` (180x180) from `ge-edu-portal.png`.
-  * **Explicit Express Route & HTML Links:** Configured explicit `GET /favicon.ico` route in [server.js](file:///path/to/home/Desktop/dev-projects/edu-ge-adoption-portal/server.js#L29-L32) and comprehensive icon link declarations in [index.html](file:///path/to/home/Desktop/dev-projects/edu-ge-adoption-portal/index.html#L9-L15) for cross-browser & mobile tab rendering.
-  * **Container Image Asset Copy:** Updated [Dockerfile](file:///path/to/home/Desktop/dev-projects/edu-ge-adoption-portal/Dockerfile#L27-L32) to explicitly bundle `ge-edu-portal.png`, `favicon*`, and `apple-touch-icon.png` into the production container image.
-* **Dual Prompt Generation Architecture Enhancement (100% Complete):**
-  * **Advanced-First Prompt Derivation:** Refined Gemini system prompt generation rules in [server.js](file:///path/to/home/Desktop/dev-projects/edu-ge-adoption-portal/server.js#L1344-L1350) to mandate generating the **Advanced Prompt** (`advancedPrompt`) FIRST with full connector workflows, and then modifying it to derive the **Basic Prompt** (`prompt`) without connectors.
-  * **Instruction Integrity & Structural Parity:** Guaranteed identical tone, structure, bullet sequence, and core rules across dual prompts, ensuring basic and advanced prompts remain closely aligned.
+* **Emphasized Big & Bold Titles (100% Complete):**
+  * Raised card titles to `1.22rem` with `800` weight and modal dialog titles to `1.45rem` with `800` font weight for strong visual prominence.
+* **Streamlined UI Layout & Word Counts (100% Complete):**
+  * Simplified step presentations, increased typography sizes to `14px`, and applied concise, easily scannable descriptions across all playbooks.
+* **Collapsible Prompt Container (Default Closed) (100% Complete):**
+  * Wrapped prompt blocks in a native `<details class="prompt-collapsible">` (collapsed by default, referencing Claude Prompt Library design) to keep layouts uncluttered.
+* **Adaptive Tag Presentation (100% Complete):**
+  * Rendered compact icon-only badges (`.tag-icon-only`) with hover tooltips on overview cards.
+  * Rendered comprehensive badges (`.tag-full` with icon and text label) inside the detailed modal view.
+* **Dual-Prompt Removal & Manual Tips Box (100% Complete):**
+  * Eliminated the dual-prompt toggle slider and complex branch logic.
+  * Added a dedicated `.manual-tip-box` providing clear manual file upload guidance when connectors are unavailable.
+* **Dynamic "Fill in the Variables" Engine (100% Complete):**
+  * Implemented automated `[VARIABLE_NAME]` token extraction, real-time input fields panel, and dynamic prompt preview/copy interpolation.
+* **Schema Refactor & Roadmap/Checklist Removal (100% Complete):**
+  * Dropped `verification_checkpoints` database table (`DROP TABLE IF EXISTS verification_checkpoints;`).
+  * Removed timeline view navigation, checklist administration tabs, and related CRUD endpoints while preserving user feedback functionality.
+* **Dev Cloud Run Deployment Ready (100% Complete):**
+  * Validated server startup, schema migration, and API response on the dev configuration.
 
 ### Next Steps & Continuous Polish
-1. **Dev Instance Exploration:** Test dev playbooks, account creations, and analytics on `your-dev-service`.
-2. **SSL Certificate Issuance Monitoring:** Check provisioning status of `your-service-cert` until it transitions from `PROVISIONING` to `ACTIVE`.
-3. **AI Tuning Oversight:** Monitor prompt drafting response payloads to verify consistent product-agnostic naming and dual prompt parity under complex custom instructions.
+1. **Deploy to Dev Instance:** Deploy latest build to `your-dev-service` on Cloud Run.
+2. **End-to-End Dev Verification:** Validate prompt interpolation, collapsible state, and manual tips box live on `your-dev-service`.
+3. **Monitor User Feedback:** Verify feedback submission and review from the floating widget into the admin portal.
 
