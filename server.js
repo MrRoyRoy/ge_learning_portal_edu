@@ -240,32 +240,19 @@ async function initializeSchemas() {
     );
   `;
 
-  const createCheckpointsTable = dbType === 'postgres' ? `
-    CREATE TABLE IF NOT EXISTS verification_checkpoints (
-      id VARCHAR(100) PRIMARY KEY,
-      role VARCHAR(100) NOT NULL,
-      phase VARCHAR(50) NOT NULL,
-      text TEXT NOT NULL,
-      text_zh TEXT NOT NULL,
-      text_cn TEXT NOT NULL
-    );
-  ` : `
-    CREATE TABLE IF NOT EXISTS verification_checkpoints (
-      id TEXT PRIMARY KEY,
-      role TEXT NOT NULL,
-      phase TEXT NOT NULL,
-      text TEXT NOT NULL,
-      text_zh TEXT NOT NULL,
-      text_cn TEXT NOT NULL
-    );
-  `;
-
   await query(createUsersTable);
   await query(createUseCasesTable);
   await query(createPreferencesTable);
   await query(createAnalyticsTable);
   await query(createFeedbacksTable);
-  await query(createCheckpointsTable);
+
+  // Automated migration: Drop obsolete verification checkpoints table
+  try {
+    await query('DROP TABLE IF EXISTS verification_checkpoints;');
+    console.log('🔄 Schema migration: Dropped obsolete "verification_checkpoints" table.');
+  } catch (err) {
+    // Ignore error if already dropped
+  }
 
   // Dynamic schema migrations for existing databases
   try {
@@ -288,24 +275,6 @@ async function initializeSchemas() {
     console.log('🔄 Schema migration: Added "updated_at" column to "use_cases" table.');
   } catch (err) {
     // Column already exists, safe to ignore
-  }
-
-  try {
-    if (dbType === 'postgres') {
-      await query('ALTER TABLE verification_checkpoints ADD COLUMN text_cn TEXT;');
-    } else {
-      await query('ALTER TABLE verification_checkpoints ADD COLUMN text_cn TEXT;');
-    }
-    console.log('🔄 Schema migration: Added "text_cn" column to "verification_checkpoints" table.');
-  } catch (err) {
-    // Column already exists, safe to ignore
-  }
-
-  try {
-    await query('UPDATE verification_checkpoints SET text_cn = text_zh WHERE text_cn IS NULL OR text_cn = \'\';');
-    console.log('🔄 Schema migration: Backfilled empty "text_cn" fields with "text_zh" values.');
-  } catch (err) {
-    console.error('⚠️ Schema migration error during backfill:', err);
   }
 
   console.log('✅ All database tables verified / created.');
@@ -344,59 +313,23 @@ async function seedDatabase() {
       ;
       globalThis.seed_useCasesDb = useCasesDb;
       globalThis.seed_useCasesTranslations = useCasesTranslations;
-      globalThis.seed_roleVerificationCheckpoints = roleVerificationCheckpoints;
     `;
 
     vm.runInNewContext(seedExtractScript, sandbox);
 
     const useCases = sandbox.seed_useCasesDb;
     const translations = sandbox.seed_useCasesTranslations;
-    const checkpointsData = sandbox.seed_roleVerificationCheckpoints;
 
     if (!useCases || !translations) {
       throw new Error('Failed to extract useCasesDb or useCasesTranslations from sandbox context.');
     }
 
-    if (count === 0) {
-      console.log(`🌱 Database is empty. Seeding all ${useCases.length} use cases from app.js...`);
-      for (const uc of useCases) {
-        await insertUseCase(uc, translations[uc.id]);
-      }
-      console.log('✅ Use cases database seeded successfully.');
-    } else {
-      console.log('📊 Database already contains seeded use cases. Synchronizing "su_helpdesk" and "at_risk_cohort" configurations...');
-      const suHelpdesk = useCases.find(uc => uc.id === 'su_helpdesk');
-      if (suHelpdesk) {
-        await query("DELETE FROM use_cases WHERE id = 'su_helpdesk'");
-        await insertUseCase(suHelpdesk, translations['su_helpdesk']);
-        console.log('✅ "su_helpdesk" dual-mode prompt configurations synchronized successfully.');
-      }
-      const atRiskCohort = useCases.find(uc => uc.id === 'at_risk_cohort');
-      if (atRiskCohort) {
-        await query("DELETE FROM use_cases WHERE id = 'at_risk_cohort'");
-        await insertUseCase(atRiskCohort, translations['at_risk_cohort']);
-        console.log('✅ "at_risk_cohort" configurations synchronized successfully.');
-      }
+    console.log(`🌱 Synchronizing all ${useCases.length} simplified use cases from app.js...`);
+    for (const uc of useCases) {
+      await query("DELETE FROM use_cases WHERE id = ?", [uc.id]);
+      await insertUseCase(uc, translations[uc.id]);
     }
-
-    // Seed verification checkpoints if empty
-    const existingCheckpoints = await query('SELECT count(*) as count FROM verification_checkpoints');
-    const checkpointCount = parseInt(existingCheckpoints[0].count || existingCheckpoints[0]['count(*)'] || 0);
-
-    if (checkpointsData && checkpointCount === 0) {
-      console.log('🌱 Seeding verification checkpoints database from app.js...');
-      for (const [role, phases] of Object.entries(checkpointsData)) {
-        for (const [phase, items] of Object.entries(phases)) {
-          for (const item of items) {
-            await query(
-              'INSERT INTO verification_checkpoints (id, role, phase, text, text_zh, text_cn) VALUES (?, ?, ?, ?, ?, ?)',
-              [item.id, role, phase, item.text, item.textZh || item.text, item.textCn || item.textZh || item.text]
-            );
-          }
-        }
-      }
-      console.log('✅ Verification checkpoints database seeded successfully.');
-    }
+    console.log('✅ Use cases database synchronized successfully.');
 
     // Clean up any previously pre-seeded mock analytics data to reflect actual adoption metrics
     await query("DELETE FROM analytics WHERE user_email = 'academic_trial@edu.hk'");
@@ -652,11 +585,8 @@ app.get('/api/use-cases', async (req, res) => {
         role: uc.role,
         level: JSON.parse(uc.level || '[]'),
         steps: JSON.parse(uc.steps || '[]'),
-        advancedSteps: enTrans.advancedSteps || null,
         prompt: uc.prompt,
-        advancedPrompt: enTrans.advancedPrompt || null,
         proTip: uc.pro_tip,
-        advancedProTip: enTrans.advancedProTip || null,
         connectorGuide: uc.connector_guide ? JSON.parse(uc.connector_guide) : null,
         translations: transObj,
         isVerified: uc.is_verified === true || uc.is_verified === 1 || uc.is_verified === 'true',
@@ -1240,7 +1170,7 @@ app.get('/api/admin/use-cases/export', requireAdmin, async (req, res) => {
 
 // Admin-Gemini: Optimize or Draft Playbooks with Gemini 3.5 Flash using Service Account Access
 app.post('/api/admin/generate-gemini', requireAdmin, async (req, res) => {
-  const { id, title, category, features, connectors, role, level, isDualMode, instruction } = req.body;
+  const { id, title, category, features, connectors, role, level, instruction } = req.body;
   if (!title && (!instruction || instruction.trim().length === 0)) {
     return res.status(400).json({ success: false, message: 'Please specify either a playbook title or custom instructions so Gemini can draft relevant content.' });
   }
@@ -1281,7 +1211,6 @@ Generate a high-fidelity educational/operational playbook based on the following
 - Connected Data Connectors: ${JSON.stringify(connectors || [])} (You may update or add connectors based on custom instructions)
 - Target User Role: "${role || 'Lecturer'}"
 - Target Institutional Levels: ${JSON.stringify(level || [])}
-- Enable Dual-Mode Connectors Workflow: ${isDualMode ? 'Yes' : 'No'} (You may enable or disable this flag if instructions request/imply it)
 `;
 
     if (originalCaseText) {
@@ -1319,36 +1248,26 @@ The JSON object MUST EXACTLY follow this schema:
   "role": "Lecturer",
   "features": ["NotebookLM", "Canvas Mode", "Deep Research", "Agent Designer", "Image Generation", "Video Generation"], // Choose recommended features based on instructions and input
   "connectors": ["Drive Connector", "Email Connector", "LMS Connector", "Calendar Connector"], // Choose recommended connectors based on instructions and input, use product-agnostic naming exactly!
-  "isDualMode": true, // Boolean flag (true or false) indicating if this is a dual-mode playbook. Set true if the user's instruction asks for active connectors or dual mode template.
   "en": {
     "title": "Suggested High-Fidelity English Title",
     "summary": "Detailed summary describing how this playbook uses Gemini to solve the target challenge.",
     "steps": ["Step 1", "Step 2", "Step 3", "Step 4"],
-    "advancedSteps": ["Advanced Step 1 using Connectors", "Advanced Step 2 using Connectors", "Advanced Step 3 using Connectors", "Advanced Step 4 using Connectors"], // Include advancedSteps if isDualMode is true, otherwise keep as null or empty array.
-    "prompt": "Highly detailed model prompt that the user can copy and paste into Gemini.",
-    "advancedPrompt": "Detailed advanced integration prompt...", // Include advancedPrompt if isDualMode is true, otherwise keep as null or empty.
-    "proTip": "Helpful pro-tip for getting the best outcome from Gemini.",
-    "advancedProTip": "Advanced pro-tip about data connectors..." // Include advancedProTip if isDualMode is true, otherwise keep as null or empty.
+    "prompt": "Highly detailed model prompt that the user can copy and paste into Gemini. Use dynamic variables in square brackets like [COURSE_NAME], [SUBJECT], [TOPIC], [TARGET_AUDIENCE] so users can fill in variables.",
+    "proTip": "Helpful pro-tip for getting the best outcome from Gemini."
   },
   "zh-TW": {
     "title": "繁體中文版高質量標題",
     "summary": "繁體中文版詳細描述...",
     "steps": ["繁體中文步驟 1", "繁體中文步驟 2", "繁體中文步驟 3", "繁體中文步驟 4"],
-    "advancedSteps": ["繁體中文進階步驟 1", "繁體中文進階步驟 2", "繁體中文進階步驟 3", "繁體中文進階步驟 4"], // Only if isDualMode is true
-    "prompt": "繁體中文詳細提示詞...",
-    "advancedPrompt": "繁體中文進階提示詞...", // Only if isDualMode is true
-    "proTip": "繁體中文實用技巧...",
-    "advancedProTip": "繁體中文進階實用技巧..." // Only if isDualMode is true
+    "prompt": "繁體中文詳細提示詞...請包含變數預留位置如 [課程名稱]、[主題] 等...",
+    "proTip": "繁體中文實用技巧..."
   },
   "zh-CN": {
     "title": "简体中文版高质量标题",
     "summary": "简体中文版详细描述...",
     "steps": ["简体中文步骤 1", "简体中文步骤 2", "简体中文步骤 3", "简体中文步骤 4"],
-    "advancedSteps": ["简体中文高级步骤 1", "简体中文高级步骤 2", "简体中文高级步骤 3", "简体中文高级步骤 4"], // Only if isDualMode is true
-    "prompt": "简体中文详细提示词...",
-    "advancedPrompt": "简体中文高级提示词...", // Only if isDualMode is true
-    "proTip": "简体中文实用技巧...",
-    "advancedProTip": "简体中文高级实用技巧..." // Only if isDualMode is true
+    "prompt": "简体中文详细提示词...请包含变量预留位置如 [课程名称]、[主题] 等...",
+    "proTip": "简体中文实用技巧..."
   }
 }
 
@@ -1356,7 +1275,7 @@ Brand Guidelines & Localisation Boundaries:
 1. Keep ALL product and feature names (e.g. "NotebookLM", "Gemini", "Canvas Mode", "Deep Research", "Agent Designer", "Image Generation", "Video Generation", "Drive Connector", "Email Connector", "Calendar Connector", "LMS Connector") strictly in ENGLISH, even inside the Traditional Chinese ("zh-TW") and Simplified Chinese ("zh-CN") translations.
 2. Never use the term "Gem" (always use "Agent"). Never use the term "Copilot".
 3. Avoid generic red/blue/green references. Ensure suggestions are premium and tailored for educational excellence.
-4. CRITICAL DUAL PROMPT GENERATION RULE: When "isDualMode" is true (or dual prompt mode is enabled), you MUST generate the Advanced Prompt ("advancedPrompt") FIRST with full integrated data connectors and automated workflows. THEN, modify that exact Advanced Prompt to create the Basic Prompt ("prompt") by removing all connector triggers (replacing connector-automated steps with manual file upload, copy-paste, or manual document attachments). You MUST maintain the exact same instruction sequence, structural bullet points, tone, and phrasing between "advancedPrompt" and "prompt" so that the integrity of instructions between both prompts remains virtually identical and very alike. Apply this exact same generation sequence to steps as well: generate "advancedSteps" first with connectors, then adapt them into "steps" without connectors.
+4. DYNAMIC PROMPT VARIABLES: Prompts MUST use bracketed variables like [COURSE_NAME], [SUBJECT], [TOPIC], [TARGET_AUDIENCE] so users can fill them in interactively. Provide clean, simple, action-oriented operational steps.
 5. Output ONLY the raw JSON block. Do NOT surround it with markdown code blocks (such as \`\`\`json ... \`\`\`), HTML tags, or any other introductory or concluding commentary text.
 
 `;
@@ -1407,83 +1326,6 @@ Brand Guidelines & Localisation Boundaries:
     res.json({ success: true, result: parsedResult });
   } catch (error) {
     console.error('Gemini content generation error:', error);
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// ==========================================
-// 5b. Phase Verification Checkpoints REST API
-// ==========================================
-
-// Get all verification checkpoints (Accessible to all authenticated users)
-app.get('/api/checkpoints', async (req, res) => {
-  try {
-    const rows = await query('SELECT * FROM verification_checkpoints ORDER BY role ASC, phase ASC, id ASC');
-    res.json(rows);
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// Add a verification checkpoint (Admin only)
-app.post('/api/admin/checkpoints', requireAdmin, async (req, res) => {
-  if (req.session.user.isAssist) {
-    return res.status(403).json({ success: false, message: 'Access denied. Administrative assistants are not authorized to modify verification checklists.' });
-  }
-
-  const { id, role, phase, text, text_zh, text_cn } = req.body;
-  if (!id || !role || !phase || !text) {
-    return res.status(400).json({ success: false, message: 'Missing required parameters.' });
-  }
-
-  try {
-    await query(
-      'INSERT INTO verification_checkpoints (id, role, phase, text, text_zh, text_cn) VALUES (?, ?, ?, ?, ?, ?)',
-      [id, role, phase, text, text_zh || text, text_cn || text_zh || text]
-    );
-    res.json({ success: true });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// Update a verification checkpoint (Admin only)
-app.put('/api/admin/checkpoints', requireAdmin, async (req, res) => {
-  if (req.session.user.isAssist) {
-    return res.status(403).json({ success: false, message: 'Access denied. Administrative assistants are not authorized to modify verification checklists.' });
-  }
-
-  const { id, role, phase, text, text_zh, text_cn } = req.body;
-  if (!id || !role || !phase || !text) {
-    return res.status(400).json({ success: false, message: 'Missing required parameters.' });
-  }
-
-  try {
-    await query(
-      'UPDATE verification_checkpoints SET role = ?, phase = ?, text = ?, text_zh = ?, text_cn = ? WHERE id = ?',
-      [role, phase, text, text_zh || text, text_cn || text_zh || text, id]
-    );
-    res.json({ success: true });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// Delete a verification checkpoint (Admin only)
-app.delete('/api/admin/checkpoints', requireAdmin, async (req, res) => {
-  if (req.session.user.isAssist) {
-    return res.status(403).json({ success: false, message: 'Access denied. Administrative assistants are not authorized to modify verification checklists.' });
-  }
-
-  const { id } = req.body;
-  if (!id) {
-    return res.status(400).json({ success: false, message: 'Missing required ID parameter.' });
-  }
-
-  try {
-    await query('DELETE FROM verification_checkpoints WHERE id = ?', [id]);
-    res.json({ success: true });
-  } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
 });

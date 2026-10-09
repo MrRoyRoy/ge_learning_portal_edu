@@ -183,9 +183,6 @@
           <li class="filter-menu-item active portal-view-item" data-view="playbooks" id="viewPlaybooksNav">
             <span class="material-symbols-outlined">explore</span> <span id="navExplorePlaybooks">Explore Playbooks</span>
           </li>
-          <li class="filter-menu-item portal-view-item" data-view="timeline" id="viewTimelineNav">
-            <span class="material-symbols-outlined">route</span> <span id="navAdoptionTimeline">Adoption Roadmap</span>
-          </li>
         </ul>
       </div>
 
@@ -377,23 +374,6 @@
             <!-- Dynamic category boxes will be rendered here by app.js -->
           </section>
         </div>
-
-        <!-- ADOPTION ROADMAP INTERACTIVE TIMELINE VIEW -->
-        <div id="timelineView" style="display: none;">
-          <div class="dashboard-header" style="margin-bottom: 20px;">
-            <div class="dashboard-title-row">
-              <div>
-                <h1 class="welcome-msg" id="timelineWelcomeMsg">Gemini Adoption Roadmap</h1>
-                <p class="welcome-subtitle" id="timelineWelcomeSubtitle">Track and customize your institution's progressive Gemini Enterprise rollout stages.</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Unified Adoption Roadmap Section -->
-          <div id="unifiedRoadmapContainer">
-            <!-- Rendered dynamically by app.js -->
-          </div>
-        </div>
       </article>
     </main>
   </div>
@@ -446,9 +426,6 @@
             </li>
             <li class="filter-menu-item admin-tab-item" data-tab="cases" id="adminTabCasesNav">
               <span class="material-symbols-outlined">edit_note</span> <span id="adminTabCasesText">Use Cases CRUD</span>
-            </li>
-            <li class="filter-menu-item admin-tab-item" data-tab="checklists" id="adminTabChecklistsNav">
-              <span class="material-symbols-outlined">playlist_add_check</span> <span id="adminTabChecklistsText">Verification Checklists</span>
             </li>
             <li class="filter-menu-item admin-tab-item" data-tab="feedbacks" id="adminTabFeedbacksNav" style="display: none;">
               <span class="material-symbols-outlined">rate_review</span> <span id="adminTabFeedbacksText">User Feedbacks</span>
@@ -655,47 +632,6 @@
             </table>
           </div>
         </section>
-
-        <!-- TAB 5: PHASE VERIFICATION CHECKLISTS PANEL -->
-        <section class="admin-tab-content" id="adminTabChecklists" style="display: none;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h2 id="adminChecklistsTitle" style="font-size: 16px;">Phase Verification Checklist Management</h2>
-            <div style="display: flex; gap: 10px; align-items: center;">
-              <select id="selectAdminCheckpointRoleFilter" class="nav-button" style="height: 38px; padding: 0 12px; background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border-glass); border-radius: 6px; font-size: 13px; font-weight: 500; outline: none; cursor: pointer; transition: border-color 0.2s ease;">
-                <option value="all">All Roles</option>
-                <option value="IT Admin">IT Admin</option>
-                <option value="Lecturer">Lecturer</option>
-                <option value="Student">Student</option>
-                <option value="Dean">Dean</option>
-                <option value="Program Leader">Program Leader</option>
-              </select>
-              <button class="nav-button nav-button-primary" id="btnAdminCreateCheckpoint" style="height: 38px;">
-                <span class="material-symbols-outlined">add_box</span> <span>Add Checklist Item</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Checkpoint List Table -->
-          <div class="glass-panel" style="padding: 24px; overflow-x: auto;">
-            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
-              <thead>
-                <tr style="border-bottom: 1px solid var(--border-glass); color: var(--text-secondary); font-weight: 600;">
-                  <th style="padding: 12px 8px; width: 100px;">ID</th>
-                  <th style="padding: 12px 8px; width: 120px;">User Role</th>
-                  <th style="padding: 12px 8px; width: 100px;">Phase</th>
-                  <th style="padding: 12px 8px;">Checkpoint Text (EN)</th>
-                  <th style="padding: 12px 8px;">Checkpoint Text (ZH-TW)</th>
-                  <th style="padding: 12px 8px;">Checkpoint Text (ZH-CN)</th>
-                  <th style="padding: 12px 8px; text-align: right; width: 140px;">Actions</th>
-                </tr>
-              </thead>
-              <tbody id="adminCheckpointsTableBody">
-                <!-- Injected dynamically by app.js -->
-              </tbody>
-            </table>
-          </div>
-        </section>
-
       </main>
     </div>
   </div>
@@ -731,10 +667,6 @@
             </div>
             <p style="font-size: 11px; color: var(--text-muted); margin: 0;" id="adminFormLabelGeminiPromptDesc">Specify what you want to create, or describe the edits you'd like to apply to this playbook. Gemini will generate high-fidelity, localized playbooks, system prompts, steps, and tips.</p>
             <textarea class="select-control" id="formCaseGeminiInstruction" style="height: 60px; padding: 8px 12px; resize: none; font-size: 12px; border-color: rgba(79, 70, 229, 0.2);" placeholder="e.g. Create a rubric grading guide for high school chemistry lab reports using Canvas Mode, focusing on safety..."></textarea>
-          </div>
-
-          <!-- DUAL-MODE ADVANCED & STANDALONE NOTIFICATION INDICATOR -->
-          <div id="adminFormDualModeIndicator" style="display: none; background: rgba(79, 70, 229, 0.08); border: 1px dashed var(--color-primary); border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; font-size: 12px; color: var(--text-primary); line-height: 1.5; width: 100%;">
           </div>
 
           <!-- ID and Category Row -->
@@ -779,17 +711,6 @@
           <div class="form-group">
             <label id="adminFormLabelSummary" class="form-label">Brief Summary Description</label>
             <textarea class="select-control" id="formCaseSummary" required style="height: 60px; padding: 8px 12px; resize: vertical;" placeholder="1-2 sentences summarizing the core adoption outcome..."></textarea>
-          </div>
-
-          <!-- Dual-Mode Active-Integration Toggle -->
-          <div class="form-group" style="margin-bottom: 16px; border: 1px dashed rgba(37, 99, 235, 0.2); padding: 12px; border-radius: 6px; background: rgba(37, 99, 235, 0.02);">
-            <label style="display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--color-primary); cursor: pointer; font-size: 13px;">
-              <input type="checkbox" id="formCaseDualMode" style="width: 16px; height: 16px; accent-color: var(--color-primary);"> 
-              <span id="adminFormLabelDualModeCheckbox">Enable Dual-Mode Template (Supports Standalone & Advanced workflows)</span>
-            </label>
-            <div id="adminFormDescDualModeCheckbox" style="font-size: 11px; color: var(--text-secondary); margin-left: 24px; margin-top: 4px;">
-              When enabled, this playbook supports both standard manual file workflows and advanced integration modes, automatically managing standard prompt variables.
-            </div>
           </div>
 
           <!-- Verified Flag Toggle -->
@@ -852,22 +773,6 @@
             <input type="text" class="select-control" id="formCaseProTip" required placeholder="Grounding the agent prevents hallucinations...">
           </div>
 
-          <!-- Advanced Active-Integration Mode Fields -->
-          <div class="form-group" style="border-left: 2px solid var(--color-primary); padding-left: 10px; margin-top: 10px;">
-            <label id="adminFormLabelAdvancedSteps" class="form-label" style="color: var(--color-primary); font-weight: 600;">Advanced Procedural Steps - Active-Integration Mode (One step per line)</label>
-            <textarea class="select-control" id="formCaseAdvancedSteps" style="height: 100px; padding: 8px 12px; resize: vertical; font-family: monospace; font-size: 11px;" placeholder="Connect to the LMS system...&#10;Enable automated draft creation..."></textarea>
-          </div>
-
-          <div class="form-group" style="border-left: 2px solid var(--color-primary); padding-left: 10px;">
-            <label id="adminFormLabelAdvancedPrompt" class="form-label" style="color: var(--color-primary); font-weight: 600;">Advanced System Prompt - Active-Integration Mode</label>
-            <textarea class="select-control" id="formCaseAdvancedPrompt" style="height: 120px; padding: 8px 12px; resize: vertical; font-family: monospace; font-size: 11px;" placeholder="You are the integrated automated student support agent..."></textarea>
-          </div>
-
-          <div class="form-group" style="border-left: 2px solid var(--color-primary); padding-left: 10px; margin-bottom: 20px;">
-            <label id="adminFormLabelAdvancedProTip" class="form-label" style="color: var(--color-primary); font-weight: 600;">Advanced Pro Tip - Active-Integration Mode</label>
-            <input type="text" class="select-control" id="formCaseAdvancedProTip" placeholder="Active integration requires setting OAuth permissions in Google Cloud...">
-          </div>
-
           <!-- Simplified Translation Inputs (Traditional Chinese) -->
           <div class="glass-panel" style="padding: 16px; margin-top: 10px;">
             <h4 id="adminFormLabelZhtwHeader" style="font-size: 12px; margin-bottom: 10px; color: var(--color-primary); text-transform: uppercase;">Traditional Chinese (繁體中文) Translations</h4>
@@ -891,20 +796,6 @@
               <div class="form-group">
                 <label id="adminFormLabelZhtwProTip" class="form-label" style="font-size: 10px;">Translated Pro Tip</label>
                 <input type="text" class="select-control" id="formTransZhtwProTip" placeholder="透過 NotebookLM 連接試算表...">
-              </div>
-              
-              <!-- Traditional Chinese Advanced Fields -->
-              <div class="form-group" style="border-left: 2px solid var(--color-primary); padding-left: 10px;">
-                <label id="adminFormLabelZhtwAdvancedSteps" class="form-label" style="font-size: 10px; color: var(--color-primary); font-weight: 600;">Translated Advanced Steps (One per line)</label>
-                <textarea class="select-control" id="formTransZhtwAdvancedSteps" style="height: 80px; padding: 8px 12px; font-family: monospace; font-size: 11px;" placeholder="在 LMS 系統中連結 NotebookLM..."></textarea>
-              </div>
-              <div class="form-group" style="border-left: 2px solid var(--color-primary); padding-left: 10px;">
-                <label id="adminFormLabelZhtwAdvancedPrompt" class="form-label" style="font-size: 10px; color: var(--color-primary); font-weight: 600;">Translated Advanced Prompt</label>
-                <textarea class="select-control" id="formTransZhtwAdvancedPrompt" style="height: 80px; padding: 8px 12px; font-family: monospace; font-size: 11px;" placeholder="你是一位整合式自動化學生支援代理人..."></textarea>
-              </div>
-              <div class="form-group" style="border-left: 2px solid var(--color-primary); padding-left: 10px;">
-                <label id="adminFormLabelZhtwAdvancedProTip" class="form-label" style="font-size: 10px; color: var(--color-primary); font-weight: 600;">Translated Advanced Pro Tip</label>
-                <input type="text" class="select-control" id="formTransZhtwAdvancedProTip" placeholder="主動整合需要在 Google Cloud 中設定 OAuth 權限...">
               </div>
             </div>
           </div>
@@ -932,20 +823,6 @@
               <div class="form-group">
                 <label id="adminFormLabelZhcnProTip" class="form-label" style="font-size: 10px;">Translated Pro Tip</label>
                 <input type="text" class="select-control" id="formTransZhcnProTip" placeholder="通过 NotebookLM 连接电子表格...">
-              </div>
-
-              <!-- Simplified Chinese Advanced Fields -->
-              <div class="form-group" style="border-left: 2px solid var(--color-primary); padding-left: 10px;">
-                <label id="adminFormLabelZhcnAdvancedSteps" class="form-label" style="font-size: 10px; color: var(--color-primary); font-weight: 600;">Translated Advanced Steps (One per line)</label>
-                <textarea class="select-control" id="formTransZhcnAdvancedSteps" style="height: 80px; padding: 8px 12px; font-family: monospace; font-size: 11px;" placeholder="在 LMS 系统中链接 NotebookLM..."></textarea>
-              </div>
-              <div class="form-group" style="border-left: 2px solid var(--color-primary); padding-left: 10px;">
-                <label id="adminFormLabelZhcnAdvancedPrompt" class="form-label" style="font-size: 10px; color: var(--color-primary); font-weight: 600;">Translated Advanced Prompt</label>
-                <textarea class="select-control" id="formTransZhcnAdvancedPrompt" style="height: 80px; padding: 8px 12px; font-family: monospace; font-size: 11px;" placeholder="你是一位整合式自动化学生支援代理人..."></textarea>
-              </div>
-              <div class="form-group" style="border-left: 2px solid var(--color-primary); padding-left: 10px;">
-                <label id="adminFormLabelZhcnAdvancedProTip" class="form-label" style="font-size: 10px; color: var(--color-primary); font-weight: 600;">Translated Advanced Pro Tip</label>
-                <input type="text" class="select-control" id="formTransZhcnAdvancedProTip" placeholder="主动整合需要在 Google Cloud 中设定 OAuth 权限...">
               </div>
             </div>
           </div>
@@ -1048,78 +925,6 @@
           <button class="nav-button nav-button-primary" type="submit" style="background: linear-gradient(135deg, #a855f7 0%, #6366f1 100%); border: none;">Submit Feedback</button>
         </div>
       </form>
-    </div>
-  </div>
-
-  <!-- CHECKPOINT EDIT / CREATE MODAL OVERLAY (ADMIN CONTROLLED) -->
-  <div class="modal-overlay" id="adminCheckpointEditModal" aria-modal="true" role="dialog" style="z-index: 2020;">
-    <div class="modal-content-card" style="max-height: 95vh; height: 580px; max-width: 600px; padding: 24px;">
-      <div class="modal-header" style="padding-bottom: 16px; border-bottom: 1px solid var(--border-glass); margin-bottom: 16px;">
-        <div class="modal-header-left">
-          <span class="material-symbols-outlined" style="color: var(--color-primary); font-size: 24px;">playlist_add_check</span>
-          <h3 id="adminCheckpointModalTitle" class="modal-title" style="margin-left: 8px;">Add/Edit Checklist Item</h3>
-        </div>
-        <button class="close-btn" id="adminCheckpointModalClose" aria-label="Close modal">
-          <span class="material-symbols-outlined">close</span>
-        </button>
-      </div>
-      <div class="modal-body" style="padding: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; height: calc(100% - 130px);">
-        <div id="adminCheckpointFormFeedback" style="display: none; padding: 10px; background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239,68,68,0.2); border-radius: 4px; color: var(--color-danger); font-size: 12px;"></div>
-        
-        <form id="formAdminSaveCheckpoint" style="display: flex; flex-direction: column; gap: 16px;">
-          <div class="form-group" style="display: flex; flex-direction: column; gap: 6px;">
-            <label class="form-label" style="text-transform: uppercase;">Checkpoint ID (Unique, e.g. ita_d0_3)</label>
-            <input type="text" id="formCheckpointId" class="select-control" placeholder="ita_d0_3" style="font-family: monospace;">
-          </div>
-          
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-            <div class="form-group" style="display: flex; flex-direction: column; gap: 6px;">
-              <label class="form-label" style="text-transform: uppercase;">User Role</label>
-              <select id="formCheckpointRole" class="select-control">
-                <option value="IT Admin">IT Admin</option>
-                <option value="Lecturer">Lecturer</option>
-                <option value="TA">TA</option>
-                <option value="Student">Student</option>
-                <option value="Security">Security</option>
-                <option value="Finance">Finance</option>
-                <option value="SAO">SAO</option>
-                <option value="Program Leader">Program Leader</option>
-                <option value="Dean">Dean</option>
-              </select>
-            </div>
-            <div class="form-group" style="display: flex; flex-direction: column; gap: 6px;">
-              <label class="form-label" style="text-transform: uppercase;">Timeline Phase</label>
-              <select id="formCheckpointPhase" class="select-control">
-                <option value="day0">Day 0 (Onboarding)</option>
-                <option value="pre">Pre-Semester (Planning)</option>
-                <option value="sem1">Semester Start (Introduction)</option>
-                <option value="mid">Mid-Semester (Midterm Review)</option>
-                <option value="end">Semester End (Final Exam)</option>
-                <option value="track2">Track 2 (Continuous Polish)</option>
-              </select>
-            </div>
-          </div>
-          
-          <div class="form-group" style="display: flex; flex-direction: column; gap: 6px;">
-            <label class="form-label" style="text-transform: uppercase;">Checkpoint Text (English)</label>
-            <input type="text" id="formCheckpointText" class="select-control" placeholder="Configure sso integrations...">
-          </div>
-          
-          <div class="form-group" style="display: flex; flex-direction: column; gap: 6px;">
-            <label class="form-label" style="text-transform: uppercase;">Checkpoint Text (Traditional Chinese)</label>
-            <input type="text" id="formCheckpointTextZh" class="select-control" placeholder="配置單一登入整合...">
-          </div>
-
-          <div class="form-group" style="display: flex; flex-direction: column; gap: 6px;">
-            <label class="form-label" style="text-transform: uppercase;">Checkpoint Text (Simplified Chinese)</label>
-            <input type="text" id="formCheckpointTextCn" class="select-control" placeholder="配置单一登录整合...">
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 12px; padding-top: 16px; border-top: 1px solid var(--border-glass); margin-top: auto;">
-        <button class="nav-button" id="btnAdminCheckpointCancel">Cancel</button>
-        <button class="nav-button nav-button-primary" id="btnAdminCheckpointSave">Save Checkpoint</button>
-      </div>
     </div>
   </div>
 
