@@ -186,63 +186,6 @@
         </ul>
       </div>
 
-      <!-- Connector States Control Panel -->
-      <div class="sidebar-section">
-        <div class="sidebar-title" id="sidebarConnectorsTitle" style="display: flex; align-items: center; justify-content: space-between;">
-          <span>Data Integrations</span>
-        </div>
-        
-        <div id="connectorList">
-          <!-- Drive integration item -->
-          <div class="connector-item">
-            <div class="connector-name-wrapper">
-              <div class="connector-indicator" id="indicator-onedrive"></div>
-              <span>Drive Connector</span>
-            </div>
-            <label class="switch">
-              <input type="checkbox" id="toggleOneDrive">
-              <span class="slider"></span>
-            </label>
-          </div>
-
-          <!-- Email integration item -->
-          <div class="connector-item">
-            <div class="connector-name-wrapper">
-              <div class="connector-indicator" id="indicator-outlook"></div>
-              <span>Email Connector</span>
-            </div>
-            <label class="switch">
-              <input type="checkbox" id="toggleOutlook">
-              <span class="slider"></span>
-            </label>
-          </div>
-
-          <!-- LMS integration item -->
-          <div class="connector-item">
-            <div class="connector-name-wrapper">
-              <div class="connector-indicator" id="indicator-lms"></div>
-              <span>LMS Connector</span>
-            </div>
-            <label class="switch">
-              <input type="checkbox" id="toggleLMS">
-              <span class="slider"></span>
-            </label>
-          </div>
-
-          <!-- Calendar integration item -->
-          <div class="connector-item">
-            <div class="connector-name-wrapper">
-              <div class="connector-indicator" id="indicator-google"></div>
-              <span>Calendar Connector</span>
-            </div>
-            <label class="switch">
-              <input type="checkbox" id="toggleGoogle">
-              <span class="slider"></span>
-            </label>
-          </div>
-        </div>
-      </div>
-
       <!-- Filter menus: Category and attributes -->
       <div class="sidebar-section" id="sidebarCategorySection">
         <div class="sidebar-title" id="titleNavigation">Navigation</div>
@@ -294,16 +237,10 @@
       </div>
 
       <div class="sidebar-section" id="sidebarStatusSection">
-        <div class="sidebar-title" id="titleFilters">Requirement Filter</div>
+        <div class="sidebar-title" id="titleFilters">Collections</div>
         <ul class="filter-menu-list">
           <li class="filter-menu-item active status-filter-item" data-status="all">
             <span class="material-symbols-outlined">check_circle</span> <span id="filterAll">Show All</span>
-          </li>
-          <li class="filter-menu-item status-filter-item" data-status="unlocked">
-            <span class="material-symbols-outlined">cloud_done</span> <span id="filterStandalone">Ready to Deploy</span>
-          </li>
-          <li class="filter-menu-item status-filter-item" data-status="integration">
-            <span class="material-symbols-outlined">lock_open_right</span> <span id="filterConnectors">Requires Connectors</span>
           </li>
           <li class="filter-menu-item status-filter-item" data-status="liked">
             <span class="material-symbols-outlined">favorite</span> <span id="filterLiked">My Liked Cases</span>

@@ -123,28 +123,35 @@ graph TD
 ############# 7. App State & Progress
  
 ##### Accomplished Tasks (Latest Session Milestone)
-* **Emphasized Big & Bold Titles (100% Complete):**
-  * Raised card titles to `1.22rem` with `800` weight and modal dialog titles to `1.45rem` with `800` font weight for strong visual prominence.
-* **Streamlined UI Layout & Word Counts (100% Complete):**
-  * Simplified step presentations, increased typography sizes to `14px`, and applied concise, easily scannable descriptions across all playbooks.
-* **Collapsible Prompt Container (Default Closed) (100% Complete):**
-  * Wrapped prompt blocks in a native `<details class="prompt-collapsible">` (collapsed by default, referencing Claude Prompt Library design) to keep layouts uncluttered.
-* **Adaptive Tag Presentation (100% Complete):**
-  * Rendered compact icon-only badges (`.tag-icon-only`) with hover tooltips on overview cards.
-  * Rendered comprehensive badges (`.tag-full` with icon and text label) inside the detailed modal view.
-* **Dual-Prompt Removal & Manual Tips Box (100% Complete):**
-  * Eliminated the dual-prompt toggle slider and complex branch logic.
-  * Added a dedicated `.manual-tip-box` providing clear manual file upload guidance when connectors are unavailable.
-* **Dynamic "Fill in the Variables" Engine (100% Complete):**
-  * Implemented automated `[VARIABLE_NAME]` token extraction, real-time input fields panel, and dynamic prompt preview/copy interpolation.
-* **Schema Refactor & Roadmap/Checklist Removal (100% Complete):**
-  * Dropped `verification_checkpoints` database table (`DROP TABLE IF EXISTS verification_checkpoints;`).
-  * Removed timeline view navigation, checklist administration tabs, and related CRUD endpoints while preserving user feedback functionality.
+* **Typographic Balance & Hierarchy (`/frontend-design`) (100% Complete):**
+  * Established unified Swiss typography stack: `Outfit` (display/headings), `Plus Jakarta Sans` (interface body text), and `JetBrains Mono` (prompts, syntax, variable tokens).
+  * Formulated full modular type scale (`--text-3xs` through `--text-4xl`), letter tracking (`--tracking-tighter` through `--tracking-widest`), and humanist line-height tokens (`--leading-none` through `--leading-relaxed`).
+* **Enlarged Expanded Card View (Modal) (100% Complete):**
+  * Expanded modal bounds to `94vw`, `max-width: 1360px`, `88vh` height with a 2-column prompt workbench layout (`350px 1fr`, responsive `1fr` on mobile).
+  * Generous padding on use case titles (`8px 0 10px 0`), modal headers, and top navigation bar (`height: 72px; padding: 0 40px;`).
+* **Interactive `{{}}` Variable Tokens & Click-to-Focus (100% Complete):**
+  * Modernized variable tokens to `{{VARIABLE_NAME}}` format (supporting legacy `[...]` backwards compatibility).
+  * Rendered clickable colored tokens (`.prompt-var-token`, `.token-braces`, `.is-filled`) in the prompt display that smoothly scroll, focus, and pulse (`@keyframes pulseVariableFocus`) the matching variable input field in the left column.
+  * Real-time bi-directional interpolation between input fields, highlighted prompt display, and clipboard copy buffer.
+* **Mouse-Reactive Ambient Background (100% Complete):**
+  * Hardware-accelerated radial spotlight tracking cursor movement (`--mouse-x`, `--mouse-y`) over the subtle architectural canvas grid via `requestAnimationFrame`.
+* **Enhanced Card Contrast & Rounded Surfaces (100% Complete):**
+  * High-contrast card surfaces against dark ink canvas, defined `1.5px` borders, and rounded corners (`18px` on cards, `24px` on dialog modals).
+* **Connector Filter Simplification (100% Complete):**
+  * Removed connector toggle switches and lock overlays; replaced with clean colored indicator tags (`.connector-tag-drive`, `.connector-tag-email`, `.connector-tag-lms`, `.connector-tag-calendar`). All cards remain permanently unlocked.
+* **3 Conceptual Steps Architecture (100% Complete):**
+  * Refactored all 14 playbooks into 3 clear conceptual steps:
+    1. **Step 1: Setup & Grounding** (with embedded collapsible helper prompts).
+    2. **Step 2: Execute Sample Prompt** (with embedded 2-column interactive prompt workbench).
+    3. **Step 3: Human Review & Delivery** (with manual upload fallback tip box and pro-tip container).
+* **Prerequisite Helper Prompts Embedded in Steps (100% Complete):**
+  * Added collapsible helper prompt cards with 1-click clipboard copying under Step 1 for prerequisites (e.g., generating assignment instructions and analytical grading rubrics for *Rubric-Aligned Essay Feedback Assistant*).
+  * Fully populated and localized for all 14 use cases across English (`en`), Traditional Chinese (`zh-TW`), and Simplified Chinese (`zh-CN`).
 * **Dev Cloud Run Deployment Ready (100% Complete):**
-  * Validated server startup, schema migration, and API response on the dev configuration.
+  * Validated server startup, schema migration, and API response locally with SQLite.
 
 ### Next Steps & Continuous Polish
-1. **Deploy to Dev Instance:** Deploy latest build to `your-dev-service` on Cloud Run.
-2. **End-to-End Dev Verification:** Validate prompt interpolation, collapsible state, and manual tips box live on `your-dev-service`.
+1. **Deploy to Dev Instance:** Deploy latest build to `your-dev-service` on Cloud Run (`your-region`, `your-gcp-project-id`).
+2. **End-to-End Dev Verification:** Validate prompt interpolation, token click-to-focus, collapsible states, and helper prompts live on `your-dev-service`.
 3. **Monitor User Feedback:** Verify feedback submission and review from the floating widget into the admin portal.
 
