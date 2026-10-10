@@ -13,19 +13,17 @@ const useCasesDb = [
     role: "Lecturer",
     level: ["University & College", "High School", "Generic"],
     steps: [
-      "In NotebookLM, create a 'Read-Only Course Hub' and upload all syllabus documents, lecture slides, and key readings.",
-      "Navigate to Gemini Enterprise Agent Designer and create a new Custom Agent. Name it '[Course Name] Coach'.",
-      "Copy the Socratic persona instructions into the Agent prompt window and link the read-only NotebookLM hub in the data configuration.",
-      "Test the Agent by asking basic syllabus questions (e.g. 'What is mitosis?') and ensuring it guides you to find the answer rather than directly giving it.",
-      "Generate a shareable link for the Agent and post it prominently on your school LMS (Canvas, Moodle, etc.) for student access."
+      "In NotebookLM, create a 'Read-Only Course Hub' and upload syllabus documents, lecture slides, and key readings.",
+      "In Agent Designer, configure the Socratic tutor persona prompt with grounding and test interactive questions.",
+      "Review guidance quality, publish the shareable Agent link, and embed it into your institutional LMS."
     ],
-    prompt: `You are the '[Course Code] Coach,' a friendly and encouraging Socratic tutor for this course. Your sole objective is to guide students to find answers themselves.
+    prompt: `You are the '{{COURSE_CODE}} Coach,' a friendly and encouraging Socratic tutor for {{COURSE_NAME}}. Your sole objective is to guide students to find answers themselves.
 Follow these rules strictly:
 1. **Ground all your responses** in the provided course materials only.
 2. When a student asks a question (e.g., 'What is the answer to question 3?'), do NOT give the direct answer. Instead, respond with a probing, contextual question that helps them think critically.
 3. Reference specific files/pages in the course materials (e.g., 'Can you look at slide 4 of Lecture 2 and tell me what the first stage is called?').
 4. If a student demonstrates correct understanding, praise them and provide a complete, rich explanation.
-5. If asked about topics outside this course, politely decline, stating: 'I can only assist you with [Course Name] topics.'
+5. If asked about topics outside this course, politely decline, stating: 'I can only assist you with {{COURSE_NAME}} topics.'
 6. Cite your sources for every answer.`,
     proTip: "By connecting NotebookLM as the grounding layer, you ensure the Agent never hallucinates answers, restricts responses to authorized curriculum text, and provides verified inline citations.",
     connectorGuide: null
@@ -40,13 +38,11 @@ Follow these rules strictly:
     role: "TA",
     level: ["Generic"],
     steps: [
-      "Create a private, secure workspace in NotebookLM dedicated to the assignment.",
-      "Upload the detailed grading rubric (PDF/Doc) and the assignment instructions as the primary source documents.",
-      "Upload a student's submission (Word or PDF). To protect data privacy, strip student names or use anonymized IDs.",
-      "Paste the rubric-alignment prompt in the chat. NotebookLM will review the essay against each rubric criterion.",
-      "Review the generated feedback. Add your personal pedagogical insights and adjust the tone to maintain the critical 'human-in-the-loop' standard."
+      "Create a dedicated workspace in NotebookLM and upload the assignment instructions and analytical grading rubric.",
+      "Upload the student essay and execute the formative rubric grading prompt in the workbench.",
+      "Review tentative criterion scores, personalize pedagogical remarks, and export feedback to LMS or student portfolio."
     ],
-    prompt: `Acting as an expert academic teaching assistant, analyze the attached student essay against the uploaded grading rubric. Generate a first draft of constructive, high-quality feedback.
+    prompt: `Acting as an expert academic teaching assistant, analyze the attached student essay for the assignment "{{ASSIGNMENT_TITLE}}" against the uploaded grading rubric for student "{{STUDENT_ID}}". Generate a first draft of constructive, high-quality feedback.
 The feedback MUST adhere to the following structure:
 1. **Rubric Performance Summary**: Provide a tentative level/score for each rubric criterion, directly referencing specific evidence from the student's submission.
 2. **Key Strengths (1-2)**: Identify specific aspects of the paper that were executed exceptionally well, quoting 1-2 examples from the text.
@@ -66,12 +62,11 @@ Maintain a supportive, pedagogical, and highly encouraging tone throughout.`,
     role: "Lecturer",
     level: ["University & College", "High School"],
     steps: [
-      "Open Gemini Enterprise and launch a 'Deep Research' session targeting emerging skills in your course domain.",
-      "Prompt the model to synthesize job market reports, professional certifications, and academic publications into core competency outcomes.",
-      "Transfer the results to Canvas Mode to brainstorm the week-by-week syllabus content, recommended textbook readings, and project briefs.",
-      "Co-create interactive grading rubrics directly inside Canvas Mode, then export the completed syllabus package to Google Docs."
+      "Initiate a Deep Research query targeting emerging job market competencies and industry trends.",
+      "Synthesize findings into learning outcomes and execute syllabus drafting in Canvas Mode.",
+      "Refine weekly modules and project-based rubrics with departmental peers, then export to Google Docs."
     ],
-    prompt: `Act as a senior instructional designer. I want to build a brand new, highly modern course syllabus for [Course Title].
+    prompt: `Act as a senior instructional designer. I want to build a brand new, highly modern course syllabus for {{COURSE_TITLE}} targeting the {{TARGET_INDUSTRY}} industry.
 Phase 1: Research. Search the web for the top 5 most in-demand technical and soft skills requested by employers in this field over the past 12 months.
 Phase 2: Learning Outcomes. Design 5 measurable learning outcomes mapped directly to Bloom's Taxonomy based on these skills.
 Phase 3: Syllabus Draft. Create a comprehensive 14-week topic outline, specifying major lecture themes, in-class active learning tasks, and project milestones.
@@ -89,19 +84,18 @@ Phase 4: Assessment. Propose a project-based grading framework that bypasses tra
     role: "TA",
     level: ["University & College", "High School"],
     steps: [
-      "Open Gemini Enterprise Canvas Mode and outline the learning objectives for your chemistry or computer science lab session.",
-      "Prompt the AI to write clear, step-by-step experimental procedures and corresponding safety hazard alerts.",
-      "Use the 'Help me visualize' feature (Image Generation) to generate custom, clear illustrations of laboratory equipment layouts.",
-      "Co-create a lab observation sheet table inside Canvas Mode and export the final guide as an interactive student worksheet."
+      "Define experiment objectives and compile safety protocols in Canvas Mode.",
+      "Generate student procedure steps and custom equipment illustrations using Image Generation.",
+      "Assemble student observation tables, review safety hazard compliance, and publish the printable lab guide."
     ],
-    prompt: `You are a university biology lab coordinator. Write an engaging, student-facing lab guide for a 'DNA Extraction' experiment.
+    prompt: `You are a laboratory coordinator for {{COURSE_NAME}}. Write an engaging, student-facing lab guide for the experiment "{{EXPERIMENT_NAME}}".
 The document should include:
-1. **Introduction**: A brief, captivating summary of the biological relevance of DNA extraction.
+1. **Introduction**: A brief, captivating summary of the biological/chemical relevance of {{EXPERIMENT_NAME}}.
 2. **Learning Objectives**: 3 clear outcomes.
 3. **Safety First Box**: Explicit hazards, clothing requirements, and chemical disposal protocols.
 4. **Step-by-step Procedure**: An easy-to-follow, numbered checklist of steps.
 5. **Observation & Reflection Journal**: Propose a set of 3 thought-provoking prediction prompts and blank tables for students to record measurements.`,
-    proTip: "Use bold text and alerts (e.g. [!CAUTION]) inside Canvas Mode to ensure safety steps stand out visually to prevent accidents during high-risk physical labs.",
+    proTip: "Use bold text and alerts inside Canvas Mode to ensure safety steps stand out visually to prevent accidents during high-risk physical labs.",
     connectorGuide: null
   },
 
@@ -116,12 +110,11 @@ The document should include:
     role: "Student",
     level: ["University & College", "High School", "Generic"],
     steps: [
-      "Consolidate unstructured student feedback text files, town hall audio recordings, and survey responses in a folder.",
-      "Ground a NotebookLM workspace directly on this folder using the secure Drive Connector.",
-      "Query NotebookLM to extract the top 5 pressing student concerns (e.g., dining hours, library quiet spaces) and compute overall sentiment.",
-      "Use Gemini in Google Docs to write a structured, data-driven advocacy proposal to submit to the school administration."
+      "Collect survey responses and student feedback sheets into a secured institutional Drive folder.",
+      "Run multi-factor qualitative sentiment and thematic analysis via Deep Research and NotebookLM.",
+      "Synthesize recurring concerns into priority advocacy items and present to university administration."
     ],
-    prompt: `Acting as the Student Union Advocacy Director, analyze the uploaded collection of town hall transcripts and anonymous student survey comments.
+    prompt: `Acting as the Student Union Advocacy Director for {{INSTITUTION_NAME}}, analyze the uploaded collection of town hall transcripts and anonymous student survey comments for {{ACADEMIC_TERM}}.
 Generate a comprehensive, evidence-based report that includes:
 1. **Thematic Clustering**: Identify and group the top 5 most frequently complained-about campus issues.
 2. **Sentiment Assessment**: For each issue, categorize the emotional tone (highly negative, frustrated, neutral) and extract 3 powerful, representative anonymized student quotes.
@@ -149,15 +142,14 @@ Generate a comprehensive, evidence-based report that includes:
     role: "Student",
     level: ["University & College", "High School", "Generic"],
     steps: [
-      "Open NotebookLM and upload your club's past event templates and the official Student Union funding guidelines.",
-      "In Canvas Mode, prompt Gemini to brainstorm a calendar of 12 highly engaging club activities aligned with your club's core mission.",
-      "Feed the calendar and past expense records from your shared Drive spreadsheet into the prompt to generate a formatted budget table.",
-      "Ask Gemini to write a formal budget justification narrative, detailing how each event benefits the wider campus student community."
+      "Gather past semester club event logs, attendance counts, and itemized receipts into Drive.",
+      "Generate annual budget justification proposals and activity timelines in Canvas Mode.",
+      "Verify allocation compliance against union bylaws and submit to the student council funding committee."
     ],
-    prompt: `Act as a professional grant and proposal writer. Help our university [Club Name] draft a detailed funding proposal for the upcoming academic year.
+    prompt: `Act as a professional grant and proposal writer. Help {{CLUB_NAME}} draft a detailed funding proposal for the academic year {{ACADEMIC_YEAR}}.
 Inputs:
-- Annual activities calendar: [List of 4 major workshops, 1 public exhibition, 2 guest lectures, and 1 social event]
-- Approved funding guidelines: [Max $200 per workshop, Max $500 for exhibition, strict food and beverage limits]
+- Annual activities calendar: List of 4 major workshops, 1 public exhibition, 2 guest lectures, and 1 social event for {{CLUB_NAME}}.
+- Approved funding guidelines: Max $200 per workshop, Max $500 for exhibition, strict food and beverage limits.
 Task:
 1. Create an **Executive Summary** detailing the club's mission and how these events boost student engagement.
 2. Compile a detailed **Line-Item Budget Table**, calculating total costs and verifying compliance with the provided funding rules.
@@ -180,44 +172,27 @@ Task:
     summary: "Build an AI support bot trained on club policy handbooks to answer operational and venue booking questions.",
     features: ["Agent Designer", "NotebookLM"],
     connectors: ["Email Connector"],
-    connectorEssential: false,
     role: "Student",
     level: ["University & College", "High School", "Generic"],
     steps: [
-      "In NotebookLM, compile all Student Union club policies, room booking rules, and equipment reservation forms.",
-      "Use Gemini Agent Designer to build a conversational agent named 'Student Union Support Assistant'.",
-      "Connect the agent to the policy knowledge base to serve static queries.",
-      "Test the agent's ability to handle complex queries (e.g. 'Can we book a room after 9 PM?').",
-      "Embed the agent on the Student Union portal or social media page for 24/7 club leader support."
+      "Centralize student handbook, welfare guidelines, and club constitutions into NotebookLM.",
+      "Deploy a 24/7 policy Q&A Agent using Agent Designer to guide members on regulations and forms.",
+      "Test common edge cases and route complex disputes to human union officers via Email Connector."
     ],
-    advancedSteps: [
-      "In NotebookLM, compile all Student Union club policies, room booking rules, and equipment reservation forms.",
-      "Use Gemini Agent Designer to build a conversational agent named 'Student Union Support Assistant'.",
-      "Connect the agent to the policy knowledge base and configure custom escalate-by-email instructions via the Email Connector.",
-      "Test the agent's ability to automatically draft escalation messages.",
-      "Embed the agent on the Student Union portal for automated, end-to-end integration."
-    ],
-    prompt: `You are the 'Student Union Support Assistant.' Your job is to help student club leaders navigate room booking, funding applications, and event risk forms.
-1. **Ground your answers strictly** in the uploaded club handbooks. Never guess policies.
-2. Provide direct, step-by-step instructions (e.g., 'To book the Student Common Room, follow these 3 steps...').
-3. Cite the section number of the policy you are referencing.
-4. If a query is highly complex, involves sensitive disputes, or requires manual human approval, provide a clear, pre-formatted draft escalation email on-screen for the user to copy and send manually to the Student Affairs Officer.
-5. Maintain a professional, supportive, and efficient tone.`,
-    advancedPrompt: `You are the 'Student Union Support Assistant' integrated with your Institutional Gmail. Your job is to help student club leaders navigate room booking, funding applications, and event risk forms.
-1. **Ground your answers strictly** in the uploaded club handbooks. Never guess policies.
-2. Provide direct, step-by-step instructions (e.g., 'To book the Student Common Room, follow these 3 steps...').
-3. Cite the section number of the policy you are referencing.
-4. If a query is highly complex or requires manual human approval, use your integrated Email Connector to automatically draft a detailed escalation email directly in the user's Gmail Drafts folder for the Student Affairs Officer, then notify the user that the draft is ready for review.
-5. Maintain a professional, supportive, and efficient tone.`,
-    proTip: "In Standalone mode, the agent provides pre-formatted drafts directly inside the chat window for easy copy-pasting.",
-    advancedProTip: "By configuring the Email Connector, the agent can automatically draft escalation emails directly in your Gmail draft folder when manual intervention is needed.",
+    prompt: `You are the 24/7 Policy and Welfare Agent for {{STUDENT_UNION_NAME}} at {{INSTITUTION_NAME}}. Your purpose is to provide immediate, highly accurate answers to student questions regarding union bylaws, venue booking, lockers, and society financial subsidies.
+Rules:
+1. Answer using ONLY verified information from the attached student handbook and constitution.
+2. Maintain a friendly, supportive student-peer tone.
+3. Provide step-by-step instructions for all administrative procedures (e.g. How to book a room, how to apply for event funding).
+4. If an inquiry involves confidential welfare disputes, severe mental health concerns, or complex disciplinary proceedings, do NOT answer. Provide immediate instructions to contact the designated human union officer at {{OFFICER_EMAIL}}.`,
+    proTip: "Pairing the Agent with Email Connector ensures seamless, automated escalation when students face nuanced emergencies requiring staff intervention.",
     connectorGuide: {
       name: "Email Connector",
       steps: [
-        "Go to Google Cloud Console > Data Store > Select Email Connector as source.",
-        "Enter your credentials and grant write-draft access permissions.",
-        "Link the connector to the Student Union Support Agent.",
-        "Set up an automated action to trigger drafts in Email whenever a student asks to escalate a booking dispute."
+        "In your institutional cloud portal, select Data Connectors > Email Connector.",
+        "Authenticate using the Student Union official support inbox credentials.",
+        "Enable OAuth2 IMAP/SMTP read and dispatch authorization.",
+        "Configure automated triage triggers that route unresolved tickets to designated committee officers."
       ]
     }
   },
@@ -225,61 +200,57 @@ Task:
     id: "visual_campaign",
     title: "Interactive Story Game & Visual Campaign",
     category: "student",
-    summary: "Brainstorm and execute an immersive, gamified campus scavenger hunt with AI-generated riddles and visuals.",
+    summary: "Create interactive visual storytelling campaigns, orientation games, and high-impact social media assets with AI media models.",
     features: ["Agent Designer", "Image Generation", "Video Generation"],
     connectors: [],
     role: "Student",
-    level: ["University & College", "High School"],
+    level: ["Generic"],
     steps: [
-      "Open Gemini Enterprise and prompt the AI to co-create a branching story narrative for a campus Scavenger Hunt.",
-      "Generate 5 cryptic, rhyming riddles that lead students to distinct physical campus landmarks.",
-      "Use built-in image generation (Image Generation) to design futuristic checkpoint graphics and poster backgrounds.",
-      "Script a 30-second promotional video using Video Generation assets to drive student sign-ups on social media.",
-      "Configure a custom Agent that students must interact with at checkpoints to unlock clues."
+      "Draft the event narrative arc, key character personas, and campus orientation milestones.",
+      "Generate high-resolution thematic illustrations with Image Generation and narrative clips with Video Generation.",
+      "Curate campaign assets into digital social feeds and interactive onboarding screens for freshers."
     ],
-    prompt: `You are the 'Gemini Gatekeeper' for a campus-wide Scavenger Hunt. Your role is to test student teams before giving them the next checkpoint clue.
-1. **Game Narrative**: The theme is 'A Time-Traveler's Campus Tour'.
-2. When a team approaches, welcome them enthusiastically and present Riddle #3.
-3. Riddle: 'I hold thousands of voices but speak in absolute silence. I have four levels but no feet. Where am I?' (Answer: The Campus Library).
-4. If the team submits the correct answer, congratulate them and generate a personalized digital badge (e.g. 'You have unlocked the Codex checkpoint!').
-5. If they submit an incorrect answer, provide a small, mysterious clue without giving away the answer.
-Never break character. Keep the tone playful, cryptic, and highly engaging.`,
-    proTip: "Ground the riddle generation in university history or campus map documents to ensure riddles are location-accurate and achievable by students.",
+    prompt: `You are a creative campaign director for {{INSTITUTION_NAME}}. Design an interactive campus storytelling campaign and multimedia visual plan for {{EVENT_NAME}} targeting {{TARGET_AUDIENCE}}.
+Requirements:
+1. **Interactive Storyline**: Outline a 4-chapter narrative mystery where freshers explore historical campus buildings, discover student traditions, and solve clues.
+2. **Visual Generation Prompts**: Provide 3 rich, descriptive text-to-image prompts (specifying artistic lighting, vibrant student characters, and cinematic composition) suitable for Gemini Image Generation.
+3. **Motion Scene Prompts**: Draft 2 prompt scripts suitable for Video Generation to create 5-second teaser animations for social media stories.`,
+    proTip: "Use Image Generation to produce unified character key visual styles before prompting Video Generation to preserve aesthetic continuity across visual campaign channels.",
     connectorGuide: null
   },
 
-  // HUB 3: OPERATIONAL COMMAND (Education Leaders & IT)
+  // HUB 3: OPERATIONAL & ACADEMIC SUPPORT (Leadership & IT)
   {
     id: "at_risk_cohort",
     title: "At-Risk Student Early Warning System",
     category: "operational",
-    summary: "Connect Gemini to LMS and SIS database metrics to analyze engagement anomalies and flag struggling students.",
+    summary: "Identify students experiencing academic difficulties across disparate LMS and SIS logs to enable proactive intervention.",
     features: ["Deep Research"],
-    connectors: ["LMS Connector", "SIS Database Connector"],
-    role: "IT Admin",
-    level: ["Generic"],
+    connectors: ["LMS Connector"],
+    role: "Dean",
+    level: ["University & College", "High School"],
     steps: [
-      "Configure secure API connections from Gemini Enterprise to your school's LMS and SIS database.",
-      "Set up an analytical data store containing anonymized student logs, login frequencies, quiz scores, and forum engagement metrics.",
-      "Configure a secure workflow that maps data attributes, ensuring strict compliance with student data privacy laws like FERPA.",
-      "Use Gemini to run multi-dimensional predictive modeling, highlighting student cohorts exhibiting a precipitous drop in engagement.",
-      "Trigger automated, personalized advisor check-in drafts to provide timely academic support."
+      "Connect LMS gradebook and SIS engagement logs to establish multi-variable risk thresholds.",
+      "Run predictive engagement synthesis using Deep Research to identify students needing intervention.",
+      "Review identified cohorts with academic advisors and dispatch personalized supportive outreach."
     ],
-    prompt: `Analyze the attached anonymized LMS and Student Information System dataset for the current semester.
-We want to identify students who are at risk of failing or dropping out before midterm exams.
-Tasks:
-1. **Anomaly Detection**: Flag all students who have shown a >50% drop in login frequency and quiz scores over the past 3 weeks compared to their baseline.
-2. **Correlation Analysis**: Identify if there is a statistically significant correlation between forum participation rates and final assignment scores in this cohort.
-3. **Draft Advisory Alerts**: For each flagged student category, generate a highly supportive, personalized academic check-in email draft from their advisor, suggesting tutoring resources.`,
-    proTip: "Never upload student Names or Social Security numbers. Maintain rigorous compliance with privacy laws by utilizing fully de-identified student IDs during data store ingestion.",
+    prompt: `Analyze student learning analytics data for {{COHORT_SEMESTER}} in the {{DEPARTMENT_NAME}} department to identify learners at risk of falling behind.
+Criteria to examine:
+- LMS login inactivity exceeding 10 consecutive days.
+- Missed or late formative assessment submissions (threshold: 2 or more).
+- Midterm scores below 60%.
+Output Requirements:
+1. **At-Risk Cohort Segmentation**: Group students into High Risk, Moderate Risk, and Low Risk categories with evidence flags.
+2. **Intervention Recommendations**: For each risk tier, suggest actionable pedagogical interventions (e.g., peer tutoring referral, advisor check-in, supplemental review modules).
+3. **Draft Outreach Email**: Generate an empathetic, non-judgmental advisor check-in email encouraging the student to schedule office hours.`,
+    proTip: "By leveraging multi-modal synthesis, Gemini combines attendance anomalies with assignment grades to catch students who appear present but are falling behind conceptually.",
     connectorGuide: {
-      name: "LMS & SIS Database Connectors",
+      name: "LMS Connector",
       steps: [
-        "In Google Cloud Console, enable the Discovery Engine API.",
-        "Create an authorized OAuth2 credentials profile for your LMS platform.",
-        "Provide read-only API access endpoints for gradebook, enrollment, and activity logs.",
-        "Establish an encrypted SQL database connection to the Student Information System (SIS).",
-        "Set up data masking rules to de-identify student PII before it reaches the AI analysis layer."
+        "In Gemini Enterprise Admin Console, navigate to Data Integrations.",
+        "Add LMS Connector (Canvas/Moodle/Blackboard API credentials).",
+        "Enforce strict token-level anonymization to mask student PII during processing.",
+        "Set automated weekly sync schedules to maintain fresh cohort telemetry."
       ]
     }
   },
@@ -287,34 +258,28 @@ Tasks:
     id: "accreditation_reports",
     title: "Accreditation Self-Study Report Synthesizer",
     category: "operational",
-    summary: "Synthesize years of course syllabi, student surveys, and meeting minutes to draft institutional accreditation reports.",
+    summary: "Map faculty syllabi, student outcomes, and institutional assessments against external accreditation criteria seamlessly.",
     features: ["NotebookLM", "Deep Research"],
     connectors: ["Drive Connector"],
     role: "Program Leader",
     level: ["University & College"],
     steps: [
-      "Upload 3 years of school syllabi, assurance of learning rubrics, student exit surveys, and advisory board minutes to SharePoint.",
-      "Establish a federated search connection from Gemini Enterprise to the Drive folder.",
-      "In NotebookLM, prompt the model to cross-reference your curriculum data against specific accreditation standards.",
-      "Generate structured, professional accreditation narrative drafts, complete with inline source evidence and citations.",
-      "Review the drafts and collaborate with deans using shared Google Docs to finalize the institutional report."
+      "Aggregate departmental self-studies, syllabi, and outcome assessments into an institutional Drive hub.",
+      "Run evidence cross-mapping across accreditation standards and criteria in NotebookLM.",
+      "Review drafted narrative syntheses, verify institutional metrics, and export the official self-study report."
     ],
-    prompt: `You are an institutional research officer preparing a self-study report for a university business school accreditation.
-Your task is to synthesize the uploaded student surveys, curriculum syllabi, and learning assessment records to draft the narrative for 'Standard 3: Assurance of Learning (AoL)'.
-The narrative must include:
-1. **Executive Summary**: A high-level overview of how the program measures and achieves learning goals.
-2. **Methodology**: Explain the direct and indirect assessment tools used.
-3. **Data Synthesis**: Analyze 3 years of quantitative data, highlighting key improvements in areas where learning caps were identified.
-4. **Action Plan**: Outline a 2-year strategic plan for curriculum refinement, mapped directly to survey insights.
-Maintain a highly formal, academic, and objective tone.`,
-    proTip: "By selecting 'Federated Search' for the Drive Connector, your data remains safely stored within your institutional tenant, ensuring absolute data security and sovereignty.",
+    prompt: `Act as a higher education quality assurance director. Synthesize institutional evidence for {{PROGRAM_NAME}} aligned with the accreditation standards of {{ACCREDITATION_BODY}}.
+Tasks:
+1. **Cross-Mapping**: Map provided course syllabi, student learning outcome evaluations, and faculty publication records against {{ACCREDITATION_BODY}} standards for Criterion 1 (Curriculum Rigor) and Criterion 2 (Faculty Qualifications).
+2. **Gap Analysis**: Highlight any missing assessment data, outdated course references, or under-documented student learning evidence.
+3. **Executive Synthesis**: Draft a 500-word formal narrative summarizing program continuous improvement initiatives and pedagogical innovations over the past review cycle.`,
+    proTip: "NotebookLM's source citation capabilities are ideal for accreditation reviews, allowing evaluators to click any statement to inspect the original course syllabus or committee minutes.",
     connectorGuide: {
       name: "Drive Connector",
       steps: [
-        "Create secure authorization rules specifically for the Drive Connector.",
-        "Configure delegated API permissions for files and folders access.",
-        "In Gemini Enterprise Console, create a new Data Store, select Drive as source, and provide credentials.",
-        "Run an initial synchronization scan to verify all folder access rules are correctly honored."
+        "Authenticate your cloud storage provider in Gemini Enterprise.",
+        "Authorize read-only access to the central Accreditation Evidence archive.",
+        "Enable automated document indexation for fast cross-document semantic lookup."
       ]
     }
   },
@@ -322,93 +287,82 @@ Maintain a highly formal, academic, and objective tone.`,
     id: "workforce_federation",
     title: "Workforce Identity Federation Setup Guide",
     category: "operational",
-    summary: "Establish a secure trust relationship between Google Cloud and institutional identity providers for single sign-on authentication.",
+    summary: "Deploy secure SAML 2.0 / OIDC identity federation linking your campus IdP to Gemini Enterprise without duplicating directories.",
     features: ["Deep Research"],
     connectors: ["Drive Connector"],
     role: "IT Admin",
     level: ["Generic"],
     steps: [
-      "Register a new enterprise identity application on your centralized SSO portal.",
-      "Configure SAML 2.0 or OIDC single sign-on settings and record the Metadata XML/Endpoints.",
-      "In Google Cloud Console, navigate to IAM & Admin > Workforce Identity Federation and create a new workforce pool.",
-      "Create an OIDC Provider linking your Google workforce pool to the identity provider's enterprise application.",
-      "Configure Attribute Mapping, mapping 'google.subject' to the user's email and mapping security groups to 'google.groups'."
+      "Audit campus identity provider (IdP) metadata, SAML 2.0 / OIDC claims, and user directory attributes.",
+      "Generate workforce federation architecture guides and role-mapping templates using Deep Research.",
+      "Conduct end-to-end SSO handshakes with IT security and rollout federated access to campus units."
     ],
-    prompt: `Act as a senior cloud solutions architect. Write a detailed, step-by-step technical implementation guide to set up Workforce Identity Federation (WIF) between Google Cloud and corporate identity systems.
-The guide must cover:
-1. **SSO Identity App Registration**: Mandatory configuration settings, single sign-on URL, and client secret management.
-2. **GCP Workforce Pool Configuration**: CLI (gcloud) commands to create the pool and provider.
-3. **Attribute Mapping Rules**: Precise Common Expression Language (CEL) syntax to map user groups and emails securely.
-4. **Security Best Practices**: Best practices for secret rotation, federated role binding, and auditing logs.`,
-    proTip: "Using OIDC with Authorization Code Flow is significantly more secure than SAML 2.0 for mobile environments and ensures smooth token exchanges during API calls.",
+    prompt: `You are an enterprise identity architect for {{INSTITUTION_DOMAIN}}. Generate a step-by-step Workforce Identity Federation deployment blueprint integrating our campus Identity Provider ({{IDP_PROVIDER}}) with Google Cloud and Gemini Enterprise.
+Deliverables:
+1. **SAML 2.0 / OIDC Configuration Spec**: Exact claim mapping rules for NameID, primary email, role attributes (faculty, staff, student), and department codes.
+2. **Conditional Access & Session Policies**: Recommended session timeout rules, multi-factor authentication (MFA) enforcement policies, and device compliance checks.
+3. **Troubleshooting Checklist**: Step-by-step diagnosis procedure for common handshake errors (e.g. SAML response clock skew, missing claims, attribute mismatch).`,
+    proTip: "Federated workforce identity ensures immediate automated offboarding—when a student graduates or staff member resigns, their Gemini Enterprise access terminates instantly at the IdP boundary.",
     connectorGuide: {
-      name: "Workforce Identity Federated Single Sign-On",
+      name: "Drive Connector",
       steps: [
-        "Sign in to your centralized Identity Provider administrative center.",
-        "Navigate to Applications > Register New Enterprise Application.",
-        "Select OIDC client configurations and input authorization redirection rules.",
-        "Set up single sign-on via SAML, adding the Google Cloud Workforce Provider ACS URL.",
-        "Add claim mappings for user emails and directory groups to ensure Google IAM receives correct attributes."
+        "In Google Cloud IAM & Admin, configure Workforce Identity Federation pools.",
+        "Upload IdP SAML 2.0 metadata XML descriptor.",
+        "Define attribute condition mappings for student and faculty groups.",
+        "Verify SSO redirect flow in an incognito browser window."
       ]
     }
   },
 
-  // HUB 4: ADMINISTRATIVE SUPPORT (Finance, Security, SAO)
+  // HUB 4: ADMINISTRATIVE & STUDENT AFFAIRS (SAO, Finance & Security)
   {
     id: "sao_scavenger_hunt",
     title: "Digital Cultural Fair Red Packet Game",
     category: "administrative",
-    summary: "Orchestrate an interactive cultural trivia game on campus that distributes digital red packets and bookstore vouchers.",
+    summary: "Build an interactive campus cultural scavenger hunt with AI-generated trivia, QR clues, and digital red packet rewards.",
     features: ["Agent Designer", "Image Generation"],
     connectors: [],
     role: "SAO",
     level: ["Generic"],
     steps: [
-      "In Agent Designer, build a custom conversational Agent named 'Lunar New Year Assistant'.",
-      "Upload short articles detailing cultural traditions, zodiac histories, and celebratory foods to the Agent's knowledge base.",
-      "Use built-in image generation to design festive digital card templates and red envelope backgrounds.",
-      "Program a simple randomizer script within your student portal that triggers small bookstore voucher codes.",
-      "Have students interact with the Agent; answering cultural riddles correctly awards them a code."
+      "Plan interactive campus discovery checkpoints, cultural trivia themes, and physical QR stations.",
+      "Generate bilingual riddle clues and digital red packet artwork via Agent Designer and Image Generation.",
+      "Pilot test the hunt route for student safety and launch the live interactive orientation activity."
     ],
-    prompt: `You are the 'Lunar New Year Cultural Guide,' a festive, polite, and highly enthusiastic AI host for our digital university fair.
-Your objective is to test students on Lunar New Year traditions and award them digital 'red packets' containing celebratory blessings.
-1. Welcome the student warmly, wishing them prosperity.
-2. Ask them 1 fun trivia question about Lunar New Year (e.g., 'What zodiac animal represents leadership and courage?').
-3. If they answer correctly, celebrate their success and generate a beautiful, poetic blessing in the form of a classic Chinese couplet, customized to their stated wish (e.g., success in exams, finding good friends).
-4. Direct them to copy the coupon code 'CNY-BOOKSTORE-10' to redeem a discount at the campus book shop.
-5. If they answer incorrectly, explain the tradition gently and give them a second chance with a different question.`,
-    proTip: "By connecting this Agent to your student portal, you can make the distribution of campus store vouchers gamified, educational, and highly engaging.",
+    prompt: `You are the Student Affairs Orientation Director for {{CAMPUS_NAME}}. Design an engaging, digital-physical Cultural Fair Scavenger Hunt celebrating {{FESTIVAL_NAME}}.
+Include:
+1. **Station Clues**: 5 clever rhyming clues that lead students to iconic campus landmarks (library, student center, amphitheater, botanical garden, sports complex).
+2. **Interactive Red Packet QR Challenges**: For each station, design a quick 2-question cultural trivia mini-quiz that unlocks a digital red packet stamp.
+3. **Reward Tier Structure**: Outline completion badge rewards and clear redemption instructions to manage crowd flow safely.`,
+    proTip: "Use Image Generation to design digital commemorative red packet graphics and badges that students can collect in their digital portfolios upon station check-in.",
     connectorGuide: null
   },
   {
     id: "finance_compliance",
     title: "Student Expense Compliance Auditor",
     category: "administrative",
-    summary: "Automatically cross-reference student club purchase receipts and expense reports against school purchasing guidelines.",
+    summary: "Audit student club reimbursement receipts, invoices, and subsidy claims automatically against university financial regulations.",
     features: ["NotebookLM", "Deep Research"],
     connectors: ["Drive Connector"],
     role: "Finance",
-    level: ["Generic"],
+    level: ["University & College", "High School"],
     steps: [
-      "Upload all school purchasing guidelines, vendor policies, and standard accounting codes to a secure folder.",
-      "Use the Drive Connector to ground your NotebookLM workspace in this policy archive.",
-      "Upload a student club's submitted annual expense spreadsheet and digital PDF receipts.",
-      "Prompt NotebookLM to cross-reference each expense item with the approved guidelines to verify compliance.",
-      "Generate an automated compliance audit report, highlighting non-compliant spending and budget overruns."
+      "Upload student society expense receipts, invoices, and bank statements to a dedicated Drive directory.",
+      "Execute automated policy compliance auditing to flag missing documentation or spending limit violations.",
+      "Review flagged discrepancies with student leaders and generate approved reimbursement vouchers."
     ],
-    prompt: `Acting as an school financial auditor, conduct a compliance review of the attached student club expense report.
-Compare each expense item with the uploaded university procurement guidelines.
-Your audit report must highlight:
-1. **Compliance Violations**: Identify any items that violate the policies (e.g., unapproved software subscriptions, exceeding maximum food limits per person). Cite the specific policy page.
-2. **Accounting Code Verification**: Verify if correct accounting codes were applied to each expense category.
-3. **Draft Advisory Memo**: Write a professional, polite advisory email to the club treasurer explaining the flagged violations and the steps required to resolve them.`,
-    proTip: "This tool does not automate financial payouts, maintaining the strict 'human-in-the-loop' standard. It acts as an elite assistant that saves hours of manual policy cross-referencing.",
+    prompt: `You are the Student Affairs Finance Auditor. Audit the reimbursement claim submitted by {{SOCIETY_NAME}} for the event "{{EVENT_NAME}}" totaling {{CLAIM_AMOUNT}}.
+Audit Requirements:
+1. **Line-Item Verification**: Cross-reference each receipt item against university student organization financial regulations.
+2. **Policy Compliance Check**: Flag any alcohol purchases, unitemized credit card slips, tips exceeding 15%, or missing third-party quotations for items over $300.
+3. **Audit Summary**: Produce an itemized audit ledger showing Allowed Amount, Disallowed Amount, and a courteous explanation of any deductions with instructions for appeal.`,
+    proTip: "Grounding NotebookLM in official institutional procurement rules ensures high-precision compliance detection without manual auditing fatigue.",
     connectorGuide: {
       name: "Drive Connector",
       steps: [
-        "In Google Cloud, set up secure authorization to M365/Drive storages.",
-        "Ground the Finance Assistant Agent in the procurement policy storage path.",
-        "Activate federated access to ensure the AI can query guidelines but never saves student bank info or sensitive personal data."
+        "Link Finance Department shared claims folder via Drive Connector.",
+        "Authorize optical character recognition (OCR) parsing on submitted receipt scans.",
+        "Verify automated audit summaries before issuing reimbursement payments."
       ]
     }
   },
@@ -416,39 +370,498 @@ Your audit report must highlight:
     id: "security_simulator",
     title: "Campus Safety Drill Simulator",
     category: "administrative",
-    summary: "Simulate complex emergency response drills to train campus security marshals and test response protocols.",
+    summary: "Simulate emergency response scenarios and evaluate campus security decision trees during emergency drill operations.",
     features: ["Agent Designer", "Video Generation"],
     connectors: ["Drive Connector"],
     role: "Security",
     level: ["Generic"],
     steps: [
-      "Ground a custom Security Drill Agent in your campus safety handbook, building layouts, and emergency protocols.",
-      "Configure the Agent to role-play as an Emergency Dispatcher during a simulated crisis scenario (e.g., power outage, severe storm).",
-      "Generate high-fidelity instructional video clips and animated scenario prompts using Video Generation features.",
-      "Have security staff interact with the simulator, typing real-time responses to evolving scenario prompts.",
-      "Generate a post-simulation feedback report, assessing the staff's compliance with safety handbooks."
+      "Establish emergency protocol handbooks, campus floor plans, and evacuation routes.",
+      "Build multi-branch crisis drill scenarios and tactical decision trees using Agent Designer.",
+      "Facilitate simulated emergency exercises for campus security personnel and evaluate response timelines."
     ],
-    prompt: `You are the 'Emergency Response Coordinator Simulator.' Your role is to guide campus security personnel through a high-stakes, real-time crisis drill.
-Scenario: A severe typhoon has caused a localized power failure in the science laboratory building, and a critical backup generator has failed.
-1. Present the scenario details clearly, including building floorplans and chemical storage risks.
-2. Ask the user: 'What is your first priority protocol?'
-3. Based on their input, evolve the scenario realistically (e.g., 'Correct, evacuation initiated. However, a laboratory TA reports one student is trapped in room 302...').
-4. Grade their decisions strictly against the uploaded Campus Safety Handbook.
-5. Provide detailed feedback, highlighting strengths and critical compliance gaps at the end of the simulation.`,
-    proTip: "Use Video Generation tools to create short, 15-second simulation briefings. Visual prompts increase engagement and make the training feel incredibly realistic to staff.",
+    prompt: `You are the Director of Campus Safety. Build a dynamic, interactive emergency drill simulation scenario for {{EMERGENCY_SCENARIO}} occurring at {{FACILITY_LOCATION}}.
+Simulation Structure:
+1. **Incident Genesis (Minute 0)**: Initial emergency call received. Present 3 critical first-response decisions to the safety team.
+2. **Escalation Phase (Minute 15)**: Condition evolves (e.g., secondary obstacle, route blockage, crowd panic). Present tactical options with consequences.
+3. **Containment & Evacuation (Minute 30)**: First responder coordination, safe perimeter establishment, and parent/press communication dispatch.
+4. **Debrief Rubric**: 4-part evaluation rubric grading decision speed, communication clarity, protocol adherence, and victim care prioritization.`,
+    proTip: "Use Video Generation to produce realistic tactical scenario prompts illustrating evacuation bottlenecks or weather events to evaluate team decision-making under stress.",
     connectorGuide: {
       name: "Drive Connector",
       steps: [
-        "Ground the Security Agent in your locked, secure 'Crisis Management' directory path.",
-        "Restrict access to authorized Security and Facilities personnel only, utilizing centralized SSO group bindings mapped in your Workforce Identity Pool."
+        "In Gemini Enterprise console, connect your Campus Security emergency operations document drive.",
+        "Verify read privileges on crisis SOPs and facility floor plans.",
+        "Run simulated scenario walk-throughs during pre-semester safety training."
       ]
     }
   }
 ];
 
+// PREREQUISITE HELPER PROMPTS DATABASE
+const useCaseHelperPrompts = {
+  socratic_tutor: {
+    en: [
+      {
+        title: "Prompt to Generate Course Syllabus & Module Outline",
+        prompt: `Act as an expert university professor. Generate a comprehensive course syllabus and 14-week module outline for the course '{{COURSE_NAME}}' (Code: {{COURSE_CODE}}). Include course description, 4 core learning objectives mapped to Bloom's taxonomy, weekly lecture topics, required reading titles, and grading breakdown.`
+      },
+      {
+        title: "Prompt to Generate Lecture Reading Summary & Key Concepts",
+        prompt: `Synthesize the core foundational concepts and terminology for Lecture Week 1-3 of '{{COURSE_NAME}}'. Provide a 500-word executive summary, 10 must-know technical terms with student-friendly definitions, and 5 common student misconceptions with corrections.`
+      }
+    ],
+    "zh-TW": [
+      {
+        title: "生成課程教學大綱與每週單元大綱提示詞",
+        prompt: `請扮演資深大學教授。為課程「{{COURSE_NAME}}」（課程代碼：{{COURSE_CODE}}）撰寫一份完整的教學大綱與 14 週單元規劃。包含課程簡介、對應 Bloom 分類法的 4 項核心學習目標、每週講義主題、必讀文獻清單及評分比重。`
+      },
+      {
+        title: "生成前三週講義摘要與核心概念提示詞",
+        prompt: `統整「{{COURSE_NAME}}」第 1 至 3 週講義的核心概念與專有名詞。提供 500 字精要摘要、10 個關鍵術語之白話解說，以及 5 個學生常見概念誤區與正確觀念導正。`
+      }
+    ],
+    "zh-CN": [
+      {
+        title: "生成课程教学大纲与每周单元大纲提示词",
+        prompt: `请扮演资深大学教授。为课程“{{COURSE_NAME}}”（课程代码：{{COURSE_CODE}}）撰写一份完整的教学大纲与 14 周单元规划。包含课程简介、对应 Bloom 分类法的 4 项核心学习目标、每周讲义主题、必读文献清单及评分比重。`
+      },
+      {
+        title: "生成前三周讲义摘要与核心概念提示词",
+        prompt: `统整“{{COURSE_NAME}}”第 1 至 3 周讲义的核心概念与专有名词。提供 500 字精要摘要、10 个关键术语之白话解说，以及 5 个学生常见概念误区与正确观念导正。`
+      }
+    ]
+  },
+  rubric_grading: {
+    en: [
+      {
+        title: "Prompt to Generate Assignment Instructions & Guidelines",
+        prompt: `Act as an academic instructor. Draft a detailed assignment instruction guide for undergraduate students titled '{{ASSIGNMENT_TITLE}}'. Include the task overview, word count requirements, required citation format, 3 specific guiding questions to address, and submission instructions.`
+      },
+      {
+        title: "Prompt to Generate Detailed Analytical Grading Rubric",
+        prompt: `Create a rigorous, 4-tier analytical grading rubric for the assignment '{{ASSIGNMENT_TITLE}}'. Structure the rubric into 4 criteria: (1) Argument & Critical Analysis (35%), (2) Evidence & Source Grounding (30%), (3) Structure & Coherence (20%), (4) Academic Writing & Mechanics (15%). For each criterion, describe clear observable indicators across 4 performance levels: Exemplary, Proficient, Developing, and Unsatisfactory.`
+      }
+    ],
+    "zh-TW": [
+      {
+        title: "生成作業指示與撰寫規範提示詞",
+        prompt: `請扮演大學課程講師。為名為「{{ASSIGNMENT_TITLE}}」的學期作業撰寫詳細指引。包含作業宗旨說明、字數規範、學術引用格式要求、3 個必須深入探討的核心引導問題，以及繳交截止規範。`
+      },
+      {
+        title: "生成詳細分析型評分規準 (Rubric) 提示詞",
+        prompt: `為作業「{{ASSIGNMENT_TITLE}}」設計一份嚴謹的四級分析型評分規準 (Rubric)。劃分 4 項指標：(1) 論點深度與批判思維 (35%)、(2) 文獻證據與論證嚴謹度 (30%)、(3) 架構組織與邏輯連貫 (20%)、(4) 學術寫作規範與流暢度 (15%)。每項指標均需具體列出：優異 (Exemplary)、熟練 (Proficient)、發展中 (Developing)、待加強 (Unsatisfactory) 的具體表現描述。`
+      }
+    ],
+    "zh-CN": [
+      {
+        title: "生成作业指引与撰写规范提示词",
+        prompt: `请扮演大学课程讲师。为名为“{{ASSIGNMENT_TITLE}}”的学期作业撰写详细指引。包含作业宗旨说明、字数规范、学术引用格式要求、3 个必须深入探讨的核心引导问题，以及提交截止规范。`
+      },
+      {
+        title: "生成详细分析型评分规准 (Rubric) 提示词",
+        prompt: `为作业“{{ASSIGNMENT_TITLE}}”设计一份严谨的四级分析型评分规准 (Rubric)。划分 4 项指标：(1) 论点深度与批判思维 (35%)、(2) 文献证据与论证严谨度 (30%)、(3) 架构组织与逻辑连贯 (20%)、(4) 学术写作规范与流畅度 (15%)。每项指标均需具体列出：优异 (Exemplary)、熟练 (Proficient)、发展中 (Developing)、待加强 (Unsatisfactory) 的具体表现描述。`
+      }
+    ]
+  },
+  curriculum_design: {
+    en: [
+      {
+        title: "Prompt to Generate Market Skills & Industry Benchmark Brief",
+        prompt: `Conduct a comprehensive skills benchmark for '{{COURSE_TITLE}}' targeting the {{TARGET_INDUSTRY}} industry. Identify the top 5 technical competencies and 3 soft skills most demanded by employers over the past 12 months, citing key industry tools.`
+      },
+      {
+        title: "Prompt to Generate Bloom's Taxonomy Course Learning Outcomes",
+        prompt: `Design 5 measurable, assessment-aligned Course Learning Outcomes (CLOs) for '{{COURSE_TITLE}}' adhering strictly to Bloom's Revised Taxonomy (spanning Apply, Analyze, Evaluate, and Create levels).`
+      }
+    ],
+    "zh-TW": [
+      {
+        title: "生成產業技能趨勢與市場需求基準提示詞",
+        prompt: `針對「{{TARGET_INDUSTRY}}」領域，為新課程「{{COURSE_TITLE}}」進行職場技能基準分析。列出過去一年就業市場需求最高的 5 項核心技術能力與 3 項跨領域軟實力，並註明主流產業工具與認證。`
+      },
+      {
+        title: "生成對應 Bloom 分類法的課程學習成效 (CLOs) 提示詞",
+        prompt: `嚴格遵循 Bloom 修訂版認知歷程分類法（涵蓋應用、分析、評鑑、創造層級），為「{{COURSE_TITLE}}」設計 5 項具體可評量的課程學習成效 (CLOs)。`
+      }
+    ],
+    "zh-CN": [
+      {
+        title: "生成产业技能趋势与市场需求基准提示词",
+        prompt: `针对“{{TARGET_INDUSTRY}}”领域，为新课程“{{COURSE_TITLE}}”进行职场技能基准分析。列出过去一年就业市场需求最高的 5 项核心技术能力与 3 项跨领域软实力，并注明主流产业工具与认证。`
+      },
+      {
+        title: "生成对应 Bloom 分类法的课程学习成效 (CLOs) 提示词",
+        prompt: `严格遵循 Bloom 修订版认知历程分类法（涵盖应用、分析、评鉴、创造层级），为“{{COURSE_TITLE}}”设计 5 项具体可评估的课程学习成效 (CLOs)。`
+      }
+    ]
+  },
+  lab_manual_creator: {
+    en: [
+      {
+        title: "Prompt to Generate Laboratory Experiment Concept & Reagents List",
+        prompt: `Act as a STEM laboratory coordinator for '{{COURSE_NAME}}'. Create a complete experiment concept sheet for '{{EXPERIMENT_NAME}}'. Include theoretical background, required chemical reagents, glass equipment list, and preparatory setup steps.`
+      },
+      {
+        title: "Prompt to Generate Safety Hazards & Protocol Guideline",
+        prompt: `Draft an institutional chemical and physical safety protocol for the experiment '{{EXPERIMENT_NAME}}'. Specify GHS hazard pictograms, mandatory PPE, waste disposal procedures, and emergency spill response steps.`
+      }
+    ],
+    "zh-TW": [
+      {
+        title: "生成實驗原理與試劑設備清單提示詞",
+        prompt: `請扮演「{{COURSE_NAME}}」實驗室負責人。為實驗「{{EXPERIMENT_NAME}}」撰寫實驗原理與準備手冊。列出理論背景、化學試劑清單、玻璃儀器規格及課前準備步驟。`
+      },
+      {
+        title: "生成實驗室安全守則與廢棄物處置規範提示詞",
+        prompt: `為實驗「{{EXPERIMENT_NAME}}」制定實驗室安全規範。明確標註 GHS 危害圖示、必備個人防護裝備 (PPE)、廢液分類處理流程與化學品潑濺應急程序。`
+      }
+    ],
+    "zh-CN": [
+      {
+        title: "生成实验原理与试剂设备清单提示词",
+        prompt: `请扮演“{{COURSE_NAME}}”实验室负责人。为实验“{{EXPERIMENT_NAME}}”撰写实验原理与准备手册。列出理论背景、化学试剂清单、玻璃仪器规格及课前准备步骤。`
+      },
+      {
+        title: "生成实验室安全守则与废弃物处置规范提示词",
+        prompt: `为实验“{{EXPERIMENT_NAME}}”制定实验室安全规范。明确标注 GHS 危害图示、必备个人防护装备 (PPE)、废液分类处理流程与化学品泼溅应急程序。`
+      }
+    ]
+  },
+  su_advocacy: {
+    en: [
+      {
+        title: "Prompt to Generate Student Town Hall Feedback Survey Form",
+        prompt: `Draft a 10-question anonymous student campus experience survey for {{INSTITUTION_NAME}} covering {{ACADEMIC_TERM}}. Include questions on library hours, dining affordability, mental health support, and classroom facilities with Likert scales and open-ended feedback prompts.`
+      },
+      {
+        title: "Prompt to Generate Qualitative Feedback Transcription Template",
+        prompt: `Structure a standardized student feedback transcription template to organize raw town hall notes and survey responses into thematic categories: Academic, Student Welfare, Facilities, and Financial Aid.`
+      }
+    ],
+    "zh-TW": [
+      {
+        title: "生成學生諮詢會回饋問卷範本提示詞",
+        prompt: `為 {{INSTITUTION_NAME}} 設計一份「{{ACADEMIC_TERM}} 學生校園生活體驗與權益問卷」（共 10 題）。涵蓋圖書館自修時數、校園餐飲平價化、身心輔導資源及教室設備，結合李克特量表與開放式建議。`
+      },
+      {
+        title: "生成質化民意彙整與歸類樣板提示詞",
+        prompt: `設計結構化的學生民意資料整理範本，將諮詢會筆記與匿名回饋分類至四大領域：學術教學、學生福利、校園設施及獎助學金。`
+      }
+    ],
+    "zh-CN": [
+      {
+        title: "生成学生咨询会反馈问卷范本提示词",
+        prompt: `为 {{INSTITUTION_NAME}} 设计一份“{{ACADEMIC_TERM}} 学生校园生活体验与权益问卷”（共 10 题）。涵盖图书馆自修时数、校园餐饮平价化、身心辅导资源及教室设备，结合李克特量表与开放式建议。`
+      },
+      {
+        title: "生成质化民意汇整与归类样板提示词",
+        prompt: `设计结构化的学生民意数据整理范本，将咨询会笔记与匿名反馈分类至四大领域：学术教学、学生福利、校园设施及奖助学金。`
+      }
+    ]
+  },
+  club_funding: {
+    en: [
+      {
+        title: "Prompt to Generate Student Club Event Proposal Template",
+        prompt: `Act as a Student Union treasurer. Draft a comprehensive event funding proposal for '{{CLUB_NAME}}' covering the academic year {{ACADEMIC_YEAR}}. Include event purpose, target student participation count, timeline, and measurable campus impact.`
+      },
+      {
+        title: "Prompt to Generate Union Subsidy Line-Item Budget Sheet",
+        prompt: `Create a compliant line-item budget table for '{{CLUB_NAME}}' detailing speaker honorariums, equipment rental, venue booking, and promotional printing adhering to Student Union grant maximums.`
+      }
+    ],
+    "zh-TW": [
+      {
+        title: "生成學生社團活動企劃書範本提示詞",
+        prompt: `請扮演學生會財務顧問。為社團「{{CLUB_NAME}}」撰寫 {{ACADEMIC_YEAR}} 學年度活動補助申請企劃。包含活動宗旨、預估參與人數、籌備進度表及對校園凝聚力之實質效益。`
+      },
+      {
+        title: "生成社團預算明細與核銷檢核表提示詞",
+        prompt: `為「{{CLUB_NAME}}」編製符合學生會補助規章之逐項預算明細表，詳列講師鐘點費、器材租賃、場地清潔及文宣印製費用，並註記報銷憑證規範。`
+      }
+    ],
+    "zh-CN": [
+      {
+        title: "生成学生社团活动企划书范本提示词",
+        prompt: `请扮演学生会财务顾问。为社团“{{CLUB_NAME}}”撰写 {{ACADEMIC_YEAR}} 学年度活动补助申请企划。包含活动宗旨、预估参与人数、筹备进度表及对校园凝聚力之实质效益。`
+      },
+      {
+        title: "生成社团预算明细与核销检核表提示词",
+        prompt: `为“{{CLUB_NAME}}”编制符合学生会补助规章之逐项预算明细表，详列讲师钟点费、器材租赁、场地清洁及文宣印制费用，并注记报销凭证规范。`
+      }
+    ]
+  },
+  su_helpdesk: {
+    en: [
+      {
+        title: "Prompt to Generate Student Union Constitution & Venue Policy Summary",
+        prompt: `Synthesize the core student governance handbook for {{STUDENT_UNION_NAME}} at {{INSTITUTION_NAME}}. Produce a structured 5-section reference guide covering room reservations, locker allocation, club registration, and dispute escalation.`
+      },
+      {
+        title: "Prompt to Generate FAQ Knowledge Base for Club Subsidies",
+        prompt: `Create a 12-question frequently asked questions (FAQ) knowledge base for student societies regarding annual budget applications, permissible expense receipts, and claim submission deadlines.`
+      }
+    ],
+    "zh-TW": [
+      {
+        title: "生成學生會會章與場地借用規範摘要提示詞",
+        prompt: `為 {{INSTITUTION_NAME}} 的 {{STUDENT_UNION_NAME}} 統整核心學生自治手冊。整理五大章節摘要：學生活動中心場地預約、置物櫃申請、新社團成立認證與爭議申訴程序。`
+      },
+      {
+        title: "生成社團補助與福利常見問題集 (FAQ) 提示詞",
+        prompt: `為各學生社團編製一份 12 題常見問答集 (FAQ)，詳細解答年度補助金請領資格、合格單據報銷規定及審核進度查詢。`
+      }
+    ],
+    "zh-CN": [
+      {
+        title: "生成学生会会章与场地借用规范摘要提示词",
+        prompt: `为 {{INSTITUTION_NAME}} 的 {{STUDENT_UNION_NAME}} 统整核心学生自治手册。整理五大章节摘要：学生活动中心场地预约、储物柜申请、新社团成立认证与争议申诉程序。`
+      },
+      {
+        title: "生成社团补助与福利常见问题集 (FAQ) 提示词",
+        prompt: `为各学生社团编制一份 12 题常见问答集 (FAQ)，详细解答年度补助金申领资格、合格单据报销规定及审核进度查询。`
+      }
+    ]
+  },
+  visual_campaign: {
+    en: [
+      {
+        title: "Prompt to Generate Campus Orientation Narrative Arc & Character Brief",
+        prompt: `Act as an interactive narrative designer. Outline a 4-chapter campus orientation story game for {{EVENT_NAME}} at {{INSTITUTION_NAME}} targeting {{TARGET_AUDIENCE}}. Include 3 distinct student guide personas and campus riddle checkpoints.`
+      },
+      {
+        title: "Prompt to Generate Image & Video Generation Art Directives",
+        prompt: `Write 3 high-detail text-to-image prompts and 2 motion video prompts for {{EVENT_NAME}}. Specify art style (modern anime/3D cinematic vector), student diversity, campus architectural lighting, and 16:9 aspect ratios.`
+      }
+    ],
+    "zh-TW": [
+      {
+        title: "生成迎新探索劇情架構與角色設定提示詞",
+        prompt: `請扮演互動敘事設計師。為 {{INSTITUTION_NAME}} 的「{{EVENT_NAME}}」（目標對象：{{TARGET_AUDIENCE}}）規劃四章節校園解謎冒險故事。包含 3 位特色學長姐導覽角色設定與標誌性建築關卡線索。`
+      },
+      {
+        title: "生成圖像與動畫生成風格指令提示詞",
+        prompt: `為「{{EVENT_NAME}}」撰寫 3 組高畫質文字生圖提示詞及 2 組 5 秒動態影片提示詞。規範繪圖風格（3D 寫實電影級向量感）、學生多元性、校園自然採光及 16:9 構圖比。`
+      }
+    ],
+    "zh-CN": [
+      {
+        title: "生成迎新探索剧情架构与角色设定提示词",
+        prompt: `请扮演互动叙事设计师。为 {{INSTITUTION_NAME}} 的“{{EVENT_NAME}}”（目标对象：{{TARGET_AUDIENCE}}）规划四章节校园解谜冒险故事。包含 3 位特色学长姐导览角色设定与标志性建筑关卡线索。`
+      },
+      {
+        title: "生成图像与动画生成风格指令提示词",
+        prompt: `为“{{EVENT_NAME}}”撰写 3 组高画质文字生图提示词及 2 组 5 秒动态视频提示词。规范绘图风格（3D 写实电影级矢量感）、学生多元性、校园自然采光及 16:9 构图比。`
+      }
+    ]
+  },
+  at_risk_cohort: {
+    en: [
+      {
+        title: "Prompt to Generate Learning Analytics Anonymized Cohort Schema",
+        prompt: `Create an anonymized synthetic CSV schema for student learning analytics tracking in {{DEPARTMENT_NAME}} for {{COHORT_SEMESTER}}. Include fields for LMS login frequency, assignment submission lag, quiz averages, and midterm exam scores.`
+      },
+      {
+        title: "Prompt to Generate Academic Advisor Supportive Outreach Email",
+        prompt: `Draft an empathetic, encouraging check-in email template from an academic advisor to a student flagged for declining attendance in {{DEPARTMENT_NAME}}. Maintain a non-punitive, supportive tone inviting them to office hours.`
+      }
+    ],
+    "zh-TW": [
+      {
+        title: "生成學習成效匿名數據欄位樣板提示詞",
+        prompt: `為「{{DEPARTMENT_NAME}}」在「{{COHORT_SEMESTER}}」學期的學習預警建立去識別化資料欄位範本。涵蓋 LMS 登入頻率、作業遲交天數、小考平均值及期中考落後指標。`
+      },
+      {
+        title: "生成學業導師關懷與輔導信函範本提示詞",
+        prompt: `以學業導師視角撰寫一封溫暖、不帶評判意味的關懷信函，發送給在「{{DEPARTMENT_NAME}}」出席率下降的學生，邀請其前來諮詢時間討論學習支援資源。`
+      }
+    ],
+    "zh-CN": [
+      {
+        title: "生成学习成效匿名数据字段样板提示词",
+        prompt: `为“{{DEPARTMENT_NAME}}”在“{{COHORT_SEMESTER}}”学期的学习预警建立去标识化数据字段范本。涵盖 LMS 登录频率、作业迟交天数、小测平均值及期中考落后指标。`
+      },
+      {
+        title: "生成学业导师关怀与辅导信函范本提示词",
+        prompt: `以学业导师视角撰写一封温暖、不带评判意味的关怀信函，发送给在“{{DEPARTMENT_NAME}}”出席率下降的学生，邀请其前来咨询时间讨论学习支持资源。`
+      }
+    ]
+  },
+  accreditation_reports: {
+    en: [
+      {
+        title: "Prompt to Generate Departmental Evidence Collection Template",
+        prompt: `Draft a comprehensive departmental self-study evidence collection checklist for {{PROGRAM_NAME}} aligned with {{ACCREDITATION_BODY}} standards. Include curriculum matrices, syllabus archives, and assessment artifacts.`
+      },
+      {
+        title: "Prompt to Generate Faculty Qualifications & Curriculum Matrix",
+        prompt: `Create an accreditation-compliant tabular matrix mapping {{PROGRAM_NAME}} courses to faculty terminal degree qualifications, research publications, and course learning outcomes.`
+      }
+    ],
+    "zh-TW": [
+      {
+        title: "生成系所自我評鑑佐證清單提示詞",
+        prompt: `依據「{{ACCREDITATION_BODY}}」認證評鑑標準，為「{{PROGRAM_NAME}}」制定自評報告佐證資料收集清單。包含核心課程配比、教學大綱存檔及學習成效審查檔案。`
+      },
+      {
+        title: "生成師資專長與課程對照矩陣提示詞",
+        prompt: `編製符合評鑑規範之表格矩陣，將「{{PROGRAM_NAME}}」各必選修課程與任課教師之最高學位、學術研究專長及課程成效指標進行嚴謹對應。`
+      }
+    ],
+    "zh-CN": [
+      {
+        title: "生成系所自我评估佐证清单提示词",
+        prompt: `依据“{{ACCREDITATION_BODY}}”认证评估标准，为“{{PROGRAM_NAME}}”制定自评报告佐证数据收集清单。包含核心课程配比、教学大纲存档及学习成效审查档案。`
+      },
+      {
+        title: "生成师资专长与课程对照矩阵提示词",
+        prompt: `编制符合评估规范之表格矩阵，将“{{PROGRAM_NAME}}”各必选修课程与任课教师之最高学位、学术研究专长及课程成效指标进行严谨对应。`
+      }
+    ]
+  },
+  workforce_federation: {
+    en: [
+      {
+        title: "Prompt to Generate SAML 2.0 / OIDC IdP Metadata Specification",
+        prompt: `Draft a technical configuration specification for federating campus Identity Provider ({{IDP_PROVIDER}}) with Google Cloud Workforce Identity for domain {{INSTITUTION_DOMAIN}}. Detail attribute mappings for NameID, email, roles, and department codes.`
+      },
+      {
+        title: "Prompt to Generate Attribute Condition & RBAC Role Matrix",
+        prompt: `Create a role-based access control (RBAC) assertion condition table mapping institutional student, lecturer, and administrative groups to Gemini Enterprise permission tiers.`
+      }
+    ],
+    "zh-TW": [
+      {
+        title: "生成 SAML 2.0 / OIDC 身份聯合技術規格提示詞",
+        prompt: `為校園網域 {{INSTITUTION_DOMAIN}} 撰寫整合身分提供者 ({{IDP_PROVIDER}}) 至 Google Cloud Workforce Identity 的部署規格書。詳列 NameID、主要電子郵件、角色群組與系所代碼映射規則。`
+      },
+      {
+        title: "生成屬性條件與 RBAC 角色授權矩陣提示詞",
+        prompt: `設計基於角色存取控制 (RBAC) 的屬性判定表，將全校學生、教師與行政人員 SSO 群組對應至 Gemini Enterprise 的權限層級。`
+      }
+    ],
+    "zh-CN": [
+      {
+        title: "生成 SAML 2.0 / OIDC 身份联合技术规格提示词",
+        prompt: `为校园网域 {{INSTITUTION_DOMAIN}} 撰写整合身份提供者 ({{IDP_PROVIDER}}) 至 Google Cloud Workforce Identity 的部署规格书。详列 NameID、主要电子邮件、角色群组与系所代码映射规则。`
+      },
+      {
+        title: "生成属性条件与 RBAC 角色授权矩阵提示词",
+        prompt: `设计基于角色访问控制 (RBAC) 的属性判定表，将全校学生、教师与行政人员 SSO 群组对应至 Gemini Enterprise 的权限层级。`
+      }
+    ]
+  },
+  sao_scavenger_hunt: {
+    en: [
+      {
+        title: "Prompt to Generate Campus Landmarks Trivia & Cultural Clues",
+        prompt: `Create 5 clever rhyming riddle clues highlighting landmark locations across {{CAMPUS_NAME}} for the {{FESTIVAL_NAME}} celebration. Each riddle should describe architectural features of the campus without stating its name.`
+      },
+      {
+        title: "Prompt to Generate QR Checkpoint Mini-Challenge Prompts",
+        prompt: `Design 5 quick two-question cultural trivia mini-challenges for QR checkpoints during {{FESTIVAL_NAME}} that students can answer on mobile devices to earn digital red packet stamps.`
+      }
+    ],
+    "zh-TW": [
+      {
+        title: "生成校園地標文化謎題與線索提示詞",
+        prompt: `為「{{CAMPUS_NAME}}」慶祝「{{FESTIVAL_NAME}}」設計 5 則押韻的校園地標尋寶謎語。透過建築物特色引導學生探索圖書館、鐘樓、學生活動中心等地標。`
+      },
+      {
+        title: "生成 QR 關卡文化小測驗與挑戰提示詞",
+        prompt: `為「{{FESTIVAL_NAME}}」設計 5 個打卡關卡的快問快答（每關 2 題），使學生可透過手機掃描即時作答並解鎖數位紅包章。`
+      }
+    ],
+    "zh-CN": [
+      {
+        title: "生成校园地标文化谜题与线索提示词",
+        prompt: `为“{{CAMPUS_NAME}}”庆祝“{{FESTIVAL_NAME}}”设计 5 则押韵的校园地标寻宝谜语。透过建筑物特色引导学生探索图书馆、钟楼、学生活动中心等地标。`
+      },
+      {
+        title: "生成 QR 关卡文化小测验与挑战提示词",
+        prompt: `为“{{FESTIVAL_NAME}}”设计 5 个打卡关卡的快问快答（每关 2 题），使学生可通过手机扫描即时作答并解锁数字红包章。`
+      }
+    ]
+  },
+  finance_compliance: {
+    en: [
+      {
+        title: "Prompt to Generate Society Expense Reimbursement Policy Guide",
+        prompt: `Draft an official student organization finance compliance guideline outlining reimbursable expenses, non-allowable expenditures (e.g. alcohol, tips over 15%), and mandatory invoice attachment criteria.`
+      },
+      {
+        title: "Prompt to Generate Audit Discrepancy Notice & Appeal Letter",
+        prompt: `Draft a formal yet polite financial audit deduction notice addressed to {{SOCIETY_NAME}} regarding event claim '{{EVENT_NAME}}' with itemized disallowed expenses and step-by-step appeal procedures.`
+      }
+    ],
+    "zh-TW": [
+      {
+        title: "生成社團經費報銷手冊與審核準則提示詞",
+        prompt: `編撰一份學生社團經費核銷指引，明確條列可報銷項目、禁止報銷項目（如酒精飲料、逾 15% 小費）及發票憑證正規化要求。`
+      },
+      {
+        title: "生成單據不合規扣除通知與申訴信範本提示詞",
+        prompt: `撰寫一份客氣且規範的財務審核意見書，通知「{{SOCIETY_NAME}}」於「{{EVENT_NAME}}」活動申請中的不合規扣除明細，並附上補件及申訴指引。`
+      }
+    ],
+    "zh-CN": [
+      {
+        title: "生成社团经费报销手册与审核准则提示词",
+        prompt: `编撰一份学生社团经费核销指引，明确条列可报销项目、禁止报销项目（如酒精饮料、逾 15% 小费）及发票凭证正规化要求。`
+      },
+      {
+        title: "生成单据不合规扣除通知与申诉信范本提示词",
+        prompt: `撰写一份客气且规范的财务审核意见书，通知“{{SOCIETY_NAME}}”于“{{EVENT_NAME}}”活动申请中的不合规扣除明细，并附上补件及申诉指引。`
+      }
+    ]
+  },
+  security_simulator: {
+    en: [
+      {
+        title: "Prompt to Generate Emergency Response SOP & Incident Brief",
+        prompt: `Act as a Director of Campus Safety. Draft a standard operating procedure (SOP) brief for campus security personnel managing {{EMERGENCY_SCENARIO}} at {{FACILITY_LOCATION}}. Include initial containment, perimeter isolation, and communications protocol.`
+      },
+      {
+        title: "Prompt to Generate Crisis Decision Tree Scenario Table",
+        prompt: `Create a 3-stage branching crisis drill scenario table for {{EMERGENCY_SCENARIO}} at {{FACILITY_LOCATION}}. At each stage (0 min, 15 min, 30 min), define 3 tactical options, the operational consequence of each, and evaluation rubric criteria.`
+      }
+    ],
+    "zh-TW": [
+      {
+        title: "生成校園緊急應變 SOP 與情境簡報提示詞",
+        prompt: `請扮演校園安保總監。為安保團隊在「{{FACILITY_LOCATION}}」應對「{{EMERGENCY_SCENARIO}}」撰寫應變標準作業程序 (SOP)。包含首要隔離處置、警戒線封鎖與校安通報程序。`
+      },
+      {
+        title: "生成三階段危機決策樹演練腳本提示詞",
+        prompt: `為「{{FACILITY_LOCATION}}」發生的「{{EMERGENCY_SCENARIO}}」建立三階段演習腳本（0分、15分、30分），每階段提供 3 項戰術選擇、後續連鎖後果及演練評分準則。`
+      }
+    ],
+    "zh-CN": [
+      {
+        title: "生成校园紧急应变 SOP 与情境简报提示词",
+        prompt: `请扮演校园安保总监。为安保团队在“{{FACILITY_LOCATION}}”应对“{{EMERGENCY_SCENARIO}}”撰写应变标准作业程序 (SOP)。包含首要隔离处置、警戒线封锁与校安通报程序。`
+      },
+      {
+        title: "生成三阶段危机决策树演练脚本提示词",
+        prompt: `为“{{FACILITY_LOCATION}}”发生的“{{EMERGENCY_SCENARIO}}”建立三阶段演习脚本（0分、15分、30分），每阶段提供 3 项战术选择、后续连锁后果及演练评分准则。`
+      }
+    ]
+  }
+};
+
 // UI STATIC TRANSLATIONS (EN, zh-TW, zh-CN)
 const uiTranslations = {
   en: {
+    samplePrompt: "Sample Prompt",
+    step1Title: "Setup & Grounding",
+    step2Title: "Execute Sample Prompt",
+    step3Title: "Human Review & Delivery",
+    fillVariablesTitle: "Fill in the variables",
+    fillVariablesDesc: "Click tokens or type below to customize prompt in real-time",
+    helperPromptTag: "HELPER PROMPT",
+    copyHelperPrompt: "Copy Prompt",
+
     wizardTitle: "Google Gemini Enterprise",
     wizardSubtitle: "Education Adoption & Playbook Portal",
     wizardDesc: "Unlock specialized AI agent templates, prompt sandboxes, and administrative integration guides customized to your role and school level.",
@@ -583,6 +996,15 @@ const uiTranslations = {
     adminFormDescDualModeCheckbox: "When enabled, this playbook supports both standard manual file workflows and advanced integration modes, automatically managing standard prompt variables."
   },
   "zh-TW": {
+    samplePrompt: "範例提示詞",
+    step1Title: "步驟一：準備與知識庫匯入",
+    step2Title: "步驟二：執行範例提示詞",
+    step3Title: "步驟三：人工覆核與成果交付",
+    fillVariablesTitle: "填寫變數參數",
+    fillVariablesDesc: "點擊標籤或於下方輸入以即時自訂提示詞",
+    helperPromptTag: "輔助提示詞",
+    copyHelperPrompt: "複製提示詞",
+
     wizardTitle: "Google Gemini Enterprise",
     wizardSubtitle: "Education Adoption & Playbook Portal",
     wizardDesc: "解鎖專為您的角色和學校級別定制的 AI Agent 模板、提示詞沙盒和管理集成指南。",
@@ -717,6 +1139,15 @@ const uiTranslations = {
     adminFormDescDualModeCheckbox: "啟用後，此案例同時支援手動上傳與進階連接器模式，標準提示詞與步驟將由系統自動處理。"
   },
   "zh-CN": {
+    samplePrompt: "范例提示词",
+    step1Title: "步骤一：准备与知识库导入",
+    step2Title: "步骤二：执行范例提示词",
+    step3Title: "步骤三：人工审核与成果交付",
+    fillVariablesTitle: "填写变量参数",
+    fillVariablesDesc: "点击标签或于下方输入以即时定制提示词",
+    helperPromptTag: "辅助提示词",
+    copyHelperPrompt: "复制提示词",
+
     wizardTitle: "Google Gemini Enterprise",
     wizardSubtitle: "Education Adoption & Playbook Portal",
     wizardDesc: "解锁专为您的角色和学校级别定制的 AI Agent 模板、提示词沙箱和管理集成指南。",
@@ -860,19 +1291,17 @@ const useCasesTranslations = {
       title: "Socratic AI Tutor Agent Creation",
       summary: "Ground a custom course Agent in your lecture notes and syllabi to act as a 24/7 Socratic learning companion.",
       steps: [
-        "In NotebookLM, create a 'Read-Only Course Hub' and upload all syllabus documents, lecture slides, and key readings.",
-        "Navigate to Gemini Enterprise Agent Designer and create a new Custom Agent. Name it '[Course Name] Coach'.",
-        "Copy the Socratic persona instructions into the Agent prompt window and link the read-only NotebookLM hub in the data configuration.",
-        "Test the Agent by asking basic syllabus questions (e.g. 'What is mitosis?') and ensuring it guides you to find the answer rather than directly giving it.",
-        "Generate a shareable link for the Agent and post it prominently on your school LMS (Canvas, Moodle, etc.) for student access."
+        "In NotebookLM, create a 'Read-Only Course Hub' and upload syllabus documents, lecture slides, and key readings.",
+        "In Agent Designer, configure the Socratic tutor persona prompt with grounding and test interactive questions.",
+        "Review guidance quality, publish the shareable Agent link, and embed it into your institutional LMS."
       ],
-      prompt: `You are the '[Course Code] Coach,' a friendly and encouraging Socratic tutor for this course. Your sole objective is to guide students to find answers themselves.
+      prompt: `You are the '{{COURSE_CODE}} Coach,' a friendly and encouraging Socratic tutor for {{COURSE_NAME}}. Your sole objective is to guide students to find answers themselves.
 Follow these rules strictly:
 1. **Ground all your responses** in the provided course materials only.
 2. When a student asks a question (e.g., 'What is the answer to question 3?'), do NOT give the direct answer. Instead, respond with a probing, contextual question that helps them think critically.
 3. Reference specific files/pages in the course materials (e.g., 'Can you look at slide 4 of Lecture 2 and tell me what the first stage is called?').
 4. If a student demonstrates correct understanding, praise them and provide a complete, rich explanation.
-5. If asked about topics outside this course, politely decline, stating: 'I can only assist you with [Course Name] topics.'
+5. If asked about topics outside this course, politely decline, stating: 'I can only assist you with {{COURSE_NAME}} topics.'
 6. Cite your sources for every answer.`,
       proTip: "By connecting NotebookLM as the grounding layer, you ensure the Agent never hallucinates answers, restricts responses to authorized curriculum text, and provides verified inline citations."
     },
@@ -880,19 +1309,17 @@ Follow these rules strictly:
       title: "Socratic AI Tutor Agent 創建",
       summary: "將客製化的課程 Agent 植基於您的授課筆記與教學大綱，打造 24/7 的 Socratic 學習導師。",
       steps: [
-        "在 NotebookLM 中，建立一個「唯讀課程中心」，並上傳所有教學大綱、講義投影片及重要讀物。",
-        "進入 Gemini Enterprise Agent Designer 並新建一個 Custom Agent。命名為「[Course Name] Coach」。",
-        "將 Socratic 角色特徵指令複製到 Agent 提示詞視窗，並於數據設定中連結唯讀的 NotebookLM 課程中心。",
-        "藉由詢問教學大綱中的基本問題（例如：「什麼是細胞分裂？」）來測試 Agent，確保它扮演引導角色，而非直接給出答案。",
-        "產生該 Agent 的公開分享連結，並置頂張貼於學校的 LMS（Canvas、Moodle 等），供學生隨時存取。"
+        "在 NotebookLM 中建立「唯讀課程中心」，上傳課程大綱、簡報及核心教材。",
+        "進入 Agent Designer 設定 Socratic 角色特徵提示詞並連結課程中心進行互動測試。",
+        "覆核引導品質後生成公開分享連結，並嵌入發布至校園 LMS 系統。"
       ],
-      prompt: `你是一位親切且循循善誘的 Socratic 學習導師。你的唯一目標是引導學生靠自己找到問題的答案。
+      prompt: `你是「{{COURSE_CODE}} 導師」，一位親切且循循善誘的 {{COURSE_NAME}} Socratic 學習教練。你的唯一目標是引導學生自主思考並找到答案。
 請嚴格遵守以下準則：
 1. **所有回答均須植基於**提供的課程教材中，絕不可編造。
 2. 當學生問及特定答案時，不要直接告知。請回覆一個具探究性、情境式的反問，幫助他們進行批判性思考。
 3. 具體指出課程材料中的文件或頁數（例如：「你可以參考 Lecture 2 的第 4 張投影片，然後告訴我第一個階段叫什麼名字嗎？」）。
 4. 當學生展現正確的理解時，給予肯定並提供完整、豐富的補充說明。
-5. 若問及本課程以外的主題，請禮貌地拒絕並回答：「我只能協助你解答關於 [Course Name] 的問題。」
+5. 若問及本課程以外的主題，請禮貌地拒絕並回答：「我只能協助你解答關於 {{COURSE_NAME}} 的問題。」
 6. 每次回答皆須引用出處。`,
       proTip: "連結 NotebookLM 作為知識地基，可確保 Agent 絕不胡言亂語（Hallucinate），且其所有答覆均受限於核准的教材，並提供真實可信的內文引用。"
     },
@@ -900,19 +1327,17 @@ Follow these rules strictly:
       title: "Socratic AI Tutor Agent 创建",
       summary: "将定制的课程 Agent 植基于您的授课笔记与教学大纲，打造 24/7 的 Socratic 学习导师。",
       steps: [
-        "在 NotebookLM 中，创建一个“只读课程中心”，并上传所有教学大纲、讲义幻灯片及重要读物。",
-        "进入 Gemini Enterprise Agent Designer 并新建一个 Custom Agent。命名为“[Course Name] Coach”。",
-        "将 Socratic 角色特征指令复制到 Agent 提示词窗口，并在数据设置中链接只读的 NotebookLM 课程中心。",
-        "通过询问教学大纲中的基本问题（例如：“什么是细胞分裂？”）来测试 Agent，确保它扮演引导角色，而非直接给出答案。",
-        "生成该 Agent 的公开分享链接，并置顶张贴于学校的 LMS（Canvas、Moodle 等），供学生随时访问。"
+        "在 NotebookLM 中建立“只读课程中心”，上传课程大纲、课件及核心教材。",
+        "进入 Agent Designer 设置 Socratic 角色特征提示词并链接课程中心进行互动测试。",
+        "审核引导品质后生成公开分享链接，并嵌入发布至校园 LMS 系统。"
       ],
-      prompt: `你是一位亲切且循循善诱的 Socratic 学习导师。你的唯一目标是引导学生靠自己找到问题的答案。
+      prompt: `你是“{{COURSE_CODE}} 导师”，一位亲切且循循善诱的 {{COURSE_NAME}} Socratic 学习教练。你的唯一目标是引导学生自主思考并找到答案。
 请严格遵守以下准则：
 1. **所有回答均须植基于**提供的课程教材中，绝不可编造。
 2. 当学生问及特定答案时，不要直接告知。请回复一个具探究性、情境式的反问，帮助他们进行批判性思考。
 3. 具体指出课程材料中的文件或页数（例如：“你可以参考 Lecture 2 的第 4 张幻灯片，然后告诉我第一个阶段叫什么名字吗？”）。
-4. 当学生展现正确的理解时，给予肯定并提供完整、丰富 pale 的补充说明。
-5. 若问及本课程以外的主题，请礼貌地拒绝并回答：“我只能协助你解答关于 [Course Name] 的问题。”
+4. 当学生展现正确的理解时，给予肯定并提供完整、丰富的补充说明。
+5. 若问及本课程以外的主题，请礼貌地拒绝并回答：“我只能协助你解答关于 {{COURSE_NAME}} 的问题。”
 6. 每次回答皆须引用出处。`,
       proTip: "链接 NotebookLM 作为知识地基，可确保 Agent 绝不胡言乱语（Hallucinate），且其所有答复均受限于核准的教材，并提供真实可信的内文引用。"
     }
@@ -922,13 +1347,11 @@ Follow these rules strictly:
       title: "Rubric-Aligned Essay Feedback Assistant",
       summary: "Analyze student essays against a complex grading rubric in NotebookLM and generate formative constructive feedback.",
       steps: [
-        "Create a private, secure workspace in NotebookLM dedicated to the assignment.",
-        "Upload the detailed grading rubric (PDF/Doc) and the assignment instructions as the primary source documents.",
-        "Upload a student's submission (Word or PDF). To protect data privacy, strip student names or use anonymized IDs.",
-        "Paste the rubric-alignment prompt in the chat. NotebookLM will review the essay against each rubric criterion.",
-        "Review the generated feedback. Add your personal pedagogical insights and adjust the tone to maintain the critical 'human-in-the-loop' standard."
+        "Create a dedicated workspace in NotebookLM and upload the assignment instructions and analytical grading rubric.",
+        "Upload the student essay and execute the formative rubric grading prompt in the workbench.",
+        "Review tentative criterion scores, personalize pedagogical remarks, and export feedback to LMS or student portfolio."
       ],
-      prompt: `Acting as an expert academic teaching assistant, analyze the attached student essay against the uploaded grading rubric. Generate a first draft of constructive, high-quality feedback.
+      prompt: `Acting as an expert academic teaching assistant, analyze the attached student essay for the assignment "{{ASSIGNMENT_TITLE}}" against the uploaded grading rubric for student "{{STUDENT_ID}}". Generate a first draft of constructive, high-quality feedback.
 The feedback MUST adhere to the following structure:
 1. **Rubric Performance Summary**: Provide a tentative level/score for each rubric criterion, directly referencing specific evidence from the student's submission.
 2. **Key Strengths (1-2)**: Identify specific aspects of the paper that were executed exceptionally well, quoting 1-2 examples from the text.
@@ -938,43 +1361,38 @@ Maintain a supportive, pedagogical, and highly encouraging tone throughout.`,
       proTip: "Because NotebookLM operates in a secure cloud tenant, student intellectual property and data remain completely confidential and are never used to train public LLM models."
     },
     "zh-TW": {
-      title: "符合評分規準的作文回饋助手",
-      summary: "在 NotebookLM 中根據複雜的評分規準分析學生作文，並生成具建設性的形成性評語。",
+      title: "Rubric 評分規準作業回饋助理",
+      summary: "在 NotebookLM 中依據多元評分規準分析學生論文，生成形成性、具建設性的回饋建議。",
       steps: [
-        "在 NotebookLM 中建立一個專屬於此作業的私密安全工作空間。",
-        "將詳細的評分規準 (Rubric) PDF/Word 檔和作業說明上傳為主要的資料來源文件。",
-        "上傳學生的作文。為了保護個人隱私，請預先隱去學生真實姓名，改用匿名 ID 代替。",
-        "將評分對齊提示詞貼入對話視窗。NotebookLM 將根據每個評分指標逐項審查作文內容。",
-        "審查生成的回饋。加入您的教學洞察並調整語氣，以維持教學上關鍵的「人機協同 (Human-in-the-loop)」原則。",
-        "產生該 Agent 的公開分享連結，並置頂張貼於學校的 LMS（Canvas、Moodle 等），供學生隨時存取。"
+        "在 NotebookLM 建立專屬工作區，上傳作業指引及分析型評分規準 (Rubric)。",
+        "匯入學生作業並在提示詞工作台執行評分規準診斷提示詞。",
+        "審核各項指標初評，增修個人化評語，並匯出發送至 LMS 或學生學習歷程。"
       ],
-      prompt: `請扮演專業的大專院校教學助理。針對上傳的學生作文，依據提供的評分規準進行分析。請起草一份高質量的建設性教學回饋。
-回饋內容必須遵循以下結構：
-1. **評分規準表現摘要**：提供作業各項指標的建議得分或表現等級，並引述作文中的具體細節作為評分證據。
-2. **核心優勢 (1-2點)**：指出寫作中表現特別出色的方面，並引用1-2處原文。
-3. **改進空間 (2-3點)**：明確點出邏輯、語法或結構上的具體問題，並解釋這些問題如何影響其評分。
-4. **具體行動建議**：提供2-3個具體且漸進的步驟，指引學生如何在下一版草稿中進行修改與提升。
-通篇請保持溫和、正面且富有教育引導意義的語氣。`,
-      proTip: "由於 NotebookLM 運作於安全的雲端企業租戶中，學生的智慧財產權與個人隱私數據將得到完全保密，絕不會被用於訓練公開的大型語言模型。"
+      prompt: `請扮演大學教學助理，依據上傳的評分規準分析學生「{{STUDENT_ID}}」繳交的「{{ASSIGNMENT_TITLE}}」作業，產生具建設性的形成性回饋草稿。
+回饋內容必須包含以下結構：
+1. **評分規準成效摘要**：為每個評分指標給予建議評等，並引用作業具體文句佐證。
+2. **主要亮點 (1-2 項)**：指出表現出色的論點或論證段落，直接引用原文肯定。
+3. **待加強面向 (2-3 項)**：具體標註邏輯跳躍、論據不足或結構鬆散之處，並說明如何對齊評分規範。
+4. **具體精進建議**：提供 2-3 個明確的下階段修改指引。
+全文請保持溫和、富教學熱忱且積極正向的口吻。`,
+      proTip: "NotebookLM 運作於受保護的企業雲端環境中，學生智財與隱私資料受到嚴格隔離，絕不用於公開模型訓練。"
     },
     "zh-CN": {
-      title: "符合评分规准的作文反馈助手",
-      summary: "在 NotebookLM 中根据复杂的评分规准分析学生作文，并生成具建设性的形成性评语。",
+      title: "Rubric 评分规准作业反馈助理",
+      summary: "在 NotebookLM 中依据多元评分规准分析学生论文，生成形成性、具建设性的反馈建议。",
       steps: [
-        "在 NotebookLM 中创建一个专属于此作业的私密安全空间。",
-        "将详细的评分规准 (Rubric) PDF/Word 档和作业说明上传为主要的资料来源文件。",
-        "上传学生的作文。为了保护个人隐私，请预先隐去学生真实姓名，改用匿名 ID 代替。",
-        "将评分对齐提示词贴入对话窗口。NotebookLM 将根据每个评分指标逐项审查作文内容。",
-        "审查生成的反馈。加入您的教学洞察并调整语气，以维持教学上关键的“人机协同 (Human-in-the-loop)”原则。"
+        "在 NotebookLM 建立专属工作区，上传作业指引及分析型评分规准 (Rubric)。",
+        "导入学生作业并在提示词工作台执行评分规准诊断提示词。",
+        "审核各项指标初评，增修个性化评语，并导出发送至 LMS 或学生学习档案。"
       ],
-      prompt: `请扮演专业的大专院校教学助理。针对上传的学生作文，依据提供的评分规准进行分析。请起草一份高质量的建设性教学反馈。
-反馈内容必须遵循以下结构：
-1. **评分规准表现摘要**：提供作业各项指标的建议得分或表现等级，并引述作文中的具体细节作为评分证据。
-2. **核心优势 (1-2点)**：指出写作中表现特别出色的方面，并引用1-2处原文。
-3. **改进空间 (2-3点)**：明确点出逻辑、语法或结构上的具体问题，并解释这些问题如何影响其评分。
-4. **具体行动建议**：提供2-3个具体且渐进的步骤，指引学生如何在下一版草稿中进行修改与提升。
-通篇请保持温和、正面且富有教育引导意义的语气。`,
-      proTip: "由于 NotebookLM 运作于安全的云端企业租户中，学生的知识产权与个人隐私数据将得到完全保密，绝不会被用于训练公开的大型语言模型。"
+      prompt: `请扮演大学教学助理，依据上传的评分规准分析学生“{{STUDENT_ID}}”提交的“{{ASSIGNMENT_TITLE}}”作业，产生具建设性的形成性反馈草稿。
+反馈内容必须包含以下结构：
+1. **评分规准成效摘要**：为每个评分指标给予建议评等，并引用作业具体文句佐证。
+2. **主要亮点 (1-2 项)**：指出表现出色的论点或论证段落，直接引用原文肯定。
+3. **待加强面向 (2-3 项)**：具体标注逻辑跳跃、论据不足或结构松散之处，并说明如何对齐评分规范。
+4. **具体改进建议**：提供 2-3 个明确的下阶段修改指引。
+全文请保持温和、富教学热情且积极正向的口吻。`,
+      proTip: "NotebookLM 运作于受保护的企业云端环境中，学生智财与隐私数据受到严格隔离，绝不用于公开模型训练。"
     }
   },
   curriculum_design: {
@@ -982,12 +1400,11 @@ Maintain a supportive, pedagogical, and highly encouraging tone throughout.`,
       title: "Industry-Aligned Curriculum Architect",
       summary: "Conduct market research and analyze industry trends to design a comprehensive, modern course syllabus from scratch.",
       steps: [
-        "Open Gemini Enterprise and launch a 'Deep Research' session targeting emerging skills in your course domain.",
-        "Prompt the model to synthesize job market reports, professional certifications, and academic publications into core competency outcomes.",
-        "Transfer the results to Canvas Mode to brainstorm the week-by-week syllabus content, recommended textbook readings, and project briefs.",
-        "Co-create interactive grading rubrics directly inside Canvas Mode, then export the completed syllabus package to Google Docs."
+        "Initiate a Deep Research query targeting emerging job market competencies and industry trends.",
+        "Synthesize findings into learning outcomes and execute syllabus drafting in Canvas Mode.",
+        "Refine weekly modules and project-based rubrics with departmental peers, then export to Google Docs."
       ],
-      prompt: `Act as a senior instructional designer. I want to build a brand new, highly modern course syllabus for [Course Title].
+      prompt: `Act as a senior instructional designer. I want to build a brand new, highly modern course syllabus for {{COURSE_TITLE}} targeting the {{TARGET_INDUSTRY}} industry.
 Phase 1: Research. Search the web for the top 5 most in-demand technical and soft skills requested by employers in this field over the past 12 months.
 Phase 2: Learning Outcomes. Design 5 measurable learning outcomes mapped directly to Bloom's Taxonomy based on these skills.
 Phase 3: Syllabus Draft. Create a comprehensive 14-week topic outline, specifying major lecture themes, in-class active learning tasks, and project milestones.
@@ -995,36 +1412,34 @@ Phase 4: Assessment. Propose a project-based grading framework that bypasses tra
       proTip: "Use Deep Research's capability to search hundreds of academic and corporate portals simultaneously, providing you with a high-fidelity summary report citing actual job-post statistics."
     },
     "zh-TW": {
-      title: "產業對齊課程架構師",
-      summary: "進行市場調研並分析產業趨勢，從零開始設計出一套全面、現代化的課程大綱。",
+      title: "產業導向課程架構設計師",
+      summary: "利用 Deep Research 進行就業市場調查與技術趨勢分析，從零規劃高度現代化的課程大綱。",
       steps: [
-        "開啟 Gemini Enterprise，啟動一個針對您學科領域內新興技能的 'Deep Research'（深度研究）對話。",
-        "指示模型綜合就業市場報告、專業證照指標及學術期刊，歸納出核心專業能力指標。",
-        "將調研結果匯入 Canvas Mode（畫布模式），共同腦力激盪出每週授課主題、推薦教科書章節與專案任務書。",
-        "直接在 Canvas Mode 中協同設計互動式評分規準，隨後將完成的整套教學大綱方案導出至 Google Docs。"
+        "發起 Deep Research 檢索鎖定目標產業的新興技術指標與就業職能。",
+        "將調研成果轉化為認知學習成效，並於 Canvas Mode 展開教學大綱編寫。",
+        "與系所同仁共同微調 14 週單元專案評核機制，最後匯出至文件。"
       ],
-      prompt: `請扮演資深課程設計專家。我想為 [Course Title] 打造一套全新的、符合產業前沿的教學大綱。
-第一階段：深度調研。請搜尋網頁，總結過去12個月內該學術領域雇主最常要求的前5大技術與軟實力。
-第二階段：學習成效。依據這些需求，設計5項直接對齊布魯姆認知分類（Bloom's Taxonomy）的可量化學習成效。
-第三階段：教學大綱草案。規劃一個完整的14週主題大綱，詳細列出每週講授重點、課堂主動學習任務與專案里程碑。
-第四階段：成效評估。提出一個專案導向的評估架構，以實作證明（Proof of work）代替傳統筆試。`,
-      proTip: "善用 Deep Research 同步檢索數百個學術與產業入口網站的能力，為您提供包含真實徵才統計數據的高保真綜合摘要報告。"
+      prompt: `請扮演資深教學設計師。我希望為面向「{{TARGET_INDUSTRY}}」領域的課程「{{COURSE_TITLE}}」規劃一套全新且符合當前產業趨勢的教學大綱。
+第一階段（趨勢調研）：檢索過去 12 個月內該領域雇主需求最高的 5 項核心技術技能與 3 項關鍵軟實力。
+第二階段（學習成效）：依據上述技能，參照 Bloom 分類法設計 5 項具體可評量的學習成效。
+第三階段（大綱草擬）：編排完整的 14 週單元大綱，註明每週授課核心、課堂實作任務及分組專案里程碑。
+第四階段（評核方案）：提出以實作產出 (Proof-of-work) 為導向的多元評量設計，取代傳統死記型期末筆試。`,
+      proTip: "善用 Deep Research 同步檢索數百個學術與企業資訊站點的能力，自動產出附有具體職缺統計數據的高信度綜整報告。"
     },
     "zh-CN": {
-      title: "产业对齐课程架构师",
-      summary: "进行市场调研并分析产业趋势，从零开始设计出一套全面、现代化的课程大纲。",
+      title: "产业导向课程架构设计师",
+      summary: "利用 Deep Research 进行就业市场调查与技术趋势分析，从零规划高度现代化的课程大纲。",
       steps: [
-        "开启 Gemini Enterprise，启动一个针对您学科领域内新兴技能的 'Deep Research'（深度研究）对话。",
-        "指示模型综合就业市场报告、专业证照指标及学术期刊，归纳出核心专业能力指标。",
-        "将调研结果汇入 Canvas Mode（画布模式），共同脑力激荡出每周授课主题、推荐教科书章节与专案任务书。",
-        "直接在 Canvas Mode 中协同设计互动式评分规准，随后将完成的整套教学大纲方案导出至 Google Docs。"
+        "发起 Deep Research 检索锁定目标产业的新兴技术指标与就业职能。",
+        "将调研成果转化为认知学习成效，并于 Canvas Mode 展开教学大纲编写。",
+        "与系所同仁共同微调 14 周单元项目评估机制，最后导出至文档。"
       ],
-      prompt: `请扮演资深课程设计专家。我想为 [Course Title] 打造一套全新的、符合产业前沿的教学大纲。
-第一阶段：深度调研。请搜索网页，总结过去12个月内该学术领域雇主最常要求的前5大技术与软实力。
-第二阶段：学习成效。依据这些需求，设计5项直接对齐布鲁姆认知分类（Bloom's Taxonomy）的可量化学习成效。
-第三阶段：教学大纲草案。规划一个完整的14周主题大纲，详细列出每周讲授重点、课堂主动学习任务与专案里程碑。
-第四阶段：成效评估。提出一个专案导向的评估架构，以实作证明（Proof of work）代替传统笔试。`,
-      proTip: "善用 Deep Research 同步检索数百个学术与产业入口网站的能力，为您提供包含真实征才统计数据的高保真综合摘要报告。"
+      prompt: `请扮演资深教学设计师。我希望为面向“{{TARGET_INDUSTRY}}”领域的课程“{{COURSE_TITLE}}”规划一套全新且符合当前产业趋势的教学大纲。
+第一阶段（趋势调研）：检索过去 12 个月内该领域雇主需求最高的 5 项核心技术技能与 3 项关键软实力。
+第二阶段（学习成效）：依据上述技能，参照 Bloom 分类法设计 5 项具体可评估的学习成效。
+第三阶段（大纲草拟）：编排完整的 14 周单元大纲，注明每周授课核心、课堂实操任务及分组项目里程碑。
+第四阶段（评估方案）：提出以实操产出 (Proof-of-work) 为导向的多元评估设计，取代传统死记型期末笔试。`,
+      proTip: "善用 Deep Research 同步检索数百个学术与企业信息站点的能力，自动产出附有具体职位统计数据的高信度综整报告。"
     }
   },
   lab_manual_creator: {
@@ -1032,55 +1447,52 @@ Phase 4: Assessment. Propose a project-based grading framework that bypasses tra
       title: "Interactive Lab Guide & Safety Manual",
       summary: "Create student-facing lab manuals with step-by-step procedures, safety icons, and visual layout prompts in Canvas mode.",
       steps: [
-        "Open Gemini Enterprise Canvas Mode and outline the learning objectives for your chemistry or computer science lab session.",
-        "Prompt the AI to write clear, step-by-step experimental procedures and corresponding safety hazard alerts.",
-        "Use the 'Help me visualize' feature (Image Generation) to generate custom, clear illustrations of laboratory equipment layouts.",
-        "Co-create a lab observation sheet table inside Canvas Mode and export the final guide as an interactive student worksheet."
+        "Define experiment objectives and compile safety protocols in Canvas Mode.",
+        "Generate student procedure steps and custom equipment illustrations using Image Generation.",
+        "Assemble student observation tables, review safety hazard compliance, and publish the printable lab guide."
       ],
-      prompt: `You are a university biology lab coordinator. Write an engaging, student-facing lab guide for a 'DNA Extraction' experiment.
+      prompt: `You are a laboratory coordinator for {{COURSE_NAME}}. Write an engaging, student-facing lab guide for the experiment "{{EXPERIMENT_NAME}}".
 The document should include:
-1. **Introduction**: A brief, captivating summary of the biological relevance of DNA extraction.
+1. **Introduction**: A brief, captivating summary of the biological/chemical relevance of {{EXPERIMENT_NAME}}.
 2. **Learning Objectives**: 3 clear outcomes.
 3. **Safety First Box**: Explicit hazards, clothing requirements, and chemical disposal protocols.
 4. **Step-by-step Procedure**: An easy-to-follow, numbered checklist of steps.
 5. **Observation & Reflection Journal**: Propose a set of 3 thought-provoking prediction prompts and blank tables for students to record measurements.`,
-      proTip: "Use bold text and alerts (e.g. [!CAUTION]) inside Canvas Mode to ensure safety steps stand out visually to prevent accidents during high-risk physical labs."
+      proTip: "Use bold text and alerts inside Canvas Mode to ensure safety steps stand out visually to prevent accidents during high-risk physical labs."
     },
     "zh-TW": {
-      title: "互動式實驗指南與安全手冊",
-      summary: "利用 Canvas Mode 建立包含步驟程序、安全圖示與實驗配置圖的互動式實驗指南。",
+      title: "互動實驗指引與安全守則編排",
+      summary: "在 Canvas 模式中編寫實驗手冊，搭配 Image Generation 生成實驗步驟圖示與安全規範說明。",
       steps: [
-        "開啟 Gemini Enterprise Canvas Mode，勾勒出本次化學或資訊工程實驗課的學習目標。",
-        "引導 AI 撰寫清晰詳盡、條理分明的實驗操作步驟，並在關鍵處加上安全警示圖示。",
-        "使用內建的「幫我可視化」功能（Image Generation），生成精確的實驗儀器排布與管線連接示意圖。",
-        "在 Canvas Mode 中協同設計實驗觀察記錄表，最後將完整的實驗手冊導出為互動式學生學習單。"
+        "在 Canvas Mode 中釐清實驗核心目標，並統整化學與物理安全守則。",
+        "編排條列式實驗步驟，並透過 Image Generation 繪製專屬實驗器材圖示。",
+        "組合實驗數據記錄表，進行校園安全規範審核後發布為可列印實驗手冊。"
       ],
-      prompt: `你是一位大學生物實驗協調員。請為「DNA 提取實驗」撰寫一份引人入勝、面向學生的實驗手冊。
-文件內容必須包含：
-1. **實驗引言**：簡短而有趣的說明 DNA 提取在現代生物學中的重要性。
-2. **學習目標**：3項明確的學習成效。
-3. **安全防護須知**：列出潛在危害、穿著規定（護目鏡/手套）及化學廢棄物處置流程。
-4. **實驗操作指南**：使用編號列表，設計出易於操作的防呆步驟。
-5. **觀察與反思日誌**：提供3個啟發性的結果預測引導問題，以及空白的實驗記錄表格。`,
-      proTip: "在 Canvas Mode 中善用粗體字與警示區塊（如 [!CAUTION]），可使安全操作程序在視覺上極為突出，有效預防實體實驗中的操作安全事故。"
+      prompt: `你是「{{COURSE_NAME}}」的實驗室負責人。請為實驗「{{EXPERIMENT_NAME}}」編寫一份生動且指引明確的學生實驗操作手冊。
+文件須包含：
+1. **前言**：簡述「{{EXPERIMENT_NAME}}」的學術價值與生活應用。
+2. **學習成效**：3 項具體操作與認知目標。
+3. **安全警示方塊**：明列危害等級、必備防護裝備及化學廢液處置規範。
+4. **逐步操作程序**：清晰編號的操作流程。
+5. **數據紀錄與思辨日誌**：提供數據填寫表格及 3 道引導性預測思考題。`,
+      proTip: "在 Canvas Mode 中善用粗體警示與醒目色塊標記安全要點，能大幅降低高風險實體實驗中的意外發生率。"
     },
     "zh-CN": {
-      title: "互动式实验指南与安全手册",
-      summary: "利用 Canvas Mode 建立包含步骤程序、安全图示与实验配置图的互动式实验指南。",
+      title: "互动实验指引与安全守则编排",
+      summary: "在 Canvas 模式中编写实验手册，搭配 Image Generation 生成实验步骤图示与安全规范说明。",
       steps: [
-        "开启 Gemini Enterprise Canvas Mode，勾勒出本次化学或信息工程实验课的学习目标。",
-        "引导 AI 撰写清晰详尽、条理分明的实验操作步骤，并在关键处加上安全警示图示。",
-        "使用内建的“帮我可视化”功能（Image Generation），生成精确的实验仪器排布与管线连接示意图。",
-        "在 Canvas Mode 中协同设计实验观察记录表，最后将完整的实验手册导出为互动式学生学习单。"
+        "在 Canvas Mode 中厘清实验核心目标，并统整化学与物理安全守则。",
+        "编排条列式实验步骤，并透过 Image Generation 绘制专属实验器材图示。",
+        "组合实验数据记录表，进行校园安全规范审核后发布为可打印实验手册。"
       ],
-      prompt: `你是一位大学生物实验协调员。请为“DNA 提取实验”撰写一份引人入胜、面向学生的实验手册。
-文件内容必须包含：
-1. **实验引言**：简短而有趣的说明 DNA 提取在现代生物学中的重要性。
-2. **学习目标**：3项明确的学习成效。
-3. **安全防护须知**：列出潜在危害、穿着规定（护目镜/手套）及化学废弃物处置流程。
-4. **实验操作指南**：使用编号列表，设计出易于操作的防呆步骤。
-5. **观察与反思日志**：提供3个启发性的结果预测引导问题，以及空白的实验记录表格。`,
-      proTip: "在 Canvas Mode 中善用粗体字与警示区块（如 [!CAUTION]），可使安全操作程序在视觉上极为突出，有效预防实体实验中的操作安全事故。"
+      prompt: `你是“{{COURSE_NAME}}”的实验室负责人。请为实验“{{EXPERIMENT_NAME}}”编写一份生动且指引明确的学生实验操作手册。
+文件须包含：
+1. **前言**：简述“{{EXPERIMENT_NAME}}”的学术价值与生活应用。
+2. **学习成效**：3 项具体操作与认知目标。
+3. **安全警示方框**：明列危害等级、必备防护装备及化学废液处置规范。
+4. **逐步操作程序**：清晰编号的操作流程。
+5. **数据记录与思辨日志**：提供数据填写表格及 3 道引导性预测思考题。`,
+      proTip: "在 Canvas Mode 中善用粗体警示与醒目色块标记安全要点，能大幅降低高风险实体实验中的意外发生率。"
     }
   },
   su_advocacy: {
@@ -1088,12 +1500,11 @@ The document should include:
       title: "Student Feedback Sentiment Dashboard",
       summary: "Consolidate massive volumes of unstructured student feedback from surveys and town halls to synthesize advocacy data.",
       steps: [
-        "Consolidate unstructured student feedback text files, town hall audio recordings, and survey responses in a folder.",
-        "Ground a NotebookLM workspace directly on this folder using the secure Drive Connector.",
-        "Query NotebookLM to extract the top 5 pressing student concerns (e.g., dining hours, library quiet spaces) and compute overall sentiment.",
-        "Use Gemini in Google Docs to write a structured, data-driven advocacy proposal to submit to the school administration."
+        "Collect survey responses and student feedback sheets into a secured institutional Drive folder.",
+        "Run multi-factor qualitative sentiment and thematic analysis via Deep Research and NotebookLM.",
+        "Synthesize recurring concerns into priority advocacy items and present to university administration."
       ],
-      prompt: `Acting as the Student Union Advocacy Director, analyze the uploaded collection of town hall transcripts and anonymous student survey comments.
+      prompt: `Acting as the Student Union Advocacy Director for {{INSTITUTION_NAME}}, analyze the uploaded collection of town hall transcripts and anonymous student survey comments for {{ACADEMIC_TERM}}.
 Generate a comprehensive, evidence-based report that includes:
 1. **Thematic Clustering**: Identify and group the top 5 most frequently complained-about campus issues.
 2. **Sentiment Assessment**: For each issue, categorize the emotional tone (highly negative, frustrated, neutral) and extract 3 powerful, representative anonymized student quotes.
@@ -1102,38 +1513,36 @@ Generate a comprehensive, evidence-based report that includes:
       proTip: "Linking your student feedback database directly via the Drive Connector keeps the data federated, secure, and up-to-the-minute without copying local files."
     },
     "zh-TW": {
-      title: "學生回饋情感分析儀表板",
-      summary: "整合問卷與公聽會等海量非結構化學生回饋，轉化為具數據說服力的權益倡議提案。",
+      title: "學生意見情緒分析與權益倡議儀表板",
+      summary: "整合校園論壇、諮詢會與問卷海量非結構化意見，產出高說服力之學生權益數據報告。",
       steps: [
-        "將非結構化的學生意見純文字、公聽會錄音檔和問卷回饋整合在同一個雲端資料夾中。",
-        "藉由安全的 Drive Connector 將 NotebookLM 工作空間直接連接至此資料夾。",
-        "向 NotebookLM 提問，提煉出前 5 大最受學生關注的痛點（如食堂營業時間、圖書館自習區），並計算整體情感傾向。",
-        "在 Google Docs 中使用 Gemini 編寫結構嚴謹、數據支持的權益倡議書，提交給學校行政層級。"
+        "將諮詢會筆記與匿名問卷彙整至安全的雲端硬碟 (Drive) 目錄中。",
+        "透過 Deep Research 與 NotebookLM 進行主題聚類與多維度情緒分析。",
+        "將高頻問題轉化為學生權益倡議白皮書，向學校管理層進行正式提案。"
       ],
-      prompt: `請扮演學生會權益倡議長。請針對上傳的公聽會會議記錄和匿名問卷意見進行全面分析。
-起草一份結構完整的數據導向倡議報告，包含以下部分：
-1. **核心主題歸類**：識別並歸納出排名前 5 大最常被反映的校園生活痛點。
-2. **情感傾向評估**：針對每項痛點評估學生的沮喪/憤怒程度，並摘錄3條具代表性且完全匿名的學生原話。
-3. **標竿解決方案**：借鑑其他同級標竿學校的成功做法，針對每項痛點提出2個可行且低成本的具體政策改善建議。
-4. **協商抗辯準備**：列出 5 個學校行政主管可能會提出的反對理由（如預算不足、人力吃緊），並寫出有數據說服力的駁斥論點。`,
-      proTip: "透過 Drive Connector 直接連結學生回饋資料夾，可讓分析過程完全符合權限安全機制，無需在本地儲存重複檔案即可讀取最新意見。"
+      prompt: `請扮演「{{INSTITUTION_NAME}}」學生會權益部長，分析「{{ACADEMIC_TERM}}」學期收集到的校園諮詢會記錄及匿名意見問卷。
+生成一份具說服力且客觀的學生權益報告：
+1. **議題聚類分析**：歸納學生最關注的 5 大校園議題。
+2. **情緒強度評估**：標註各議題的負面情緒比重，並摘錄 3 則最具代表性的學生去識別化發言。
+3. **數據導向方案**：參考其他大學標竿做法，針對每個議題提出 2 項具可行性且低成本的政策建議。
+4. **協商對策準備**：預判 5 項校方可能提出的預算或行政反對理由，並提供有數據佐證的應對答辯。`,
+      proTip: "透過 Drive Connector 建立即時連線，能確保民意數據維持在雲端權限保護下，無需在本機複製檔案即可獲得最新分析。"
     },
     "zh-CN": {
-      title: "学生反馈情感分析仪表板",
-      summary: "整合问卷与公听会等海量非结构化学生反馈，转化为具数据说服力的权益倡议提案。",
+      title: "学生意见情绪分析与权益倡议仪表板",
+      summary: "整合校园论坛、咨询会与问卷海量非结构化意见，产出高说服力之学生权益数据报告。",
       steps: [
-        "将非结构化的学生意见纯文字、公听会录音档和问卷反馈整合在同一个云端文件夹中。",
-        "借由安全的 Drive Connector 将 NotebookLM 工作空间直接连接至此文件夹。",
-        "向 NotebookLM 提问，提炼出前 5 大最受学生关注的痛点（如食堂营业时间、图书馆自习区），并计算整体情感倾向。",
-        "在 Google Docs 中使用 Gemini 编写结构严谨、数据支持的权益倡议书，提交给学校行政层级。"
+        "将咨询会笔记与匿名问卷汇整至安全的云端硬盘 (Drive) 目录中。",
+        "透过 Deep Research 与 NotebookLM 进行主题聚类与多维度情绪分析。",
+        "将高频问题转化为学生权益倡议白皮书，向学校管理层进行正式提案。"
       ],
-      prompt: `请扮演学生会权益倡议长。请针对上传的公听会会议记录和匿名问卷意见进行全面分析。
-起草一份结构完整的数据导向倡议报告，包含以下部分：
-1. **核心主题归类**：识别并归纳出排名前 5 大最常被反映的校园生活痛点。
-2. **情感倾向评估**：针对每项痛点评估学生的沮丧/愤怒程度，并摘录3条具代表性且完全匿名的学生原话。
-3. **标杆解决方案**：借鉴其他同级标杆学校的成功做法，针对每项痛点提出2个可行且低成本的具体政策改善建议。
-4. **协商抗辩准备**：列出 5 个学校行政主管可能会提出的反对理由（如预算不足、人力吃紧），并写出有数据说服力的驳斥论点。`,
-      proTip: "通过 Drive Connector 直接链接学生反馈文件夹，可让分析过程完全符合权限安全机制，无需在本地存储重复文件即可读取最新意见。"
+      prompt: `请扮演“{{INSTITUTION_NAME}}”学生会权益部长，分析“{{ACADEMIC_TERM}}”学期收集到的校园咨询会记录及匿名意见问卷。
+生成一份具说服力且客观的学生权益报告：
+1. **议题聚类分析**：归纳学生最关注的 5 大校园议题。
+2. **情绪强度评估**：标注各议题的负面情绪比重，并摘录 3 则最具代表性的学生去标识化发言。
+3. **数据导向方案**：参考其他大学标杆做法，针对每个议题提出 2 项具可行性且低成本的政策建议。
+4. **协商对策准备**：预判 5 项校方可能提出的预算或行政反对理由，并提供有数据佐证的应对答辩。`,
+      proTip: "透过 Drive Connector 建立即时连线，能确保民意数据维持在云端权限保护下，无需在本机复制文件即可获得最新分析。"
     }
   },
   club_funding: {
@@ -1141,15 +1550,14 @@ Generate a comprehensive, evidence-based report that includes:
       title: "Annual Club Calendar & Budget Justifier",
       summary: "Brainstorm an annual activities calendar and draft detailed, compliant student government funding proposals.",
       steps: [
-        "Open NotebookLM and upload your club's past event templates and the official Student Union funding guidelines.",
-        "In Canvas Mode, prompt Gemini to brainstorm a calendar of 12 highly engaging club activities aligned with your club's core mission.",
-        "Feed the calendar and past expense records from your shared Drive spreadsheet into the prompt to generate a formatted budget table.",
-        "Ask Gemini to write a formal budget justification narrative, detailing how each event benefits the wider campus student community."
+        "Gather past semester club event logs, attendance counts, and itemized receipts into Drive.",
+        "Generate annual budget justification proposals and activity timelines in Canvas Mode.",
+        "Verify allocation compliance against union bylaws and submit to the student council funding committee."
       ],
-      prompt: `Act as a professional grant and proposal writer. Help our university [Club Name] draft a detailed funding proposal for the upcoming academic year.
+      prompt: `Act as a professional grant and proposal writer. Help {{CLUB_NAME}} draft a detailed funding proposal for the academic year {{ACADEMIC_YEAR}}.
 Inputs:
-- Annual activities calendar: [List of 4 major workshops, 1 public exhibition, 2 guest lectures, and 1 social event]
-- Approved funding guidelines: [Max $200 per workshop, Max $500 for exhibition, strict food and beverage limits]
+- Annual activities calendar: List of 4 major workshops, 1 public exhibition, 2 guest lectures, and 1 social event for {{CLUB_NAME}}.
+- Approved funding guidelines: Max $200 per workshop, Max $500 for exhibition, strict food and beverage limits.
 Task:
 1. Create an **Executive Summary** detailing the club's mission and how these events boost student engagement.
 2. Compile a detailed **Line-Item Budget Table**, calculating total costs and verifying compliance with the provided funding rules.
@@ -1157,42 +1565,40 @@ Task:
       proTip: "Upload the Student Union's official constitutional funding guidelines to NotebookLM first. This prevents your proposal from getting rejected for violating obscure spend-limit policies."
     },
     "zh-TW": {
-      title: "年度社團活動行事曆與預算審查",
-      summary: "腦力激盪出年度社團活動規劃，並撰寫符合學生會補助規範的預算申請計畫書。",
+      title: "社團年度行事曆與經費預算企劃書",
+      summary: "規劃社團年度活動時間軸，自動編排符合學生會補助章程的逐項預算企劃書。",
       steps: [
-        "開啟 NotebookLM 並上傳社團以往的辦理活動範本及官方補助章程。",
-        "在 Canvas Mode 中，引導 Gemini 規劃出12個高度契合社團宗旨、且能吸引同學踴躍參與的年度活動。",
-        "將該活動行事曆與雲端硬碟試算表中的歷年支出明細輸入對話，以自動生成精密的預算表。",
-        "讓 Gemini 撰寫正式的預算合理性論述，詳加說明每場活動能為校園學生社群帶來何種正面影響。"
+        "將過往學期社團活動紀錄、參與人次及單據明細彙整至雲端硬碟。",
+        "在 Canvas Mode 中產生年度預算論證企劃與活動期程表。",
+        "對齊學生自治組織法規檢驗預算合規性，最後呈交學生會評議委員會。"
       ],
-      prompt: `請扮演專業的計畫書撰寫專家。協助我們學校的 [社團名稱] 撰寫一份下學年度的經費補助申請書。
-輸入條件：
-- 年度活動規劃：[包含 4 場大型工作坊、1 場成果展發表會、2 場名家講座和 1 場聯誼活動]
-- 審查補助標準：[每場工作坊補貼上限 $200 元、成果展補助上限 $500 元，嚴格限制餐飲費用比例]
-任務：
-1. 撰寫一份**執行摘要**，闡述社團本質及這些活動如何實質提升學生的校園參與度。
-2. 編製詳細的**預算科目表**，精算各活動總支出並檢驗是否完全符合補助限制。
-3. 撰寫一份有說服力的**社會影響力聲明**，證明此筆預算撥付將為全校學生創造最大化價值。`,
-      proTip: "優先將學生會的官方經費補助細則上傳至 NotebookLM。這樣能預先篩除不合規的支出項目，避免提案因違反隱蔽的預算上限而直接被退件。"
+      prompt: `請扮演專業提案企劃專家。協助社團「{{CLUB_NAME}}」撰寫「{{ACADEMIC_YEAR}}」學年度經費補助企劃書。
+背景資料：
+- 年度規劃活動：包含 4 場實務工作坊、1 場成果展覽、2 場大師講座及 1 場迎新聚會。
+- 學生會補助上限標準：每場工作坊上限 $200、展覽上限 $500，餐敘飲品嚴格受限。
+撰寫任務：
+1. **執行摘要**：闡述社團創立宗旨在於豐富校園社群生活。
+2. **逐項預算明細表**：計算活動總開銷，並嚴格落實法規上限自檢。
+3. **社群影響力陳述**：論證此系列活動如何強化校園多元性與學生技能成長。`,
+      proTip: "先將學生會最新的組織法與補助章程上傳至 NotebookLM，可確保產出的企劃書 100% 規避預算超標陷阱。"
     },
     "zh-CN": {
-      title: "年度社团活动行事历与预算审查",
-      summary: "脑力激荡出年度社团活动规划，并撰写符合学生会补助规范的预算申请计划书。",
+      title: "社团年度行事历与经费预算企划书",
+      summary: "规划社团年度活动时间轴，自动编排符合学生会补助章程的逐项预算企划书。",
       steps: [
-        "开启 NotebookLM 并上传社团以往的办理活动范本及官方补助章程。",
-        "在 Canvas Mode 中，引导 Gemini 规划出12个高度契合社团宗旨、且能吸引同学踊跃参与的年度活动。",
-        "将该活动行事历与云端硬盘试算表中的历年支出明细输入对话，以自动生成精密的预算表。",
-        "让 Gemini 撰写正式的预算合理性论述，详加说明每场活动能为校园学生社群带来何种正面影响。"
+        "将过往学期社团活动记录、参与人次及单据明细汇整至云端硬盘。",
+        "在 Canvas Mode 中产生年度预算论证企划与活动期程表。",
+        "对齐学生自治组织法规检验预算合规性，最后呈交学生会评议委员会。"
       ],
-      prompt: `请扮演专业的计划书撰写专家。协助我们学校的 [社团名称] 撰写一份下学年度的经费补助申请书。
-输入条件：
-- 年度活动规划：[包含 4 场大型工作坊、1 场成果展发表会、2 场名家讲座和 1 场联谊活动]
-- 审查补助标准：[每场工作坊补贴上限 $200 元、成果展补助上限 $500 元，严格限制餐饮费用比例]
-任务：
-1. 撰写一份**执行摘要**，阐述社团本质及这些活动如何实质提升学生的校园参与度。
-2. 编制详细的**预算科目表**，精算各活动总支出并检验是否完全符合补助限制。
-3. 撰写一份有说服力的**社会影响力声明**，证明此笔预算拨付将为全校学生创造最大化价值。`,
-      proTip: "优先将学生会的官方经费补助细则上传至 NotebookLM。这样能预先筛除不合规的支出项目，避免提案因违反隐蔽的预算上限而直接被退件。"
+      prompt: `请扮演专业提案企划专家。协助社团“{{CLUB_NAME}}”撰写“{{ACADEMIC_YEAR}}”学年度经费补助企划书。
+背景数据：
+- 年度规划活动：包含 4 场实务工作坊、1 场成果展览、2 场大师讲座及 1 场迎新聚会。
+- 学生会补助上限标准：每场工作坊上限 $200、展览上限 $500，餐叙饮品严格受限。
+撰写任务：
+1. **执行摘要**：阐述社团创立宗旨在丰富校园社群生活。
+2. **逐项预算明细表**：计算活动总开销，并严格落实法规上限自检。
+3. **社群影响力陈述**：论证此系列活动如何强化校园多元性与学生技能成长。`,
+      proTip: "先将学生会最新的组织法与补助章程上传至 NotebookLM，可确保产出的企划书 100% 规避预算超标陷阱。"
     }
   },
   su_helpdesk: {
@@ -1200,512 +1606,393 @@ Task:
       title: "24/7 Student Union Policy Agent",
       summary: "Build an AI support bot trained on club policy handbooks to answer operational and venue booking questions.",
       steps: [
-        "In NotebookLM, compile all Student Union club policies, room booking rules, and equipment reservation forms.",
-        "Use Gemini Agent Designer to build a conversational agent named 'Student Union Support Assistant'.",
-        "Connect the agent to the policy knowledge base to serve static queries.",
-        "Test the agent's ability to handle complex queries (e.g. 'Can we book a room after 9 PM?').",
-        "Embed the agent on the Student Union portal or social media page for 24/7 club leader support."
+        "Centralize student handbook, welfare guidelines, and club constitutions into NotebookLM.",
+        "Deploy a 24/7 policy Q&A Agent using Agent Designer to guide members on regulations and forms.",
+        "Test common edge cases and route complex disputes to human union officers via Email Connector."
       ],
-      advancedSteps: [
-        "In NotebookLM, compile all Student Union club policies, room booking rules, and equipment reservation forms.",
-        "Use Gemini Agent Designer to build a conversational agent named 'Student Union Support Assistant'.",
-        "Connect the agent to the policy knowledge base and configure custom escalate-by-email instructions via the Email Connector.",
-        "Test the agent's ability to automatically draft escalation messages.",
-        "Embed the agent on the Student Union portal for automated, end-to-end integration."
-      ],
-      prompt: `You are the 'Student Union Support Assistant.' Your job is to help student club leaders navigate room booking, funding applications, and event risk forms.
-1. **Ground your answers strictly** in the uploaded club handbooks. Never guess policies.
-2. Provide direct, step-by-step instructions (e.g., 'To book the Student Common Room, follow these 3 steps...').
-3. Cite the section number of the policy you are referencing.
-4. If a query is highly complex, involves sensitive disputes, or requires manual human approval, provide a clear, pre-formatted draft escalation email on-screen for the user to copy and send manually to the Student Affairs Officer.
-5. Maintain a professional, supportive, and efficient tone.`,
-      advancedPrompt: `You are the 'Student Union Support Assistant' integrated with your Institutional Gmail. Your job is to help student club leaders navigate room booking, funding applications, and event risk forms.
-1. **Ground your answers strictly** in the uploaded club handbooks. Never guess policies.
-2. Provide direct, step-by-step instructions (e.g., 'To book the Student Common Room, follow these 3 steps...').
-3. Cite the section number of the policy you are referencing.
-4. If a query is highly complex or requires manual human approval, use your integrated Email Connector to automatically draft a detailed escalation email directly in the user's Gmail Drafts folder for the Student Affairs Officer, then notify the user that the draft is ready for review.
-5. Maintain a professional, supportive, and efficient tone.`,
-      proTip: "In Standalone mode, the agent provides pre-formatted drafts directly inside the chat window for easy copy-pasting.",
-      advancedProTip: "By configuring the Email Connector, the agent can automatically draft escalation emails directly in your Gmail draft folder when manual intervention is needed."
+      prompt: `You are the 24/7 Policy and Welfare Agent for {{STUDENT_UNION_NAME}} at {{INSTITUTION_NAME}}. Your purpose is to provide immediate, highly accurate answers to student questions regarding union bylaws, venue booking, lockers, and society financial subsidies.
+Rules:
+1. Answer using ONLY verified information from the attached student handbook and constitution.
+2. Maintain a friendly, supportive student-peer tone.
+3. Provide step-by-step instructions for all administrative procedures (e.g. How to book a room, how to apply for event funding).
+4. If an inquiry involves confidential welfare disputes, severe mental health concerns, or complex disciplinary proceedings, do NOT answer. Provide immediate instructions to contact the designated human union officer at {{OFFICER_EMAIL}}.`,
+      proTip: "Pairing the Agent with Email Connector ensures seamless, automated escalation when students face nuanced emergencies requiring staff intervention."
     },
     "zh-TW": {
-      title: "24/7 學生會政策諮詢 Agent",
-      summary: "建立一個專門解答社團場地借用、活動報備及預算補助政策的校園智能客服 Agent。",
+      title: "24/7 學生會法規與會務諮詢 Agent",
+      summary: "將社團評鑑、場地借用與會務規章交由專屬 Agent，提供全天候即時規章諮詢與行政表單指引。",
       steps: [
-        "在 NotebookLM 中匯整所有學生會規章、課外活動組場地租借細則與活動安全切結書。",
-        "使用 Gemini Agent Designer 創建一個名為「Student Union Support Assistant」的對話型 Agent。",
-        "將此 Agent 連結規章知識庫，在本地回答學生的靜態規定查詢。",
-        "測試 Agent 對複雜規定的解答能力（例如：「我們可以在晚上9點後租用活動中心大禮堂嗎？」）。",
-        "將該 Agent 的對話框嵌入至學生會官網或社團通訊軟體中，提供 24 小時不打烊的諮詢服務。"
+        "將學生手冊、福利規章與社團章程整合至 NotebookLM 知識庫。",
+        "在 Agent Designer 中建立 24/7 規章諮詢 Agent，指導學生填寫申請表單。",
+        "驗證極端諮詢情境，並透過 Email Connector 自動將複雜爭議轉派常務幹事處理。"
       ],
-      advancedSteps: [
-        "在 NotebookLM 中匯整所有學生會規章、課外活動組場地租借細則與活動安全切結書。",
-        "使用 Gemini Agent Designer 創建一個名為「Student Union Support Assistant」的對話型 Agent。",
-        "將此 Agent 連結規章知識庫，並透過 Email Connector 設定背景電子郵件自動草稿升級機制。",
-        "測試 Agent 自動於使用者的寄件夾起草升級郵件之整合功能。",
-        "將該 Agent 的對話框嵌入至學生會官網，提供自動化、端到端的整合。"
-      ],
-      prompt: `你是一位全天候在線的「學生會政策諮詢助手」。你的工作是引導學生社團幹部順利完成場地預約、經費申請與活動企劃安全備查。
-請遵循以下準則：
-1. **回答內容必須嚴格依據**上傳的社團法規手冊，絕不可憑空揣測。
-2. 提供清晰的、步驟化的操作指示（例如：「要預約學生交誼廳，請依照以下 3 個步驟進行...」）。
-3. 必須詳細引用手冊中的法規條款編號（例如：參見《社團活動管理辦法》第三條）。
-4. 面對極為複雜、涉及敏感爭議或必須由人工審批的案件，請直接於對話框中提供一份預先格式化的申訴電子郵件草稿，方便使用者自行複製並手動發送給學生事務官。
-5. 全程保持專業、禮貌且高效的服務語氣。`,
-      advancedPrompt: `你是一位與學校 Gmail 系統整合的全天候「學生會政策諮詢助手」。你的工作是引導學生社團幹部順利完成場地預約、經費申請與活動企劃安全備查。
-請遵循以下準則：
-1. **回答內容必須嚴格依據**上傳的社團法規手冊，絕不可憑空揣測。
-2. 提供清晰的、步驟化的操作指示（例如：「要預約學生交誼廳，請依照以下 3 個步驟進行...」）。
-3. 必須詳細引用手冊中的法規條款編號（例如：參見《社團活動管理辦法》第三條）。
-4. 面對極為複雜、涉及敏感爭議或必須由人工介入的案件，請使用已整合的 Email Connector（郵件連接器）在背景為使用者自動起草一封發給學生事務官的詳細申訴郵件，並保存在使用者的 Gmail 寄件夾草稿夾，隨後提醒使用者前往草稿夾確認。
-5. 全程保持專業、禮貌且高效的服務語氣。`,
-      proTip: "在標準/手動模式下，Agent 將直接在聊天視窗中提供格式完整的郵件草稿，方便您直接複製與貼上使用。",
-      advancedProTip: "配置 Email Connector 後，Agent 可在需要人工審批時，直接在用戶的 Gmail 草稿信箱中擬好一封結構完整的升級審查信，大幅減少行政耗時。"
+      prompt: `你是「{{INSTITUTION_NAME}}」之「{{STUDENT_UNION_NAME}}」全天候行政諮詢 Agent。你的任務是快速且精確地解答學生關於會章、活動場地借用、置物櫃申請及社團經費請領的疑問。
+規範：
+1. 僅能依據附加之法規手冊與章程進行回覆，絕不推測。
+2. 保持熱情、親切且具同理心的同儕對話語氣。
+3. 針對每項流程提供步驟化清晰指引。
+4. 若涉及學生重大權益糾紛、心理輔導或懲戒評議，請停止回答並引導其寄信至專責幹事信箱：{{OFFICER_EMAIL}}。`,
+      proTip: "整合 Email Connector 具備關鍵字升級機制，當學生遭遇重大急難或特殊爭議時，系統能即刻發送郵件通知真人幹事介入輔導。"
     },
     "zh-CN": {
-      title: "24/7 学生会政策咨询 Agent",
-      summary: "建立一个专门解答社团场地借用、活动报备及预算补助政策的校园智能客服 Agent。",
+      title: "24/7 学生会法规与会务咨询 Agent",
+      summary: "将社团评估、场地借用与会务规章交由专属 Agent，提供全天候即时规章咨询与行政表单指引。",
       steps: [
-        "在 NotebookLM 中汇整所有学生会规章、课外活动组场地租借细则与活动安全切结书。",
-        "使用 Gemini Agent Designer 创建一个名为“Student Union Support Assistant”的对话型 Agent。",
-        "将此 Agent 链接规章知识库，在本地回答学生的静态规定查询。",
-        "测试 Agent 对复杂规定的解答能力（例如：“我们可以在晚上9点后租用活动中心大礼堂吗？”）。",
-        "将该 Agent 的对话框嵌入至学生会官网或社团通讯软件中，提供 24 小时不打烊的咨询服务。"
+        "将学生手册、福利规章与社团章程整合至 NotebookLM 知识库。",
+        "在 Agent Designer 中建立 24/7 规章咨询 Agent，指导学生填写申请表单。",
+        "验证极端咨询情境，并透过 Email Connector 自动将复杂争议转派常务干事处理。"
       ],
-      advancedSteps: [
-        "在 NotebookLM 中汇整所有学生会规章、课外活动组场地租借细则与活动安全切结书。",
-        "使用 Gemini Agent Designer 创建一个名为“Student Union Support Assistant”的对话型 Agent。",
-        "将此 Agent 链接规章知识库，并通过 Email Connector 设置背景电子邮件自动草稿升级机制。",
-        "测试 Agent 自动于使用者的寄件夹起草升级邮件之整合功能。",
-        "将该 Agent 的对话框嵌入至学生会官网，提供自动化、端到端的整合。"
-      ],
-      prompt: `你是一位全天候在线的“学生会政策咨询助手”。你的工作是引导学生社团干部顺利完成场地预约、经费申请与活动策划安全备查。
-请遵循以下准则：
-1. **回答内容必须严格依据**上传的社团法规手册，绝不可凭空猜测。
-2. 提供清晰的、步骤化的操作指示（例如：“要预约学生交谊厅，请依照以下 3 个步骤进行...”）。
-3. 必须详细引用手册中的法规条款编号（例如：参见《社团活动管理办法》第三条）。
-4. 面对极为复杂、涉及敏感争议或必须由人工审批的案件，请直接于对话框中提供一份预先格式化的申诉电子邮件草稿，方便使用者自行复制并手动发送给学生事务官。
-5. 全程保持专业、礼貌且高效的服务语气。`,
-      advancedPrompt: `你是一位与学校 Gmail 系统整合的全天候“学生会政策咨询助手”。你的工作是引导学生社团干部顺利完成场地预约、经费申请与活动策划安全备查。
-请遵循以下准则：
-1. **回答内容必须严格依据**上传的社团法规手册，绝不可凭空猜测。
-2. 提供清晰的、步骤化的操作指示（例如：“要预约学生交谊厅，请依照以下 3 个步骤进行...”）。
-3. 必须详细引用手册中的法规条款编号（例如：参见《社团活动管理办法》第三条）。
-4. 面对极为复杂、涉及敏感争议或必须由人工介入的案件，请使用已整合的 Email Connector（邮件连接器）在背景为使用者自动起草一封发送给学生事务官的详细申诉邮件，并保存在使用者的 Gmail 寄件夹草稿夹，随后提醒使用者前往草稿夹确认。
-5. 全程保持专业、礼貌且高效的服务语气。`,
-      proTip: "在标准/手动模式下，Agent 将直接在聊天窗口中提供格式完整的邮件草稿，方便您直接复制与贴上使用。",
-      advancedProTip: "配置 Email Connector 后，Agent 可在需要人工审批时，直接在用户的 Gmail 草稿信箱中拟好一封结构完整的升级审查信，大幅减少行政耗时。"
+      prompt: `你是“{{INSTITUTION_NAME}}”之“{{STUDENT_UNION_NAME}}”全天候行政咨询 Agent。你的任务是快速且精确地解答学生关于会章、活动场地借用、储物柜申请及社团经费申领的疑问。
+规范：
+1. 仅能依据附加之法规手册与章程进行回复，绝不推测。
+2. 保持热情、亲切且具同理心的同侪对话语气。
+3. 针对每项流程提供步骤化清晰指引。
+4. 若涉及学生重大权益纠纷、心理辅导或惩戒评议，请停止回答并引导其寄信至专责干事邮箱：{{OFFICER_EMAIL}}。`,
+      proTip: "整合 Email Connector 具备关键字升级机制，当学生遭遇重大急难或特殊争议时，系统能即刻发送邮件通知真人干事介入辅导。"
     }
   },
   visual_campaign: {
     "en": {
       title: "Interactive Story Game & Visual Campaign",
-      summary: "Brainstorm and execute an immersive, gamified campus scavenger hunt with AI-generated riddles and visuals.",
+      summary: "Create interactive visual storytelling campaigns, orientation games, and high-impact social media assets with AI media models.",
       steps: [
-        "Open Gemini Enterprise and prompt the AI to co-create a branching story narrative for a campus Scavenger Hunt.",
-        "Generate 5 cryptic, rhyming riddles that lead students to distinct physical campus landmarks.",
-        "Use built-in image generation (Image Generation) to design futuristic checkpoint graphics and poster backgrounds.",
-        "Script a 30-second promotional video using Video Generation assets to drive student sign-ups on social media.",
-        "Configure a custom Agent that students must interact with at checkpoints to unlock clues."
+        "Draft the event narrative arc, key character personas, and campus orientation milestones.",
+        "Generate high-resolution thematic illustrations with Image Generation and narrative clips with Video Generation.",
+        "Curate campaign assets into digital social feeds and interactive onboarding screens for freshers."
       ],
-      prompt: `You are the 'Gemini Gatekeeper' for a campus-wide Scavenger Hunt. Your role is to test student teams before giving them the next checkpoint clue.
-1. **Game Narrative**: The theme is 'A Time-Traveler's Campus Tour'.
-2. When a team approaches, welcome them enthusiastically and present Riddle #3.
-3. Riddle: 'I hold thousands of voices but speak in absolute silence. I have four levels but no feet. Where am I?' (Answer: The Campus Library).
-4. If the team submits the correct answer, congratulate them and generate a personalized digital badge (e.g. 'You have unlocked the Codex checkpoint!').
-5. If they submit an incorrect answer, provide a small, mysterious clue without giving away the answer.
-Never break character. Keep the tone playful, cryptic, and highly engaging.`,
-      proTip: "Ground the riddle generation in university history or campus map documents to ensure riddles are location-accurate and achievable by students."
+      prompt: `You are a creative campaign director for {{INSTITUTION_NAME}}. Design an interactive campus storytelling campaign and multimedia visual plan for {{EVENT_NAME}} targeting {{TARGET_AUDIENCE}}.
+Requirements:
+1. **Interactive Storyline**: Outline a 4-chapter narrative mystery where freshers explore historical campus buildings, discover student traditions, and solve clues.
+2. **Visual Generation Prompts**: Provide 3 rich, descriptive text-to-image prompts (specifying artistic lighting, vibrant student characters, and cinematic composition) suitable for Gemini Image Generation.
+3. **Motion Scene Prompts**: Draft 2 prompt scripts suitable for Video Generation to create 5-second teaser animations for social media stories.`,
+      proTip: "Use Image Generation to produce unified character key visual styles before prompting Video Generation to preserve aesthetic continuity across visual campaign channels."
     },
     "zh-TW": {
-      title: "互動式故事遊戲與視覺宣傳",
-      summary: "構思並落實一個全校性質、結合實體景標與 AI 猜謎的尋寶闖關（Scavenger Hunt）遊戲。",
+      title: "互動迎新故事冒險與多媒體視覺宣傳",
+      summary: "運用生成式多模態模型，編排互動式校園探索解謎遊戲，並快速生成宣傳主視覺與短影音動畫。",
       steps: [
-        "登入 Gemini Enterprise，引導 AI 共同編撰一齣名為「時空旅人的校園巡禮」分支劇情腳本。",
-        "自動生成 5 道富有詩意與線索的韻腳謎題，分別暗指校園內 5 個代表性實體景點。",
-        "利用內建的 Image Generation 生成科幻感十足的關卡數位勳章與海報美術素材。",
-        "使用 Video Generation 工具合成一段 30 秒的短影音預告片，發布在社群媒體吸引同學組隊報名。",
-        "設計一個在各關卡守候的專屬 AI 關主 Agent，供參賽學生在現場互動猜謎以獲取下一關地圖。"
+        "擬定迎新活動世界觀架構、核心導覽角色及校園探索關卡。",
+        "透過 Image Generation 產出主視覺插畫，並使用 Video Generation 製作動態短片。",
+        "將素材發布至社群平台限時動態與迎新互動網頁，引導新生參與。"
       ],
-      prompt: `請扮演尋寶遊戲的專屬「AI 時空關主」。你的任務是測試抵達關卡的學生隊伍，並在他們答對後給予下一關的線索。
-請遵循以下設定：
-1. **故事背景**：本次遊戲主題為「時空旅人的校園巡禮」。
-2. 當有隊伍前來互動時，熱情地歡迎他們，並當場念出第三關的謎題。
-3. 謎題：「我收容了上萬種聲音，卻在絕對的寂靜中對話。我有四個樓層，卻沒有雙腳。我在哪裡？」（答案：圖書館）。
-4. 如果他們提交正確答案，讚美他們的智慧並生成一段專屬數位成就解鎖敘述（例如：「恭喜解鎖古籍守衛者勳章！」）。
-5. 如果答案錯誤，絕不可直接透露，請提供一個充滿神秘感的小提示。
-全程必須堅守角色設定，語氣請保持神秘、趣味且富有沈浸感。`,
-      proTip: "生成線索與謎題時，可上傳校園地圖或校史館文獻作為地基，能確保生成的謎題內容絕對符合地標特徵且無事實謬誤。"
+      prompt: `請扮演「{{INSTITUTION_NAME}}」的創意總監。為面向「{{TARGET_AUDIENCE}}」的「{{EVENT_NAME}}」規劃互動式校園探索故事遊戲與多媒體視覺設計。
+企劃規範：
+1. **互動敘事**：規劃 4 個章節的校園解謎歷程，引領新生在尋找線索中了解校園傳統與特色建築。
+2. **生圖提示詞 (Image Generation)**：提供 3 組具體生動的提示詞（註明光影風格、當代大學生角色及高解析度比例），生成海報主視覺。
+3. **動態場景提示詞 (Video Generation)**：設計 2 組 5 秒動態前導片腳本提示詞，供社群限時動態發布。`,
+      proTip: "先利用 Image Generation 確定角色的色調與服裝風格，再以此為基準導入 Video Generation，能維繫跨社群平台宣傳風格的高度一致性。"
     },
     "zh-CN": {
-      title: "互动式故事游戏与视觉宣传",
-      summary: "构思并落实一个全校性质、结合实体景标与 AI 猜谜的寻宝闯关（Scavenger Hunt）游戏。",
+      title: "互动迎新故事冒险与多媒体视觉宣传",
+      summary: "运用生成式多模态模型，编排互动式校园探索解谜游戏，并快速生成宣传主视觉与短视频动画。",
       steps: [
-        "登入 Gemini Enterprise，引导 AI 共同编撰一出名为“时空旅人的校园巡礼”分支剧情脚本。",
-        "自动生成 5 道富有诗意与线索的韵脚谜题，分别暗指校园内 5 个代表性实体景点。",
-        "利用内建的 Image Generation 生成科幻感十足的关卡数字勋章与海报美术素材。",
-        "使用 Video Generation 工具合成一段 30 秒的短视频预告片，发布在社交媒体吸引同学组队报名。",
-        "设计一个在各关卡守候的专属 AI 关主 Agent，供参赛学生在现场互动猜谜以获取下一关地图。"
+        "拟定迎新活动世界观架构、核心导览角色及校园探索关卡。",
+        "透过 Image Generation 产出主视觉插画，并使用 Video Generation 制作动态短片。",
+        "将素材发布至社交平台限时动态与迎新互动网页，引导新生参与。"
       ],
-      prompt: `请扮演寻宝游戏的专属“AI 时空关主”。你的任务是测试抵达关卡的学生队伍，并在他们答对后给予下一关的线索。
-请遵循以下设定：
-1. **故事背景**：本次游戏主题为“时空旅人的校园巡礼”。
-2. 当有队伍前来互动时，热情地欢迎他们，并当场念出第三关的谜题。
-3. 谜题：“我收容了上万种声音，却在绝对的寂静中对话。我有四个楼层，却没有双脚。我在哪里？”（答案：图书馆）。
-4. 如果他们提交正确答案，赞美他们的智慧并生成一段专属数字成就解锁叙述（例如：“恭喜解锁古籍守卫者勋章！”）。
-5. 如果答案错误，绝不可直接透露，请提供一个充满神秘感的小提示。
-全程必须坚守角色设定，语气请保持神秘、趣味且富有沉浸感。`,
-      proTip: "生成线索与谜题时，可上传校园地图或校史馆文献作为地基，能确保生成的谜题内容绝对符合地标特征且无事实谬误。"
+      prompt: `请扮演“{{INSTITUTION_NAME}}”的创意总监。为面向“{{TARGET_AUDIENCE}}”的“{{EVENT_NAME}}”规划互动式校园探索故事游戏与多媒体视觉设计。
+企划规范：
+1. **互动叙事**：规划 4 个章节的校园解谜历程，引领新生在寻找线索中了解校园传统与特色建筑。
+2. **生图提示词 (Image Generation)**：提供 3 组具体生动的提示词（注明光影风格、当代大学生角色及高分辨率比例），生成海报主视觉。
+3. **动态场景提示词 (Video Generation)**：设计 2 组 5 秒动态前导片脚本提示词，供社交限时动态发布。`,
+      proTip: "先利用 Image Generation 确定角色的色调与服装风格，再以此为基准导入 Video Generation，能维系跨社交平台宣传风格的高度一致性。"
     }
   },
   at_risk_cohort: {
     "en": {
       title: "At-Risk Student Early Warning System",
-      summary: "Connect Gemini to LMS and SIS database metrics to analyze engagement anomalies and flag struggling students.",
+      summary: "Identify students experiencing academic difficulties across disparate LMS and SIS logs to enable proactive intervention.",
       steps: [
-        "Configure secure API connections from Gemini Enterprise to your school's LMS and SIS database.",
-        "Set up an analytical data store containing anonymized student logs, login frequencies, quiz scores, and forum engagement metrics.",
-        "Configure a secure workflow that maps data attributes, ensuring strict compliance with student data privacy laws like FERPA.",
-        "Use Gemini to run multi-dimensional predictive modeling, highlighting student cohorts exhibiting a precipitous drop in engagement.",
-        "Trigger automated, personalized advisor check-in drafts to provide timely academic support."
+        "Connect LMS gradebook and SIS engagement logs to establish multi-variable risk thresholds.",
+        "Run predictive engagement synthesis using Deep Research to identify students needing intervention.",
+        "Review identified cohorts with academic advisors and dispatch personalized supportive outreach."
       ],
-      prompt: `Analyze the attached anonymized LMS and Student Information System dataset for the current semester.
-We want to identify students who are at risk of failing or dropping out before midterm exams.
-Tasks:
-1. **Anomaly Detection**: Flag all students who have shown a >50% drop in login frequency and quiz scores over the past 3 weeks compared to their baseline.
-2. **Correlation Analysis**: Identify if there is a statistically significant correlation between forum participation rates and final assignment scores in this cohort.
-3. **Draft Advisory Alerts**: For each flagged student category, generate a highly supportive, personalized academic check-in email draft from their advisor, suggesting tutoring resources.`,
-      proTip: "Never upload student Names or Social Security numbers. Maintain rigorous compliance with privacy laws by utilizing fully de-identified student IDs during data store ingestion."
+      prompt: `Analyze student learning analytics data for {{COHORT_SEMESTER}} in the {{DEPARTMENT_NAME}} department to identify learners at risk of falling behind.
+Criteria to examine:
+- LMS login inactivity exceeding 10 consecutive days.
+- Missed or late formative assessment submissions (threshold: 2 or more).
+- Midterm scores below 60%.
+Output Requirements:
+1. **At-Risk Cohort Segmentation**: Group students into High Risk, Moderate Risk, and Low Risk categories with evidence flags.
+2. **Intervention Recommendations**: For each risk tier, suggest actionable pedagogical interventions (e.g., peer tutoring referral, advisor check-in, supplemental review modules).
+3. **Draft Outreach Email**: Generate an empathetic, non-judgmental advisor check-in email encouraging the student to schedule office hours.`,
+      proTip: "By leveraging multi-modal synthesis, Gemini combines attendance anomalies with assignment grades to catch students who appear present but are falling behind conceptually."
     },
     "zh-TW": {
-      title: "高風險學生預警系統",
-      summary: "將 Gemini 連接至 LMS 與學籍系統，深度分析學習足跡與成績異常，提前關懷高風險學生。",
+      title: "學業預警與學習困難即時介入系統",
+      summary: "整合教學平台 LMS 與學籍系統紀錄，早期識別潛在學習困難學生並提供個人化輔導策略。",
       steps: [
-        "配置 Gemini Enterprise 與學校 LMS（如 Canvas、Moodle）和學籍數據庫（SIS）的安全 API 管道。",
-        "建立包含去識別化學習足跡、登入頻率、小考表現與論壇互動率的安全數據儲存庫。",
-        "在數據對齊與屏蔽配置中，嚴格遵守 FERPA 或個人資料保護法，徹底過濾個人隱私資訊。",
-        "指示 Gemini 執行多維度預測建模，標記出在學習參與度上呈現斷崖式下降的學生群組。",
-        "觸發自動化機制，為導師預先生成客製化、充滿溫度與關懷的諮詢信件草稿。"
+        "連線 LMS 成績冊與學生出席紀錄，建立跨維度的學習困難預警閥值。",
+        "運用 Deep Research 進行學習歷程分析，篩選出亟需學術支援的學生名單。",
+        "與學業導師共同覆核名單，發送具關懷性質的個別化輔導與諮詢邀請。"
       ],
-      prompt: `請分析本學期已匿名化的 LMS 與學籍系統綜合數據集。
-我們的目標是在期中考前，篩選出可能面臨不及格或有輟學風險的高關注學生。
-任務要求：
-1. **學習足跡異動分析**：篩選出過去3週內，登入頻率和小考分數較其前段基線下降超過 50% 的所有學生匿名標記。
-2. **多維度關聯分析**：分析該群組中，課堂論壇互動率與最終作業成績是否存在顯著統計學正相關。
-3. **起草導師關懷信**：針對標記出的高風險群體，起草一封語氣誠懇、富有支持溫度的導師諮詢信草稿，並主動列出學校的心理諮商與課後輔導資源。`,
-      proTip: "絕不可上傳學生姓名或身份證字號等個人隱私。請落實去識別化代碼，確保數據分析在完全合規的前提下進行。"
+      prompt: `請分析「{{DEPARTMENT_NAME}}」學系在「{{COHORT_SEMESTER}}」學期的學習分析數據，找出處於學業預警邊緣的學生族群。
+審核指標：
+- LMS 登入中斷超過 10 天以上。
+- 形成性平時作業缺繳或遲交達 2 次以上。
+- 期中考成績落後於 60% 以下。
+輸出格式：
+1. **預警分級分類**：將學生區分為高、中、低風險群組，並註記具體異常指標。
+2. **輔導處方建議**：針對不同風險層級提供具體支持方案（如同儕課業輔導、導師面談、線上補救單元）。
+3. **關懷信函草稿**：擬定一封具溫度、不具斥責意味的導師問候信，邀請學生前來諮詢。`,
+      proTip: "藉由多模態分析能力，Gemini 能交叉比對出席率與作業邏輯完整度，提前發現看似準時出席但實質理解遇到瓶頸的學生。"
     },
     "zh-CN": {
-      title: "高风险学生预警系统",
-      summary: "将 Gemini 连接至 LMS 与学籍系统，深度分析学习足迹与成绩异常，提前关怀高风险学生。",
+      title: "学业预警与学习困难即时介入系统",
+      summary: "整合教学平台 LMS 与学籍系统记录，早期识别潜在学习困难学生并提供个性化辅导策略。",
       steps: [
-        "配置 Gemini Enterprise 与学校 LMS（如 Canvas、Moodle）和学籍数据库（SIS）的安全 API 管道。",
-        "建立包含去识别化学习足迹、登入频率、小考表现与论坛互动率的安全数据存储库。",
-        "在数据对齐与屏蔽配置中，严格遵守 FERPA 或个人资料保护法，彻底过滤个人隐私信息。",
-        "指示 Gemini 执行多维度预测建模，标记出在学习参与度上呈现断崖式下降的学生群组。",
-        "触发自动化机制，为导师预先生成客制化、充满温度与关怀的咨询信件草稿。"
+        "连线 LMS 成绩册与学生出席记录，建立跨维度的学习困难预警阈值。",
+        "运用 Deep Research 进行学习历程分析，筛选出亟需学术支持的学生名单。",
+        "与学业导师共同审核名单，发送具关怀性质的个性化辅导与咨询邀请。"
       ],
-      prompt: `请分析本学期已匿名化的 LMS 与学籍系统综合数据集。
-我们的目标是在期中考前，筛选出可能面临不及格或有辍学风险的高关注学生。
-任务要求：
-1. **学习足迹异动分析**：筛选出过去3周内，登入频率和小考分数较其前段基线下降超过 50% 的所有学生匿名标记。
-2. **多维度关联分析**：分析该群组中，课堂论坛互动率与最终作业成绩是否存在显著统计学正相关。
-3. **起草导师关怀信**：针对标记出的高风险群体，起草一封语气诚恳、富有支持温度的导师咨询信草稿，并主动列出学校的心理咨询与课后辅导资源。`,
-      proTip: "绝不可上传学生姓名或身份证字号等个人隐私。请落实去识别化代码，确保数据分析在完全合规的前提下进行。"
+      prompt: `请分析“{{DEPARTMENT_NAME}}”学系在“{{COHORT_SEMESTER}}”学期的学习分析数据，找出处于学业预警边缘的学生族群。
+审核指标：
+- LMS 登录中断超过 10 天以上。
+- 形成性平时作业缺交或迟交达 2 次以上。
+- 期中考成绩落后于 60% 以下。
+输出格式：
+1. **预警分级分类**：将学生区分为高、中、低风险群组，并注记具体异常指标。
+2. **辅导处方建议**：针对不同风险层级提供具体支持方案（如同侪课业辅导、导师面谈、线上补救单元）。
+3. **关怀信函草稿**：拟定一封具温度、不具斥责意味的导师问候信，邀请学生前来咨询。`,
+      proTip: "借由多模态分析能力，Gemini 能交叉比对出席率与作业逻辑完整度，提前发现看似准时出席但实质理解遇到瓶颈的学生。"
     }
   },
   accreditation_reports: {
     "en": {
       title: "Accreditation Self-Study Report Synthesizer",
-      summary: "Synthesize years of course syllabi, student surveys, and meeting minutes to draft institutional accreditation reports.",
+      summary: "Map faculty syllabi, student outcomes, and institutional assessments against external accreditation criteria seamlessly.",
       steps: [
-        "Upload 3 years of school syllabi, assurance of learning rubrics, student exit surveys, and advisory board minutes to SharePoint.",
-        "Establish a federated search connection from Gemini Enterprise to the Drive folder.",
-        "In NotebookLM, prompt the model to cross-reference your curriculum data against specific accreditation standards.",
-        "Generate structured, professional accreditation narrative drafts, complete with inline source evidence and citations.",
-        "Review the drafts and collaborate with deans using shared Google Docs to finalize the institutional report."
+        "Aggregate departmental self-studies, syllabi, and outcome assessments into an institutional Drive hub.",
+        "Run evidence cross-mapping across accreditation standards and criteria in NotebookLM.",
+        "Review drafted narrative syntheses, verify institutional metrics, and export the official self-study report."
       ],
-      prompt: `You are an institutional research officer preparing a self-study report for a university business school accreditation.
-Your task is to synthesize the uploaded student surveys, curriculum syllabi, and learning assessment records to draft the narrative for 'Standard 3: Assurance of Learning (AoL)'.
-The narrative must include:
-1. **Executive Summary**: A high-level overview of how the program measures and achieves learning goals.
-2. **Methodology**: Explain the direct and indirect assessment tools used.
-3. **Data Synthesis**: Analyze 3 years of quantitative data, highlighting key improvements in areas where learning caps were identified.
-4. **Action Plan**: Outline a 2-year strategic plan for curriculum refinement, mapped directly to survey insights.
-Maintain a highly formal, academic, and objective tone.`,
-      proTip: "By selecting 'Federated Search' for the Drive Connector, your data remains safely stored within your institutional tenant, ensuring absolute data security and sovereignty."
+      prompt: `Act as a higher education quality assurance director. Synthesize institutional evidence for {{PROGRAM_NAME}} aligned with the accreditation standards of {{ACCREDITATION_BODY}}.
+Tasks:
+1. **Cross-Mapping**: Map provided course syllabi, student learning outcome evaluations, and faculty publication records against {{ACCREDITATION_BODY}} standards for Criterion 1 (Curriculum Rigor) and Criterion 2 (Faculty Qualifications).
+2. **Gap Analysis**: Highlight any missing assessment data, outdated course references, or under-documented student learning evidence.
+3. **Executive Synthesis**: Draft a 500-word formal narrative summarizing program continuous improvement initiatives and pedagogical innovations over the past review cycle.`,
+      proTip: "NotebookLM's source citation capabilities are ideal for accreditation reviews, allowing evaluators to click any statement to inspect the original course syllabus or committee minutes."
     },
     "zh-TW": {
-      title: "機構認證自我評查報告合成器",
-      summary: "整合歷年課程大綱、學生評鑑問卷與會議記錄，自動撰寫高品質的機構級教學認證報告。",
+      title: "評鑑自我評量報告整合與佐證矩陣",
+      summary: "將系所教學大綱、學生學習成效與院務會議紀錄對齊外部認證評鑑指標，一鍵完成自評報告編撰。",
       steps: [
-        "將過去 3 年的學部教學大綱、AoL 評估表、學生畢業回饋和諮詢委員會會議記錄上傳至雲端儲存。",
-        "透過安全的 Drive Connector 建立聯邦搜尋（Federated Search）連結。",
-        "在 NotebookLM 中，引導模型將上傳的教學龐雜文獻與特定的教育認證標準（如 AACSB、IEET）進行比對。",
-        "自動生成結構完整、格式規範的認證報告草稿，並自動附上對應的文件來源引註與實證出處。",
-        "下載文稿並在 Google Docs 中與學院院長、教學小組成員共同協作，以最終定稿。"
+        "將系所自評、歷年教學大綱及學習成效檔案集中於雲端硬碟 (Drive)。",
+        "在 NotebookLM 中建立各門課程與評鑑規準的交叉對應與佐證追溯。",
+        "審核自動生成的論述章節，核算指標達成率後匯出正式自評報告書。"
       ],
-      prompt: `你是一位大學校務研究員（IR），正在撰寫商學院國際認證的自我評查報告（Self-Study Report）。
-請協助整合上傳的歷年學生滿意度問卷、教學大綱與學習評估數據，撰寫「指標 3：學習保證（Assurance of Learning, AoL）」的自評論述。
-報告結構必須包含：
-1. **摘要**：高層次概述學部如何系統性建立學習成效衡量體系。
-2. **評估方法論**：詳細說明所採取的直接與間接學習評估工具。
-3. **數據綜合分析**：分析連續 3 年的量化 AoL 數據，特別強調在發現學生學術弱點後，課程委員會所採取的「閉環持續改進（Closing the Loop）」具體實效。
-4. **兩年期改進計畫**：提出一份基於問卷洞察的未來 2 年期大綱調整策略藍圖。
-文字風格必須呈現極高的學術嚴謹度、客觀且語氣高度專業。`,
-      proTip: "選擇 Drive Connector 提供的「聯邦搜尋」模式，意即數據不經過任何實體數據轉存，全程安全地留在您學校的雲端環境內，確保學術主權與高度保密性。"
+      prompt: `請扮演高等教育品質保證專案執行長。為「{{PROGRAM_NAME}}」彙整符合「{{ACCREDITATION_BODY}}」認證評鑑標準的自我評量報告佐證。
+核心任務：
+1. **標準交叉映射**：將系所課程大綱、學習成效評量結果及師資學術產出，對齊「指標一（課程嚴謹度）」與「指標二（師資結構）」。
+2. **缺口分析**：明確標註尚未齊全的佐證檔案、過期文獻或缺少評鑑問卷回饋的課程。
+3. **自評論述撰寫**：撰寫 500 字正式陳述，綜述系所在此評鑑週期中推動的持續品質改善機制 (Continuous Improvement)。`,
+      proTip: "NotebookLM 的內文精確出處引用功能特別適合評鑑委員審查，點擊報告中任何數據即可溯源查看原始會議記錄或大綱文件。"
     },
     "zh-CN": {
-      title: "机构认证自我评查报告合成器",
-      summary: "整合历年课程大纲、学生评鉴问卷与会议记录，自动撰写高质量的机构级教学认证报告。",
+      title: "评估自我评估报告整合与佐证矩阵",
+      summary: "将系所教学大纲、学生学习成效与院务会议记录对齐外部认证评估指标，一键完成自评报告编撰。",
       steps: [
-        "将过去 3 年的学部教学大纲、AoL 评估表、学生毕业反馈和咨询委员会会议记录上传至云端储存。",
-        "通过安全的 Drive Connector 建立联邦搜索（Federated Search）链接。",
-        "在 NotebookLM 中，引导模型将上传的教学庞杂文献与特定的教育认证标准（如 AACSB、IEET）进行比对。",
-        "自动生成结构完整、格式规范的认证报告草稿，并自动附上对应的文件来源引注与实证出处。",
-        "下载文稿并在 Google Docs 中与学院院长、教学小组成员共同协作，以最终定稿。"
+        "将系所自评、历年教学大纲及学习成效档案集中于云端硬盘 (Drive)。",
+        "在 NotebookLM 中建立各门课程与评估规准的交叉对应与佐证追溯。",
+        "审核自动生成的论述章节，核算指标达成率后导出正式自评报告书。"
       ],
-      prompt: `你是一位大学校务研究员（IR），正在撰写商学院国际认证的自我评查报告（Self-Study Report）。
-请协助整合上传的历年学生满意度问卷、教学大纲与学习评估数据，撰写“指标 3：学习保证（Assurance of Learning, AoL）”的自评论述。
-报告结构必须包含：
-1. **摘要**：高层次概述学部如何系统性建立学习成效衡量体系。
-2. **评估方法论**：详细说明所采取的直接与间接学习评估工具。
-3. **数据综合分析**：分析连续 3 年的量化 AoL 数据，特别强调在发现学生学术弱点后，课程委员会所采取的“闭环持续改进（Closing the Loop）”具体实效。
-4. **两年期改进计划**：提出一份基于问卷洞察的未来 2 年期大纲调整策略蓝图。
-文字风格必须呈现极高的学术严密性、客观且语气高度专业。`,
-      proTip: "选择 Drive Connector 提供的“联邦搜索”模式，意即数据不经过任何实体数据转存，全程安全地留在您学校的云端环境内，确保学术主权与高度保密性。"
+      prompt: `请扮演高等教育质量保证项目执行长。为“{{PROGRAM_NAME}}”汇整符合“{{ACCREDITATION_BODY}}”认证评估标准的自我评估报告佐证。
+核心任务：
+1. **标准交叉映射**：将系所课程大纲、学习成效评估结果及师资学术产出，对齐“指标一（课程严谨度）”与“指标二（师资结构）”。
+2. **缺口分析**：明确标注尚未齐全的佐证档案、过期文献或缺少评估问卷反馈的课程。
+3. **自评论述撰写**：撰写 500 字正式陈述，综述系所在此评估周期中推动的持续质量改善机制 (Continuous Improvement)。`,
+      proTip: "NotebookLM 的内文精确出处引用功能特别适合评估委员审查，点击报告中任何数据即可溯源查看原始会议记录或大纲文件。"
     }
   },
   workforce_federation: {
     "en": {
       title: "Workforce Identity Federation Setup Guide",
-      summary: "Establish a secure trust relationship between Google Cloud and institutional identity providers for single sign-on authentication.",
+      summary: "Deploy secure SAML 2.0 / OIDC identity federation linking your campus IdP to Gemini Enterprise without duplicating directories.",
       steps: [
-        "Register a new enterprise identity application on your centralized SSO portal.",
-        "Configure SAML 2.0 or OIDC single sign-on settings and record the Metadata XML/Endpoints.",
-        "In Google Cloud Console, navigate to IAM & Admin > Workforce Identity Federation and create a new workforce pool.",
-        "Create an OIDC Provider linking your Google workforce pool to the identity provider's enterprise application.",
-        "Configure Attribute Mapping, mapping 'google.subject' to the user's email and mapping security groups to 'google.groups'."
+        "Audit campus identity provider (IdP) metadata, SAML 2.0 / OIDC claims, and user directory attributes.",
+        "Generate workforce federation architecture guides and role-mapping templates using Deep Research.",
+        "Conduct end-to-end SSO handshakes with IT security and rollout federated access to campus units."
       ],
-      prompt: `Act as a senior cloud solutions architect. Write a detailed, step-by-step technical implementation guide to set up Workforce Identity Federation (WIF) between Google Cloud and corporate identity systems.
-The guide must cover:
-1. **SSO Identity App Registration**: Mandatory configuration settings, single sign-on URL, and client secret management.
-2. **GCP Workforce Pool Configuration**: CLI (gcloud) commands to create the pool and provider.
-3. **Attribute Mapping Rules**: Precise Common Expression Language (CEL) syntax to map user groups and emails securely.
-4. **Security Best Practices**: Best practices for secret rotation, federated role binding, and auditing logs.`,
-      proTip: "Using OIDC with Authorization Code Flow is significantly more secure than SAML 2.0 for mobile environments and ensures smooth token exchanges during API calls."
+      prompt: `You are an enterprise identity architect for {{INSTITUTION_DOMAIN}}. Generate a step-by-step Workforce Identity Federation deployment blueprint integrating our campus Identity Provider ({{IDP_PROVIDER}}) with Google Cloud and Gemini Enterprise.
+Deliverables:
+1. **SAML 2.0 / OIDC Configuration Spec**: Exact claim mapping rules for NameID, primary email, role attributes (faculty, staff, student), and department codes.
+2. **Conditional Access & Session Policies**: Recommended session timeout rules, multi-factor authentication (MFA) enforcement policies, and device compliance checks.
+3. **Troubleshooting Checklist**: Step-by-step diagnosis procedure for common handshake errors (e.g. SAML response clock skew, missing claims, attribute mismatch).`,
+      proTip: "Federated workforce identity ensures immediate automated offboarding—when a student graduates or staff member resigns, their Gemini Enterprise access terminates instantly at the IdP boundary."
     },
     "zh-TW": {
-      title: "與 Microsoft Entra ID 的 Workforce Identity 聯合配置",
-      summary: "在 Google Cloud 與學校單一登入（SSO）身分識別層之間建立安全信任關係，實現無密碼安全登入。",
+      title: "校園單一登入與身分聯合 (SSO) 架構指引",
+      summary: "安全整合現有校園 IdP (SAML 2.0 / OIDC) 至 Gemini Enterprise，不需重複同步帳號密碼。",
       steps: [
-        "在您的學校 SSO 管理中心，註冊一個代表 Google Cloud 平台的企業級單一登入識別服務。",
-        "配置 OIDC 或 SAML 2.0 連線端點，並記錄相應的憑證 Metadata、客戶端 ID 與密鑰。",
-        "登入 GCP 主控台，前往 IAM & Admin > Workforce Identity Federation 建立一個新的員工身分池。",
-        "在此 WIF 身分池中建立一個連線供應商，將其對接您在步驟1中建立的 SSO 身分驗證服務。",
-        "設定嚴格的屬性對應規則（Attribute Mapping），安全地將 SSO 用戶權限與 Google Cloud 角色綁定。"
+        "審核學校身分識別提供者 (IdP) 憑證中繼資料、SAML 屬性與使用者目錄結構。",
+        "藉由 Deep Research 產出符合資安規範的聯邦身分架構圖與角色映射範本。",
+        "完成校內 IT 端到端 SSO 驗證演練，正式對全體教職員工及學生啟用授權。"
       ],
-      prompt: `請扮演資深雲端架構師。撰寫一份高度詳實的、以命令行（gcloud）為導向的 Workforce Identity Federation 連線手冊。
-指南必須覆蓋：
-1. **SSO 身分終端配置**：應綁定的權限範圍、回調 URI 設定與 OIDC JWT 的生命週期設定。
-2. **GCP 身分池創建語法**：使用 gcloud 命令行建立身分池、以及建立身分供應商（Provider）的具體語法。
-3. **CEL 屬性對應規則**：提供標準的 Common Expression Language 程式碼範例，將 SSO 身分群組（Groups）與 GCP 權限對齊。
-4. **審計與安全規範**：提供生產環境下身分聯邦的憑證自動輪轉、連線失效偵測與活動日誌追蹤的安全建議。`,
-      proTip: "使用基於授權碼（Authorization Code Flow）的 OIDC 連線框架比傳統 SAML 2.0 更契合現代微服務，並能為行動裝置端提供更佳的安全連線驗證體驗。"
+      prompt: `你是「{{INSTITUTION_DOMAIN}}」的企業身分架構工程師。請為整合本校現有身分提供者 ({{IDP_PROVIDER}}) 至 Google Cloud Workforce Identity 與 Gemini Enterprise 制定逐步實施藍圖。
+輸出需求：
+1. **SAML 2.0 / OIDC 設定規格**：明確條列 NameID、主要 Email、身分別（教師、職員、學生）及系所代碼映射規則。
+2. **條件式存取與工作階段策略**：建議連線逾時機制、多因素驗證 (MFA) 強制策略及受控裝置合規性檢驗。
+3. **常見故障排除檢核表**：整理 SSO 整合常見錯誤（如時鐘偏差 Clock Skew、屬性聲明缺失、憑證過期）之排查步驟。`,
+      proTip: "使用 Workforce 聯合身分能落實離校即時撤權——學生畢業或職員離職時，其 Gemini Enterprise 使用權限隨校內 IdP 即刻註銷，零資安死角。"
     },
     "zh-CN": {
-      title: "与 Microsoft Entra ID 的 Workforce Identity 联合配置",
-      summary: "在 Google Cloud 与学校单一登入（SSO）身份识别层之间建立安全信任关系，实现无密码安全登入。",
+      title: "校园单点登录与身份联合 (SSO) 架构指引",
+      summary: "安全整合现有校园 IdP (SAML 2.0 / OIDC) 至 Gemini Enterprise，无需重复同步账号密码。",
       steps: [
-        "在您的学校 SSO 管理中心，注册一个代表 Google Cloud 平台的企业级单一登入识别服务。",
-        "配置 OIDC 或 SAML 2.0 连线端点，并记录相应的凭证 Metadata、客户端 ID 与密钥。",
-        "登入 GCP 控制台，前往 IAM & Admin > Workforce Identity Federation 建立一个新的员工身份池。",
-        "在此 WIF 身份池中建立一个连线供应商，将其对接您在步骤1中建立的 SSO 身份验证服务。",
-        "设定严格的属性对应规则（Attribute Mapping），安全地将 SSO 用户权限与 Google Cloud 角色绑定。"
+        "审核学校身份识别提供者 (IdP) 凭据元数据、SAML 属性与用户目录结构。",
+        "借由 Deep Research 产出符合资安规范的联邦身份架构图与角色映射范本。",
+        "完成校内 IT 端到端 SSO 验证演练，正式对全体教职员工及学生启用授权。",
       ],
-      prompt: `请扮演资深云端架构师。撰写一份高度详实的、以命令行（gcloud）为导向的 Workforce Identity Federation 连线手册。
-指南必须覆盖：
-1. **SSO 身份终端配置**：应绑定的权限范围、回调 URI 设定与 OIDC JWT 的生命周期设定。
-2. **GCP 身份池创建语法**：使用 gcloud 命令行建立身份池、以及建立身份供应商（Provider）的具体语法。
-3. **CEL 属性对应规则**：提供标准的 Common Expression Language 代码范例，将 SSO 身份群组（Groups）与 GCP 权限对齐。
-4. **审计与安全规范**：提供生产环境下身份联邦的凭证自动轮转、连线失效侦测与活动日志追踪的安全建议。`,
-      proTip: "使用基于授权码（Authorization Code Flow）的 OIDC 连线框架比传统 SAML 2.0 更契合现代微服务，并能为移动装置端提供更佳的安全连线验证体验。"
+      prompt: `你是“{{INSTITUTION_DOMAIN}}”的企业身份架构工程师。请为整合本校现有身份提供者 ({{IDP_PROVIDER}}) 至 Google Cloud Workforce Identity 与 Gemini Enterprise 制定逐步实施蓝图。
+输出需求：
+1. **SAML 2.0 / OIDC 设置规格**：明确条列 NameID、主要 Email、身份别（教师、职员、学生）及系所代码映射规则。
+2. **条件式访问与会话策略**：建议连线超时机制、多因素验证 (MFA) 强制策略及受控设备合规性检验。
+3. **常见故障排除检核表**：整理 SSO 整合常见错误（如时钟偏差 Clock Skew、属性声明缺失、凭证过期）之排查步骤。`,
+      proTip: "使用 Workforce 联合身份能落实离校即时撤权——学生毕业或职员离职时，其 Gemini Enterprise 使用权限随校内 IdP 即刻注销，零资安死角。"
     }
   },
   sao_scavenger_hunt: {
     "en": {
       title: "Digital Cultural Fair Red Packet Game",
-      summary: "Orchestrate an interactive cultural trivia game on campus that distributes digital red packets and bookstore vouchers.",
+      summary: "Build an interactive campus cultural scavenger hunt with AI-generated trivia, QR clues, and digital red packet rewards.",
       steps: [
-        "In Agent Designer, build a custom conversational Agent named 'Lunar New Year Assistant'.",
-        "Upload short articles detailing cultural traditions, zodiac histories, and celebratory foods to the Agent's knowledge base.",
-        "Use built-in image generation to design festive digital card templates and red envelope backgrounds.",
-        "Program a simple randomizer script within your student portal that triggers small bookstore voucher codes.",
-        "Have students interact with the Agent; answering cultural riddles correctly awards them a code."
+        "Plan interactive campus discovery checkpoints, cultural trivia themes, and physical QR stations.",
+        "Generate bilingual riddle clues and digital red packet artwork via Agent Designer and Image Generation.",
+        "Pilot test the hunt route for student safety and launch the live interactive orientation activity."
       ],
-      prompt: `You are the 'Lunar New Year Cultural Guide,' a festive, polite, and highly enthusiastic AI host for our digital university fair.
-Your objective is to test students on Lunar New Year traditions and award them digital 'red packets' containing celebratory blessings.
-1. Welcome the student warmly, wishing them prosperity.
-2. Ask them 1 fun trivia question about Lunar New Year (e.g., 'What zodiac animal represents leadership and courage?').
-3. If they answer correctly, celebrate their success and generate a beautiful, poetic blessing in the form of a classic Chinese couplet, customized to their stated wish (e.g., success in exams, finding good friends).
-4. Direct them to copy the coupon code 'CNY-BOOKSTORE-10' to redeem a discount at the campus book shop.
-5. If they answer incorrectly, explain the tradition gently and give them a second chance with a different question.`,
-      proTip: "By connecting this Agent to your student portal, you can make the distribution of campus store vouchers gamified, educational, and highly engaging."
+      prompt: `You are the Student Affairs Orientation Director for {{CAMPUS_NAME}}. Design an engaging, digital-physical Cultural Fair Scavenger Hunt celebrating {{FESTIVAL_NAME}}.
+Include:
+1. **Station Clues**: 5 clever rhyming clues that lead students to iconic campus landmarks (library, student center, amphitheater, botanical garden, sports complex).
+2. **Interactive Red Packet QR Challenges**: For each station, design a quick 2-question cultural trivia mini-quiz that unlocks a digital red packet stamp.
+3. **Reward Tier Structure**: Outline completion badge rewards and clear redemption instructions to manage crowd flow safely.`,
+      proTip: "Use Image Generation to design digital commemorative red packet graphics and badges that students can collect in their digital portfolios upon station check-in."
     },
     "zh-TW": {
-      title: "數位文化祭紅包抽獎遊戲",
-      summary: "主導一場全校規模的春節/元宵文化問答闖關活動，通過 AI 生成應景對聯並發放校園禮券。",
+      title: "校園文化祭互動尋寶與數位紅包解謎",
+      summary: "結合在地文化節慶，設計融合校園歷史地標的互動式實體與線上打卡闖關解謎遊戲。",
       steps: [
-        "在 Agent Designer 中，架構一個富有東方古典應景氛圍的「Lunar New Year Assistant」智能對話 Agent。",
-        "將春節典故、十二生肖歷史及元宵民俗知識文檔上傳為該 Agent 的專屬知識基礎。",
-        "透過 Image Generation 繪製出一批具浮雕質感的虛擬紅色紅包與春聯美術底圖。",
-        "在學生資訊門戶（Student Portal）中配置一組與 Agent 連線的輕量化禮券庫隨機派發 API。",
-        "學生只要在與 Agent 趣味對答中正確回答出傳統典故，便可獲得專屬紅聯祝福及實體書券兌換碼。"
+        "規劃校園文化地標打卡動線、節慶文化典故及實體 QR 關卡佈設。",
+        "運用 Agent Designer 與 Image Generation 產出尋寶謎語與紀念數位紅包圖樣。",
+        "進行實地動線安全測試後，正式上線迎新文化週互動闖關活動。"
       ],
-      prompt: `你是一位充滿活力、知書達禮、熱愛華夏傳統文化的「新年文化大使兼 AI 關主」。
-你的任務是引導學生完成線上新春文化問答，並針對他們的個人願望，現場提筆寫一幅專屬的賀歲春聯。
-1. 熱情有禮地歡迎前來體驗的學生，向他們恭賀新年，祝其學業進步。
-2. 出1道有趣的傳統民俗問題（例如：「生肖中的龍通常代表何種氣宇與意義？」）。
-3. 如果學生答對了，大加讚賞，並詢問其新學期心願（例如：考高分、脫單、找到好實習），現場為其度身創作一幅充滿詩意、平仄對仗的古典春聯（包含左右聯與橫批）。
-4. 指引他們複製領獎代碼「CNY-BOOKSTORE-10」到校園書店兌換禮物。
-5. 如果答錯了，請溫和地告知其典故，並換個簡單問題給他們第二次答題機會。`,
-      proTip: "透過將問答 Agent 與學生事務入口結合，您可以將原本呆板的校園文化推廣活動，改造成爆款、極具文化沈浸感且互動率極高的數位盛會。"
+      prompt: `請扮演「{{CAMPUS_NAME}}」學務處迎新活動組長。為慶祝「{{FESTIVAL_NAME}}」策劃一場兼具文化底蘊與校園探索趣味的實體與數位互動尋寶遊戲。
+企劃內容：
+1. **關卡謎題**：設計 5 則具巧思的押韻線索，引導學生依序探索圖書館、學生活動中心、戶外劇場、生態花園及體育館。
+2. **QR 數位紅包挑戰**：每個關卡搭配 2 題節慶文化趣味快問快答，通關即可獲取數位紅包圖章。
+3. **獎勵級距與動線規劃**：制定集點兌獎規則及排隊分流安全機制。`,
+      proTip: "運用 Image Generation 繪製具校園特色的數位紅包圖騰與紀念徽章，可供學生通關後下載典藏於個人學習歷程中。"
     },
     "zh-CN": {
-      title: "数字文化祭红包抽奖游戏",
-      summary: "主导一场全校规模的春节/元宵文化问答闯关活动，通过 AI 生成应景对联并发放校园礼券。",
+      title: "校园文化祭互动寻宝与数字红包解谜",
+      summary: "结合在地文化节庆，设计融合校园历史地标的互动式实体与线上打卡闯关解谜游戏。",
       steps: [
-        "在 Agent Designer 中，架构一个富有东方古典应景氛围的“Lunar New Year Assistant”智能对话 Agent。",
-        "将春节典故、十二生肖历史及元宵民俗知识文档上传为该 Agent 的专属知识基础。",
-        "通过 Image Generation 绘制出一批具浮雕质感的虚拟红色红包与春联美术底图。",
-        "在学生信息门户（Student Portal）中配置一组与 Agent 连线的轻量化礼券库随机派发 API。",
-        "学生只要在与 Agent 趣味对答中正确回答出传统典故，便可获得专属红联祝福及实体书券兑换码。"
+        "规划校园文化地标打卡动线、节庆文化典故及实体 QR 关卡布设。",
+        "运用 Agent Designer 与 Image Generation 产出寻宝谜语与纪念数字红包图样。",
+        "进行实地动线安全测试后，正式上线迎新文化周互动闯关活动。"
       ],
-      prompt: `你是一位充满活力、知书达礼、热爱华夏传统文化的“新年文化大使兼 AI 关主”。
-你的任务是引导学生完成线上新春文化问答，并针对他们的个人愿望，现场提笔写一幅专属的贺岁春联。
-1. 热情有礼地欢迎前来体验的学生，向他们恭贺新年，祝其学业进步。
-2. 出1道传统的民俗问题（例如：“生肖中的龙通常代表何种气宇与意义？”）。
-3. 如果学生答对了，大加赞赏，并询问其新学期心愿（例如：考高分、脱单、找到好实习），现场为其度身创作一幅充满诗意、平仄对仗的古典春联（包含左右联与横批）。
-4. 指引他们复制领奖代码“CNY-BOOKSTORE-10”到校园书店兑换礼物。
-5. 如果答错了，请温和地告知其典故，并换个简单问题给他们第二次答题机会。`,
-      proTip: "通过将问答 Agent 与学生事务入口结合，您可以将原本呆板的校园文化推广活动，改造成爆款、极具文化沉浸感且互动率极高的数字盛会。"
+      prompt: `请扮演“{{CAMPUS_NAME}}”学务处迎新活动组长。为庆祝“{{FESTIVAL_NAME}}”策划一场兼具文化底蕴与校园探索趣味的实体与数字互动寻宝游戏。
+企划内容：
+1. **关卡谜题**：设计 5 则具巧思的押韵线索，引导学生依序探索图书馆、学生活动中心、户外剧场、生态花园及体育馆。
+2. **QR 数字红包挑战**：每个关卡搭配 2 题节庆文化趣味快问快答，通关即可获取数字红包图章。
+3. **奖励级距与动线规划**：制定集点兑奖规则及排队分流安全机制。`,
+      proTip: "运用 Image Generation 绘制具校园特色的数字红包图腾与纪念徽章，可供学生通关后下载典藏于个人学习历程中。"
     }
   },
   finance_compliance: {
     "en": {
       title: "Student Expense Compliance Auditor",
-      summary: "Automatically cross-reference student club purchase receipts and expense reports against school purchasing guidelines.",
+      summary: "Audit student club reimbursement receipts, invoices, and subsidy claims automatically against university financial regulations.",
       steps: [
-        "Upload all school purchasing guidelines, vendor policies, and standard accounting codes to a secure folder.",
-        "Use the Drive Connector to ground your NotebookLM workspace in this policy archive.",
-        "Upload a student club's submitted annual expense spreadsheet and digital PDF receipts.",
-        "Prompt NotebookLM to cross-reference each expense item with the approved guidelines to verify compliance.",
-        "Generate an automated compliance audit report, highlighting non-compliant spending and budget overruns."
+        "Upload student society expense receipts, invoices, and bank statements to a dedicated Drive directory.",
+        "Execute automated policy compliance auditing to flag missing documentation or spending limit violations.",
+        "Review flagged discrepancies with student leaders and generate approved reimbursement vouchers."
       ],
-      prompt: `Acting as an school financial auditor, conduct a compliance review of the attached student club expense report.
-Compare each expense item with the uploaded university procurement guidelines.
-Your audit report must highlight:
-1. **Compliance Violations**: Identify any items that violate the policies (e.g., unapproved software subscriptions, exceeding maximum food limits per person). Cite the specific policy page.
-2. **Accounting Code Verification**: Verify if correct accounting codes were applied to each expense category.
-3. **Draft Advisory Memo**: Write a professional, polite advisory email to the club treasurer explaining the flagged violations and the steps required to resolve them.`,
-      proTip: "This tool does not automate financial payouts, maintaining the strict 'human-in-the-loop' standard. It acts as an elite assistant that saves hours of manual policy cross-referencing."
+      prompt: `You are the Student Affairs Finance Auditor. Audit the reimbursement claim submitted by {{SOCIETY_NAME}} for the event "{{EVENT_NAME}}" totaling {{CLAIM_AMOUNT}}.
+Audit Requirements:
+1. **Line-Item Verification**: Cross-reference each receipt item against university student organization financial regulations.
+2. **Policy Compliance Check**: Flag any alcohol purchases, unitemized credit card slips, tips exceeding 15%, or missing third-party quotations for items over $300.
+3. **Audit Summary**: Produce an itemized audit ledger showing Allowed Amount, Disallowed Amount, and a courteous explanation of any deductions with instructions for appeal.`,
+      proTip: "Grounding NotebookLM in official institutional procurement rules ensures high-precision compliance detection without manual auditing fatigue."
     },
     "zh-TW": {
-      title: "學生報支合規性審計員",
-      summary: "將課外活動報銷憑證、收據與學校繁瑣的採購規章進行自動化比對，秒級判定報支合規性。",
+      title: "社團活動經費報銷合規審核助理",
+      summary: "依據校內主計與社團經費管理辦法，自動比對發票單據、明細清單與預算核准額度。",
       steps: [
-        "將全校採購法規手冊、合格供應商清單及預算會計科目代碼庫上傳至安全的雲端硬碟。",
-        "使用 Drive Connector 將財務審核 NotebookLM 工作區直接對齊此政策庫。",
-        "上傳社團幹部遞交的支出明細 Excel 表格與全部 PDF 收據影本。",
-        "指示 NotebookLM 將每一筆開支條目與採購章程中的限額和允許項目進行自動化交叉比對。",
-        "生成自動化審核報告，醒目標記出任何超支、違反補助目或未附合格發票的疑慮開支。"
+        "將社團活動之發票掃描檔、收據清冊及預算核准表匯入至專屬 Drive 目錄。",
+        "執行合規審計提示詞，自動揪出單據不齊、品名模糊或超額報銷項目。",
+        "與社團幹部核對異常項目並產出合格報銷核定單，加速撥款作業。"
       ],
-      prompt: `請扮演大學課外活動組的專職資深財務審計官。對上傳的學生社團活動報銷憑證與明細表進行合規性核對。
-請依據學校《學生活動經費報支管理辦法》審查所有申報科目。
-生成的財務審計意見書必須明確指明：
-1. **不合規項目清單**：列出所有涉嫌違反報支細則的開支（例如：單人餐飲超標、私自訂閱非核准之商業軟體），並指明其違反了辦法中的哪一條規定或頁數。
-2. **會計科目檢驗**：審視其試算表中所歸類的編號代碼與開支內容是否完全匹配（例如：將辦公用品錯歸至圖書採購）。
-3. **勸導修改公文**：起草一封語氣嚴謹、用詞得體但態度明確的勸導公文，發送給社團財務幹部，指引他們如何在規定期限內補正發票或進行退件修正。`,
-      proTip: "此工具僅扮演高效的「財務決策助手」，絕不介入任何實體款項撥付的自動核發，嚴守財務工作「人機共審」的安全基準線。"
+      prompt: `請扮演學務處財務審核專員。審查社團「{{SOCIETY_NAME}}」於活動「{{EVENT_NAME}}」提出之經費補助申請（申報總額：{{CLAIM_AMOUNT}}）。
+審核要求：
+1. **單據核對**：逐筆比對收據憑證是否符合校內學生團體經費請領規範。
+2. **合規性篩檢**：明確標註含有含酒精飲料、未附品名明細之簽單、小費超過 15% 或逾 $300 缺乏比價單之違規項目。
+3. **審核結果彙整**：編列核准金額、核減金額及委婉且條理分明的扣除理由與申復指引。`,
+      proTip: "將學校最新主計法規作為 NotebookLM 的底層知識，能以極高精準度過濾違規憑證，免去人工逐張查驗的疲勞與疏漏。"
     },
     "zh-CN": {
-      title: "学生报销合规性审计员",
-      summary: "将课外活动报销凭证、收据与学校繁琐的采购规章进行自动化比对，秒级判定报销合规性。",
+      title: "社团活动经费报销合规审核助理",
+      summary: "依据校内主计与社团经费管理办法，自动比对发票单据、明细清单与预算核准额度。",
       steps: [
-        "将全校采购法规手册、合格供应商清单及预算会计科目代码库上传至安全的云端硬盘。",
-        "使用 Drive Connector 将财务审核 NotebookLM 工作区直接对齐此政策库。",
-        "上传社团干部递交的支出明细 Excel 表格与全部 PDF 收据影本。",
-        "指示 NotebookLM 将每一笔开支条目与采购章程中的限额和允许项目进行自动化交叉比对。",
-        "生成自动化审核报告，醒目标记出任何超支、违反补助目或未附合格发票的疑虑开支。"
+        "将社团活动之发票扫描件、收据清册及预算核准表导入至专属 Drive 目录。",
+        "执行合规审计提示词，自动揪出单据不齐、品名模糊或超额报销项目。",
+        "与社团干部核对异常项目并产出合格报销核定单，加速拨款作业。"
       ],
-      prompt: `请扮演大学课外活动组的专职资深财务审计官。对上传的学生社团活动报销凭证与明细表进行合规性核对。
-请依据学校《学生活动经费报销管理办法》审查所有申报科目。
-生成的财务审计意见书必须明确指明：
-1. **不合规项目清单**：列出所有涉嫌违反报销细则的开支（例如：单人餐饮超标、私自订阅非核准之商业软件），并指明其违反了办法中的哪一条规定或页数。
-2. **会计科目检验**：审视其试算表中所归类的编号代码与开支内容是否完全匹配（例如：将办公用品错归至图书采购）。
-3. **劝导修改公文**：起草一封语气严谨、用词得体但态度明确的劝导公文，发送给社团财务干部，指引他们如何在规定期限内补正发票或进行退件修正。`,
-      proTip: "此工具仅扮演高效的“财务决策助手”，绝不介入任何实体款项拨付的自动核发，严守财务工作“人机共审”的安全基准线。"
+      prompt: `请扮演学务处财务审核专员。审查社团“{{SOCIETY_NAME}}”于活动“{{EVENT_NAME}}”提出之经费补助申请（申报总额：{{CLAIM_AMOUNT}}）。
+审核要求：
+1. **单据核对**：逐笔比对收据凭证是否符合校内学生团体经费申领规范。
+2. **合规性筛检**：明确标注含有含酒精饮料、未附品名明细之签单、小费超过 15% 或逾 $300 缺乏比价单之违规项目。
+3. **审核结果汇总**：编列核准金额、核减金额及委婉且条理分明的扣除理由与申复指引。`,
+      proTip: "将学校最新主计法规作为 NotebookLM 的底层知识，能以极高精准度过滤违规凭证，免去人工逐张查验的疲劳与疏漏。"
     }
   },
   security_simulator: {
     "en": {
       title: "Campus Safety Drill Simulator",
-      summary: "Simulate complex emergency response drills to train campus security marshals and test response protocols.",
+      summary: "Simulate emergency response scenarios and evaluate campus security decision trees during emergency drill operations.",
       steps: [
-        "Ground a custom Security Drill Agent in your campus safety handbook, building layouts, and emergency protocols.",
-        "Configure the Agent to role-play as an Emergency Dispatcher during a simulated crisis scenario (e.g., power outage, severe storm).",
-        "Generate high-fidelity instructional video clips and animated scenario prompts using Video Generation features.",
-        "Have security staff interact with the simulator, typing real-time responses to evolving scenario prompts.",
-        "Generate a post-simulation feedback report, assessing the staff's compliance with safety handbooks."
+        "Establish emergency protocol handbooks, campus floor plans, and evacuation routes.",
+        "Build multi-branch crisis drill scenarios and tactical decision trees using Agent Designer.",
+        "Facilitate simulated emergency exercises for campus security personnel and evaluate response timelines."
       ],
-      prompt: `You are the 'Emergency Response Coordinator Simulator.' Your role is to guide campus security personnel through a high-stakes, real-time crisis drill.
-Scenario: A severe typhoon has caused a localized power failure in the science laboratory building, and a critical backup generator has failed.
-1. Present the scenario details clearly, including building floorplans and chemical storage risks.
-2. Ask the user: 'What is your first priority protocol?'
-3. Based on their input, evolve the scenario realistically (e.g., 'Correct, evacuation initiated. However, a laboratory TA reports one student is trapped in room 302...').
-4. Grade their decisions strictly against the uploaded Campus Safety Handbook.
-5. Provide detailed feedback, highlighting strengths and critical compliance gaps at the end of the simulation.`,
-      proTip: "Use Video Generation tools to create short, 15-second simulation briefings. Visual prompts increase engagement and make the training feel incredibly realistic to staff."
+      prompt: `You are the Director of Campus Safety. Build a dynamic, interactive emergency drill simulation scenario for {{EMERGENCY_SCENARIO}} occurring at {{FACILITY_LOCATION}}.
+Simulation Structure:
+1. **Incident Genesis (Minute 0)**: Initial emergency call received. Present 3 critical first-response decisions to the safety team.
+2. **Escalation Phase (Minute 15)**: Condition evolves (e.g., secondary obstacle, route blockage, crowd panic). Present tactical options with consequences.
+3. **Containment & Evacuation (Minute 30)**: First responder coordination, safe perimeter establishment, and parent/press communication dispatch.
+4. **Debrief Rubric**: 4-part evaluation rubric grading decision speed, communication clarity, protocol adherence, and victim care prioritization.`,
+      proTip: "Use Video Generation to produce realistic tactical scenario prompts illustrating evacuation bottlenecks or weather events to evaluate team decision-making under stress."
     },
     "zh-TW": {
-      title: "校園安全演練模擬器",
-      summary: "藉由應變角色扮演與多媒體模擬，進行高逼真度的安全哨兵危機演練與合規測試。",
+      title: "校園防救災與重大危安演練模擬",
+      summary: "透過動態危機決策樹模擬突發狀況，提升校園安保團隊在各類演練中的即時指揮處置效能。",
       steps: [
-        "將自訂的「安全防汛避難演練 Agent」植基於學校的安全防護手冊、建築平面圖與防災流程中。",
-        "配置 Agent 扮演總指揮中心調度員，即時模擬一場校園突發災難情境（如局域大停電、強烈颱風）。",
-        "利用 Video Generation 功能生成包含動態暴風雨、煙霧瀰漫與夜間逃生指示等 15 秒情境短影音。",
-        "要求前來演練的安全警衛人員在終端即時打字輸入其當下的決策、疏散路線與通報程序。",
-        "演練結束後，自動比對安全手冊生成考評報告，具體點出決策中的安全漏洞與卓越表現。"
+        "建置緊急應變手冊、校園平面圖及疏散避難動線資料庫。",
+        "利用 Agent Designer 構建多分支危機情境演習腳本與即時處置決策樹。",
+        "開展校安與駐衛保全無預警模擬操演，檢討處置反應時效並優化流程。"
       ],
-      prompt: `你是一位全天候在線的「校園危機指揮官模擬器」。你的任務是帶領參訓的校園警衛人員，在高度擬真的極端情境下執行一場即時的安全應變演練。
-今日演練設定：一場超級颱風肆虐校園，導致理科教學大樓局部大停電，且一具關鍵的緊急備用發電機因進水而發生故障。
-請依照以下節奏推動演練：
-1. 播報基本災情與目前大樓內的化學實驗室危險物品分布圖，營造逼真的臨場緊迫感。
-2. 詢問使用者（受訓警衛）：「你的第一個標準處置程序是什麼？」
-3. 依據受訓警衛的回應，即時推進災情（例如：「收到，已下達局部疏散令。但此時實驗室助教緊急通報，理學大樓302室內仍有1名受傷學生被困...」）。
-4. 嚴格對照安全防護手冊規定，評估警衛做出的每一項撤離、求援與封鎖決策。
-5. 演練結尾，給予完整的百分制評分，列出其應變盲點與表現特別符合標準流程的部分。`,
-      proTip: "使用 Video Generation 生產 15 秒的突發場景畫面，能在演練中為受訓人員創造極高張力的視覺氛圍，大幅提升訓練效果與專注度。"
+      prompt: `你是校園安全防護中心總指揮官。請為發生於「{{FACILITY_LOCATION}}」的「{{EMERGENCY_SCENARIO}}」建立動態緊急應變模擬演練腳本。
+演練結構：
+1. **初始通報 (0 分鐘)**：接獲首通通報。向應變小組提供 3 項第一時間處置決策選擇。
+2. **災情升級 (15 分鐘)**：情勢惡化（如周邊要道阻塞、群眾恐慌或次生災害）。提出各應對戰術及其衍生後果。
+3. **封鎖與撤離 (30 分鐘)**：消防警消協調、警戒線擴大劃設及校級對外公關新聞通報。
+4. **覆盤評分表**：制定 4 項指標之演練評核表（決策速度、通訊精確度、SOP 落實度與傷者救護優先級）。`,
+      proTip: "可利用 Video Generation 產出逼真的事故模擬短片，在演習期間作為突發情境插入題，考驗團隊在高度壓力下的應變能力。"
     },
     "zh-CN": {
-      title: "校园安全演练模拟器",
-      summary: "借由应变角色扮演与多媒体模拟，进行高逼真度的安全哨兵危机演练与合规测试。",
+      title: "校园防救灾与重大危安演练模拟",
+      summary: "透过动态危机决策树模拟突发状况，提升校园安保团队在各类演练中的即时指挥处置效能。",
       steps: [
-        "将自订的“安全防汛避难演练 Agent”植基于学校的安全防护手册、建筑平面图与防灾流程中。",
-        "配置 Agent 扮演总指挥中心调度员，即时模拟一场校园突发灾难情境（如局域大停电、强烈台风）。",
-        "利用 Video Generation 功能生成包含动态暴风雨、烟雾弥漫与夜间逃生指示等 15 秒情境短视频。",
-        "要求前来演练的安全警卫人员在终端即时打字输入其当下的决策、疏散路线与通报程序。",
-        "演练结束后，自动比对安全手册生成考评报告，具体点出决策中的安全漏洞与卓越表现。"
+        "建置紧急应变手册、校园平面图及疏散避难动线数据库。",
+        "利用 Agent Designer 构建多分支危机情境演习脚本与即时处置决策树。",
+        "开展校安与驻卫保全无预警模拟操演，检讨处置反应时效并优化流程。"
       ],
-      prompt: `你是一位全天候在线的“校园危机指挥官模拟器”。你的任务是带领参训的校园警卫人员，在高度拟真的极端情境下执行一场即时的安全应变演练。
-今日演练设定：一场超级台风肆虐校园，导致理科教学大楼局部大停电，且一具关键的紧急备用发电机因进水而发生故障。
-请依照以下节奏推动演练：
-1. 播报基本灾情与目前大楼内的化学实验室危险物品分布图，营造逼真的临场紧迫感。
-2. 询问使用者（受训警卫）：“你的第一个标准处置程序是什么？”
-3. 依据受训警卫的回应，即时推进灾情（例如：“收到，已下达局部疏散令。但此时实验室助教紧急通报，理学大楼302室内仍有1名受伤学生被困...”）。
-4. 严格对照安全防护手册规定，评估警卫做出的每一项撤离、求援与封锁决策。
-5. 演练结尾，给予完整的百分制评分，列出其应变盲点与表现特别符合标准流程的部分。`,
-      proTip: "使用 Video Generation 生产 15 秒的突发场景画面，能在演练中为受训人员创造极高张力的视觉氛围，大幅提升训练效果与专注度。"
+      prompt: `你是校园安全防护中心总指挥官。请为发生于“{{FACILITY_LOCATION}}”的“{{EMERGENCY_SCENARIO}}”建立动态紧急应变模拟演练脚本。
+演练结构：
+1. **初始通报 (0 分钟)**：接获首通通报。向应变小组提供 3 项第一时间处置决策选择。
+2. **灾情升级 (15 分钟)**：情势恶化（如周边要道阻塞、群众恐慌或次生灾害）。提出各应对战术及其衍生后果。
+3. **封锁与撤离 (30 分钟)**：消防警消协调、警戒线扩大划设及校级对外公关新闻通报。
+4. **复盘评分表**：制定 4 项指标之演练评估表（决策速度、通讯精确度、SOP 落实度与伤者救护优先级）。`,
+      proTip: "可利用 Video Generation 产出逼真的事故模拟短片，在演习期间作为突发情境插入题，考验团队在高度压力下的应变能力。"
     }
   }
 };
@@ -2225,15 +2512,32 @@ function getTagIcon(type, name) {
 }
 
 // Helper to extract bracketed prompt variables for dynamic 'Fill in the variables' panel
+// Utility to escape HTML text for raw display
+function escapeHtml(unsafe) {
+  if (unsafe === null || unsafe === undefined) return "";
+  return String(unsafe)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+// Utility to escape quotes for dynamic inline onClick triggers
+function escapeQuotesForOnClick(str) {
+  if (!str) return "";
+  return String(str).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+}
+
+// Helper to extract bracketed and brace prompt variables (e.g. {{COURSE_CODE}} or [COURSE_CODE])
 function extractPromptVariables(promptText) {
   if (!promptText) return [];
-  // Match [Course Code], [Variable Name], etc., excluding markdown links [text](url) and alerts [!ALERT]
-  const regex = /\[([A-Za-z][A-Za-z0-9\s/_\-']{1,40})\](?!\()/g;
+  const regex = /(?:\{\{([A-Za-z0-9\s/_\-']{1,50})\}\}|\[([A-Za-z0-9\s/_\-']{1,50})\](?!\())/g;
   const vars = [];
   const seen = new Set();
   let match;
   while ((match = regex.exec(promptText)) !== null) {
-    const raw = match[1].trim();
+    const raw = (match[1] || match[2]).trim();
     if (!seen.has(raw)) {
       seen.add(raw);
       vars.push({
@@ -2246,52 +2550,161 @@ function extractPromptVariables(promptText) {
   return vars;
 }
 
+// Helper to get stylized connector metadata, icons, and localized labels
+function getConnectorMeta(connectorName, lang = "en") {
+  const c = (connectorName || "").toLowerCase();
+  if (c.includes("drive")) {
+    return {
+      class: "connector-tag-drive",
+      icon: "folder_shared",
+      label: lang === "en" ? "Drive Connector" : (lang === "zh-TW" ? "Drive 連接器" : "Drive 连接器")
+    };
+  }
+  if (c.includes("email") || c.includes("outlook") || c.includes("mail")) {
+    return {
+      class: "connector-tag-email",
+      icon: "mail",
+      label: lang === "en" ? "Email Connector" : (lang === "zh-TW" ? "Email 連接器" : "Email 连接器")
+    };
+  }
+  if (c.includes("lms") || c.includes("canvas") || c.includes("moodle")) {
+    return {
+      class: "connector-tag-lms",
+      icon: "school",
+      label: lang === "en" ? "LMS Connector" : (lang === "zh-TW" ? "LMS 連接器" : "LMS 连接器")
+    };
+  }
+  if (c.includes("calendar") || c.includes("google")) {
+    return {
+      class: "connector-tag-calendar",
+      icon: "calendar_month",
+      label: lang === "en" ? "Calendar Connector" : (lang === "zh-TW" ? "Calendar 連接器" : "Calendar 连接器")
+    };
+  }
+  return {
+    class: "",
+    icon: "api",
+    label: connectorName
+  };
+}
+
+// Build interactive prompt HTML with clickable {{VARIABLE}} token pills
+function buildInteractivePromptHtml(promptText, promptVars, valuesMap = {}) {
+  if (!promptText) return "";
+  const regex = /(?:\{\{([A-Za-z0-9\s/_\-']{1,50})\}\}|\[([A-Za-z0-9\s/_\-']{1,50})\](?!\())/g;
+  let lastIndex = 0;
+  let result = "";
+  let match;
+  while ((match = regex.exec(promptText)) !== null) {
+    result += escapeHtml(promptText.substring(lastIndex, match.index));
+    const rawLabel = (match[1] || match[2]).trim();
+    const token = match[0];
+    const val = valuesMap[token] ? valuesMap[token].trim() : "";
+    const isFilled = Boolean(val);
+    const displayVal = isFilled ? val : rawLabel;
+    
+    result += `<span class="prompt-var-token ${isFilled ? 'is-filled' : ''}" data-token="${escapeHtml(token)}" title="Click to edit {{${escapeHtml(rawLabel)}}}"><span class="token-braces">{{</span><span class="token-name">${escapeHtml(displayVal)}</span><span class="token-braces">}}</span></span>`;
+    lastIndex = regex.lastIndex;
+  }
+  result += escapeHtml(promptText.substring(lastIndex));
+  return result;
+}
+
+// Generate interpolated plain-text prompt for direct clipboard copy
+function getInterpolatedPlainText(promptText, promptVars, valuesMap = {}) {
+  if (!promptText) return "";
+  let result = promptText;
+  promptVars.forEach(v => {
+    const val = valuesMap[v.token] ? valuesMap[v.token].trim() : "";
+    if (val) {
+      result = result.split(v.token).join(val);
+    }
+  });
+  return result;
+}
+
+// Helper to copy step helper prompts to clipboard with visual confirmation
+window.copyHelperPromptToClipboard = function(btn) {
+  try {
+    const details = btn.closest('.helper-prompt-collapsible');
+    if (!details) return;
+    const textEl = details.querySelector('.helper-prompt-text');
+    if (!textEl) return;
+    const textToCopy = textEl.textContent.trim();
+    navigator.clipboard.writeText(textToCopy).then(() => {
+      const originalHtml = btn.innerHTML;
+      const lang = appState.activeLanguage || "en";
+      const copiedText = lang === 'zh-TW' ? '已複製！' : (lang === 'zh-CN' ? '已复制！' : 'Copied!');
+      btn.innerHTML = `<span class="material-symbols-outlined" style="font-size: 14px;">check</span> <span>${copiedText}</span>`;
+      btn.style.borderColor = 'var(--color-success)';
+      btn.style.color = 'var(--color-success)';
+      setTimeout(() => {
+        btn.innerHTML = originalHtml;
+        btn.style.borderColor = '';
+        btn.style.color = '';
+      }, 2000);
+      const toastMsg = lang === 'zh-TW' ? '輔助提示詞已複製至剪貼簿！' : (lang === 'zh-CN' ? '辅助提示词已复制至剪贴板！' : 'Helper prompt copied to clipboard!');
+      showToast(toastMsg, "success");
+    }).catch(err => {
+      console.error('Clipboard copy error:', err);
+    });
+  } catch (err) {
+    console.error('Helper copy error:', err);
+  }
+};
+
+// Ambient mouse glow tracker for hardware-accelerated radial spotlight
+function initMouseGlow() {
+  if (typeof window === "undefined" || typeof document === "undefined") return;
+  let scheduled = false;
+  window.addEventListener("mousemove", (e) => {
+    if (!scheduled) {
+      scheduled = true;
+      requestAnimationFrame(() => {
+        document.documentElement.style.setProperty("--mouse-x", `${e.clientX}px`);
+        document.documentElement.style.setProperty("--mouse-y", `${e.clientY}px`);
+        scheduled = false;
+      });
+    }
+  }, { passive: true });
+}
+
 // Helper to render New and Updated badges for Use Cases created/updated within 5 days
 function getUsecaseBadgeHtml(uc, lang) {
   if (!uc.createdAt) return "";
-
   const now = new Date();
   const createdDate = new Date(uc.createdAt);
   const diffTimeCreated = Math.abs(now - createdDate);
   const diffDaysCreated = Math.ceil(diffTimeCreated / (1000 * 60 * 60 * 24));
-
   let isNew = diffDaysCreated <= 5;
   let isUpdated = false;
-
-  if (uc.updatedAt) {
+  if (!isNew && uc.updatedAt) {
     const updatedDate = new Date(uc.updatedAt);
     const diffTimeUpdated = Math.abs(now - updatedDate);
     const diffDaysUpdated = Math.ceil(diffTimeUpdated / (1000 * 60 * 60 * 24));
-    // It's only marked "updated" if it's NOT already marked "new" (to avoid cluttering)
-    if (!isNew && diffDaysUpdated <= 5 && updatedDate > createdDate) {
-      isUpdated = true;
-    }
+    isUpdated = diffDaysUpdated <= 5;
   }
-
   if (isNew) {
-    const newLabel = lang === 'en' ? 'New' : (lang === 'zh-TW' ? '新' : '新');
-    return `<span class="tag" style="background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.25); color: #ef4444; font-weight: 700; font-size: 10px; padding: 4px 8px; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 4px;">${newLabel}</span>`;
+    const newLabel = lang === 'en' ? 'NEW' : (lang === 'zh-TW' ? '新上線' : '新上线');
+    return `<span class="tag tag-new tag-icon-only" title="${newLabel}"><span class="material-symbols-outlined" style="font-size: 14px;">auto_awesome</span></span>`;
   }
-
   if (isUpdated) {
-    const updatedLabel = lang === 'en' ? 'Updated' : (lang === 'zh-TW' ? '已更新' : '已更新');
-    return `<span class="tag" style="background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.25); color: #3b82f6; font-weight: 700; font-size: 10px; padding: 4px 8px; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 4px;">${updatedLabel}</span>`;
+    const updLabel = lang === 'en' ? 'UPDATED' : (lang === 'zh-TW' ? '已更新' : '已更新');
+    return `<span class="tag tag-updated tag-icon-only" title="${updLabel}"><span class="material-symbols-outlined" style="font-size: 14px;">update</span></span>`;
   }
-
   return "";
 }
 
-// Main Render Loop for Use Cases Grid
+// Render Use Cases Grid (All cards unlocked, colored connector tags, high contrast)
 function renderUseCases() {
   const container = document.getElementById("useCasesContainer");
-  container.innerHTML = ""; // clear current cards
+  if (!container) return;
+  container.innerHTML = "";
   const lang = appState.activeLanguage || "en";
   const t = uiTranslations[lang];
 
   // Filter use cases from db based on state
   const filteredUseCases = useCasesDb.filter(useCase => {
-    // 1. Role Filter Mapping: Show academic support cases to everyone, but specialize core hubs
-    // A. Role match
     let matchesRole = false;
     const isSupportRole = ["Security", "Finance", "IT Admin", "SAO"].includes(appState.userRole);
 
@@ -2310,7 +2723,6 @@ function renderUseCases() {
       matchesRole = true;
     }
 
-    // 2. Institution Level Filter: Support roles ignore this completely.
     let matchesLevel = true;
     if (appState.isAdmin === true) {
       matchesLevel = true;
@@ -2318,40 +2730,30 @@ function renderUseCases() {
       matchesLevel = useCase.level.includes("Generic") || useCase.level.includes(appState.institutionLevel) || useCase.level.length === 0;
     }
 
-    // 3. Feature Tags filter
     let matchesFeature = true;
     if (appState.activeFilterFeature !== "all") {
       matchesFeature = useCase.features.some(f => f.toLowerCase() === appState.activeFilterFeature.toLowerCase());
     }
 
-    // 4. Status Filter (Connector dependencies)
     let matchesStatus = true;
-    const hasMissingConnector = checkMissingConnector(useCase);
-    if (appState.activeFilterStatus === "standard" || appState.activeFilterStatus === "unlocked") {
-      matchesStatus = !hasMissingConnector;
-    } else if (appState.activeFilterStatus === "integration") {
-      matchesStatus = hasMissingConnector;
-    } else if (appState.activeFilterStatus === "liked") {
+    if (appState.activeFilterStatus === "liked") {
       matchesStatus = useCase.isLiked === true || useCase.isLiked === 1;
     } else if (appState.activeFilterStatus === "deployed") {
       matchesStatus = useCase.isDeployed === true || useCase.isDeployed === 1;
     }
 
-    // 5. Search Bar Query
     let matchesSearch = true;
     if (appState.searchQuery) {
-      // Localized search lookup
       const trans = useCasesTranslations[useCase.id] ? useCasesTranslations[useCase.id][lang] : null;
       const cTitle = trans ? trans.title : useCase.title;
       const cSummary = trans ? trans.summary : useCase.summary;
 
       matchesSearch = cTitle.toLowerCase().includes(appState.searchQuery) || 
                       cSummary.toLowerCase().includes(appState.searchQuery) ||
-                      useCase.role.toLowerCase().includes(appState.searchQuery) ||
+                      (useCase.role && useCase.role.toLowerCase().includes(appState.searchQuery)) ||
                       useCase.features.some(f => f.toLowerCase().includes(appState.searchQuery));
     }
 
-    // 6. Category Filter (Sidebar navigation)
     let matchesCategory = true;
     if (appState.activeFilterCategory && appState.activeFilterCategory !== "all") {
       const filterCat = appState.activeFilterCategory === "admin" ? "administrative" : appState.activeFilterCategory;
@@ -2361,7 +2763,6 @@ function renderUseCases() {
     return matchesRole && matchesLevel && matchesFeature && matchesStatus && matchesSearch && matchesCategory;
   });
 
-  // Group filtered use cases by Hub Category
   const categories = {
     academic: { title: t.hubs.academic, icon: "school", class: "hub-academic", items: [] },
     student: { title: t.hubs.student, icon: "diversity_3", class: "hub-student", items: [] },
@@ -2375,27 +2776,13 @@ function renderUseCases() {
     }
   });
 
-  // Sort each Hub Category's items programmatically:
-  // Standalone tools (connectors.length === 0) ALWAYS float to the top.
-  // Connector required tools (connectors.length > 0) sorted to the very bottom!
-  Object.keys(categories).forEach(key => {
-    const hub = categories[key];
-    hub.items.sort((a, b) => {
-      const aHas = a.connectors && a.connectors.length > 0 ? 1 : 0;
-      const bHas = b.connectors && b.connectors.length > 0 ? 1 : 0;
-      return aHas - bHas; // (0 - 1) means 'a' goes first (at top), (1 - 0) means 'b' goes first.
-    });
-  });
-
-  // Render Hub Segments
   let renderedCount = 0;
   Object.keys(categories).forEach(key => {
     const hub = categories[key];
-    if (hub.items.length === 0) return; // skip empty hubs
+    if (hub.items.length === 0) return;
 
     renderedCount += hub.items.length;
 
-    // Create Hub Container
     const hubSection = document.createElement("div");
     hubSection.className = `hub-section ${hub.class}`;
 
@@ -2414,25 +2801,19 @@ function renderUseCases() {
     const cardsGrid = document.createElement("div");
     cardsGrid.className = "cards-grid";
 
-    // Create Cards
     hub.items.forEach(uc => {
       const card = document.createElement("div");
       card.className = "card glass-panel";
+      card.dataset.ucId = uc.id;
       card.addEventListener("click", () => openUseCaseModal(uc));
 
-      const hasMissingConnector = checkMissingConnector(uc);
-
-      // Extract translated versions
       const trans = useCasesTranslations[uc.id] ? useCasesTranslations[uc.id][lang] : null;
       const cardTitle = trans ? trans.title : uc.title;
       const cardSummary = trans ? trans.summary : uc.summary;
 
-      // Build Tag Pills HTML - Icon-only tags for small cards with hover tooltips
       let tagsHtml = "";
       const badgeHtml = getUsecaseBadgeHtml(uc, lang);
-      if (badgeHtml) {
-        tagsHtml += badgeHtml;
-      }
+      if (badgeHtml) tagsHtml += badgeHtml;
 
       if (uc.isVerified) {
         const verifiedLabel = lang === 'en' ? 'Verified' : (lang === 'zh-TW' ? '已驗證' : '已验证');
@@ -2443,6 +2824,7 @@ function renderUseCases() {
         const icon = getTagIcon('feature', f);
         tagsHtml += `<span class="tag tag-feature tag-icon-only" title="${escapeHtml(f)}"><span class="material-symbols-outlined" style="font-size: 14px;">${icon}</span></span>`;
       });
+
       if (uc.level && uc.level.length > 0) {
         const displayLevels = uc.level.length > 1 ? ["Generic"] : uc.level;
         displayLevels.forEach(lvl => {
@@ -2452,32 +2834,21 @@ function renderUseCases() {
         });
       }
 
-      // Connector localized title
+      // Render colored indicator tags for connectors
+      if (uc.connectors && uc.connectors.length > 0) {
+        uc.connectors.forEach(c => {
+          const meta = getConnectorMeta(c, lang);
+          tagsHtml += `<span class="tag tag-icon-only ${meta.class}" title="${escapeHtml(meta.label)}"><span class="material-symbols-outlined" style="font-size: 14px;">${meta.icon}</span></span>`;
+        });
+      }
+
+      // Connector localized bottom label
       let connectorLabelHtml = "";
-      if (uc.connectors.length > 0) {
-        const connectorsListText = uc.connectors.map(c => {
-          if (c.toLowerCase().includes("drive")) return lang === "en" ? "Drive Connector" : "Drive 連接器";
-          if (c.toLowerCase().includes("email")) return lang === "en" ? "Email Connector" : "Email 連接器";
-          if (c.toLowerCase().includes("lms")) return lang === "en" ? "LMS Connector" : "LMS 連接器";
-          if (c.toLowerCase().includes("calendar") || c.toLowerCase().includes("google")) return lang === "en" ? "Calendar Connector" : "Calendar 連接器";
-          return c;
-        }).join(', ');
-        
-        if (uc.connectorEssential === false) {
-          connectorLabelHtml = `
-            <span class="card-connector-req" style="color: var(--color-primary); background: rgba(79, 70, 229, 0.05); border: 1px dashed rgba(79, 70, 229, 0.25); padding: 4px 10px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px; font-size: 11px;">
-              <span class="material-symbols-outlined" style="color: var(--color-primary); font-size: 14px;">api</span>
-              ${connectorsListText} (${lang === "en" ? "Optional" : (lang === "zh-TW" ? "可擴充" : "可扩充")})
-            </span>
-          `;
-        } else {
-          connectorLabelHtml = `
-            <span class="card-connector-req">
-              <span class="material-symbols-outlined">api</span>
-              ${connectorsListText} ${lang === "en" ? "Required" : (lang === "zh-TW" ? "集成連線" : "集成连线")}
-            </span>
-          `;
-        }
+      if (uc.connectors && uc.connectors.length > 0) {
+        connectorLabelHtml = uc.connectors.map(c => {
+          const meta = getConnectorMeta(c, lang);
+          return `<span class="tag tag-full ${meta.class}" style="font-size: 11px; padding: 3px 8px; border-radius: 6px;"><span class="material-symbols-outlined" style="font-size: 13px;">${meta.icon}</span><span>${escapeHtml(meta.label)}</span></span>`;
+        }).join(' ');
       } else {
         connectorLabelHtml = `
           <span class="card-connector-req" style="color: var(--color-success)">
@@ -2487,50 +2858,17 @@ function renderUseCases() {
         `;
       }
 
-      // Build card content
-      let cardInnerHtml = `
+      card.innerHTML = `
         <div class="card-top">
           <div class="card-tags">${tagsHtml}</div>
-          <h3 class="card-title">${cardTitle}</h3>
-          <p class="card-summary">${cardSummary}</p>
+          <h3 class="card-title">${escapeHtml(cardTitle)}</h3>
+          <p class="card-summary">${escapeHtml(cardSummary)}</p>
         </div>
         <div class="card-bottom">
-          <span class="tag" style="background: rgba(255,255,255,0.02); border-color: rgba(255,255,255,0.05); color: var(--text-secondary)">${t.roles[uc.role] || uc.role}</span>
+          <span class="tag" style="background: rgba(255,255,255,0.02); border-color: rgba(255,255,255,0.05); color: var(--text-secondary)">${escapeHtml(t.roles[uc.role] || uc.role)}</span>
           ${connectorLabelHtml}
         </div>
       `;
-
-      card.innerHTML = cardInnerHtml;
-
-      // Handle Lock Overlay if connectors configured but toggled off
-      if (hasMissingConnector) {
-        const missing = uc.connectors.find(c => {
-          if (c.toLowerCase().includes("drive")) return !appState.activeConnectors.onedrive;
-          if (c.toLowerCase().includes("email")) return !appState.activeConnectors.outlook;
-          if (c.toLowerCase().includes("lms")) return !appState.activeConnectors.lms;
-          if (c.toLowerCase().includes("calendar") || c.toLowerCase().includes("google")) return !appState.activeConnectors.google;
-          return false;
-        });
-
-        // Map to a pretty local name
-        let prettyMissing = missing;
-        if (missing.toLowerCase().includes("drive")) prettyMissing = lang === "en" ? "Drive Connector" : "Drive 連接器";
-        else if (missing.toLowerCase().includes("email")) prettyMissing = lang === "en" ? "Email Connector" : "Email 連接器";
-        else if (missing.toLowerCase().includes("lms")) prettyMissing = lang === "en" ? "LMS Connector" : "LMS 連接器";
-        else if (missing.toLowerCase().includes("calendar") || missing.toLowerCase().includes("google")) prettyMissing = lang === "en" ? "Calendar Connector" : "Calendar 連接器";
-
-        const lockOverlay = document.createElement("div");
-        lockOverlay.className = "card-lock-overlay";
-        lockOverlay.innerHTML = `
-          <div class="lock-icon-wrapper">
-            <span class="material-symbols-outlined">lock</span>
-          </div>
-          <h4 class="lock-title">${t.integrationRequired}</h4>
-          <p class="lock-subtitle">${lang === "en" ? `Requires active ${prettyMissing} to run securely.` : `安全操作需要連接 ${prettyMissing}。`}</p>
-          <button class="unlock-action-btn" onclick="event.stopPropagation(); handleQuickUnlock('${missing}')">${t.simulatedConnect}</button>
-        `;
-        card.appendChild(lockOverlay);
-      }
 
       cardsGrid.appendChild(card);
     });
@@ -2540,7 +2878,6 @@ function renderUseCases() {
     container.appendChild(hubSection);
   });
 
-  // Render empty state if no matching cases found
   if (renderedCount === 0) {
     container.innerHTML = `
       <div class="glass-panel" style="padding: 60px; text-align: center; border-style: dashed;">
@@ -2550,75 +2887,60 @@ function renderUseCases() {
         <button class="nav-button nav-button-primary" style="margin: 0 auto;" id="btnResetFilters">${t.btnResetFilters}</button>
       </div>
     `;
-    document.getElementById("btnResetFilters").addEventListener("click", () => {
-      document.getElementById("searchInput").value = "";
-      appState.searchQuery = "";
-      renderUseCases();
-    });
+    const resetBtn = document.getElementById("btnResetFilters");
+    if (resetBtn) {
+      resetBtn.addEventListener("click", () => {
+        const searchInput = document.getElementById("searchInput");
+        if (searchInput) searchInput.value = "";
+        appState.searchQuery = "";
+        renderUseCases();
+      });
+    }
   }
 }
 
-// Quick Unlock Connector Toggle from Card Lock Screen
+// Quick Unlock Connector fallback (all cards are permanently unlocked)
 window.handleQuickUnlock = function(connectorName) {
   let toggleId = "";
   let key = "";
-  const nameLower = connectorName.toLowerCase();
+  const nameLower = (connectorName || "").toLowerCase();
 
-  if (nameLower.includes("drive")) {
-    toggleId = "toggleOneDrive";
-    key = "onedrive";
-  } else if (nameLower.includes("email") || nameLower.includes("outlook")) {
-    toggleId = "toggleOutlook";
-    key = "outlook";
-  } else if (nameLower.includes("lms")) {
-    toggleId = "toggleLMS";
-    key = "lms";
-  } else if (nameLower.includes("calendar") || nameLower.includes("google")) {
-    toggleId = "toggleGoogle";
-    key = "google";
-  }
+  if (nameLower.includes("drive")) { toggleId = "toggleOneDrive"; key = "onedrive"; }
+  else if (nameLower.includes("email") || nameLower.includes("outlook")) { toggleId = "toggleOutlook"; key = "outlook"; }
+  else if (nameLower.includes("lms")) { toggleId = "toggleLMS"; key = "lms"; }
+  else if (nameLower.includes("calendar") || nameLower.includes("google")) { toggleId = "toggleGoogle"; key = "google"; }
 
-  if (toggleId) {
-    document.getElementById(toggleId).checked = true;
+  if (key) {
     appState.activeConnectors[key] = true;
-    document.getElementById(`indicator-${key}`).classList.add("active");
+    const toggleEl = document.getElementById(toggleId);
+    if (toggleEl) toggleEl.checked = true;
+    const indEl = document.getElementById(`indicator-${key}`);
+    if (indEl) indEl.classList.add("active");
     renderUseCases();
-    
     const lang = appState.activeLanguage || "en";
     const tTrans = uiTranslations[lang];
-    const localizedSuccess = `${connectorName} ${tTrans.connectorLinkedSuccess}`;
-    showToast(localizedSuccess, "success");
+    showToast(`${connectorName} ${tTrans.connectorLinkedSuccess || "connector active"}`, "success");
   }
 };
 
-// Check if a use case has missing connector dependencies
+// Check if a use case has missing connector dependencies (always returns false to unlock all cards)
 function checkMissingConnector(useCase) {
-  if (!useCase.connectors || useCase.connectors.length === 0) return false;
-  if (useCase.connectorEssential === false) return false; // non-essential connectors never lock the card
-
-  return useCase.connectors.some(c => {
-    const cLower = c.toLowerCase();
-    if (cLower.includes("drive")) return !appState.activeConnectors.onedrive;
-    if (cLower.includes("email") || cLower.includes("outlook")) return !appState.activeConnectors.outlook;
-    if (cLower.includes("lms")) return !appState.activeConnectors.lms;
-    if (cLower.includes("calendar") || cLower.includes("google")) return !appState.activeConnectors.google;
-    return false;
-  });
+  return false;
 }
 
-// Modal Detail View Rendering
+// Modal Detail View Rendering with Enlarged Workbench, 3 Conceptual Steps, and Embedded Helper Prompts
 function openUseCaseModal(useCase) {
   const overlay = document.getElementById("modalOverlay");
+  if (!overlay) return;
   const lang = appState.activeLanguage || "en";
   const t = uiTranslations[lang];
 
-  // Look up translations
   const trans = useCasesTranslations[useCase.id] ? useCasesTranslations[useCase.id][lang] : null;
   const title = trans ? trans.title : useCase.title;
   const summary = trans ? trans.summary : useCase.summary;
 
-  // Set Title
-  document.getElementById("modalTitle").textContent = title;
+  const modalTitleEl = document.getElementById("modalTitle");
+  if (modalTitleEl) modalTitleEl.textContent = title;
 
   // Set metadata tags - Icon with labels for enlarged cards
   let tagsHtml = "";
@@ -2629,82 +2951,119 @@ function openUseCaseModal(useCase) {
 
   useCase.features.forEach(f => {
     const icon = getTagIcon('feature', f);
-    tagsHtml += `<span class="tag tag-feature tag-full" style="font-size: 11px;"><span class="material-symbols-outlined" style="font-size: 14px;">${icon}</span><span>${f}</span></span>`;
+    tagsHtml += `<span class="tag tag-feature tag-full" style="font-size: 11px;"><span class="material-symbols-outlined" style="font-size: 14px;">${icon}</span><span>${escapeHtml(f)}</span></span>`;
   });
+
   if (useCase.level && useCase.level.length > 0) {
     const displayLevels = useCase.level.length > 1 ? ["Generic"] : useCase.level;
     displayLevels.forEach(lvl => {
       const levelText = t.levels[lvl] || lvl;
       const icon = getTagIcon('level', lvl);
-      tagsHtml += `<span class="tag tag-level tag-full" style="font-size: 11px;"><span class="material-symbols-outlined" style="font-size: 14px;">${icon}</span><span>${levelText}</span></span>`;
+      tagsHtml += `<span class="tag tag-level tag-full" style="font-size: 11px;"><span class="material-symbols-outlined" style="font-size: 14px;">${icon}</span><span>${escapeHtml(levelText)}</span></span>`;
     });
   }
-  document.getElementById("modalTags").innerHTML = tagsHtml;
 
-  // Render Body Sections
+  // Colored tags for connectors in modal header
+  if (useCase.connectors && useCase.connectors.length > 0) {
+    useCase.connectors.forEach(c => {
+      const meta = getConnectorMeta(c, lang);
+      tagsHtml += `<span class="tag tag-full ${meta.class}" style="font-size: 11px;"><span class="material-symbols-outlined" style="font-size: 14px;">${meta.icon}</span><span>${escapeHtml(meta.label)}</span></span>`;
+    });
+  }
+
+  const modalTagsEl = document.getElementById("modalTags");
+  if (modalTagsEl) modalTagsEl.innerHTML = tagsHtml;
+
   const body = document.getElementById("modalDynamicContent");
-  body.innerHTML = ""; // clear old modal contents
+  if (!body) return;
+  body.innerHTML = "";
 
   // 1. Overview Section
   const overviewSec = document.createElement("div");
   overviewSec.className = "modal-section";
+  overviewSec.style.marginBottom = "24px";
   overviewSec.innerHTML = `
     <h4 class="section-label">
       <span class="material-symbols-outlined">info</span> ${t.overviewLabel}
     </h4>
-    <p style="font-size: 15px; color: var(--text-secondary); line-height: 1.6;">${summary}</p>
+    <p style="font-size: 15px; color: var(--text-secondary); line-height: 1.6;">${escapeHtml(summary)}</p>
   `;
   body.appendChild(overviewSec);
 
-  // 2. Integration / Connector Requirements (with manual fallback tips)
-  const hasConnectors = useCase.connectors && useCase.connectors.length > 0;
-  if (hasConnectors) {
-    const hasMissing = checkMissingConnector(useCase);
-    const connectorGuide = trans ? trans.connectorGuide : useCase.connectorGuide;
-    
-    let guideHtml = "";
-    if (connectorGuide) {
-      let stepsLi = "";
-      connectorGuide.steps.forEach(s => {
-        stepsLi += `<li>${s}</li>`;
-      });
-      guideHtml = `
-        <div class="setup-guide-box" style="margin-top: 14px;">
-          <div class="setup-guide-header">
-            <span class="material-symbols-outlined">settings_suggest</span>
-            ${connectorGuide.name} ${lang === "en" ? "Setup Instructions" : "部署設定指南"}
+  // 2. Operational Steps (3 Conceptual Stages with Step 1 Helpers and Step 2 Workbench)
+  const currentSteps = trans?.steps || useCase.steps || [];
+  const currentPrompt = trans?.prompt || useCase.prompt || "";
+  const currentProTip = trans?.proTip || useCase.proTip || "";
+  const connectorGuide = trans ? trans.connectorGuide : useCase.connectorGuide;
+
+  const stepsSec = document.createElement("div");
+  stepsSec.className = "modal-section";
+
+  // Step 1: Setup & Grounding with Embedded Helper Prompts
+  const helperPromptsList = (typeof useCaseHelperPrompts !== 'undefined' && useCaseHelperPrompts[useCase.id]) ? (useCaseHelperPrompts[useCase.id][lang] || useCaseHelperPrompts[useCase.id].en || []) : [];
+  let helperPromptsHtml = "";
+  if (helperPromptsList.length > 0) {
+    const helperHeadingText = lang === 'zh-TW' ? '事前準備輔助提示詞（若尚未備妥教材或規準，可直接複製使用）：' : (lang === 'zh-CN' ? '事前准备辅助提示词（若尚未备妥教材或规准，可直接复制使用）：' : 'Prerequisite Helper Prompts (Use if you do not have documents or rubrics handy):');
+    const helperItems = helperPromptsList.map(hp => `
+      <details class="helper-prompt-collapsible">
+        <summary class="helper-prompt-summary">
+          <div class="helper-prompt-title">
+            <span class="material-symbols-outlined" style="font-size: 15px; color: var(--color-primary);">smart_toy</span>
+            <span>${escapeHtml(hp.title)}</span>
+            <span class="helper-prompt-badge">${t.helperPromptTag || "HELPER PROMPT"}</span>
           </div>
-          <ol class="setup-steps">${stepsLi}</ol>
+          <span class="material-symbols-outlined" style="font-size: 18px; color: var(--text-muted);">expand_more</span>
+        </summary>
+        <div class="helper-prompt-body">
+          <div class="helper-prompt-text">${escapeHtml(hp.prompt)}</div>
+          <button class="helper-copy-btn" onclick="copyHelperPromptToClipboard(this)">
+            <span class="material-symbols-outlined" style="font-size: 14px;">content_copy</span>
+            <span>${t.copyHelperPrompt || "Copy Prompt"}</span>
+          </button>
+        </div>
+      </details>
+    `).join('');
+
+    helperPromptsHtml = `
+      <div class="helper-prompts-container">
+        <div class="helper-prompts-heading">
+          <span class="material-symbols-outlined" style="font-size: 15px; color: var(--color-primary);">auto_awesome</span>
+          <span>${helperHeadingText}</span>
+        </div>
+        ${helperItems}
+      </div>
+    `;
+  }
+
+  // Step 2: Workbench with "Fill in the variables" and "Sample Prompt"
+  const promptVars = extractPromptVariables(currentPrompt);
+  const valuesMap = {};
+  promptVars.forEach(v => { valuesMap[v.token] = ""; });
+
+  let varInputsHtml = "";
+  if (promptVars.length > 0) {
+    promptVars.forEach((v, vIdx) => {
+      varInputsHtml += `
+        <div class="variable-input-group">
+          <label class="variable-label" for="promptVarInput_${vIdx}">{{${escapeHtml(v.label)}}}</label>
+          <input type="text" class="variable-input" id="promptVarInput_${vIdx}" data-token="${escapeHtml(v.token)}" placeholder="${escapeHtml(v.label)}..." />
         </div>
       `;
-    }
-
-    const firstConnector = useCase.connectors[0];
-    const statusText = hasMissing ? t.inactiveAccessRestricted : t.linkedAndActive;
-
-    const integrationSec = document.createElement("div");
-    integrationSec.className = "modal-section";
-    integrationSec.style.marginBottom = "16px";
-    integrationSec.innerHTML = `
-      <h4 class="section-label" style="margin-bottom: 12px;">
-        <span class="material-symbols-outlined">api</span> ${t.enterpriseIntegrationLabel}
-      </h4>
-      <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.02); border: 1px solid var(--border-glass); border-radius: 12px; padding: 14px 18px;">
-        <div style="display: flex; align-items: center; gap: 12px;">
-          <div style="width: 10px; height: 10px; border-radius: 50%; background: ${hasMissing ? 'var(--color-danger)' : 'var(--color-success)'}; box-shadow: 0 0 10px ${hasMissing ? 'var(--color-danger)' : 'var(--color-success)'}"></div>
-          <span style="font-size: 13px; font-weight: 600; color: var(--text-primary)">
-            Connector: ${statusText}
-          </span>
-        </div>
-        ${hasMissing ? `
-          <button class="nav-button nav-button-primary" style="height: 32px; font-size: 12px; border-radius: 8px;" onclick="handleQuickUnlock('${firstConnector}'); openUseCaseModal(JSON.parse('${escapeQuotesForOnClick(JSON.stringify(useCase))}'));">${t.linkConnector}</button>
-        ` : `
-          <span style="font-size: 12px; color: var(--color-success); font-weight: 700; display: flex; align-items: center; gap: 4px;">
-            <span class="material-symbols-outlined" style="font-size: 18px;">cloud_done</span> ${t.encryptedFederatedActive}
-          </span>
-        `}
+    });
+  } else {
+    varInputsHtml = `
+      <div style="font-size: 12px; color: var(--text-muted); font-style: italic; padding: 12px 0;">
+        ${lang === "zh-TW" ? "此提示詞無需額外填寫變數即可直接運行。" : (lang === "zh-CN" ? "此提示词无需额外填写变量即可直接运行。" : "This prompt is ready to run without extra variables.")}
       </div>
-      ${guideHtml}
+    `;
+  }
+
+  const initialTokensHtml = buildInteractivePromptHtml(currentPrompt, promptVars, valuesMap);
+
+  // Step 3: Human Review, Delivery, Manual Tip Box & Pro-Tip
+  let manualTipHtml = "";
+  if (useCase.connectors && useCase.connectors.length > 0) {
+    manualTipHtml = `
       <div class="manual-tip-box" style="margin-top: 14px;">
         <span class="material-symbols-outlined manual-tip-icon">tips_and_updates</span>
         <div class="manual-tip-content">
@@ -2713,180 +3072,156 @@ function openUseCaseModal(useCase) {
         </div>
       </div>
     `;
-    body.appendChild(integrationSec);
   }
 
-  // 3. Operational Steps (Clean & Simple)
-  const currentSteps = trans?.steps || useCase.steps;
-  const currentPrompt = trans?.prompt || useCase.prompt;
-  const currentProTip = trans?.proTip || useCase.proTip;
-
-  if (currentSteps && currentSteps.length > 0) {
-    const stepsSec = document.createElement("div");
-    stepsSec.className = "modal-section";
-    let stepLiHtml = "";
-    currentSteps.forEach((step, idx) => {
-      stepLiHtml += `
-        <li class="step-item">
-          <div class="step-num">${idx + 1}</div>
-          <div>${step}</div>
-        </li>
-      `;
-    });
-    stepsSec.innerHTML = `
-      <h4 class="section-label">
-        <span class="material-symbols-outlined">route</span> ${t.operationalSteps}
-      </h4>
-      <ul class="steps-list">${stepLiHtml}</ul>
-    `;
-    body.appendChild(stepsSec);
-  }
-
-  // 4. Sample Prompt with Claude-style Collapsible Disclosure & God of Prompt Variables Panel
-  if (currentPrompt) {
-    const promptSec = document.createElement("div");
-    promptSec.className = "modal-section";
-    promptSec.style.marginTop = "24px";
-
-    // Extract dynamic variables from prompt
-    const promptVars = extractPromptVariables(currentPrompt);
-
-    let variablesPanelHtml = "";
-    if (promptVars.length > 0) {
-      let varInputsHtml = "";
-      promptVars.forEach((v, vIdx) => {
-        varInputsHtml += `
-          <div class="variable-input-group">
-            <label class="variable-label" for="promptVarInput_${vIdx}">${escapeHtml(v.label)}</label>
-            <input type="text" class="variable-input" id="promptVarInput_${vIdx}" data-token="${escapeHtml(v.token)}" placeholder="${escapeHtml(v.label)}..." />
-          </div>
-        `;
-      });
-
-      const varPanelTitle = lang === "zh-TW" ? "填寫變數參數" : (lang === "zh-CN" ? "填写变量参数" : "Fill in the variables");
-      const varPanelDesc = lang === "zh-TW" ? "輸入數值以即時替換提示詞變數" : (lang === "zh-CN" ? "输入数值以即时替换提示词变量" : "Customize variables in real-time");
-
-      variablesPanelHtml = `
-        <div class="prompt-variables-panel">
-          <div class="prompt-variables-header">
-            <div class="prompt-variables-title">
-              <span class="material-symbols-outlined" style="font-size: 16px;">tune</span>
-              <span>${varPanelTitle}</span>
-            </div>
-            <span style="font-size: 11px; color: var(--text-muted);">${varPanelDesc}</span>
-          </div>
-          <div class="prompt-variables-grid">
-            ${varInputsHtml}
-          </div>
+  let guideHtml = "";
+  if (connectorGuide && connectorGuide.steps && connectorGuide.steps.length > 0) {
+    const stepsLi = connectorGuide.steps.map(s => `<li>${escapeHtml(s)}</li>`).join('');
+    guideHtml = `
+      <div class="setup-guide-box" style="margin-top: 14px;">
+        <div class="setup-guide-header">
+          <span class="material-symbols-outlined">settings_suggest</span>
+          ${escapeHtml(connectorGuide.name)} ${lang === "en" ? "Setup Instructions" : (lang === "zh-TW" ? "部署設定指南" : "部署设定指南")}
         </div>
-      `;
-    }
-
-    promptSec.innerHTML = `
-      <details class="prompt-collapsible" id="modalPromptCollapsible">
-        <summary class="prompt-summary">
-          <div class="prompt-summary-left">
-            <span class="material-symbols-outlined" style="font-size: 16px; color: var(--color-primary);">terminal</span>
-            <span class="prompt-summary-title">${t.promptSandbox || "Sample Prompt Template"}</span>
-            <span class="prompt-summary-badge">PROMPT</span>
-          </div>
-          <span class="material-symbols-outlined prompt-summary-chevron">expand_more</span>
-        </summary>
-        <div class="prompt-content-body">
-          ${variablesPanelHtml}
-          <div class="prompt-box" id="modalPromptText">
-            <span class="prompt-raw-text">${escapeHtml(currentPrompt)}</span>
-            <button class="copy-prompt-btn" onclick="copyPromptToClipboard()"><span class="material-symbols-outlined" style="font-size: 16px;">content_copy</span> ${t.copyPrompt}</button>
-          </div>
-        </div>
-      </details>
+        <ol class="setup-steps">${stepsLi}</ol>
+      </div>
     `;
-    body.appendChild(promptSec);
-
-    // Initialize interactive variable listeners
-    if (promptVars.length > 0) {
-      const varInputs = promptSec.querySelectorAll(".variable-input");
-      const rawPromptTemplate = currentPrompt;
-      const valuesMap = {};
-      promptVars.forEach(v => { valuesMap[v.token] = ""; });
-
-      const updateInterpolatedPrompt = () => {
-        let interpolated = rawPromptTemplate;
-        promptVars.forEach(v => {
-          const val = valuesMap[v.token]?.trim();
-          if (val) {
-            interpolated = interpolated.split(v.token).join(val);
-          }
-        });
-
-        const promptTextEl = promptSec.querySelector(".prompt-raw-text");
-        if (promptTextEl) {
-          promptTextEl.textContent = interpolated;
-        }
-        const promptBox = promptSec.querySelector("#modalPromptText");
-        if (promptBox) {
-          promptBox.dataset.currentPrompt = interpolated;
-        }
-      };
-
-      varInputs.forEach(inp => {
-        inp.addEventListener("input", (e) => {
-          const token = e.target.dataset.token;
-          valuesMap[token] = e.target.value;
-          updateInterpolatedPrompt();
-        });
-      });
-      // Store initial
-      const promptBox = promptSec.querySelector("#modalPromptText");
-      if (promptBox) {
-        promptBox.dataset.currentPrompt = currentPrompt;
-      }
-    } else {
-      const promptBox = promptSec.querySelector("#modalPromptText");
-      if (promptBox) {
-        promptBox.dataset.currentPrompt = currentPrompt;
-      }
-    }
   }
 
-  // 5. Pro Tip Box
+  let proTipHtml = "";
   if (currentProTip) {
-    const proTipSec = document.createElement("div");
-    proTipSec.className = "modal-section";
-    proTipSec.style.marginTop = "24px";
-    proTipSec.innerHTML = `
-      <div class="pro-tip-box">
+    proTipHtml = `
+      <div class="pro-tip-box" style="margin-top: 14px;">
         <span class="material-symbols-outlined pro-tip-icon">lightbulb</span>
         <div class="pro-tip-content">
           <div class="pro-tip-title">${t.adoptionProTip}</div>
-          <p class="pro-tip-text">${currentProTip}</p>
+          <p class="pro-tip-text">${escapeHtml(currentProTip)}</p>
         </div>
       </div>
     `;
-    body.appendChild(proTipSec);
+  }
+
+  stepsSec.innerHTML = `
+    <h4 class="section-label">
+      <span class="material-symbols-outlined">route</span> ${t.operationalSteps}
+    </h4>
+    <ul class="steps-list">
+      <!-- Step 1: Setup & Grounding -->
+      <li class="step-item">
+        <div class="step-header">
+          <div class="step-num">1</div>
+          <div class="step-info">
+            <div class="step-title">${t.step1Title || "Setup & Grounding"}</div>
+            <div class="step-desc">${escapeHtml(currentSteps[0] || "Upload course materials and establish knowledge grounding.")}</div>
+          </div>
+        </div>
+        ${helperPromptsHtml}
+      </li>
+
+      <!-- Step 2: Execute Sample Prompt -->
+      <li class="step-item">
+        <div class="step-header">
+          <div class="step-num">2</div>
+          <div class="step-info">
+            <div class="step-title">${t.step2Title || "Execute Sample Prompt"}</div>
+            <div class="step-desc">${escapeHtml(currentSteps[1] || "Configure variables and execute the agent prompt.")}</div>
+          </div>
+        </div>
+        <div class="step-workbench-container" style="margin-top: 14px;">
+          <div class="prompt-workbench-grid">
+            <div class="prompt-variables-panel">
+              <div class="prompt-variables-header">
+                <div class="prompt-variables-title">
+                  <span class="material-symbols-outlined" style="font-size: 16px;">tune</span>
+                  <span>${t.fillVariablesTitle || "Fill in the variables"}</span>
+                </div>
+                <span class="prompt-variables-subtitle">${t.fillVariablesDesc || "Click tokens or type below"}</span>
+              </div>
+              <div class="prompt-variables-grid">
+                ${varInputsHtml}
+              </div>
+            </div>
+            <div class="prompt-box" id="modalPromptText">
+              <div class="prompt-raw-text" id="modalPromptDisplay">${initialTokensHtml}</div>
+              <button class="copy-prompt-btn" onclick="copyPromptToClipboard()">
+                <span class="material-symbols-outlined" style="font-size: 16px;">content_copy</span>
+                ${t.copyPrompt || "Copy Prompt"}
+              </button>
+            </div>
+          </div>
+        </div>
+      </li>
+
+      <!-- Step 3: Human Review & Delivery -->
+      <li class="step-item">
+        <div class="step-header">
+          <div class="step-num">3</div>
+          <div class="step-info">
+            <div class="step-title">${t.step3Title || "Human Review & Delivery"}</div>
+            <div class="step-desc">${escapeHtml(currentSteps[2] || "Review output quality, personalize feedback, and deliver to students or LMS.")}</div>
+          </div>
+        </div>
+        ${manualTipHtml}
+        ${guideHtml}
+        ${proTipHtml}
+      </li>
+    </ul>
+  `;
+
+  body.appendChild(stepsSec);
+
+  // Initialize interactive variable listeners & click-to-focus on {{VARIABLE}} tokens
+  const promptBox = stepsSec.querySelector("#modalPromptText");
+  const promptDisplayEl = stepsSec.querySelector("#modalPromptDisplay");
+
+  if (promptBox) {
+    promptBox.dataset.currentPrompt = currentPrompt;
+  }
+
+  if (promptVars.length > 0 && promptDisplayEl) {
+    // 1. Click token in prompt -> focus matching input field with smooth scroll and pulse animation
+    promptDisplayEl.addEventListener("click", (e) => {
+      const tokenSpan = e.target.closest(".prompt-var-token");
+      if (!tokenSpan) return;
+      const token = tokenSpan.dataset.token;
+      if (!token) return;
+      const input = stepsSec.querySelector(`input[data-token="${CSS.escape(token)}"]`);
+      if (input) {
+        input.focus();
+        input.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        input.classList.remove("pulse-focus");
+        void input.offsetWidth; // force reflow
+        input.classList.add("pulse-focus");
+      }
+    });
+
+    // 2. Input typing -> live interpolate into display and clipboard dataset
+    const varInputs = stepsSec.querySelectorAll(".variable-input");
+    const updateInterpolation = () => {
+      const newHtml = buildInteractivePromptHtml(currentPrompt, promptVars, valuesMap);
+      promptDisplayEl.innerHTML = newHtml;
+      const plainText = getInterpolatedPlainText(currentPrompt, promptVars, valuesMap);
+      if (promptBox) {
+        promptBox.dataset.currentPrompt = plainText;
+      }
+    };
+
+    varInputs.forEach(inp => {
+      inp.addEventListener("input", (e) => {
+        const token = e.target.dataset.token;
+        valuesMap[token] = e.target.value;
+        updateInterpolation();
+      });
+    });
   }
 
   overlay.classList.add("active");
 }
 
-// Utility to escape quotes for dynamic inline onClick triggers
-function escapeQuotesForOnClick(str) {
-  return str.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-}
-
-// Utility to escape HTML text for raw display
-function escapeHtml(unsafe) {
-  return unsafe
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
-
 // Close Detail Modal
 function closeModal() {
-  document.getElementById("modalOverlay").classList.remove("active");
+  const overlay = document.getElementById("modalOverlay");
+  if (overlay) overlay.classList.remove("active");
 }
 
 // Interactive Copy Button Logic
@@ -2936,526 +3271,7 @@ function showToast(message, type = "success") {
 
 // Enhance the useCases database with non-essential connector fallbacks and translations
 function enhanceUseCasesDatabase() {
-  // Mark all connector-dependent use cases as non-essential except when specified
-  useCasesDb.forEach(uc => {
-    if (uc.connectors && uc.connectors.length > 0) {
-      uc.connectorEssential = false;
-    }
-  });
-
-  // Overrides for su_advocacy
-  const su_advocacy = useCasesDb.find(uc => uc.id === "su_advocacy");
-  if (su_advocacy) {
-    su_advocacy.steps = [
-      "Consolidate unstructured student feedback text files, town hall audio recordings, and survey responses locally.",
-      "Upload these files directly to a secure NotebookLM workspace manually.",
-      "Query NotebookLM to extract the top 5 pressing student concerns (e.g., dining hours, library quiet spaces) and compute overall sentiment.",
-      "Use Gemini in Google Docs to write a structured, data-driven advocacy proposal to submit to the school administration."
-    ];
-    su_advocacy.advancedSteps = [
-      "Consolidate unstructured student feedback text files, town hall audio recordings, and survey responses in a shared Drive folder.",
-      "Ground a NotebookLM workspace directly on this folder using the secure Drive Connector.",
-      "Query NotebookLM to extract the top 5 pressing student concerns (e.g., dining hours, library quiet spaces) and compute overall sentiment.",
-      "Use Gemini in Google Docs to write a structured, data-driven advocacy proposal to submit to the school administration."
-    ];
-    su_advocacy.proTip = "Uploading student feedback files directly to NotebookLM is secure and maintains total data privacy without any public model training.";
-    su_advocacy.advancedProTip = "Linking your student feedback database directly via the Drive Connector keeps the data federated, secure, and up-to-the-minute without copying local files.";
-  }
-
-  // Translations for su_advocacy
-  if (useCasesTranslations.su_advocacy) {
-    useCasesTranslations.su_advocacy.en.steps = su_advocacy.steps;
-    useCasesTranslations.su_advocacy.en.advancedSteps = su_advocacy.advancedSteps;
-    useCasesTranslations.su_advocacy.en.proTip = su_advocacy.proTip;
-    useCasesTranslations.su_advocacy.en.advancedProTip = su_advocacy.advancedProTip;
-
-    useCasesTranslations.su_advocacy["zh-TW"].steps = [
-      "在本地整理非結構化學生回饋文字檔、公聽會錄音檔與問卷回覆。",
-      "手動將這些檔案直接上傳到安全的 NotebookLM 工作空間。",
-      "引導 NotebookLM 提取前 5 大最受關注的學生訴求（如餐廳營業時間、圖書館自修室），並分析整體情緒指標。",
-      "在 Google Docs 中使用 Gemini 撰寫結構化、數據導向的權益倡議提案，並提交給學校行政部門。"
-    ];
-    useCasesTranslations.su_advocacy["zh-TW"].advancedSteps = [
-      "在共享的雲端硬碟資料夾中整理非結構化學生回饋文字檔、公聽會錄音與問卷。",
-      "使用安全的 Drive Connector，將 NotebookLM 工作空間直接連結至該資料夾。",
-      "引導 NotebookLM 提取前 5 大最受關注的學生訴求（如餐廳營業時間、圖書館自修室），並分析整體情緒指標。",
-      "在 Google Docs 中使用 Gemini 撰寫結構化、數據導向的權益倡議提案，並提交給學校行政部門。"
-    ];
-    useCasesTranslations.su_advocacy["zh-TW"].proTip = "手動上傳學生回饋檔案到 NotebookLM 是極安全的，能在不使用公開模型訓練的前提下保障數據隱私。";
-    useCasesTranslations.su_advocacy["zh-TW"].advancedProTip = "透過 Drive Connector 直接連結學生意見資料庫，能在不複製本地檔案的前提下，保持數據的同盟性、安全性與即時性。";
-
-    useCasesTranslations.su_advocacy["zh-CN"].steps = [
-      "在本地整理非结构化学生反馈文本档、公听会录音档与问卷回复。",
-      "手动将这些文件直接上传到安全的 NotebookLM 工作空间。",
-      "引导 NotebookLM 提取前 5 大最受关注的学生诉求（如餐厅营业时间、图书馆自修室），并分析整体情绪指标。",
-      "在 Google Docs 中使用 Gemini 撰写结构化、数据导向的权益倡议提案，并提交给学校行政部门。"
-    ];
-    useCasesTranslations.su_advocacy["zh-CN"].advancedSteps = [
-      "在共享的云端硬盘文件夹中整理非结构化学生反馈文本档、公听会录音与问卷。",
-      "使用安全的 Drive Connector，将 NotebookLM 工作空间直接链接至该文件夹。",
-      "引导 NotebookLM 提取前 5 大最受关注的学生诉求（如餐厅营业时间、图书馆自修室），并分析整体情绪指标。",
-      "在 Google Docs 中使用 Gemini 撰写结构化、数据导向的权益倡议提案，并提交给学校行政部门。"
-    ];
-    useCasesTranslations.su_advocacy["zh-CN"].proTip = "手动上传学生反馈文件到 NotebookLM 是极安全的，能在不使用公开模型训练的前提下保障数据隐私。";
-    useCasesTranslations.su_advocacy["zh-CN"].advancedProTip = "通过 Drive Connector 直接链接学生意见数据库，能在不复制本地文件的前提下，保持数据的同盟性、安全性与即时性。";
-  }
-
-  // Overrides for club_funding
-  const club_funding = useCasesDb.find(uc => uc.id === "club_funding");
-  if (club_funding) {
-    club_funding.steps = [
-      "Open NotebookLM and upload your club's past event templates and the official Student Union funding guidelines.",
-      "In Canvas Mode, prompt Gemini to brainstorm a calendar of 12 highly engaging club activities aligned with your club's core mission.",
-      "Paste or upload your past expense spreadsheet records directly into the prompt to generate a formatted budget table.",
-      "Ask Gemini to write a formal budget justification narrative, detailing how each event benefits the wider campus student community."
-    ];
-    club_funding.advancedSteps = [
-      "Open NotebookLM and upload your club's past event templates and the official Student Union funding guidelines.",
-      "In Canvas Mode, prompt Gemini to brainstorm a calendar of 12 highly engaging club activities aligned with your club's core mission.",
-      "Feed the calendar and past expense records from your shared Drive spreadsheet using the Drive Connector to generate a formatted budget table.",
-      "Ask Gemini to write a formal budget justification narrative, detailing how each event benefits the wider campus student community."
-    ];
-    club_funding.proTip = "Upload the Student Union's official constitutional funding guidelines to NotebookLM first. This prevents your proposal from getting rejected for violating obscure spend-limit policies.";
-    club_funding.advancedProTip = "Grounding your shared Drive spreadsheet with the Drive Connector ensures that Gemini always computes budgets against the most up-to-date club account balances.";
-  }
-
-  if (useCasesTranslations.club_funding) {
-    useCasesTranslations.club_funding.en.steps = club_funding.steps;
-    useCasesTranslations.club_funding.en.advancedSteps = club_funding.advancedSteps;
-    useCasesTranslations.club_funding.en.proTip = club_funding.proTip;
-    useCasesTranslations.club_funding.en.advancedProTip = club_funding.advancedProTip;
-
-    useCasesTranslations.club_funding["zh-TW"].steps = [
-      "開啟 NotebookLM 並上傳您社團過往的活動範本與學生會官方補助指南。",
-      "在 Canvas Mode 中，引導 Gemini 腦力激盪出 12 個與社團核心宗旨高度契合的精彩活動行事曆。",
-      "手動將共享雲端硬碟試算表中的歷史支出紀錄貼入提示詞中，以生成格式化預算表。",
-      "引導 Gemini 撰寫正式的預算合理性陳述，詳細說明每項活動將如何使廣大校園社群受益。"
-    ];
-    useCasesTranslations.club_funding["zh-TW"].advancedSteps = [
-      "開啟 NotebookLM 並上傳您社團過往的活動範本與學生會官方補助指南。",
-      "在 Canvas Mode 中，引導 Gemini 腦力激盪出 12 個與社團核心宗旨高度契合的精彩活動行事曆。",
-      "透過 Drive Connector 讀取共享雲端硬碟試算表中的歷史支出紀錄，以生成格式化預算表。",
-      "引導 Gemini 撰寫正式的預算合理性陳述，詳細說明每項活動將如何使廣大校園社群受益。"
-    ];
-    useCasesTranslations.club_funding["zh-TW"].proTip = "先將學生會的官方章程補助指南上傳至 NotebookLM。這能有效防止您的申請案因違反某些冷門的支出限額規定而被退件。";
-    useCasesTranslations.club_funding["zh-TW"].advancedProTip = "透過 Drive Connector 連結您的共享試算表，能確保 Gemini 始終對齊最新的社團帳戶餘額進行預算試算。";
-
-    useCasesTranslations.club_funding["zh-CN"].steps = [
-      "开启 NotebookLM 并上传您社团过往的活动模板与学生会官方补助指南。",
-      "在 Canvas Mode 中，引导 Gemini 脑力激荡出 12 个与社团核心宗旨高度契合的精彩活动日历。",
-      "手动将共享云端硬盘电子表格中的历史支出记录贴入提示词中，以生成格式化预算表。",
-      "引导 Gemini 撰写正式的预算合理性陈述，详细说明每项活动将如何使广大校园社群受益。"
-    ];
-    useCasesTranslations.club_funding["zh-CN"].advancedSteps = [
-      "开启 NotebookLM 并上传您社团过往的活动模板与学生会官方补助指南。",
-      "在 Canvas Mode 中，引导 Gemini 脑力荡出 12 个与社团核心宗旨高度契合的精彩活动日历。",
-      "通过 Drive Connector 读取共享云端硬盘电子表格中的历史支出记录，以生成格式化预算表。",
-      "引导 Gemini 撰写正式的预算合理性陈述，详细说明每项活动将如何使广大校园社群受益。"
-    ];
-    useCasesTranslations.club_funding["zh-CN"].proTip = "先将学生会的官方章程补助指南上传至 NotebookLM。这能有效防止您的申请案因违反某些冷门的支出限额规定而被退件。";
-    useCasesTranslations.club_funding["zh-CN"].advancedProTip = "通过 Drive Connector 链接您的共享电子表格，能确保 Gemini 始终对齐最新的社团账户余额进行预算试算。";
-  }
-
-  // Overrides for su_helpdesk
-  const su_helpdesk = useCasesDb.find(uc => uc.id === "su_helpdesk");
-  if (su_helpdesk) {
-    su_helpdesk.steps = [
-      "In NotebookLM, compile all Student Union club policies, room booking rules, and equipment reservation forms.",
-      "Use Gemini Agent Designer to build a conversational agent named 'Student Union Support Assistant'.",
-      "Connect the agent to the policy knowledge base and configure it to draft escalation templates for complex bookings.",
-      "Test the agent's ability to handle complex queries (e.g. 'Can we book a room after 9 PM?').",
-      "Embed the agent on the Student Union portal or social media page for 24/7 club leader support."
-    ];
-    su_helpdesk.advancedSteps = [
-      "In NotebookLM, compile all Student Union club policies, room booking rules, and equipment reservation forms.",
-      "Use Gemini Agent Designer to build a conversational agent named 'Student Union Support Assistant'.",
-      "Connect the agent to the policy knowledge base and configure custom escalate-by-email instructions via the Email Connector.",
-      "Test the agent's ability to handle complex queries (e.g. 'Can we book a room after 9 PM?').",
-      "Embed the agent on the Student Union portal or social media page for 24/7 club leader support."
-    ];
-    su_helpdesk.proTip = "By utilizing the Agent Designer, you can define clear guidelines for the assistant to draft formal, ready-to-copy escalation emails inside the chat UI.";
-    su_helpdesk.advancedProTip = "By configuring the Email Connector, the agent can automatically draft escalation emails directly in the user's draft folder when manual intervention is needed.";
-  }
-
-  if (useCasesTranslations.su_helpdesk) {
-    useCasesTranslations.su_helpdesk.en.steps = su_helpdesk.steps;
-    useCasesTranslations.su_helpdesk.en.advancedSteps = su_helpdesk.advancedSteps;
-    useCasesTranslations.su_helpdesk.en.proTip = su_helpdesk.proTip;
-    useCasesTranslations.su_helpdesk.en.advancedProTip = su_helpdesk.advancedProTip;
-
-    useCasesTranslations.su_helpdesk["zh-TW"].steps = [
-      "在 NotebookLM 中，匯整所有學生會社團政策、場地借用規範與設備預約表單。",
-      "利用 Gemini Agent Designer 建立名為「學生會支援助理」的對話式服務 Agent。",
-      "將 Agent 連結規章知識庫，並設定為在遇到複雜預約時，自動在對話視窗中擬好升級審查信範本。",
-      "測試 Agent 處理複雜查詢的能力（例如：「我們可以在晚上 9 點後借用場地嗎？」）。",
-      "將 Agent 嵌入至學生會入口網站或社群網頁，提供 24/7 的社團幹部諮詢服務。"
-    ];
-    useCasesTranslations.su_helpdesk["zh-TW"].advancedSteps = [
-      "在 NotebookLM 中，匯整所有學生會社團政策、場地借用規範與設備預約表單。",
-      "利用 Gemini Agent Designer 建立名為「學生會支援助理」的對話式服務 Agent。",
-      "將此 Agent 連結規章知識庫，並透過 Email Connector（郵件連接器）設定「自動生成郵件草稿」的諮詢升級機制。",
-      "測試 Agent 處理複雜查詢的能力（例如：「我們可以在晚上 9 點後借用場地嗎？」）。",
-      "將 Agent 嵌入至學生會入口網站或社群網頁，提供 24/7 的社團幹部諮詢服務。"
-    ];
-    useCasesTranslations.su_helpdesk["zh-TW"].proTip = "使用 Agent Designer，您可以為助理定義明確的指引，以便直接在對話中擬定好結構完整的諮詢升級郵件供您複製。";
-    useCasesTranslations.su_helpdesk["zh-TW"].advancedProTip = "配置 Email Connector 後，Agent 可在需要人工審批時，直接在用戶的草稿信箱中擬好一封結構完整的升級審查信，大幅減少行政耗時。";
-
-    useCasesTranslations.su_helpdesk["zh-CN"].steps = [
-      "在 NotebookLM 中，汇整所有学生会社团政策、场地借用规范与设备预约表单。",
-      "利用 Gemini Agent Designer 建立名为“学生会支援助理”的对话式服务 Agent。",
-      "将 Agent 链接规章知识库，并设置为在遇到复杂预约时，自动在对话窗口中拟好升级审查信模板。",
-      "测试 Agent 处理复杂查询的能力（例如：“我们可以在晚上 9 点后借用场地吗？”）。",
-      "将 Agent 嵌入至学生会入口网站或社群网页，提供 24/7 的社团个人咨询服务。"
-    ];
-    useCasesTranslations.su_helpdesk["zh-CN"].advancedSteps = [
-      "在 NotebookLM 中，汇整所有学生会社团政策、场地借用规范与设备预约表单。",
-      "利用 Gemini Agent Designer 建立名为“学生会支援助理”的对话式服务 Agent。",
-      "将此 Agent 链接规章知识库，并通过 Email Connector（邮件连接器）设置“自动生成邮件草稿”的咨询升级机制。",
-      "测试 Agent 处理复杂查询的能力（例如：“我们可以在晚上 9 点后借用场地吗？”）。",
-      "将 Agent 嵌入至学生会入口网站或社群网页，提供 24/7 的社团个人咨询服务。"
-    ];
-    useCasesTranslations.su_helpdesk["zh-CN"].proTip = "使用 Agent Designer，您可以为助理定义明确的指引，以便直接在对话中拟定好结构完整的咨询升级邮件供您复制。";
-    useCasesTranslations.su_helpdesk["zh-CN"].advancedProTip = "配置 Email Connector 后，Agent 可在需要人工审批时，直接在用户的草稿信箱中拟好一封结构完整的升级审查信，大幅减少行政耗时。";
-  }
-
-  // Overrides for at_risk_cohort
-  const at_risk_cohort = useCasesDb.find(uc => uc.id === "at_risk_cohort");
-  if (at_risk_cohort) {
-    at_risk_cohort.steps = [
-      "Export an anonymized CSV dataset containing student login logs, quiz scores, and forum engagement metrics from your LMS.",
-      "Upload this CSV dataset directly into a secure Gemini Advanced prompt.",
-      "Instruct Gemini to run multi-dimensional predictive modeling, highlighting student cohorts exhibiting a precipitous drop in engagement.",
-      "Generate draft check-in emails suggesting tutoring resources to send to flagged cohorts."
-    ];
-    at_risk_cohort.advancedSteps = [
-      "Configure secure API connections from Gemini to your school's LMS and SIS database using the connectors.",
-      "Set up an analytical data store containing anonymized student logs, login frequencies, quiz scores, and forum engagement metrics.",
-      "Configure a secure workflow that maps data attributes, ensuring strict compliance with student data privacy laws like FERPA.",
-      "Use Gemini to run multi-dimensional predictive modeling, highlighting student cohorts exhibiting a precipitous drop in engagement.",
-      "Trigger automated, personalized advisor check-in drafts to provide timely academic support."
-    ];
-    at_risk_cohort.proTip = "Exporting de-identified datasets manually is a quick, high-security way to run predictive diagnostics without complex system configurations.";
-    at_risk_cohort.advancedProTip = "Setting up automated LMS/SIS database connectors allows for nightly automated risk sweeps, feeding real-time engagement alerts directly to counselor dashboards.";
-  }
-
-  if (useCasesTranslations.at_risk_cohort) {
-    useCasesTranslations.at_risk_cohort.en.steps = at_risk_cohort.steps;
-    useCasesTranslations.at_risk_cohort.en.advancedSteps = at_risk_cohort.advancedSteps;
-    useCasesTranslations.at_risk_cohort.en.proTip = at_risk_cohort.proTip;
-    useCasesTranslations.at_risk_cohort.en.advancedProTip = at_risk_cohort.advancedProTip;
-
-    useCasesTranslations.at_risk_cohort["zh-TW"].steps = [
-      "從您的學習管理系統 (LMS) 匯出包含學生登入紀錄、小考成績和論壇互動指標的去識別化 CSV 數據集。",
-      "將此 CSV 數據集直接上傳至安全的 Gemini Advanced 提示對話中。",
-      "引導 Gemini 進行多維度預測建模，標記出參與度急劇下降的高風險學生群組。",
-      "生成關懷確認信草稿，推薦輔導資源給受標記的學生群組。"
-    ];
-    useCasesTranslations.at_risk_cohort["zh-TW"].advancedSteps = [
-      "透過連接器在 Gemini 與學校的 LMS 及學籍系統 (SIS) 資料庫之間，設定安全、加密的 API 介接。",
-      "建立一個包含匿名化學生歷程紀錄、登入頻率、測驗分數與論壇參與指標的分析資料庫。",
-      "設定安全的資料屬性對照，確保資料傳輸全程符合 FERPA 等嚴格的學生隱私權保護規範。",
-      "引導 Gemini 進行多維度預測建模，標記出參與度急劇下降的高風險學生群組。",
-      "自動觸發輔導教師的關懷信件草稿，在關鍵時刻提供即時的學術輔導與關懷。"
-    ];
-    useCasesTranslations.at_risk_cohort["zh-TW"].proTip = "手動匯出去識別化數據集是一種快速且具高安全性的分析方式，免去複雜的系統介接設定。";
-    useCasesTranslations.at_risk_cohort["zh-TW"].advancedProTip = "設定自動化的 LMS/SIS 資料庫連接器，可進行每晚的自動風險掃描，將即時警報直接傳送至輔導人員的工作儀表板。";
-
-    useCasesTranslations.at_risk_cohort["zh-CN"].steps = [
-      "从您的学习管理系统 (LMS) 导出包含学生登录记录、小考成绩和论坛互动指标的去识别化 CSV 数据集。",
-      "将此 CSV 数据集直接上传至安全的 Gemini Advanced 提示对话中。",
-      "引导 Gemini 进行多维度预测建模，标记出参与度急剧下降的高风险学生群组。",
-      "生成关怀确认信草稿，推荐辅导资源给受标记的学生群组。"
-    ];
-    useCasesTranslations.at_risk_cohort["zh-CN"].advancedSteps = [
-      "通过连接器在 Gemini 与学校的 LMS 及学籍系统 (SIS) 数据库之间，设定安全、加密的 API 介接。",
-      "建立一个包含匿名化学生历程记录、登录频率、测验分数与论坛参与指标的分析数据库。",
-      "设定安全的数据属性对照，确保数据传输全程符合 FERPA 等严格的学生隐私权保护规范。",
-      "引导 Gemini 进行多维度预测建模，标记出参与度急剧下降的高风险学生群组。",
-      "自动触发辅导教师的关怀信件草稿，在关键时刻提供即时的学术辅导与关怀。"
-    ];
-    useCasesTranslations.at_risk_cohort["zh-CN"].proTip = "手动导出去识别化数据集是一种快速且具高安全性的分析方式，免去复杂的系统介接设定。";
-    useCasesTranslations.at_risk_cohort["zh-CN"].advancedProTip = "设定自动化的 LMS/SIS 数据库连接器，可进行每晚的自动风险扫描，将实时警报直接传送至辅导人员的工作仪表板。";
-  }
-
-  // Overrides for accreditation_reports
-  const accreditation_reports = useCasesDb.find(uc => uc.id === "accreditation_reports");
-  if (accreditation_reports) {
-    accreditation_reports.steps = [
-      "Gather 3 years of school syllabi, assurance of learning rubrics, student exit surveys, and advisory board minutes.",
-      "Upload these document archives directly into NotebookLM to establish a local, encrypted research workspace.",
-      "Prompt NotebookLM to cross-reference your curriculum data against specific accreditation standards.",
-      "Generate structured, professional accreditation narrative drafts, complete with inline source evidence and citations.",
-      "Review the drafts and collaborate with deans using shared Google Docs to finalize the institutional report."
-    ];
-    accreditation_reports.advancedSteps = [
-      "Upload 3 years of school syllabi, assurance of learning rubrics, student exit surveys, and advisory board minutes to SharePoint.",
-      "Establish a federated search connection from Gemini to the Drive folder using the Drive Connector.",
-      "In NotebookLM, prompt the model to cross-reference your curriculum data against specific accreditation standards.",
-      "Generate structured, professional accreditation narrative drafts, complete with inline source evidence and citations.",
-      "Review the drafts and collaborate with deans using shared Google Docs to finalize the institutional report."
-    ];
-    accreditation_reports.proTip = "NotebookLM acts as an elite research assistant, allowing you to easily paste or upload files up to 500,000 words each for secure local analysis.";
-    accreditation_reports.advancedProTip = "By selecting 'Federated Search' for the Drive Connector, your data remains safely stored within your institutional tenant, ensuring absolute data security and sovereignty.";
-  }
-
-  if (useCasesTranslations.accreditation_reports) {
-    useCasesTranslations.accreditation_reports.en.steps = accreditation_reports.steps;
-    useCasesTranslations.accreditation_reports.en.advancedSteps = accreditation_reports.advancedSteps;
-    useCasesTranslations.accreditation_reports.en.proTip = accreditation_reports.proTip;
-    useCasesTranslations.accreditation_reports.en.advancedProTip = accreditation_reports.advancedProTip;
-
-    useCasesTranslations.accreditation_reports["zh-TW"].steps = [
-      "蒐集近 3 年的學校教學大綱、學習保證規準、畢業生流向調查與諮詢委員會會議紀錄。",
-      "直接將這些文檔封存檔上傳至 NotebookLM，建立一個本地、加密的自評研究工作空間。",
-      "引導 NotebookLM 將您的課程數據與特定的學術認證標準進行多維交叉比對。",
-      "自動撰寫結構嚴謹、符合專業規範的自評報告草稿，並自動帶入文檔來源佐證與引用標記。",
-      "審閱報告草稿，並透過共享 Google Docs 與各院院長協同修改並最終定稿。"
-    ];
-    useCasesTranslations.accreditation_reports["zh-TW"].advancedSteps = [
-      "將近 3 年的學校教學大綱、學習保證規準、畢業生流向調查與諮詢委員會會議紀錄上傳至雲端系統中。",
-      "透過安全的 Drive Connector 建立與 Gemini 的同盟搜尋連線。",
-      "在 NotebookLM 中，引導模型將您的課程數據與特定的學術認證標準進行多維交叉比對。",
-      "自動撰寫結構嚴謹、符合專業規範的自評報告草稿，並自動帶入文檔來源佐證與引用標記。",
-      "審閱報告草稿，並透過共享 Google Docs 與各院院長協同修改並最終定稿。"
-    ];
-    useCasesTranslations.accreditation_reports["zh-TW"].proTip = "NotebookLM 宛如頂尖研究助理，單一文檔可支援高達 50 萬字，讓手動上傳與分析安全無虞。";
-    useCasesTranslations.accreditation_reports["zh-TW"].advancedProTip = "選擇 Drive Connector 的「同盟搜尋 (Federated Search)」，數據將安全地保留在原組織的雲端租戶中，確保絕對的數據主權與資安保障。";
-
-    useCasesTranslations.accreditation_reports["zh-CN"].steps = [
-      "搜集近 3 年的学校教学大纲、学习保证规准、毕业生流向调查与咨询委员会会议记录。",
-      "直接将这些文档封存档上传至 NotebookLM，建立一个本地、加密的自评研究空间。",
-      "引导 NotebookLM 将您的课程数据与特定的学术认证标准进行多维交叉比对。",
-      "自动撰写结构严谨、符合专业规范的自评报告草稿，并自动带入文档来源佐证与引用标记。",
-      "审阅报告草稿，并通过共享 Google Docs 与各院院长协同修改并最终定稿。"
-    ];
-    useCasesTranslations.accreditation_reports["zh-CN"].advancedSteps = [
-      "将近 3 年的学校教学大纲、学习保证规准、毕业生流向调查与咨询委员会会议记录上传至云端系统中。",
-      "通过安全的 Drive Connector 建立与 Gemini 的同盟搜寻连线。",
-      "在 NotebookLM 中，引导模型将您的课程数据与特定的学术认证标准进行多维交叉比对。",
-      "自动撰写结构严谨、符合专业规范的自评报告草稿，并自动带入文档来源佐证与引用标记。",
-      "审阅报告草稿，并通过共享 Google Docs 与各院院长协同修改并最终定稿。"
-    ];
-    useCasesTranslations.accreditation_reports["zh-CN"].proTip = "NotebookLM 宛如顶尖研究助理，单一文档可支持高达 50 万字，让手动上传与分析安全无虞。";
-    useCasesTranslations.accreditation_reports["zh-CN"].advancedProTip = "选择 Drive Connector 的“同盟搜寻 (Federated Search)”，数据将安全地保留在原组织的云端租户中，确保绝对的数据主权与资安保障。";
-  }
-
-  // Overrides for finance_compliance
-  const finance_compliance = useCasesDb.find(uc => uc.id === "finance_compliance");
-  if (finance_compliance) {
-    finance_compliance.steps = [
-      "Upload school purchasing guidelines, vendor policies, and standard accounting codes directly to NotebookLM.",
-      "Upload the student club's submitted annual expense spreadsheet and digital PDF receipts to the same workspace.",
-      "Prompt NotebookLM to cross-reference each expense item with the approved guidelines to verify compliance.",
-      "Generate an automated compliance audit report, highlighting non-compliant spending and budget overruns."
-    ];
-    finance_compliance.advancedSteps = [
-      "Upload all school purchasing guidelines, vendor policies, and standard accounting codes to a secure cloud folder.",
-      "Use the Drive Connector to ground your NotebookLM workspace in this policy archive.",
-      "Upload a student club's submitted annual expense spreadsheet and digital PDF receipts.",
-      "Prompt NotebookLM to cross-reference each expense item with the approved guidelines to verify compliance.",
-      "Generate an automated compliance audit report, highlighting non-compliant spending and budget overruns."
-    ];
-    finance_compliance.proTip = "By compiling the procurement guidelines and receipts manually in NotebookLM, you retain complete over-the-shoulder human review of all financial evaluations.";
-    finance_compliance.advancedProTip = "By linking your secure cloud folders using the Drive Connector, you can automatically run audit checks as soon as clubs drop new receipts into their shared directories.";
-  }
-
-  if (useCasesTranslations.finance_compliance) {
-    useCasesTranslations.finance_compliance.en.steps = finance_compliance.steps;
-    useCasesTranslations.finance_compliance.en.advancedSteps = finance_compliance.advancedSteps;
-    useCasesTranslations.finance_compliance.en.proTip = finance_compliance.proTip;
-    useCasesTranslations.finance_compliance.en.advancedProTip = finance_compliance.advancedProTip;
-
-    useCasesTranslations.finance_compliance["zh-TW"].steps = [
-      "將學校採購與請款指南、廠商合約政策與標準會計科目直接上傳至 NotebookLM。",
-      "將社團提交的年度支出明細試算表與數位 PDF 收據手動上傳至同一個工作空間。",
-      "引導 NotebookLM 將每筆支出項目與核准的請款指南逐一比對以驗證合規性。",
-      "生成自動化合規審計報告，具體標示非合規性消費支出與超出預算的項目。"
-    ];
-    useCasesTranslations.finance_compliance["zh-TW"].advancedSteps = [
-      "將所有學校採購與請款指南、廠商合約政策與標準會計科目上傳至雲端硬碟的安全資料夾中。",
-      "使用 Drive Connector，將您的 NotebookLM 工作空間直接連結至該政策資料庫。",
-      "上傳社團提交的年度支出明細試算表與數位 PDF 收據檔。",
-      "引導 NotebookLM 將每筆支出項目與核准的請款指南逐一比對以驗證合規性。",
-      "生成自動化合規審計報告，具體標示非合規性消費支出與超出預算的項目。"
-    ];
-    useCasesTranslations.finance_compliance["zh-TW"].proTip = "手動在 NotebookLM 中比對採購指南與收據，可以讓您保持對所有財務審查的即時主導，保留高水準的人工覆核機制。";
-    useCasesTranslations.finance_compliance["zh-TW"].advancedProTip = "透過 Drive Connector 連結您的安全雲端資料夾，一旦社團將新收據放入共享目錄，您即可自動執行即時審計對照。";
-
-    useCasesTranslations.finance_compliance["zh-CN"].steps = [
-      "将学校采购与请款指南、厂商合约政策与标准会计科目直接上传至 NotebookLM。",
-      "将社团提交的年度支出明细电子表格与数字 PDF 收据手动上传至同一个工作空间。",
-      "引导 NotebookLM 将每笔支出项目与核准的请款指南逐一比对以验证合规性。",
-      "生成自动化合规审计报告，具体标示非合规性消费支出与超出预算的项目。"
-    ];
-    useCasesTranslations.finance_compliance["zh-CN"].advancedSteps = [
-      "将所有学校采购与请款指南、厂商合约政策与标准会计科目上传至云端硬盘的安全文件夹中。",
-      "使用 Drive Connector，将您的 NotebookLM 工作空间直接链接至该政策数据库。",
-      "上传社团提交的年度支出明细电子表格与数字 PDF 收据档。",
-      "引导 NotebookLM 将每笔支出项目与核准的请款指南逐一比对以验证合规性。",
-      "生成自动化合规审计报告，具体标示非合规性消费支出与超出预算的项目。"
-    ];
-    useCasesTranslations.finance_compliance["zh-CN"].proTip = "手动在 NotebookLM 中比对采购指南与收据，可以让您保持对所有财务审查的即时主导，保留高水平的人工覆核机制。";
-    useCasesTranslations.finance_compliance["zh-CN"].advancedProTip = "通过 Drive Connector 链接您的安全云端文件夹，一旦社团将新收据放入共享目录，您即可自动执行即时审计对照。";
-  }
-
-  // Overrides for security_simulator
-  const security_simulator = useCasesDb.find(uc => uc.id === "security_simulator");
-  if (security_simulator) {
-    security_simulator.steps = [
-      "Upload your campus safety handbook, building layout PDFs, and emergency protocols directly into Agent Designer.",
-      "Configure the custom Agent to role-play as an Emergency Dispatcher during a simulated crisis scenario (e.g., power outage, severe storm).",
-      "Generate high-fidelity instructional video clips and animated scenario prompts using Video Generation features.",
-      "Have security staff interact with the simulator, typing real-time responses to evolving scenario prompts.",
-      "Generate a post-simulation feedback report, assessing the staff's compliance with safety handbooks."
-    ];
-    security_simulator.advancedSteps = [
-      "Ground a custom Security Drill Agent in your campus safety handbook, building layouts, and emergency protocols via the secure Drive Connector.",
-      "Configure the Agent to role-play as an Emergency Dispatcher during a simulated crisis scenario (e.g., power outage, severe storm).",
-      "Generate high-fidelity instructional video clips and animated scenario prompts using Video Generation features.",
-      "Have security staff interact with the simulator, typing real-time responses to evolving scenario prompts.",
-      "Generate a post-simulation feedback report, assessing the staff's compliance with safety handbooks."
-    ];
-    security_simulator.proTip = "By uploading safety documents manually, you can easily sandbox separate crisis simulations for different campus sites without cross-contaminating response guidelines.";
-    security_simulator.advancedProTip = "Connecting directly to your security team's shared Drive ensures that safety drills always use the absolute latest building escape routes and marshal duty schedules.";
-  }
-
-  if (useCasesTranslations.security_simulator) {
-    useCasesTranslations.security_simulator.en.steps = security_simulator.steps;
-    useCasesTranslations.security_simulator.en.advancedSteps = security_simulator.advancedSteps;
-    useCasesTranslations.security_simulator.en.proTip = security_simulator.proTip;
-    useCasesTranslations.security_simulator.en.advancedProTip = security_simulator.advancedProTip;
-
-    useCasesTranslations.security_simulator["zh-TW"].steps = [
-      "手動將您的校園安全手冊、大樓空間平面 PDF 檔與緊急應變協議上傳至 Agent Designer。",
-      "設定客製化的安全演練 Agent，使其在模擬危機情境（如停電、強烈颱風）中扮演「緊急派遣調度員」。",
-      "使用 Video Generation（影片生成）技術，自動生成高畫質的指示性影片與生動的情境動態提示。",
-      "指派維安或駐衛警人員與模擬器互動，輸入實時的緊急應變策略以應對不斷變化的危機事件。",
-      "生成演練後的成效評估報告，評估演練人員對安全防護手冊規範的執行合規度。"
-    ];
-    useCasesTranslations.security_simulator["zh-TW"].advancedSteps = [
-      "透過安全的 Drive Connector，將客製化安全演練 Agent 植基於您的校園安全手冊、大樓空間平面圖與緊急應變協議文檔。",
-      "設定客製化的安全演練 Agent，使其在模擬危機情境（如停電、強烈颱風）中扮演「緊急派遣調度員」。",
-      "使用 Video Generation（影片生成）技術，自動生成高畫質的指示性影片與生動的情境動態提示。",
-      "指派維安或駐衛警人員與模擬器互動，輸入實時的緊急應變策略以應對不斷變化的危機事件。",
-      "生成演練後的成效評估報告，評估演練人員對安全防護手冊規範的執行合規度。"
-    ];
-    useCasesTranslations.security_simulator["zh-TW"].proTip = "手動上傳校園維安文件，能讓您輕鬆針對不同的校區或場地建立獨立沙盒模擬，避免不同應變標準相互混淆。";
-    useCasesTranslations.security_simulator["zh-TW"].advancedProTip = "直接連接至安全團隊的共享雲端硬碟，能確保您的危機演練始終基於最新的逃生路線與現場指揮人員值班表進行。";
-
-    useCasesTranslations.security_simulator["zh-CN"].steps = [
-      "手动将您的校园安全手册、大楼空间平面 PDF 档与紧急应变协议上传至 Agent Designer。",
-      "设定定制的安全演练 Agent，使其在模拟危机情境（如停电、强烈台风）中扮演“紧急派遣调度员”。",
-      "使用 Video Generation（影片生成）技术，自动生成高画质的指示性影片与生动的情境动态提示。",
-      "指派维安或驻卫警人员与模拟器互动，输入实时的紧急应变策略以应对不断变化的危机事件。",
-      "生成演练后的成效评估报告，评估演练人员对安全防护手册规范的执行合规度。"
-    ];
-    useCasesTranslations.security_simulator["zh-CN"].advancedSteps = [
-      "通过安全的 Drive Connector，将定制安全演练 Agent 植基于您的校园安全手册、大楼空间平面图与紧急应变协议文档。",
-      "设定定制的安全演练 Agent，使其在模拟危机情境（如停电、强烈台风）中扮演“紧急派遣调度员”。",
-      "使用 Video Generation（影片生成）技术，自动生成高画质的指示性影片与生动的情境动态提示。",
-      "指派维安或驻卫警人员与模拟器互动，输入实时的紧急应变策略以应对不断变化的危机事件。",
-      "生成演练后的成效评估报告，评估演练人员对安全防护手册规范的执行合规度。"
-    ];
-    useCasesTranslations.security_simulator["zh-CN"].proTip = "手动上传校园维安文件，能让您轻松针对不同的校区或场地建立独立沙盒模拟，避免不同应变标准相互混淆。";
-    useCasesTranslations.security_simulator["zh-CN"].advancedProTip = "直接连接至安全团队的共享云端硬盘，能确保您的危机演练始终基于最新的逃生路线与现场指挥人员值班表进行。";
-  }
-
-  // Add the brand new essential email-connector usecase!
-  useCasesDb.push({
-    id: "email_digest",
-    title: "Daily Academic Email Digest & Priority Planner",
-    category: "academic",
-    summary: "Connect Gemini directly to your institutional inbox to summarize daily administrative announcements, faculty updates, and extract key deadlines.",
-    features: ["NotebookLM"],
-    connectors: ["Email Connector"],
-    connectorEssential: true,
-    role: "Student",
-    level: ["University & College", "High School", "Generic"],
-    steps: [
-      "Connect your institutional email inbox using the secure, encrypted Email Connector.",
-      "Navigate to NotebookLM and create a new secure notebook titled 'Daily Academic Digests'.",
-      "Prompt Gemini to fetch and analyze your school emails received over the past 24 hours.",
-      "Generate a structured, localized bullet-point digest of critical department deadlines, exam announcements, and class schedule changes.",
-      "Ask Gemini to automatically draft brief, professional email replies to professors and upload them directly to your email draft folders."
-    ],
-    prompt: `You are the 'Academic Personal Assistant'. Analyze all institutional emails received in the past 24 hours.
-Generate a comprehensive daily digest that includes:
-1. **Priority Deadline Alert**: Extract any homework, project, or exam deadlines. Highlight them in bold with dates.
-2. **Class Schedule Updates**: List any room changes, office hour announcements, or rescheduled lectures.
-3. **Action Items**: Provide a clear checklist of 3 immediate things that require the user's attention.
-4. **Draft Professional Replies**: For any urgent emails from professors, draft brief, formal response emails (e.g. confirming attendance, requesting meeting times) and place them in Drafts.
-Keep the tone respectful, clear, and highly organized.`,
-    proTip: "By utilizing the Email Connector, your emails remain fully within your university's secure tenant, guaranteeing that personal correspondence is never leaked or used for training.",
-    connectorGuide: {
-      name: "Email Connector",
-      steps: [
-        "Enable the Email Connector inside your sidebar panel settings.",
-        "Provide your institutional authorization to grant secure draft and read access.",
-        "Ground your NotebookLM workspace in the synchronized email stream for automated digest runs."
-      ]
-    }
-  });
-
-  // Inject translations for email_digest
-  useCasesTranslations.email_digest = {
-    "en": {
-      title: "Daily Academic Email Digest & Priority Planner",
-      summary: "Connect Gemini directly to your institutional inbox to summarize daily administrative announcements, faculty updates, and extract key deadlines.",
-      steps: [
-        "Connect your institutional email inbox using the secure, encrypted Email Connector.",
-        "Navigate to NotebookLM and create a new secure notebook titled 'Daily Academic Digests'.",
-        "Prompt Gemini to fetch and analyze your school emails received over the past 24 hours.",
-        "Generate a structured, localized bullet-point digest of critical department deadlines, exam announcements, and class schedule changes.",
-        "Ask Gemini to automatically draft brief, professional email replies to professors and upload them directly to your email draft folders."
-      ],
-      prompt: `You are the 'Academic Personal Assistant'. Analyze all institutional emails received in the past 24 hours.
-Generate a comprehensive daily digest that includes:
-1. **Priority Deadline Alert**: Extract any homework, project, or exam deadlines. Highlight them in bold with dates.
-2. **Class Schedule Updates**: List any room changes, office hour announcements, or rescheduled lectures.
-3. **Action Items**: Provide a clear checklist of 3 immediate things that require the user's attention.
-4. **Draft Professional Replies**: For any urgent emails from professors, draft brief, formal response emails (e.g. confirming attendance, requesting meeting times) and place them in Drafts.
-Keep the tone respectful, clear, and highly organized.`,
-      proTip: "By utilizing the Email Connector, your emails remain fully within your university's secure tenant, guaranteeing that personal correspondence is never leaked or used for training."
-    },
-    "zh-TW": {
-      title: "每日學術郵件摘要與優先級計畫",
-      summary: "直接整合學校信箱，自動分析並摘要過去 24 小時內的行政公告、教授通知與課程快報，快速整理出急迫的待辦期限與日程。",
-      steps: [
-        "使用安全加密的 Email Connector（郵件連接器）連結您的學校信箱。",
-        "在 NotebookLM 中建立一個名為「每日學術摘要」的工作空間。",
-        "引導 Gemini 讀取並分析過去 24 小時內收到的學校信件。",
-        "自動生成結構清晰的摘要，列出關鍵截止日期、考程異動、停調課通知與行政公告。",
-        "對教授或行政人員的緊急信件，自動擬好專業的草稿並同步至您的郵件草稿匣。"
-      ],
-      prompt: `請扮演專業的「學術個人助理」。分析過去 24 小時內收到的所有學校電子郵件。
-生成一份全面的每日摘要，其中包括：
-1. **優先截止日期警報**：提取任何作業、項目或考試截止日期。用粗體突出顯示日期。
-2. **課程時間表更新**：列出任何教室異動、辦公時間公告或重新安排的講座。
-3. **行動項目**：提供一份清晰的清單，列出 3 個需要用戶立即注意的事項。
-4. **起草專業回覆**：對於教授發送的任何緊急郵件，起草簡短、正式的回覆郵件（例如確認出席、要求會議時間）並將其放入草稿箱。
-保持禮貌、清晰且高度組織化的語氣。`,
-      proTip: "透過 Email Connector，所有信件均維持在學校安全的雲端租戶內進行處理，絕不會被外部模型訓練，確保個人隱私萬無一失。"
-    },
-    "zh-CN": {
-      title: "每日学术邮件摘要与优先级计划",
-      summary: "直接整合学校邮箱，自动分析并摘要过去 24 小时内的行政公告、教授通知与课程快报，快速整理出急迫的待办期限与日程。",
-      steps: [
-        "使用安全加密的 Email Connector（邮件连接器）链接您的学校邮箱。",
-        "在 NotebookLM 中创建一个名为“每日学术摘要”的工作空间。",
-        "引导 Gemini 读取并分析过去 24 小时内收到的学校邮件。",
-        "自动生成结构清晰的摘要，列出关键截止日期、考程异动、停调课通知与行政公告。",
-        "对教授或行政人员的紧急邮件，自动拟好专业的草稿并同步至您的邮件草稿匣。"
-      ],
-      prompt: `请扮演专业的“学术个人助理”。分析过去 24 小时内收到的所有学校电子邮件。
-生成一份全面的每日摘要，其中包括：
-1. **优先截止日期警报**：提取任何作业、项目或考试截止日期。用粗体突出显示日期。
-2. **课程时间表更新**：列出任何教室异动、办公时间公告或重新安排的讲座。
-3. **行动项目**：提供一份清晰的清单，列出 3 个需要用户立即注意的事项。
-4. **起草专业回复**：对于教授发送的任何紧急邮件，起草简短、正式的回复邮件（例如确认出席、要求会议时间）并将其放入草稿箱。
-保持礼貌、清晰且高度组织化的语气。`,
-      proTip: "通过 Email Connector，所有邮件均维持在学校安全的云端租户内进行处理，绝不会被外部模型训练，确保个人隐私万无一失。"
-    }
-  };
+  // Use cases database initialized cleanly with 3 conceptual steps and {{VARIABLE}} syntax.
 }
 
 // Bind initialization lifecycle on DOM Load
@@ -3618,6 +3434,7 @@ function injectAdminBackButton() {
 async function initApp() {
   // Execute base configs
   enhanceUseCasesDatabase();
+  initMouseGlow();
   initTheme();
   initLanguage();
   initFeedbackSystem();
