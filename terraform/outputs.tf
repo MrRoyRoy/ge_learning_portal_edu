@@ -7,3 +7,8 @@ output "database_connection_name" {
   description = "The connection string identifier of the PostgreSQL database instance."
   value       = google_sql_database_instance.postgres_instance.connection_name
 }
+
+output "infographic_bucket_url" {
+  description = "Public base URL for generated use case infographics."
+  value       = "https://storage.googleapis.com/${google_storage_bucket.infographics.name}/infographics/"
+}

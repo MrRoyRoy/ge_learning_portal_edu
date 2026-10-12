@@ -1,0 +1,15 @@
+.gcloudignore
+.git
+.gitignore
+node_modules/
+scratch/
+terraform/
+.terraform/
+*.tfstate*
+.agents/
+.DS_Store
+*.zip
+*.pdf
+test-*.js
+imgs/Archimedes.jpeg
+imgs/.DS_Store

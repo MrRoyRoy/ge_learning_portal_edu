@@ -24,12 +24,16 @@ WORKDIR /usr/src/app
 COPY --from=builder /usr/src/app/node_modules ./node_modules
 COPY --from=builder /usr/src/app/package.json ./package.json
 COPY server.js ./
+COPY lib ./lib
+COPY scripts ./scripts
 COPY app.js ./
 COPY index.html ./
 COPY style.css ./
 COPY ge-edu-portal.png ./
 COPY favicon* ./
 COPY apple-touch-icon.png ./
+# Downscaled Archimedes mascot reference used by lib/infographics.js (INFOGRAPHIC_REF_IMAGE default)
+COPY imgs/archimedes-ref.jpg ./imgs/archimedes-ref.jpg
 
 # Expose standard routing port
 EXPOSE 8080

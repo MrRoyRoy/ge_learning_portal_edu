@@ -17,7 +17,12 @@ The application is built as a high-fidelity, dynamic web application supported b
   * **Master Admin Account:** `edu_portal_s_admin` with password `***REMOVED***`.
   * **Admin Assist Account:** `edu_portal_admin` with password `***REMOVED***` (cannot Create, Update, or Delete use case playbooks).
   * **Demo Admin Account:** `demo-admin` with password `***REMOVED***` (inherits identical assistant admin rights and permissions as `edu_portal_admin`).
-  * **Standard Accounts:** Email-based provisioning with auto-generated 10-character temp passwords. Force-reset of credentials is strictly enforced on first login.
+  * **Standard Accounts:** Email-based provisioning with auto-generated 10-character temp passwords. Force-reset of credentials is strictly enforced on first login. Each user has an optional `ge_app_link` (their Gemini Enterprise app URL) used by **Try it**.
+  * **Invited DB Admins:** `admins` table (role `super` | `assist`). Super admins invite by email → verification link (`/?verify=TOKEN`, 48h) → set password. Verified DB admins can use **Forgot password** (`/?reset=TOKEN`, 1h). Tokens stored as sha256 in `auth_tokens`, single-use. Hard-coded accounts remain as break-glass logins.
+* **Email (`lib/mailer.js`, nodemailer):** SMTP config lives in the DB (`app_settings.smtp`), edited in **Admin → Settings → Email** (super only). Password encrypted with AES-256-GCM (`lib/secrets.js`, key `SETTINGS_ENCRYPTION_KEY` → `SESSION_SECRET`). Resolution: DB config → `SMTP_*` env → demo mode (links logged / shown to super admin only).
+* **Infographics (`lib/infographics.js`, `scripts/generate-infographics.js`):** Vertex `gemini-nano-banana-2.1` (locations/global, 16:9 image) → uploaded via GCS JSON API to public bucket `your-infographic-bucket` → URL in `use_cases.infographic_url`. CLI: `npm run infographics [-- --force] [-- --id=<id>]`. GCP token/headers in `lib/gcp.js`.
+* **Prompt Types:** `use_cases.prompt_type` and helper prompt `type` ∈ general | notebooklm | deep_research | agent_designer | canvas | image | video. General/Canvas/Image/Video show **Copy prompt + Try it** (`ge_app_link?q=<prompt>`); NotebookLM/Deep Research/Agent Designer show **Copy prompt** only.
+* **Seeding:** `seedDatabase()` upserts the 14 playbooks (never wipes `infographic_url` / admin-edited `prompt_type`).
 * **Markup & Client Logic:** Vanilla HTML5 paired with modular ES6+ client-side logic (`app.js`). Hydrates page templates dynamically from `/api/use-cases` on session validation.
 * **Styles & Visual Identity:** Pure Swiss Minimalism Vanilla CSS (`style.css`), powered by CSS variable maps. **TailwindCSS is strictly avoided** to preserve precise typographic scale and structural grids.
 
@@ -69,7 +74,7 @@ The portal supports intelligent integration simulation and dynamic prompt custom
   * Rather than complex dual-prompt switches, playbook detail views feature a streamlined, clean prompt container accompanied by a non-intrusive manual tips box (`.manual-tip-box`) recommending the manual file upload fallback workflow if institutional connectors are inactive or unavailable.
 * **Dynamic "Fill in the Variables" Engine:**
   * Prompts automatically scan for variable tokens (e.g. `[COURSE_NAME]`, `[ASSIGNMENT_TOPIC]`).
-  * An interactive variable panel renders real-time input fields directly above the prompt.
+  * A compact variables column (`#wbVariables`, one input per row) renders in the modal hero's right column under the summary and like/view row; nothing renders when there are no variables.
   * Editing variable values dynamically interpolates into both the highlighted prompt preview and the instant clipboard copy action.
 * **Collapsible Prompt (Default Closed):**
   * Step instructions display prompts inside a `<details class="prompt-collapsible">` container, collapsed by default to maintain a clean, compact view per modern prompt library standards.
@@ -93,13 +98,13 @@ graph TD
   H -->|No| G
   G -->|Submit Config| I[Load Server-Side Playbooks & Active Main App]
   H -->|Yes| I
-  I --> J[Sync Likes & Deploys on Card Interaction]
+  I --> J[Sync Likes & Record Views on Card / Modal Interaction]
 ```
 
 * **Instant Translation Chain:** Language switches translate the full portal, sidebar filters, active user context metrics, and interactive toasts in real-time.
 * **Product-Agnostic Notifications:** Simulating connectors issues clean native toasts, fully localized across English (`en`), Traditional Chinese (`zh-TW`), and Simplified Chinese (`zh-CN`).
-* **Interactive Preferences (Likes/Deployments):** Standard use case cards carry responsive heart and rocket icons that bypass detail popups, updating preference tables dynamically on the server database.
-* **SVG Vector Graph Charts:** The admin statistics view aggregates database events and paints high-contrast line charts showing Page Views, Likes, and Deployments over the last 6 months.
+* **Likes & Views:** Cards and the modal show a heart (like, optimistic with rollback + explicit toasts on 401 session expired / 403 admin preview) and a read-only eye view counter. Every modal open records a `view` event and bumps the counter optimistically. Deploy was removed everywhere (endpoint, UI, filter, analytics).
+* **SVG Vector Graph Charts:** The admin statistics view aggregates database events and paints high-contrast line charts showing Views, Likes, and Try it launches over the last 6 months.
 
 ---
 ## 6. Cloud Run Production & Dev Deployments
@@ -122,7 +127,36 @@ graph TD
 
 ############# 7. App State & Progress
  
-##### Accomplished Tasks (Latest Session Milestone)
+##### Accomplished Tasks (Latest Session Milestone — 2026-10-12, v4 modal polish)
+* **Modal v4 (100%):** "Fill in the variables" moved from the full-width panel into the hero right column (compact `.uc-vars` section, one input per row, hidden when no variables; hero top-aligned, stacks image → summary → variables under 900px). Steps get 24px inner padding (16px mobile), 56px summary rows with 20px padding, roomier prompt body/actions. **Try it** = green `#1e8e3e` (hover `#137333`), **Copy prompt** = blue `#1a73e8` (hover `#1557b0`), white text/icon, same in both themes, coloured focus rings, equal heights; `promptActionButtonsHtml` lost its `primary` option. Dead CSS removed (`.prompt-variables-panel/header/title/subtitle/grid`, old `.uc-vars` grid rules).
+* **README rewrite (100%):** architecture table + mermaid flowchart, exact schema (9 tables incl. `sessions`) + erDiagram, API overview, env var table, Cloud Run + Secret Manager deploy, Terraform. No passwords/secrets in README.
+* **Verified:** `node --check`, Playwright `test_v3.js` (adapted: hero variables column, one-column inputs, green/blue buttons, step padding ≥16px) all passing, no console errors; screenshots `v4_*`.
+
+##### Previous Milestone — 2026-10-12, v3 UI
+* **Likes root cause fixed (100%):** express-session used the default MemoryStore, so Cloud Run scale-to-zero / new instances dropped every session; like POSTs then returned 401 and the client swallowed it silently. Sessions now persist in the DB (`lib/session-store.js`, `sessions` table, lazy prune); `requireStandardUser` returns `session_expired` (401) / `admin_preview` (403); the client rolls back and toasts. Verified a session survives a server restart.
+* **Views replace Deploy (100%):** `/api/use-cases/deploy` removed; GET `/api/use-cases` returns `likeCount` (+ legacy `totalLikes`) and `viewCount`; POST `/view` returns the new `viewCount`; admin stats use `totalViews` and history views/likes/tries.
+* **Modal (100%):** Copy prompt removed from the hero; "Fill in the variables" panel moved into the overview (open, responsive auto-fill grid) between the summary row and How it works; values interpolate into main + helper prompts; Step 2 = collapsed sample prompt with Copy / Try it by type; chips and the Try it nudge focus the overview panel.
+* **UI polish (100%):** dark card/panel borders `--line-card` rgba(255,255,255,.16) with .30 hover; feedback modal icon/title centred; floating Feedback only in the user portal (hidden on auth cards + admin); Admins panel above Add users.
+* **Particle field rewrite (100%):** organic teardrop droplets with per-particle sine drift, springs for length/scale, lerped angle/alpha, idle Lissajous focus, ≤1200 particles, DPR ≤2, paused when hidden, static frame under reduced motion, touch support.
+* **Verified:** `node --check`, curl (401/403/like/unlike/view/404 deploy, session across restart), Playwright `test_v3.js` 109/109 (desktop + mobile, light + dark, admin), no console errors.
+* **Infographics (100%):** 14 Nano Banana infographics generated, public in `gs://your-infographic-bucket`, shown as the hero of the enlarged card; admin Generate / Regenerate / Generate missing.
+* **Admin Auth & Email (100%):** Admin invites (super/assist) with email verification, forgot/reset password, SMTP settings UI with presets (Gmail, Outlook.com, Microsoft 365, Custom), encrypted password, test send, demo-mode fallback.
+* **Users (100%):** `ge_app_link` column (demo-user@example.com set), Edit user modal (email rename cascades prefs/analytics/feedback, GE app link, reset access).
+* **Prompt Types & Try it (100%):** per-prompt type chip; Try it deep-links to `ge_app_link?q=`; copy-only for NotebookLM/Deep Research/Agent Designer; `try` analytics event + Tries stat.
+* **Unified Responsive UI (100%):** shared 72px topbar for user + admin, admin tab row (Users · Analytics · Use cases · Feedback · Settings), sidebar removed, dropdown filter bar (Category / GE feature / Collection / Sort), headline "{n} playbooks for {role}", unclipped auto-height cards (3/2/1 cols), 13px type floor, fewer words, humanized variable labels (no `{{ }}`), workbench details side-by-side & collapsed, full-screen modal sheet on mobile.
+* **Particle Field (100%):** `initParticleField()` canvas of colored dashes reacting to mouse/touch (replaces `initMouseGlow`), reduced-motion aware.
+* **Verified locally:** curl API suite, local SMTP catcher delivery, Playwright 57/57 (desktop + mobile, light + dark).
+* **Cleanup (100%):** remaining hard-coded English strings (login, temp reset, case form, Gemini drafting, diff viewer, feedback modal, toasts/confirms) moved into `uiTranslationsV3` (en / zh-TW / zh-CN, 372 keys each) with `data-i18n*` attributes (`data-i18n-title` added); dead functions removed (`setupConnectorToggles`, `checkMissingConnector`, `handleOnboardingSubmit`, `getCategoryByRole`, etc.); 66 legacy sidebar/hub/lock/switch CSS rules pruned; top-level `sessionStorage` read guarded so the vm seeder works; README rewritten (invites, password recovery, SMTP, Try it, infographics, env vars, new schema). Verified: Playwright 57/57 + zh-TW i18n check, no console errors.
+
+### Next Steps & Continuous Polish
+1. **Dev deployed (2026-10-12, revision `your-dev-service-00004-h68`):** `SETTINGS_ENCRYPTION_KEY` + `INFOGRAPHIC_BUCKET` set, timeout 600s; DB-backed sessions (likes fixed); views replace deploys; **Archimedes infographics v2** (raven-graduate mascot, cel-shaded editorial vector, reference `imgs/archimedes-ref.jpg` sent to Nano Banana, per-case `CONCEPT_HINTS`) auto-upgraded via `applySeedInfographics()` (only replaces older `?v=` of the same object); Playwright 109/109 on dev.
+   **Prod deployed (2026-10-12, revision `your-service-00028-zh5`)** with v4 modal polish (variables in hero column, green Try it / blue Copy prompt, step padding), own `SETTINGS_ENCRYPTION_KEY`, timeout 600s; Playwright 124/124 on prod. Prod has 7 extra admin-created use cases without infographics → run **Generate missing** in Admin → Use cases. Dev is one revision behind (redeploy dev to match).
+2. **Terraform:** `terraform import` the bucket + IAM created via gcloud before the next `apply`.
+3. **Configure real SMTP** in Admin → Settings → Email (Gmail App Password or Outlook) and run an end-to-end invite + forgot password.
+4. **Optional CSS cleanup:** still-unused legacy selectors remain in `style.css` (roadmap / timeline / pipeline / milestone / mobile-timeline / flag-* / prompt-variables-*); remove after a visual check.
+5. **Monitor User Feedback** from the floating widget in the admin portal.
+
+##### Previous Milestones
 * **Typographic Balance & Hierarchy (`/frontend-design`) (100% Complete):**
   * Established unified Swiss typography stack: `Outfit` (display/headings), `Plus Jakarta Sans` (interface body text), and `JetBrains Mono` (prompts, syntax, variable tokens).
   * Formulated full modular type scale (`--text-3xs` through `--text-4xl`), letter tracking (`--tracking-tighter` through `--tracking-widest`), and humanist line-height tokens (`--leading-none` through `--leading-relaxed`).
@@ -149,9 +183,4 @@ graph TD
   * Fully populated and localized for all 14 use cases across English (`en`), Traditional Chinese (`zh-TW`), and Simplified Chinese (`zh-CN`).
 * **Dev Cloud Run Deployment Ready (100% Complete):**
   * Validated server startup, schema migration, and API response locally with SQLite.
-
-### Next Steps & Continuous Polish
-1. **Deploy to Dev Instance:** Deploy latest build to `your-dev-service` on Cloud Run (`your-region`, `your-gcp-project-id`).
-2. **End-to-End Dev Verification:** Validate prompt interpolation, token click-to-focus, collapsible states, and helper prompts live on `your-dev-service`.
-3. **Monitor User Feedback:** Verify feedback submission and review from the floating widget into the admin portal.
 

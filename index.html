@@ -21,6 +21,8 @@
   <script src="app.js" defer></script>
 </head>
 <body>
+  <!-- Pointer-reactive particle field (drawn by initParticleField in app.js) -->
+  <canvas id="fieldCanvas" aria-hidden="true"></canvas>
 
   <!-- AUTHENTICATION & ONBOARDING GATEWAY WIZARD -->
   <div class="wizard-overlay" id="wizardOverlay" aria-modal="true" role="dialog">
@@ -32,31 +34,79 @@
           <span class="material-symbols-outlined" style="font-size: 32px; color: white;">school</span>
         </div>
         <h1 class="wizard-title" id="loginTitle">Google Gemini Enterprise</h1>
-        <h2 id="loginSubtitle" style="font-size: 15px; color: var(--color-primary); font-weight: 700; margin-top: 4px;">Education Adoption & Playbook Portal</h2>
-        <p class="wizard-desc" id="loginDesc">Unlock customized AI agent templates, prompt sandboxes, and administrative integration guides tailored to your school role.</p>
+        <h2 id="loginSubtitle" data-i18n="loginSubtitle" style="font-size: 15px; color: var(--color-primary); font-weight: 700; margin-top: 4px;">Education Adoption & Playbook Portal</h2>
+        <p class="wizard-desc" id="loginDesc" data-i18n="loginDesc">Unlock customized AI agent templates, prompt sandboxes, and administrative integration guides tailored to your school role.</p>
       </div>
 
       <div class="wizard-form">
         <!-- Error Message Alert -->
-        <div id="loginErrorMsg" style="display: none; background: var(--color-danger-glow); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 4px; padding: 10px 12px; color: var(--color-danger); font-size: 12px; text-align: center; width: 100%;"></div>
+        <div id="loginErrorMsg" style="display: none; background: var(--color-danger-glow); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 4px; padding: 10px 12px; color: var(--color-danger); font-size: 13px; text-align: center; width: 100%;"></div>
 
 
         <div class="form-group">
-          <label class="form-label" for="loginEmail" id="labelEmail">Institutional Email</label>
+          <label class="form-label" for="loginEmail" id="labelEmail" data-i18n="inviteEmailLabel">Email</label>
           <input type="text" class="select-control" id="loginEmail" placeholder="e.g. academic@edu.hk">
         </div>
 
         <div class="form-group">
-          <label class="form-label" for="loginPassword" id="labelPassword">Access Password</label>
+          <label class="form-label" for="loginPassword" id="labelPassword" data-i18n="loginPasswordLabel">Password</label>
           <input type="password" class="select-control" id="loginPassword" placeholder="••••••••">
         </div>
 
         <div class="wizard-actions">
           <button class="nav-button nav-button-primary btn-wide" id="btnLogin">
-            Sign In <span class="material-symbols-outlined">login</span>
+            <span data-i18n="btnLoginText">Sign in</span> <span class="material-symbols-outlined">login</span>
           </button>
         </div>
+        <button type="button" class="link-btn" id="btnForgotPassword" data-i18n="forgotPassword">Forgot password?</button>
       </div>
+    </div>
+
+    <!-- CARD 1b: Forgot password (verified admins receive a reset link) -->
+    <div class="wizard-card glass-panel" id="forgotCard" style="display: none;">
+      <div class="wizard-header">
+        <div class="wizard-logo">
+          <span class="material-symbols-outlined" style="font-size: 32px; color: white;">mail</span>
+        </div>
+        <h1 class="wizard-title" data-i18n="forgotTitle">Reset your password</h1>
+        <p class="wizard-desc" data-i18n="forgotDesc">Enter your admin email.</p>
+      </div>
+      <form class="wizard-form" id="formForgotPassword" novalidate>
+        <div id="forgotMsg" class="inline-feedback" hidden></div>
+        <div class="form-group">
+          <label class="form-label" for="forgotEmail" data-i18n="inviteEmailLabel">Email</label>
+          <input type="email" class="select-control" id="forgotEmail" autocomplete="email" required>
+        </div>
+        <div class="wizard-actions">
+          <button type="submit" class="nav-button nav-button-primary btn-wide" id="btnForgotSubmit" data-i18n="forgotSubmit">Send reset link</button>
+        </div>
+        <button type="button" class="link-btn" id="btnForgotBack" data-i18n="backToSignIn">Back to sign in</button>
+      </form>
+    </div>
+
+    <!-- CARD 1c: Set password from ?verify= or ?reset= token -->
+    <div class="wizard-card glass-panel" id="setPasswordCard" style="display: none;">
+      <div class="wizard-header">
+        <div class="wizard-logo">
+          <span class="material-symbols-outlined" style="font-size: 32px; color: white;">key</span>
+        </div>
+        <h1 class="wizard-title" id="setPasswordTitle">Set your password</h1>
+        <p class="wizard-desc" data-i18n="setPwDesc">At least 8 characters.</p>
+      </div>
+      <form class="wizard-form" id="formSetPassword" novalidate>
+        <div id="setPasswordMsg" class="inline-feedback" hidden></div>
+        <div class="form-group">
+          <label class="form-label" for="setPassword1" data-i18n="setPwLabel">New password</label>
+          <input type="password" class="select-control" id="setPassword1" autocomplete="new-password" minlength="8" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="setPassword2" data-i18n="setPwConfirmLabel">Confirm password</label>
+          <input type="password" class="select-control" id="setPassword2" autocomplete="new-password" minlength="8" required>
+        </div>
+        <div class="wizard-actions">
+          <button type="submit" class="nav-button nav-button-primary btn-wide" id="btnSetPasswordSubmit" data-i18n="setPwSubmit">Save password</button>
+        </div>
+      </form>
     </div>
 
     <!-- CARD 2: Forced Password Reset (Temporary Accounts) -->
@@ -65,26 +115,26 @@
         <div class="wizard-logo" style="background: var(--color-warning);">
           <span class="material-symbols-outlined" style="font-size: 32px; color: white;">lock_reset</span>
         </div>
-        <h1 class="wizard-title">Reset Temporary Password</h1>
-        <p class="wizard-desc">Your account has been provisioned with a temporary password. To protect your data, please set your own secure password to continue.</p>
+        <h1 class="wizard-title" data-i18n="tempResetTitle">Set a new password</h1>
+        <p class="wizard-desc" data-i18n="tempResetDesc">You signed in with a temporary password. Choose your own to continue.</p>
       </div>
 
       <div class="wizard-form">
-        <div id="resetErrorMsg" style="display: none; background: var(--color-danger-glow); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 4px; padding: 10px 12px; color: var(--color-danger); font-size: 12px; text-align: center; width: 100%;"></div>
+        <div id="resetErrorMsg" style="display: none; background: var(--color-danger-glow); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 4px; padding: 10px 12px; color: var(--color-danger); font-size: 13px; text-align: center; width: 100%;"></div>
 
         <div class="form-group">
-          <label class="form-label" for="resetPassword1">New Secure Password</label>
-          <input type="password" class="select-control" id="resetPassword1" placeholder="At least 6 characters">
+          <label class="form-label" for="resetPassword1" data-i18n="setPwLabel">New password</label>
+          <input type="password" class="select-control" id="resetPassword1" placeholder="At least 8 characters" data-i18n-placeholder="pwPlaceholderMin">
         </div>
 
         <div class="form-group">
-          <label class="form-label" for="resetPassword2">Confirm New Password</label>
-          <input type="password" class="select-control" id="resetPassword2" placeholder="Re-enter password">
+          <label class="form-label" for="resetPassword2" data-i18n="setPwConfirmLabel">Confirm password</label>
+          <input type="password" class="select-control" id="resetPassword2" placeholder="Re-enter password" data-i18n-placeholder="pwPlaceholderRepeat">
         </div>
 
         <div class="wizard-actions">
           <button class="nav-button nav-button-primary btn-wide" id="btnSubmitReset">
-            Update Password & Access Hub <span class="material-symbols-outlined">key</span>
+            <span data-i18n="btnSubmitResetText">Save and continue</span> <span class="material-symbols-outlined">key</span>
           </button>
         </div>
       </div>
@@ -126,7 +176,7 @@
             <option value="High School">High School (Grades 6-12)</option>
             <option value="Primary School">Primary School (Grades K-5)</option>
           </select>
-          <p id="levelHelperText" style="font-size: 11px; color: var(--text-muted); margin-top: 4px;"></p>
+          <p id="levelHelperText" style="font-size: 13px; color: var(--text-muted); margin-top: 4px;"></p>
         </div>
 
         <!-- Language Selection -->
@@ -150,166 +200,89 @@
 
   </div>
 
-  <!-- MAIN APPLICATION LAYOUT -->
+  <!-- MAIN APPLICATION LAYOUT (shared topbar, no sidebar) -->
   <div class="app-container" id="appLayout">
-    <!-- Mobile Sidebar Backdrop Overlay -->
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
-    
-    <!-- LEFT SIDEBAR: Context Profile & Filters -->
-    <aside class="sidebar" id="appSidebar">
-      <div class="sidebar-brand">
-        <div class="logo-icon">
-          <span class="material-symbols-outlined">school</span>
-        </div>
-        <span class="brand-text">GE Adoption Hub</span>
-        <button id="btnMobileSidebarClose" class="nav-button" aria-label="Close menu" style="margin-left: auto; border: none; background: transparent; padding: 4px; min-width: auto; height: auto;">
-          <span class="material-symbols-outlined" style="font-size: 20px; color: var(--text-primary);">close</span>
+    <header class="topbar" id="userTopbar">
+      <div class="topbar-brand">
+        <div class="logo-icon"><span class="material-symbols-outlined">school</span></div>
+        <span class="brand-text" data-i18n="brandName">GE Adoption Hub</span>
+      </div>
+
+      <div class="topbar-search search-wrapper">
+        <span class="material-symbols-outlined search-icon">search</span>
+        <input type="search" class="search-input" id="searchInput" placeholder="Search playbooks" data-i18n-placeholder="searchPlaceholder" autocomplete="off">
+      </div>
+
+      <div class="topbar-actions">
+        <button class="icon-btn" id="btnThemeToggle" aria-label="Toggle theme" data-i18n-aria="themeToggle">
+          <span class="material-symbols-outlined" id="themeIcon">dark_mode</span>
         </button>
-      </div>
-
-      <!-- Live profile context panel -->
-      <div class="sidebar-section">
-        <div class="sidebar-title" id="titleContextProfile">Active Context</div>
-        <div class="context-profile-card">
-          <div class="profile-role-name" id="profileRoleName">Lecturer</div>
-          <div class="profile-institution" id="profileInstitutionName">Higher Education</div>
-        </div>
-      </div>
-
-      <!-- Primary Page Views -->
-      <div class="sidebar-section">
-        <div class="sidebar-title" id="titlePrimaryViews">Portal Views</div>
-        <ul class="filter-menu-list">
-          <li class="filter-menu-item active portal-view-item" data-view="playbooks" id="viewPlaybooksNav">
-            <span class="material-symbols-outlined">explore</span> <span id="navExplorePlaybooks">Explore Playbooks</span>
-          </li>
-        </ul>
-      </div>
-
-      <!-- Filter menus: Category and attributes -->
-      <div class="sidebar-section" id="sidebarCategorySection">
-        <div class="sidebar-title" id="titleNavigation">Navigation</div>
-        <ul class="filter-menu-list">
-          <li class="filter-menu-item active category-filter-item" data-category="all">
-            <span class="material-symbols-outlined">dashboard</span> <span id="navAll">All Templates</span>
-          </li>
-          <li class="filter-menu-item category-filter-item" data-category="academic">
-            <span class="material-symbols-outlined">menu_book</span> <span id="navAcademic">Academic Portal</span>
-          </li>
-          <li class="filter-menu-item category-filter-item" data-category="student">
-            <span class="material-symbols-outlined">groups</span> <span id="navStudent">Student Support</span>
-          </li>
-          <li class="filter-menu-item category-filter-item" data-category="operational">
-            <span class="material-symbols-outlined">settings_suggest</span> <span id="navOperational">Operations & Services</span>
-          </li>
-          <li class="filter-menu-item category-filter-item" data-category="admin">
-            <span class="material-symbols-outlined">shield_person</span> <span id="navAdmin">System & Admin</span>
-          </li>
-        </ul>
-      </div>
-
-      <!-- GE FEATURES FILTER SECTION -->
-      <div class="sidebar-section" id="sidebarFeatureSection">
-        <div class="sidebar-title" id="sidebarFeaturesTitle">Filter by GE Feature</div>
-        <ul class="filter-menu-list">
-          <li class="filter-menu-item active feature-filter-item" data-feature="all">
-            <span class="material-symbols-outlined">apps</span> <span id="featAll">All Capabilities</span>
-          </li>
-          <li class="filter-menu-item feature-filter-item" data-feature="Agent Designer">
-            <span class="material-symbols-outlined">smart_toy</span> <span class="feature-name">Agent Designer</span>
-          </li>
-          <li class="filter-menu-item feature-filter-item" data-feature="NotebookLM">
-            <span class="material-symbols-outlined">menu_book</span> <span class="feature-name">NotebookLM</span>
-          </li>
-          <li class="filter-menu-item feature-filter-item" data-feature="Deep Research">
-            <span class="material-symbols-outlined">travel_explore</span> <span class="feature-name">Deep Research</span>
-          </li>
-          <li class="filter-menu-item feature-filter-item" data-feature="Canvas Mode">
-            <span class="material-symbols-outlined">draw</span> <span class="feature-name">Canvas Mode</span>
-          </li>
-          <li class="filter-menu-item feature-filter-item" data-feature="Image Generation">
-            <span class="material-symbols-outlined">image</span> <span class="feature-name">Image Generation</span>
-          </li>
-          <li class="filter-menu-item feature-filter-item" data-feature="Video Generation">
-            <span class="material-symbols-outlined">movie</span> <span class="feature-name">Video Generation</span>
-          </li>
-        </ul>
-      </div>
-
-      <div class="sidebar-section" id="sidebarStatusSection">
-        <div class="sidebar-title" id="titleFilters">Collections</div>
-        <ul class="filter-menu-list">
-          <li class="filter-menu-item active status-filter-item" data-status="all">
-            <span class="material-symbols-outlined">check_circle</span> <span id="filterAll">Show All</span>
-          </li>
-          <li class="filter-menu-item status-filter-item" data-status="liked">
-            <span class="material-symbols-outlined">favorite</span> <span id="filterLiked">My Liked Cases</span>
-          </li>
-          <li class="filter-menu-item status-filter-item" data-status="deployed">
-            <span class="material-symbols-outlined">rocket_launch</span> <span id="filterDeployed">My Deployed Cases</span>
-          </li>
-        </ul>
-      </div>
-    </aside>
-
-    <!-- RIGHT MAIN WORKSPACE -->
-    <main class="workspace">
-      
-      <!-- TOP NAVIGATION NAVBAR -->
-      <header class="navbar">
-        <div class="navbar-left">
-          <button class="nav-button mobile-menu-btn" id="btnMobileMenu" aria-label="Open Filter Menu" style="margin-right: 4px; padding: 0 10px; flex-shrink: 0;">
-            <span class="material-symbols-outlined">menu</span>
+        <select class="pill-select topbar-lang" id="navLang" aria-label="Language">
+          <option value="en">English</option>
+          <option value="zh-TW">繁體中文</option>
+          <option value="zh-CN">简体中文</option>
+        </select>
+        <div class="avatar-wrap">
+          <button class="avatar-btn" id="userAvatarBtn" aria-haspopup="menu" aria-expanded="false" aria-controls="userAvatarMenu" aria-label="Account menu" data-i18n-aria="avatarMenu">
+            <span id="userAvatarInitial">U</span>
           </button>
-          <div class="search-wrapper">
-            <span class="material-symbols-outlined search-icon">search</span>
-            <input type="text" class="search-input" id="searchInput" placeholder="Search prompts, templates, roles...">
-          </div>
-        </div>
-        <div class="navbar-right">
-          <span style="font-size: 13px; color: var(--text-muted); font-weight: 500; margin-left: 32px;" id="navbarWelcomeText">Edu GE Adoption Portal</span>
-          
-          <!-- Theme Toggle Button -->
-          <button class="nav-button" id="btnThemeToggle" aria-label="Toggle Theme" style="padding: 0; width: 44px; justify-content: center; flex-shrink: 0;">
-            <span class="material-symbols-outlined" id="themeIcon" style="font-size: 20px;">dark_mode</span>
-          </button>
-
-          <!-- Language Selection Dropdown -->
-          <select class="select-control" id="navLang" style="width: auto; height: 38px; padding: 0 10px; font-size: 12px; flex-shrink: 0;">
-            <option value="en">English</option>
-            <option value="zh-TW">繁體中文</option>
-            <option value="zh-CN">简体中文</option>
-          </select>
-
-          <!-- Switch Profile Context -->
-          <button class="nav-button" id="btnChangeContext" style="flex-shrink: 0;">
-            <span class="material-symbols-outlined" style="font-size: 18px;">manage_accounts</span> <span id="btnChangeContextText">Switch Profile</span>
-          </button>
-
-          <!-- Log out from the system -->
-          <button class="nav-button" id="btnLogout" style="flex-shrink: 0;">
-            <span class="material-symbols-outlined" style="font-size: 18px;">logout</span> <span id="btnLogoutText">Logout</span>
-          </button>
-        </div>
-      </header>
-
-      <!-- DASHBOARD CORE CONTENTS CONTAINER -->
-      <article class="content-area">
-        <!-- EXPLORE PLAYBOOKS VIEW -->
-        <div id="playbooksView">
-          <div class="dashboard-header">
-            <div class="dashboard-title-row">
-              <div>
-                <h1 class="welcome-msg" id="welcomeMsg">Adoption Playbook & Reference Hub</h1>
-                <p class="welcome-subtitle" id="welcomeSubtitle">Explore battle-tested prompt recipes, custom Agent instructions, and configuration guidelines tailored specifically to support your educational role.</p>
-              </div>
+          <div class="avatar-menu" id="userAvatarMenu" role="menu" hidden>
+            <div class="avatar-menu-head">
+              <div class="avatar-menu-email" id="userMenuEmail"></div>
+              <div class="avatar-menu-context"><span id="profileRoleName">Lecturer</span> · <span id="profileInstitutionName">Higher Education</span></div>
             </div>
+            <button class="avatar-menu-item" id="btnChangeContext" role="menuitem">
+              <span class="material-symbols-outlined">manage_accounts</span><span id="btnChangeContextText">Switch profile</span>
+            </button>
+            <button class="avatar-menu-item" id="btnBackToAdminDash" role="menuitem" hidden>
+              <span class="material-symbols-outlined">admin_panel_settings</span><span data-i18n="goAdminPortal">Admin portal</span>
+            </button>
+            <button class="avatar-menu-item" id="btnLogout" role="menuitem">
+              <span class="material-symbols-outlined">logout</span><span id="btnLogoutText" data-i18n="btnLogoutText">Log out</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <article class="content-area">
+        <div id="playbooksView">
+          <div class="results-head">
+            <h1 class="welcome-msg" id="welcomeMsg">Playbooks</h1>
           </div>
 
-          <!-- DYNAMIC CARDS CONTAINER BY HUB CATEGORY -->
-          <section class="hubs-grid" id="useCasesContainer">
-            <!-- Dynamic category boxes will be rendered here by app.js -->
-          </section>
+          <!-- Filter bar: native selects styled as pills -->
+          <div class="filter-bar" role="group" aria-label="Filters">
+            <select class="pill-select" id="filterCategory" aria-label="Category" data-i18n-aria="filterCategoryLabel">
+              <option value="all" data-i18n="catAll">All categories</option>
+              <option value="academic" data-i18n="catAcademic">Academic</option>
+              <option value="student" data-i18n="catStudent">Student support</option>
+              <option value="operational" data-i18n="catOperational">Operations</option>
+              <option value="admin" data-i18n="catAdmin">Administration</option>
+            </select>
+            <select class="pill-select" id="filterFeature" aria-label="GE feature" data-i18n-aria="filterFeatureLabel">
+              <option value="all" data-i18n="featAll">All GE features</option>
+              <option value="Agent Designer">Agent Designer</option>
+              <option value="NotebookLM">NotebookLM</option>
+              <option value="Deep Research">Deep Research</option>
+              <option value="Canvas Mode">Canvas Mode</option>
+              <option value="Image Generation">Image Generation</option>
+              <option value="Video Generation">Video Generation</option>
+            </select>
+            <select class="pill-select" id="filterCollection" aria-label="Collection" data-i18n-aria="filterCollectionLabel">
+              <option value="all" data-i18n="colAll">All playbooks</option>
+              <option value="liked" data-i18n="colLiked">Liked</option>
+            </select>
+            <select class="pill-select" id="filterSort" aria-label="Sort" data-i18n-aria="filterSortLabel">
+              <option value="popular" data-i18n="sortPopular">Most popular</option>
+              <option value="newest" data-i18n="sortNewest">Newest</option>
+              <option value="az" data-i18n="sortAz">A–Z</option>
+            </select>
+          </div>
+
+          <!-- Flat card grid, rendered by app.js -->
+          <section class="cards-grid" id="useCasesContainer" aria-live="polite"></section>
         </div>
       </article>
     </main>
@@ -335,241 +308,358 @@
     </div>
   </div>
 
-  <!-- SWISS MINIMALIST ADMINISTRATION PORTAL -->
-  <div id="adminPortal" style="display: none; min-height: 100vh; width: 100vw; position: fixed; top: 0; left: 0; background: var(--bg-dark-base); z-index: 500; overflow-y: auto;">
-    
-    <div style="display: flex; min-height: 100vh;">
-      
-      <!-- Admin Sidebar Navigation -->
-      <aside class="sidebar" id="adminSidebar" style="z-index: 600;">
-        <div class="sidebar-brand">
-          <div class="logo-icon" style="background: var(--color-accent);">
-            <span class="material-symbols-outlined" style="color: white !important;">shield</span>
-          </div>
-          <span class="brand-text" id="adminBrandText">Admin Control</span>
-          <button id="btnAdminMobileSidebarClose" class="nav-button" aria-label="Close menu" style="margin-left: auto; border: none; background: transparent; padding: 4px; min-width: auto; height: auto; display: none;">
-            <span class="material-symbols-outlined" style="font-size: 20px; color: var(--text-primary);">close</span>
+  <!-- ADMINISTRATION PORTAL (shared topbar + tab row) -->
+  <div id="adminPortal" class="admin-portal" style="display: none;">
+    <header class="topbar" id="adminTopbar">
+      <div class="topbar-brand">
+        <div class="logo-icon"><span class="material-symbols-outlined">shield</span></div>
+        <span class="brand-text" id="adminBrandText">Admin console</span>
+      </div>
+      <div class="topbar-spacer"></div>
+      <div class="topbar-actions">
+        <button class="icon-btn" id="btnAdminThemeToggle" aria-label="Toggle theme" data-i18n-aria="themeToggle">
+          <span class="material-symbols-outlined" id="adminThemeIcon">dark_mode</span>
+        </button>
+        <select class="pill-select topbar-lang" id="adminLang" aria-label="Language">
+          <option value="en">English</option>
+          <option value="zh-TW">繁體中文</option>
+          <option value="zh-CN">简体中文</option>
+        </select>
+        <div class="avatar-wrap">
+          <button class="avatar-btn" id="adminAvatarBtn" aria-haspopup="menu" aria-expanded="false" aria-controls="adminAvatarMenu" aria-label="Account menu" data-i18n-aria="avatarMenu">
+            <span id="adminAvatarInitial">A</span>
           </button>
-        </div>
-
-        <div class="sidebar-section">
-          <div class="sidebar-title" id="adminMenuNavigationTitle">Menu Navigation</div>
-          <ul class="filter-menu-list">
-            <li class="filter-menu-item active admin-tab-item" data-tab="users" id="adminTabUsersNav">
-              <span class="material-symbols-outlined">manage_accounts</span> <span id="adminTabUsersText">Users Provisioning</span>
-            </li>
-            <li class="filter-menu-item admin-tab-item" data-tab="analytics" id="adminTabAnalyticsNav">
-              <span class="material-symbols-outlined">monitoring</span> <span id="adminTabAnalyticsText">System Analytics</span>
-            </li>
-            <li class="filter-menu-item admin-tab-item" data-tab="cases" id="adminTabCasesNav">
-              <span class="material-symbols-outlined">edit_note</span> <span id="adminTabCasesText">Use Cases CRUD</span>
-            </li>
-            <li class="filter-menu-item admin-tab-item" data-tab="feedbacks" id="adminTabFeedbacksNav" style="display: none;">
-              <span class="material-symbols-outlined">rate_review</span> <span id="adminTabFeedbacksText">User Feedbacks</span>
-            </li>
-          </ul>
-        </div>
-
-        <!-- Utility Admin options -->
-        <div style="margin-top: auto;">
-          <button class="nav-button btn-wide" id="btnAdminBackToPortal" style="margin-bottom: 8px;">
-            <span class="material-symbols-outlined">grid_view</span> <span id="btnAdminBackToPortalText">Learning Portal</span>
-          </button>
-          <button class="nav-button btn-wide nav-button-primary" id="btnAdminLogout" style="background: var(--color-danger); border-color: var(--color-danger);">
-            <span class="material-symbols-outlined">logout</span> <span id="btnAdminLogoutText">Log Out</span>
-          </button>
-        </div>
-      </aside>
-
-      <!-- Admin Main Content Area -->
-      <main class="workspace" style="padding: 40px;">
-        
-        <!-- Header banner -->
-        <div class="dashboard-header" style="border-bottom: 1px solid var(--border-glass); padding-bottom: 20px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
-          <div style="display: flex; align-items: center; gap: 12px; flex-grow: 1;">
-            <button class="nav-button" id="btnAdminMobileMenu" aria-label="Open Admin Menu" style="padding: 0 10px; flex-shrink: 0; display: none; height: 38px; width: 44px; justify-content: center; align-items: center;">
-              <span class="material-symbols-outlined" style="font-size: 24px;">menu</span>
+          <div class="avatar-menu" id="adminAvatarMenu" role="menu" hidden>
+            <div class="avatar-menu-head">
+              <div class="avatar-menu-email" id="adminMenuEmail"></div>
+              <div class="avatar-menu-context" id="adminMenuRole"></div>
+            </div>
+            <button class="avatar-menu-item" id="btnAdminBackToPortal" role="menuitem">
+              <span class="material-symbols-outlined">grid_view</span><span id="btnAdminBackToPortalText">Learning portal</span>
             </button>
+            <button class="avatar-menu-item" id="btnAdminLogout" role="menuitem">
+              <span class="material-symbols-outlined">logout</span><span id="btnAdminLogoutText">Log out</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <nav class="tab-row" id="adminTabRow" role="tablist" aria-label="Admin sections">
+      <button class="tab-item admin-tab-item" role="tab" data-tab="users" id="adminTabUsersNav"><span id="adminTabUsersText">Users</span></button>
+      <button class="tab-item admin-tab-item" role="tab" data-tab="analytics" id="adminTabAnalyticsNav"><span id="adminTabAnalyticsText">Analytics</span></button>
+      <button class="tab-item admin-tab-item" role="tab" data-tab="cases" id="adminTabCasesNav"><span id="adminTabCasesText">Use cases</span></button>
+      <button class="tab-item admin-tab-item" role="tab" data-tab="feedbacks" id="adminTabFeedbacksNav" hidden><span id="adminTabFeedbacksText" data-i18n="adminTabFeedbacksText">Feedback</span></button>
+      <button class="tab-item admin-tab-item" role="tab" data-tab="settings" id="adminTabSettingsNav" hidden><span data-i18n="adminTabSettingsText">Settings</span></button>
+    </nav>
+
+    <main class="admin-main">
+
+      <!-- TAB: USERS -->
+      <section class="admin-tab-content" id="adminTabUsers">
+        <!-- (a) Admins (super only) -->
+        <div class="panel" id="adminAdminsPanel" hidden>
+          <h2 class="panel-title" data-i18n="adminsTitle">Admins</h2>
+          <p class="panel-desc" data-i18n="adminsDesc">Invite people to manage this portal.</p>
+          <form id="formInviteAdmin" class="inline-form" novalidate>
+            <div class="form-group grow">
+              <label class="form-label" for="inputInviteAdminEmail" data-i18n="inviteEmailLabel">Email</label>
+              <input type="email" class="select-control" id="inputInviteAdminEmail" placeholder="name@school.edu" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="selectInviteAdminRole" data-i18n="inviteRoleLabel">Role</label>
+              <select class="select-control" id="selectInviteAdminRole">
+                <option value="assist" data-i18n="roleAssist">Assistant admin</option>
+                <option value="super" data-i18n="roleSuper">Super admin</option>
+              </select>
+            </div>
+            <button class="nav-button nav-button-primary" type="submit" id="btnSendInvite" data-i18n="sendInvite">Send invite</button>
+          </form>
+          <div id="adminInviteResult" class="inline-feedback" hidden></div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th data-i18n="inviteEmailLabel">Email</th>
+                  <th data-i18n="inviteRoleLabel">Role</th>
+                  <th data-i18n="adminThPasswordStatus">Status</th>
+                  <th data-i18n="invitedBy">Invited by</th>
+                  <th class="col-actions"><span class="sr-only" data-i18n="adminThAdminActions">Actions</span></th>
+                </tr>
+              </thead>
+              <tbody id="adminAdminsTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- (b) Add users -->
+        <div class="panel">
+          <h2 class="panel-title" id="adminProvisionTitle">Add users</h2>
+          <p class="panel-desc" id="adminProvisionDesc">Separate emails with commas. Users set their own password on first sign-in.</p>
+          <div id="userActionFeedback" class="inline-feedback" style="display: none;"></div>
+          <form id="formAddUser" class="inline-form">
+            <div class="form-group grow">
+              <label id="adminProvisionLabelEmail" class="form-label" for="inputNewUserEmail">Emails</label>
+              <input type="text" class="select-control" id="inputNewUserEmail" placeholder="prof1@edu.hk, prof2@edu.hk" required>
+            </div>
+            <button id="adminBtnProvision" class="nav-button nav-button-primary" type="submit">Add users</button>
+          </form>
+        </div>
+
+        <!-- (c) Users table -->
+        <div class="panel">
+          <h2 class="panel-title" id="adminRegisteredUsersTitle">Users</h2>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th id="adminThUserEmail">Email</th>
+                  <th data-i18n="adminThGeLink">GE app link</th>
+                  <th id="adminThPasswordStatus">Status</th>
+                  <th id="adminThCreatedDate">Created</th>
+                  <th class="col-actions"><span class="sr-only" id="adminThAdminActions">Actions</span></th>
+                </tr>
+              </thead>
+              <tbody id="adminUsersTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB: ANALYTICS -->
+      <section class="admin-tab-content" id="adminTabAnalytics" style="display: none;">
+        <div class="stat-grid">
+          <div class="panel stat-card">
+            <div class="stat-label" id="adminLabelTotalUsers">Total users</div>
+            <div class="stat-value" id="statTotalUsers">0</div>
+          </div>
+          <div class="panel stat-card">
+            <div class="stat-label" id="adminLabelTotalUseCases">Use cases</div>
+            <div class="stat-value" id="statTotalUseCases">0</div>
+          </div>
+          <div class="panel stat-card">
+            <div class="stat-label" id="adminLabelTotalLikes">Likes</div>
+            <div class="stat-value" id="statTotalLikes">0</div>
+          </div>
+          <div class="panel stat-card">
+            <div class="stat-label" id="adminLabelTotalViews">Views</div>
+            <div class="stat-value" id="statTotalViews">0</div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2 class="panel-title" id="adminChartTitle">6-month adoption</h2>
+          <p class="panel-desc" id="adminChartDesc">Views, likes and Try it launches.</p>
+          <div class="chart-legend">
+            <div id="adminLabelViewsLegend"><span style="display: inline-block; width: 12px; height: 3px; background: var(--color-secondary);"></span> PAGE VIEWS</div>
+            <div id="adminLabelLikesLegend"><span style="display: inline-block; width: 12px; height: 3px; background: var(--color-danger);"></span> USER LIKES</div>
+            <div id="adminLabelTriesLegend"><span style="display: inline-block; width: 12px; height: 3px; background: var(--color-success);"></span> Try it</div>
+          </div>
+          <div id="adminChartContainer" style="width: 100%; height: 260px;"></div>
+        </div>
+
+        <div class="panel">
+          <h2 class="panel-title" id="adminLeaderboardTitle">
+            <span class="material-symbols-outlined" style="color: var(--color-danger);">star</span>
+            <span data-i18n="leaderboardTitle">Most popular playbooks</span>
+          </h2>
+          <p class="panel-desc" id="adminLeaderboardDesc" data-i18n="leaderboardDesc">Ranked by likes.</p>
+          <div id="adminMostLikedList" style="display: grid; grid-template-columns: 1fr; gap: 12px;"></div>
+        </div>
+      </section>
+
+      <!-- TAB: USE CASES -->
+      <section class="admin-tab-content" id="adminTabCases" style="display: none;">
+        <div class="panel-head">
+          <h2 class="panel-title" id="adminCrudTitle">Use cases</h2>
+          <div class="panel-actions">
+            <button class="nav-button" id="btnAdminGenerateMissing" hidden>
+              <span class="material-symbols-outlined">imagesmode</span> <span data-i18n="generateMissing">Generate missing</span>
+            </button>
+            <button class="nav-button" id="btnAdminExportCases">
+              <span class="material-symbols-outlined">download</span> <span id="adminBtnExportText">Export JSON</span>
+            </button>
+            <button class="nav-button" id="btnAdminImportCases">
+              <span class="material-symbols-outlined">upload</span> <span id="adminBtnImportText" data-i18n="adminBtnImportText">Import JSON</span>
+            </button>
+            <input type="file" id="inputAdminImportFile" accept=".json" style="display: none;">
+            <button class="nav-button nav-button-primary" id="btnAdminCreateCase">
+              <span class="material-symbols-outlined">add</span> <span id="adminBtnCreateCaseText">Add use case</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="panel table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th class="col-check">
+                  <input type="checkbox" id="chkAdminSelectAllCases" aria-label="Select all">
+                </th>
+                <th data-i18n="adminCrudThInfographic">Infographic</th>
+                <th id="adminCrudThId">ID</th>
+                <th id="adminCrudThTitle">Title</th>
+                <th id="adminCrudThCategory">Category</th>
+                <th id="adminCrudThRole">Role</th>
+                <th id="adminCrudThVerified" data-i18n="adminCrudThVerified">Verified</th>
+                <th class="col-actions"><span class="sr-only" id="adminCrudThActions">Actions</span></th>
+              </tr>
+            </thead>
+            <tbody id="adminCasesTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- TAB: FEEDBACK -->
+      <section class="admin-tab-content" id="adminTabFeedbacks" style="display: none;">
+        <div class="panel-head">
+          <h2 class="panel-title" id="adminFeedbackTitle" data-i18n="adminFeedbackTitle">Feedback</h2>
+        </div>
+        <div class="panel table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th data-i18n="fbThAuthor">From</th>
+                <th data-i18n="fbThContent">Feedback</th>
+                <th data-i18n="fbThDate">Submitted</th>
+                <th class="col-actions"><span class="sr-only" data-i18n="adminThAdminActions">Actions</span></th>
+              </tr>
+            </thead>
+            <tbody id="adminFeedbacksTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- TAB: SETTINGS (super only) -->
+      <section class="admin-tab-content" id="adminTabSettings" style="display: none;">
+        <div class="panel settings-panel">
+          <div class="panel-head">
             <div>
-              <h1 id="adminPortalTitle" style="font-size: 24px; font-weight: 600; letter-spacing: -0.02em;">GEMINI EDUCATION MANAGEMENT</h1>
-              <p id="adminPortalSubtitle" style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">Configure users, update learning playbooks, and analyze the last 6 months deployment metrics.</p>
+              <h2 class="panel-title" data-i18n="settingsEmailTitle">Email</h2>
+              <p class="panel-desc" data-i18n="settingsEmailDesc">Used for admin invites and password resets.</p>
             </div>
+            <span class="status-pill" id="smtpStatusPill">—</span>
           </div>
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <!-- Admin Theme Toggle Button -->
-            <button class="nav-button" id="btnAdminThemeToggle" aria-label="Toggle Theme" style="padding: 0; width: 44px; justify-content: center; flex-shrink: 0; height: 38px;">
-              <span class="material-symbols-outlined" id="adminThemeIcon" style="font-size: 20px;">dark_mode</span>
-            </button>
-            <span class="material-symbols-outlined" style="font-size: 18px; color: var(--text-muted);">language</span>
-            <select class="select-control" id="adminLang" style="width: auto; height: 38px; padding: 0 10px; font-size: 12px; flex-shrink: 0;">
-              <option value="en">English</option>
-              <option value="zh-TW">繁體中文</option>
-              <option value="zh-CN">简体中文</option>
-            </select>
-          </div>
-        </div>
 
-        <!-- TAB 1: USER PROVISIONING & ACCOUNT MANAGEMENT -->
-        <section class="admin-tab-content" id="adminTabUsers">
-          <div class="glass-panel" style="padding: 24px; margin-bottom: 24px;">
-            <h2 id="adminProvisionTitle" style="font-size: 16px; margin-bottom: 8px;">Provision New Account</h2>
-            <p id="adminProvisionDesc" style="font-size: 12px; color: var(--text-secondary); margin-bottom: 16px;">This generates a <strong>random 10-character</strong> temporary password. You can provision multiple accounts at once by separating email addresses with commas; in that case, the default temporary password for all of them will be <strong>"ChangeMe"</strong>. All users are forced to reset their password on first login.</p>
-            
-            <div id="userActionFeedback" style="display: none; margin-bottom: 16px;"></div>
+          <form id="formSmtpSettings" class="settings-form" novalidate autocomplete="off">
+            <div class="form-group">
+              <label class="form-label" for="smtpPreset" data-i18n="smtpPreset">Provider</label>
+              <select class="select-control" id="smtpPreset">
+                <option value="custom" data-i18n="presetCustom">Custom</option>
+                <option value="gmail" data-i18n="presetGmail">Gmail</option>
+                <option value="outlook" data-i18n="presetOutlook">Outlook.com</option>
+                <option value="m365" data-i18n="presetM365">Microsoft 365</option>
+              </select>
+              <p class="field-hint" id="smtpPresetHint"></p>
+            </div>
 
-            <form id="formAddUser" style="display: flex; gap: 12px; align-items: flex-end; max-width: 500px;">
-              <div class="form-group" style="flex-grow: 1;">
-                <label id="adminProvisionLabelEmail" class="form-label">User Email Address</label>
-                <input type="text" class="select-control" id="inputNewUserEmail" placeholder="e.g. prof1@edu.hk, prof2@edu.hk" required style="width: 100%;">
+            <div class="settings-row settings-row-3">
+              <div class="form-group">
+                <label class="form-label" for="smtpHost" data-i18n="smtpHost">SMTP host</label>
+                <input type="text" class="select-control" id="smtpHost" placeholder="smtp.example.com">
+                <p class="field-error" data-error-for="smtpHost"></p>
               </div>
-              <button id="adminBtnProvision" class="nav-button nav-button-primary" type="submit" style="height: 40px; flex-shrink: 0;">
-                Provision <span class="material-symbols-outlined">person_add</span>
-              </button>
-            </form>
-          </div>
+              <div class="form-group">
+                <label class="form-label" for="smtpPort" data-i18n="smtpPort">Port</label>
+                <input type="number" class="select-control" id="smtpPort" min="1" max="65535" placeholder="587">
+                <p class="field-error" data-error-for="smtpPort"></p>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="smtpSecurity" data-i18n="smtpSecurity">Security</label>
+                <select class="select-control" id="smtpSecurity">
+                  <option value="starttls" data-i18n="secStarttls">STARTTLS</option>
+                  <option value="ssl" data-i18n="secSsl">SSL/TLS</option>
+                  <option value="none" data-i18n="secNone">None</option>
+                </select>
+              </div>
+            </div>
+            <p class="field-warning" id="smtpSecurityWarn" data-i18n="secNoneWarn" hidden>Without encryption, your password is sent in plain text.</p>
 
-          <!-- Registered Users Table -->
-          <div class="glass-panel" style="padding: 24px; overflow-x: auto;">
-            <h2 id="adminRegisteredUsersTitle" style="font-size: 16px; margin-bottom: 16px;">Registered Portal Users</h2>
-            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
-              <thead>
-                <tr style="border-bottom: 1px solid var(--border-glass); color: var(--text-secondary); font-weight: 600;">
-                  <th id="adminThUserEmail" style="padding: 12px 8px;">User Email</th>
-                  <th id="adminThPasswordStatus" style="padding: 12px 8px;">Password Status</th>
-                  <th id="adminThCreatedDate" style="padding: 12px 8px;">Created Date</th>
-                  <th id="adminThAdminActions" style="padding: 12px 8px; text-align: right;">Administrative Actions</th>
-                </tr>
-              </thead>
-              <tbody id="adminUsersTableBody">
-                <!-- Injected dynamically by app.js -->
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        <!-- TAB 2: SYSTEM ANALYTICS (6 MONTHS TREND) -->
-        <section class="admin-tab-content" id="adminTabAnalytics" style="display: none;">
-          
-          <!-- Key metrics counters -->
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
-            <div class="glass-panel" style="padding: 20px; position: relative;">
-              <div id="adminLabelTotalUsers" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary);">Total Registered Users</div>
-              <div id="statTotalUsers" style="font-size: 32px; font-weight: 700; margin-top: 8px; font-family: var(--font-heading);">0</div>
-              <div class="connector-indicator active" style="position: absolute; top: 20px; right: 20px; background: var(--color-primary);"></div>
-            </div>
-            <div class="glass-panel" style="padding: 20px; position: relative;">
-              <div id="adminLabelTotalUseCases" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary);">Total Use Cases</div>
-              <div id="statTotalUseCases" style="font-size: 32px; font-weight: 700; margin-top: 8px; font-family: var(--font-heading);">0</div>
-              <div class="connector-indicator active" style="position: absolute; top: 20px; right: 20px; background: var(--color-accent);"></div>
-            </div>
-            <div class="glass-panel" style="padding: 20px; position: relative;">
-              <div id="adminLabelTotalLikes" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary);">User Liked Counts</div>
-              <div id="statTotalLikes" style="font-size: 32px; font-weight: 700; margin-top: 8px; font-family: var(--font-heading);">0</div>
-              <div class="connector-indicator active" style="position: absolute; top: 20px; right: 20px; background: var(--color-danger);"></div>
-            </div>
-            <div class="glass-panel" style="padding: 20px; position: relative;">
-              <div id="adminLabelTotalDeployments" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary);">Cases Deployed Counts</div>
-              <div id="statTotalDeployments" style="font-size: 32px; font-weight: 700; margin-top: 8px; font-family: var(--font-heading);">0</div>
-              <div class="connector-indicator active" style="position: absolute; top: 20px; right: 20px; background: var(--color-success);"></div>
-            </div>
-          </div>
-
-          <!-- Gorgeous native SVG Line Chart mapping the last 6 months metrics -->
-          <div class="glass-panel" style="padding: 24px;">
-            <h2 id="adminChartTitle" style="font-size: 16px; margin-bottom: 4px;">6-Month Portal Adoption Metrics</h2>
-            <p id="adminChartDesc" style="font-size: 11px; color: var(--text-muted); margin-bottom: 20px;">Detailed aggregation charting Views, Likes, and Deployed actions across the academic term.</p>
-            
-            <div style="display: flex; gap: 24px; margin-bottom: 12px; font-size: 11px; font-weight: 700;">
-              <div id="adminLabelViewsLegend" style="display: flex; align-items: center; gap: 6px;"><span style="display: inline-block; width: 12px; height: 3px; background: var(--color-secondary);"></span> PAGE VIEWS</div>
-              <div id="adminLabelLikesLegend" style="display: flex; align-items: center; gap: 6px;"><span style="display: inline-block; width: 12px; height: 3px; background: var(--color-danger);"></span> USER LIKES</div>
-              <div id="adminLabelDeploymentsLegend" style="display: flex; align-items: center; gap: 6px;"><span style="display: inline-block; width: 12px; height: 3px; background: var(--color-success);"></span> DEPLOYMENTS</div>
+            <div class="settings-row">
+              <div class="form-group">
+                <label class="form-label" for="smtpUser" data-i18n="smtpUser">Username</label>
+                <input type="text" class="select-control" id="smtpUser" autocomplete="off">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="smtpPassword" data-i18n="smtpPassword">Password</label>
+                <input type="password" class="select-control" id="smtpPassword" autocomplete="new-password">
+                <p class="field-error" data-error-for="smtpPassword"></p>
+              </div>
             </div>
 
-            <!-- Native SVG container for precision chart rendering -->
-            <div id="adminChartContainer" style="width: 100%; height: 260px;">
-              <!-- App.js renders high fidelity lines here dynamically -->
+            <div class="settings-row">
+              <div class="form-group">
+                <label class="form-label" for="smtpFromName" data-i18n="smtpFromName">From name</label>
+                <input type="text" class="select-control" id="smtpFromName" placeholder="GE Adoption Hub">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="smtpFromEmail" data-i18n="smtpFromEmail">From email</label>
+                <input type="email" class="select-control" id="smtpFromEmail" placeholder="no-reply@school.edu">
+                <p class="field-error" data-error-for="smtpFromEmail"></p>
+              </div>
             </div>
-          </div>
 
-          <!-- Most Popular Playbooks Leaderboard -->
-          <div class="glass-panel" style="padding: 24px; margin-top: 24px;">
-            <h2 id="adminLeaderboardTitle" style="font-size: 16px; margin-bottom: 4px; display: flex; align-items: center; gap: 8px;">
-              <span class="material-symbols-outlined" style="color: var(--color-danger);">star</span>
-              <span>Most Popular Playbooks (Leaderboard)</span>
-            </h2>
-            <p id="adminLeaderboardDesc" style="font-size: 11px; color: var(--text-muted); margin-bottom: 20px;">Top-performing educational use cases ranked by collective user appreciation likes.</p>
-            
-            <div id="adminMostLikedList" style="display: grid; grid-template-columns: 1fr; gap: 12px;">
-              <!-- App.js renders dynamically here -->
+            <label class="check-row">
+              <input type="checkbox" id="smtpEnabled">
+              <span data-i18n="smtpEnabled">Send emails</span>
+            </label>
+
+            <div class="settings-test">
+              <div class="form-group grow">
+                <label class="form-label" for="smtpTestTo" data-i18n="testTo">Send test to</label>
+                <input type="email" class="select-control" id="smtpTestTo" placeholder="you@school.edu">
+              </div>
+              <button type="button" class="nav-button" id="btnSmtpTest" data-i18n="sendTest">Send test email</button>
             </div>
-          </div>
-        </section>
+            <div id="smtpTestResult" class="inline-feedback" hidden></div>
 
-        <!-- TAB 3: USE CASE EDITOR & CRUD PANEL -->
-        <section class="admin-tab-content" id="adminTabCases" style="display: none;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h2 id="adminCrudTitle" style="font-size: 16px;">Playbook Content Master Management</h2>
-            <div style="display: flex; gap: 10px;">
-              <button class="nav-button" id="btnAdminExportCases">
-                <span class="material-symbols-outlined">download</span> <span id="adminBtnExportText">Extract All (JSON)</span>
-              </button>
-              <button class="nav-button" id="btnAdminImportCases">
-                <span class="material-symbols-outlined">upload</span> <span id="adminBtnImportText">Import JSON</span>
-              </button>
-              <input type="file" id="inputAdminImportFile" accept=".json" style="display: none;">
-              <button class="nav-button nav-button-primary" id="btnAdminCreateCase">
-                <span class="material-symbols-outlined">add_box</span> <span id="adminBtnCreateCaseText">Add Use Case</span>
-              </button>
+            <div class="settings-footer">
+              <span class="field-hint" id="smtpLastChanged"></span>
+              <button type="submit" class="nav-button nav-button-primary" id="btnSmtpSave" data-i18n="saveSettings">Save</button>
             </div>
-          </div>
+          </form>
+        </div>
+      </section>
+    </main>
+  </div>
 
-          <!-- Use Cases Table List -->
-          <div class="glass-panel" style="padding: 24px; overflow-x: auto;">
-            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
-              <thead>
-                <tr style="border-bottom: 1px solid var(--border-glass); color: var(--text-secondary); font-weight: 600;">
-                  <th style="padding: 12px 8px; width: 40px; text-align: center;">
-                    <input type="checkbox" id="chkAdminSelectAllCases" style="cursor: pointer; width: 15px; height: 15px; accent-color: var(--color-primary);">
-                  </th>
-                  <th id="adminCrudThId" style="padding: 12px 8px;">ID</th>
-                  <th id="adminCrudThTitle" style="padding: 12px 8px;">Title</th>
-                  <th id="adminCrudThCategory" style="padding: 12px 8px;">Category Hub</th>
-                  <th id="adminCrudThRole" style="padding: 12px 8px;">Primary Role</th>
-                  <th id="adminCrudThVerified" style="padding: 12px 8px;">Verified</th>
-                  <th id="adminCrudThActions" style="padding: 12px 8px; text-align: right;">Actions</th>
-                </tr>
-              </thead>
-              <tbody id="adminCasesTableBody">
-                <!-- Injected dynamically by app.js -->
-              </tbody>
-            </table>
+  <!-- EDIT USER MODAL -->
+  <div class="modal-overlay" id="adminUserEditModal" aria-modal="true" role="dialog" aria-labelledby="adminUserEditTitle">
+    <div class="modal-content-card modal-small">
+      <div class="modal-header">
+        <div class="modal-header-left">
+          <h3 class="modal-title" id="adminUserEditTitle" data-i18n="editUserTitle">Edit user</h3>
+        </div>
+        <button class="close-btn" id="adminUserEditClose" aria-label="Close">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <form id="formAdminEditUser" class="modal-body" novalidate>
+        <div id="editUserFeedback" class="inline-feedback" hidden></div>
+        <div class="form-group">
+          <label class="form-label" for="editUserEmail" data-i18n="inviteEmailLabel">Email</label>
+          <input type="email" class="select-control" id="editUserEmail" required>
+          <p class="field-error" data-error-for="editUserEmail"></p>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="editUserGeLink" data-i18n="geLinkLabel">GE app link</label>
+          <input type="url" class="select-control" id="editUserGeLink" placeholder="https://">
+          <p class="field-hint" data-i18n="geLinkHint">Opens prompts directly in this user's Gemini Enterprise app.</p>
+          <p class="field-error" data-error-for="editUserGeLink"></p>
+        </div>
+        <div class="reset-access-box">
+          <div>
+            <div class="reset-access-title" data-i18n="resetAccess">Reset access</div>
+            <p class="field-hint" data-i18n="resetAccessDesc">Creates a new temporary password.</p>
           </div>
-        </section>
-
-        <!-- TAB 4: USER FEEDBACKS PANEL (EDU_PORTAL_S_ADMIN ONLY) -->
-        <section class="admin-tab-content" id="adminTabFeedbacks" style="display: none;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h2 id="adminFeedbackTitle" style="font-size: 16px;">User Feedbacks & Suggestions</h2>
-          </div>
-
-          <!-- Feedbacks List -->
-          <div class="glass-panel" style="padding: 24px; overflow-x: auto;">
-            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
-              <thead>
-                <tr style="border-bottom: 1px solid var(--border-glass); color: var(--text-secondary); font-weight: 600;">
-                  <th style="padding: 12px 8px; width: 200px;">User / Author</th>
-                  <th style="padding: 12px 8px;">Feedback Suggestion</th>
-                  <th style="padding: 12px 8px; width: 150px;">Submitted At</th>
-                  <th style="padding: 12px 8px; width: 80px; text-align: right;">Action</th>
-                </tr>
-              </thead>
-              <tbody id="adminFeedbacksTableBody">
-                <!-- Injected dynamically by app.js -->
-              </tbody>
-            </table>
-          </div>
-        </section>
-      </main>
+          <button type="button" class="nav-button" id="btnEditUserReset" data-i18n="resetAccess">Reset access</button>
+        </div>
+        <div id="editUserTempPw" class="inline-feedback" hidden></div>
+        <div class="modal-footer-row">
+          <button type="button" class="nav-button" id="btnEditUserCancel" data-i18n="cancel">Cancel</button>
+          <button type="submit" class="nav-button nav-button-primary" id="btnEditUserSave" data-i18n="save">Save</button>
+        </div>
+      </form>
     </div>
   </div>
 
@@ -578,9 +668,9 @@
     <div class="modal-content-card" style="max-height: 90vh; height: 780px; max-width: 800px;">
       <div class="modal-header">
         <div class="modal-header-left">
-          <h3 class="modal-title" id="adminCaseModalTitle">Edit Use Case</h3>
+          <h3 class="modal-title" id="adminCaseModalTitle">New playbook</h3>
         </div>
-        <button class="close-btn" id="adminCaseModalClose" aria-label="Close form">
+        <button class="close-btn" id="adminCaseModalClose" aria-label="Close" data-i18n-aria="closeLabel">
           <span class="material-symbols-outlined">close</span>
         </button>
       </div>
@@ -588,37 +678,51 @@
       <form id="formAdminSaveCase" style="display: flex; flex-direction: column; overflow-y: auto; height: calc(100% - 72px);">
         <div class="modal-body" style="gap: 16px;">
           
-          <div id="adminFormFeedback" style="display: none; background: var(--color-danger-glow); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 4px; padding: 10px 12px; color: var(--color-danger); font-size: 12px; text-align: center; width: 100%;"></div>
+          <div id="adminFormFeedback" style="display: none; background: var(--color-danger-glow); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 4px; padding: 10px 12px; color: var(--color-danger); font-size: 13px; text-align: center; width: 100%;"></div>
+
+          <!-- Infographic preview (generate/regenerate is super-admin only) -->
+          <div class="infographic-preview" id="formCaseInfographicWrap">
+            <div class="form-label" data-i18n="formInfographicLabel">Infographic</div>
+            <div class="infographic-preview-row">
+              <a id="formCaseInfographicLink" href="#" target="_blank" rel="noopener" hidden>
+                <img id="formCaseInfographicImg" alt="" loading="lazy">
+              </a>
+              <span class="field-hint" id="formCaseInfographicNone" data-i18n="none">None</span>
+              <button type="button" class="nav-button" id="btnFormCaseGenInfographic" hidden>
+                <span class="material-symbols-outlined">imagesmode</span> <span id="btnFormCaseGenInfographicText">Generate</span>
+              </button>
+            </div>
+          </div>
 
           <!-- Interactive AI Drafting Request Card -->
           <div class="glass-panel" style="padding: 16px; border: 1px solid rgba(79, 70, 229, 0.25); background: rgba(79, 70, 229, 0.03); width: 100%; box-sizing: border-box; display: flex; flex-direction: column; gap: 10px; border-radius: 8px;">
             <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
               <div style="display: flex; align-items: center; gap: 8px;">
                 <span class="material-symbols-outlined" style="color: var(--color-primary); font-size: 18px;">psychology</span>
-                <span style="font-size: 13px; font-weight: 700; color: var(--color-primary);" id="adminFormLabelGeminiPromptTitle">Generate/Refine Playbook with Gemini</span>
+                <span style="font-size: 13px; font-weight: 700; color: var(--color-primary);" id="adminFormLabelGeminiPromptTitle" data-i18n="adminFormLabelGeminiPromptTitle">Draft or refine with Gemini</span>
               </div>
-              <button id="btnAdminFormGemini" class="nav-button" type="button" style="background: linear-gradient(135deg, #4f46e5 0%, #2563eb 100%); color: white; display: flex; align-items: center; gap: 6px; border: none; border-radius: 6px; padding: 6px 12px; font-weight: 600; cursor: pointer; font-size: 12px; box-shadow: 0 4px 12px rgba(37,99,235,0.25);" title="Generate playbook contents with Gemini 3.5 Flash">
+              <button id="btnAdminFormGemini" class="nav-button" type="button" style="background: linear-gradient(135deg, #4f46e5 0%, #2563eb 100%); color: white; display: flex; align-items: center; gap: 6px; border: none; border-radius: 6px; padding: 6px 12px; font-weight: 600; cursor: pointer; font-size: 13px; box-shadow: 0 4px 12px rgba(37,99,235,0.25);" title="Draft with Gemini 3.5 Flash" data-i18n-title="caseFormDraftBtnTitle">
                 <span class="material-symbols-outlined" style="font-size: 16px; color: white !important;">bolt</span>
-                <span>Draft with Gemini</span>
+                <span data-i18n="caseFormDraftBtn">Draft with Gemini</span>
               </button>
             </div>
-            <p style="font-size: 11px; color: var(--text-muted); margin: 0;" id="adminFormLabelGeminiPromptDesc">Specify what you want to create, or describe the edits you'd like to apply to this playbook. Gemini will generate high-fidelity, localized playbooks, system prompts, steps, and tips.</p>
-            <textarea class="select-control" id="formCaseGeminiInstruction" style="height: 60px; padding: 8px 12px; resize: none; font-size: 12px; border-color: rgba(79, 70, 229, 0.2);" placeholder="e.g. Create a rubric grading guide for high school chemistry lab reports using Canvas Mode, focusing on safety..."></textarea>
+            <p style="font-size: 13px; color: var(--text-muted); margin: 0;" id="adminFormLabelGeminiPromptDesc" data-i18n="adminFormLabelGeminiPromptDesc">Describe what to create or change. Gemini drafts the steps, prompt, tip and translations.</p>
+            <textarea class="select-control" id="formCaseGeminiInstruction" style="height: 60px; padding: 8px 12px; resize: none; font-size: 13px; border-color: rgba(79, 70, 229, 0.2);" placeholder="e.g. A Canvas Mode rubric for high school chemistry lab reports" data-i18n-placeholder="caseFormDraftPlaceholder"></textarea>
           </div>
 
           <!-- ID and Category Row -->
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
             <div class="form-group">
-              <label id="adminFormLabelId" class="form-label">ID (Unique, Immutable)</label>
+              <label id="adminFormLabelId" class="form-label" for="formCaseId" data-i18n="adminFormLabelId">ID (can't change later)</label>
               <input type="text" class="select-control" id="formCaseId" required placeholder="e.g. research_agent">
             </div>
             <div class="form-group">
-              <label id="adminFormLabelCategory" class="form-label">Category Hub</label>
+              <label id="adminFormLabelCategory" class="form-label" for="formCaseCategory" data-i18n="adminFormLabelCategory">Category</label>
               <select class="select-control" id="formCaseCategory" required>
-                <option value="academic">Academic Portal</option>
-                <option value="student">Student Support</option>
-                <option value="operational">Operations & Services</option>
-                <option value="admin">System & Admin</option>
+                <option value="academic" data-i18n="catAcademic">Academic</option>
+                <option value="student" data-i18n="catStudent">Student support</option>
+                <option value="operational" data-i18n="catOperational">Operations</option>
+                <option value="admin" data-i18n="catAdmin">Administration</option>
               </select>
             </div>
           </div>
@@ -626,11 +730,11 @@
           <!-- Title and Role Row -->
           <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 16px;">
             <div class="form-group">
-              <label id="adminFormLabelTitle" class="form-label">Template Title</label>
-              <input type="text" class="select-control" id="formCaseTitle" required placeholder="e.g. Chemistry Lab Safety Agent">
+              <label id="adminFormLabelTitle" class="form-label" for="formCaseTitle" data-i18n="adminFormLabelTitle">Title</label>
+              <input type="text" class="select-control" id="formCaseTitle" required placeholder="e.g. Chemistry lab safety agent" data-i18n-placeholder="caseFormTitlePh">
             </div>
             <div class="form-group">
-              <label id="adminFormLabelRole" class="form-label">Primary Role Context</label>
+              <label id="adminFormLabelRole" class="form-label" for="formCaseRole" data-i18n="adminFormLabelRole">Role</label>
               <select class="select-control" id="formCaseRole" required>
                 <option value="Lecturer">Lecturer / Educator</option>
                 <option value="TA">Teaching Assistant (TA)</option>
@@ -646,26 +750,24 @@
           </div>
 
           <div class="form-group">
-            <label id="adminFormLabelSummary" class="form-label">Brief Summary Description</label>
-            <textarea class="select-control" id="formCaseSummary" required style="height: 60px; padding: 8px 12px; resize: vertical;" placeholder="1-2 sentences summarizing the core adoption outcome..."></textarea>
+            <label id="adminFormLabelSummary" class="form-label" for="formCaseSummary" data-i18n="adminFormLabelSummary">Summary</label>
+            <textarea class="select-control" id="formCaseSummary" required style="height: 60px; padding: 8px 12px; resize: vertical;" placeholder="1–2 sentences on the outcome" data-i18n-placeholder="caseFormSummaryPh"></textarea>
           </div>
 
           <!-- Verified Flag Toggle -->
           <div class="form-group" style="margin-bottom: 16px; border: 1px dashed rgba(16, 185, 129, 0.2); padding: 12px; border-radius: 6px; background: rgba(16, 185, 129, 0.02);">
             <label style="display: flex; align-items: center; gap: 8px; font-weight: 700; color: #10b981; cursor: pointer; font-size: 13px;">
               <input type="checkbox" id="formCaseVerified" style="width: 16px; height: 16px; accent-color: #10b981;"> 
-              <span id="adminFormLabelVerifiedCheckbox">Mark Playbook as Verified by Admin</span>
+              <span id="adminFormLabelVerifiedCheckbox" data-i18n="caseFormVerified">Mark as verified</span>
             </label>
-            <div id="adminFormDescVerifiedCheckbox" style="font-size: 11px; color: var(--text-secondary); margin-left: 24px; margin-top: 4px;">
-              Verified playbooks receive a premium verification badge on the main portal to signal that their prompts and structures have been officially vetted for institutional accuracy.
-            </div>
+            <div id="adminFormDescVerifiedCheckbox" data-i18n="caseFormVerifiedDesc" style="font-size: 13px; color: var(--text-secondary); margin-left: 24px; margin-top: 4px;">Shows a verified badge on the portal.</div>
           </div>
 
           <!-- Features and Connectors Checkboxes -->
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
             <div class="form-group">
-              <label id="adminFormLabelFeatures" class="form-label">Required Gemini Features</label>
-              <div class="glass-panel" style="padding: 10px; display: grid; grid-template-columns: 1fr; gap: 4px; font-size: 12px;">
+              <label id="adminFormLabelFeatures" class="form-label" data-i18n="adminFormLabelFeatures">GE features</label>
+              <div class="glass-panel" style="padding: 10px; display: grid; grid-template-columns: 1fr; gap: 4px; font-size: 13px;">
                 <label style="display: flex; align-items: center; gap: 6px;"><input type="checkbox" name="formFeatures" value="Agent Designer"> Agent Designer</label>
                 <label style="display: flex; align-items: center; gap: 6px;"><input type="checkbox" name="formFeatures" value="NotebookLM"> NotebookLM</label>
                 <label style="display: flex; align-items: center; gap: 6px;"><input type="checkbox" name="formFeatures" value="Deep Research"> Deep Research</label>
@@ -675,8 +777,8 @@
               </div>
             </div>
             <div class="form-group">
-              <label id="adminFormLabelConnectors" class="form-label">Required Connectors</label>
-              <div class="glass-panel" style="padding: 10px; display: grid; grid-template-columns: 1fr; gap: 4px; font-size: 12px;">
+              <label id="adminFormLabelConnectors" class="form-label" data-i18n="adminFormLabelConnectors">Connectors</label>
+              <div class="glass-panel" style="padding: 10px; display: grid; grid-template-columns: 1fr; gap: 4px; font-size: 13px;">
                 <label style="display: flex; align-items: center; gap: 6px;"><input type="checkbox" name="formConnectors" value="Drive Connector"> Drive Connector</label>
                 <label style="display: flex; align-items: center; gap: 6px;"><input type="checkbox" name="formConnectors" value="Email Connector"> Email Connector</label>
                 <label style="display: flex; align-items: center; gap: 6px;"><input type="checkbox" name="formConnectors" value="LMS Connector"> LMS Connector</label>
@@ -686,52 +788,65 @@
           </div>
 
           <div class="form-group">
-            <label id="adminFormLabelLevel" class="form-label">Applicable Institution Levels</label>
-            <div class="glass-panel" style="padding: 10px; display: flex; gap: 16px; font-size: 12px;">
-              <label style="display: flex; align-items: center; gap: 6px;"><input type="checkbox" name="formLevel" value="University & College"> University & College</label>
-              <label style="display: flex; align-items: center; gap: 6px;"><input type="checkbox" name="formLevel" value="High School"> High School</label>
-              <label style="display: flex; align-items: center; gap: 6px;"><input type="checkbox" name="formLevel" value="Primary School"> Primary School</label>
-              <label style="display: flex; align-items: center; gap: 6px;"><input type="checkbox" name="formLevel" value="Generic"> Generic</label>
+            <label id="adminFormLabelLevel" class="form-label" data-i18n="adminFormLabelLevel">School levels</label>
+            <div class="glass-panel" style="padding: 10px; display: flex; gap: 16px; font-size: 13px;">
+              <label style="display: flex; align-items: center; gap: 6px;"><input type="checkbox" name="formLevel" value="University & College"> <span data-i18n="levelUni">University & college</span></label>
+              <label style="display: flex; align-items: center; gap: 6px;"><input type="checkbox" name="formLevel" value="High School"> <span data-i18n="levelHigh">High school</span></label>
+              <label style="display: flex; align-items: center; gap: 6px;"><input type="checkbox" name="formLevel" value="Primary School"> <span data-i18n="levelPrimary">Primary school</span></label>
+              <label style="display: flex; align-items: center; gap: 6px;"><input type="checkbox" name="formLevel" value="Generic"> <span data-i18n="levelGeneric">Any level</span></label>
             </div>
           </div>
 
           <div class="form-group">
-            <label id="adminFormLabelSteps" class="form-label">Procedural Guide Steps (One step per line)</label>
-            <textarea class="select-control" id="formCaseSteps" required style="height: 100px; padding: 8px 12px; resize: vertical; font-family: monospace; font-size: 11px;" placeholder="Upload materials to NotebookLM...&#10;Open Agent Designer...&#10;Generate shareable link..."></textarea>
+            <label id="adminFormLabelSteps" class="form-label" for="formCaseSteps" data-i18n="adminFormLabelSteps">Steps (one per line)</label>
+            <textarea class="select-control" id="formCaseSteps" required style="height: 100px; padding: 8px 12px; resize: vertical; font-family: monospace; font-size: 13px;" placeholder="Upload materials to NotebookLM…" data-i18n-placeholder="caseFormStepsPh"></textarea>
           </div>
 
           <div class="form-group">
-            <label id="adminFormLabelPrompt" class="form-label">System Prompt sandbox instruction</label>
-            <textarea class="select-control" id="formCasePrompt" required style="height: 120px; padding: 8px 12px; resize: vertical; font-family: monospace; font-size: 11px;" placeholder="You are the class AI assistant..."></textarea>
+            <label id="adminFormLabelPrompt" class="form-label" for="formCasePrompt" data-i18n="adminFormLabelPrompt">Prompt</label>
+            <textarea class="select-control" id="formCasePrompt" required style="height: 120px; padding: 8px 12px; resize: vertical; font-family: monospace; font-size: 13px;" placeholder="You are the class AI assistant…" data-i18n-placeholder="caseFormPromptPh"></textarea>
           </div>
 
           <div class="form-group">
-            <label id="adminFormLabelProTip" class="form-label">Pro Tip</label>
-            <input type="text" class="select-control" id="formCaseProTip" required placeholder="Grounding the agent prevents hallucinations...">
+            <label class="form-label" for="formCasePromptType" data-i18n="formPromptTypeLabel">Prompt type</label>
+            <select class="select-control" id="formCasePromptType">
+              <option value="general">General query</option>
+              <option value="notebooklm">NotebookLM</option>
+              <option value="deep_research">Deep Research</option>
+              <option value="agent_designer">Agent Designer</option>
+              <option value="canvas">Canvas Mode</option>
+              <option value="image">Image Generation</option>
+              <option value="video">Video Generation</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label id="adminFormLabelProTip" class="form-label" for="formCaseProTip" data-i18n="adminFormLabelProTip">Pro tip</label>
+            <input type="text" class="select-control" id="formCaseProTip" required placeholder="Grounding the agent reduces hallucinations…" data-i18n-placeholder="caseFormProTipPh">
           </div>
 
           <!-- Simplified Translation Inputs (Traditional Chinese) -->
           <div class="glass-panel" style="padding: 16px; margin-top: 10px;">
-            <h4 id="adminFormLabelZhtwHeader" style="font-size: 12px; margin-bottom: 10px; color: var(--color-primary); text-transform: uppercase;">Traditional Chinese (繁體中文) Translations</h4>
+            <h4 id="adminFormLabelZhtwHeader" data-i18n="adminFormLabelZhtwHeader" style="font-size: 13px; margin-bottom: 10px; color: var(--color-primary); text-transform: uppercase;">Traditional Chinese (繁體中文)</h4>
             <div style="display: grid; grid-template-columns: 1fr; gap: 10px;">
               <div class="form-group">
-                <label id="adminFormLabelZhtwTitle" class="form-label" style="font-size: 10px;">Translated Title</label>
+                <label id="adminFormLabelZhtwTitle" class="form-label" style="font-size: 13px;">Translated Title</label>
                 <input type="text" class="select-control" id="formTransZhtwTitle" placeholder="預算審核指南助理">
               </div>
               <div class="form-group">
-                <label id="adminFormLabelZhtwSummary" class="form-label" style="font-size: 10px;">Translated Summary</label>
+                <label id="adminFormLabelZhtwSummary" class="form-label" style="font-size: 13px;">Translated Summary</label>
                 <input type="text" class="select-control" id="formTransZhtwSummary" placeholder="在 NotebookLM 中分析與審查社團預算案...">
               </div>
               <div class="form-group">
-                <label id="adminFormLabelZhtwSteps" class="form-label" style="font-size: 10px;">Translated Steps (One per line)</label>
-                <textarea class="select-control" id="formTransZhtwSteps" style="height: 80px; padding: 8px 12px; font-family: monospace; font-size: 11px;" placeholder="將社團章程上傳到 NotebookLM..."></textarea>
+                <label id="adminFormLabelZhtwSteps" class="form-label" style="font-size: 13px;">Translated Steps (One per line)</label>
+                <textarea class="select-control" id="formTransZhtwSteps" style="height: 80px; padding: 8px 12px; font-family: monospace; font-size: 13px;" placeholder="將社團章程上傳到 NotebookLM..."></textarea>
               </div>
               <div class="form-group">
-                <label id="adminFormLabelZhtwPrompt" class="form-label" style="font-size: 10px;">Translated Prompt</label>
-                <textarea class="select-control" id="formTransZhtwPrompt" style="height: 80px; padding: 8px 12px; font-family: monospace; font-size: 11px;" placeholder="你是一位社團輔導老師..."></textarea>
+                <label id="adminFormLabelZhtwPrompt" class="form-label" style="font-size: 13px;">Translated Prompt</label>
+                <textarea class="select-control" id="formTransZhtwPrompt" style="height: 80px; padding: 8px 12px; font-family: monospace; font-size: 13px;" placeholder="你是一位社團輔導老師..."></textarea>
               </div>
               <div class="form-group">
-                <label id="adminFormLabelZhtwProTip" class="form-label" style="font-size: 10px;">Translated Pro Tip</label>
+                <label id="adminFormLabelZhtwProTip" class="form-label" style="font-size: 13px;">Translated Pro Tip</label>
                 <input type="text" class="select-control" id="formTransZhtwProTip" placeholder="透過 NotebookLM 連接試算表...">
               </div>
             </div>
@@ -739,26 +854,26 @@
 
           <!-- Simplified Translation Inputs (Simplified Chinese) -->
           <div class="glass-panel" style="padding: 16px; margin-top: 10px;">
-            <h4 id="adminFormLabelZhcnHeader" style="font-size: 12px; margin-bottom: 10px; color: var(--color-primary); text-transform: uppercase;">Simplified Chinese (简体中文) Translations</h4>
+            <h4 id="adminFormLabelZhcnHeader" data-i18n="adminFormLabelZhcnHeader" style="font-size: 13px; margin-bottom: 10px; color: var(--color-primary); text-transform: uppercase;">Simplified Chinese (简体中文)</h4>
             <div style="display: grid; grid-template-columns: 1fr; gap: 10px;">
               <div class="form-group">
-                <label id="adminFormLabelZhcnTitle" class="form-label" style="font-size: 10px;">Translated Title</label>
+                <label id="adminFormLabelZhcnTitle" class="form-label" style="font-size: 13px;">Translated Title</label>
                 <input type="text" class="select-control" id="formTransZhcnTitle" placeholder="预算审核指南助理">
               </div>
               <div class="form-group">
-                <label id="adminFormLabelZhcnSummary" class="form-label" style="font-size: 10px;">Translated Summary</label>
+                <label id="adminFormLabelZhcnSummary" class="form-label" style="font-size: 13px;">Translated Summary</label>
                 <input type="text" class="select-control" id="formTransZhcnSummary" placeholder="在 NotebookLM 中分析与审查社团预算案...">
               </div>
               <div class="form-group">
-                <label id="adminFormLabelZhcnSteps" class="form-label" style="font-size: 10px;">Translated Steps (One per line)</label>
-                <textarea class="select-control" id="formTransZhcnSteps" style="height: 80px; padding: 8px 12px; font-family: monospace; font-size: 11px;" placeholder="将社团章程上传到 NotebookLM..."></textarea>
+                <label id="adminFormLabelZhcnSteps" class="form-label" style="font-size: 13px;">Translated Steps (One per line)</label>
+                <textarea class="select-control" id="formTransZhcnSteps" style="height: 80px; padding: 8px 12px; font-family: monospace; font-size: 13px;" placeholder="将社团章程上传到 NotebookLM..."></textarea>
               </div>
               <div class="form-group">
-                <label id="adminFormLabelZhcnPrompt" class="form-label" style="font-size: 10px;">Translated Prompt</label>
-                <textarea class="select-control" id="formTransZhcnPrompt" style="height: 80px; padding: 8px 12px; font-family: monospace; font-size: 11px;" placeholder="你是一位社团辅导老师..."></textarea>
+                <label id="adminFormLabelZhcnPrompt" class="form-label" style="font-size: 13px;">Translated Prompt</label>
+                <textarea class="select-control" id="formTransZhcnPrompt" style="height: 80px; padding: 8px 12px; font-family: monospace; font-size: 13px;" placeholder="你是一位社团辅导老师..."></textarea>
               </div>
               <div class="form-group">
-                <label id="adminFormLabelZhcnProTip" class="form-label" style="font-size: 10px;">Translated Pro Tip</label>
+                <label id="adminFormLabelZhcnProTip" class="form-label" style="font-size: 13px;">Translated Pro Tip</label>
                 <input type="text" class="select-control" id="formTransZhcnProTip" placeholder="通过 NotebookLM 连接电子表格...">
               </div>
             </div>
@@ -767,8 +882,8 @@
         </div>
 
         <div style="padding: 20px 32px; border-top: 1px solid var(--border-glass); background: var(--bg-sidebar); display: flex; justify-content: flex-end; gap: 12px;">
-          <button class="nav-button" type="button" id="btnAdminFormCancel">Cancel</button>
-          <button id="btnAdminFormSave" class="nav-button nav-button-primary" type="submit">Save Changes</button>
+          <button class="nav-button" type="button" id="btnAdminFormCancel" data-i18n="btnAdminFormCancel">Cancel</button>
+          <button id="btnAdminFormSave" class="nav-button nav-button-primary" type="submit" data-i18n="btnAdminFormSave">Save</button>
         </div>
       </form>
       <!-- Stunning dynamic Gemini generating loader overlay -->
@@ -778,8 +893,8 @@
           <div class="gemini-loader-ring"></div>
           <span class="material-symbols-outlined gemini-loader-sparkle" style="color: white !important;">bolt</span>
         </div>
-        <div style="margin-top: 20px; font-weight: 700; font-family: var(--font-heading); color: #ffffff; letter-spacing: 0.05em; text-transform: uppercase; font-size: 14px;" id="adminFormLabelGenerating">Gemini is drafting playbook...</div>
-        <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;" id="adminFormLabelGeneratingDesc">Optimizing guidelines, prompts, and localizations in real-time.</div>
+        <div style="margin-top: 20px; font-weight: 700; font-family: var(--font-heading); color: #ffffff; letter-spacing: 0.05em; text-transform: uppercase; font-size: 14px;" id="adminFormLabelGenerating" data-i18n="draftingTitle">Gemini is drafting…</div>
+        <div style="font-size: 13px; color: #94a3b8; margin-top: 4px;" id="adminFormLabelGeneratingDesc" data-i18n="draftingDesc">Writing steps, prompt and translations.</div>
         <div class="gemini-loader-bar">
           <div class="gemini-loader-bar-fill"></div>
         </div>
@@ -793,21 +908,19 @@
       <div class="modal-header" style="background: linear-gradient(135deg, rgba(37,99,235,0.05) 0%, rgba(79,70,229,0.05) 100%);">
         <div class="modal-header-left">
           <span class="material-symbols-outlined" style="color: var(--color-primary); font-size: 28px;">difference</span>
-          <h3 class="modal-title" style="margin-left: 8px;">Gemini Optimization Review (Diff Viewer)</h3>
+          <h3 class="modal-title" style="margin-left: 8px;" data-i18n="diffTitle">Review Gemini changes</h3>
         </div>
-        <button class="close-btn" id="adminDiffViewerClose" aria-label="Close diff viewer">
+        <button class="close-btn" id="adminDiffViewerClose" aria-label="Close" data-i18n-aria="closeLabel">
           <span class="material-symbols-outlined">close</span>
         </button>
       </div>
       
       <div style="flex: 1; display: flex; flex-direction: column; overflow: hidden; padding: 20px 32px; gap: 16px;">
-        <div style="background: rgba(37, 99, 235, 0.05); border: 1px solid rgba(37, 99, 235, 0.15); padding: 12px 16px; border-radius: 8px; font-size: 12px; line-height: 1.5; color: var(--text-primary);">
-          <strong>Gemini 3.5 Flash</strong> has analyzed your playbook parameters and generated optimized translations, prompt instructions, and step-by-step guides. Please review the comparison below.
-        </div>
+        <div style="background: rgba(37, 99, 235, 0.05); border: 1px solid rgba(37, 99, 235, 0.15); padding: 12px 16px; border-radius: 8px; font-size: 13px; line-height: 1.5; color: var(--text-primary);" data-i18n="diffIntro">Gemini 3.5 Flash suggested the changes below.</div>
         
         <div style="display: flex; gap: 16px; width: 100%;">
-          <div style="flex: 1; text-align: center; font-weight: 700; color: var(--text-secondary); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Current Draft / Database Version</div>
-          <div style="flex: 1; text-align: center; font-weight: 700; color: var(--color-primary); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Optimized Gemini Version</div>
+          <div style="flex: 1; text-align: center; font-weight: 700; color: var(--text-secondary); font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;" data-i18n="diffCurrent">Current</div>
+          <div style="flex: 1; text-align: center; font-weight: 700; color: var(--color-primary); font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;" data-i18n="diffProposed">Suggested</div>
         </div>
 
         <div style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; padding-right: 4px;" id="adminDiffScrollContainer">
@@ -816,8 +929,8 @@
       </div>
 
       <div style="padding: 20px 32px; border-top: 1px solid var(--border-glass); background: var(--bg-sidebar); display: flex; justify-content: flex-end; gap: 12px; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px;">
-        <button class="nav-button" type="button" id="btnDiffReject">Keep Current Version</button>
-        <button class="nav-button nav-button-primary" type="button" id="btnDiffAccept" style="background: linear-gradient(135deg, #4f46e5 0%, #2563eb 100%); border: none;">Accept & Apply Gemini suggestions</button>
+        <button class="nav-button" type="button" id="btnDiffReject" data-i18n="diffReject">Keep current</button>
+        <button class="nav-button nav-button-primary" type="button" id="btnDiffAccept" style="background: linear-gradient(135deg, #4f46e5 0%, #2563eb 100%); border: none;" data-i18n="diffAccept">Apply suggestions</button>
       </div>
     </div>
   </div>
@@ -829,37 +942,35 @@
   </div>
 
   <!-- PREMIUM FLOATING FEEDBACK BUTTON -->
-  <button id="btnFloatingFeedback" class="floating-feedback-button" aria-label="Submit Feedback">
+  <button id="btnFloatingFeedback" class="floating-feedback-button" aria-label="Feedback" data-i18n-aria="feedbackBtn" hidden>
     <span class="material-symbols-outlined" style="font-size: 22px;">rate_review</span>
-    <span class="feedback-button-text">Feedback</span>
+    <span class="feedback-button-text" data-i18n="feedbackBtn">Feedback</span>
   </button>
 
   <!-- FEEDBACK SUBMISSION MODAL OVERLAY -->
   <div class="modal-overlay" id="feedbackSubmissionModal" aria-modal="true" role="dialog" style="display: none; z-index: 2010;">
     <div class="modal-content-card" style="max-width: 460px; padding: 24px; height: auto;">
       <div class="modal-header" style="margin-bottom: 16px;">
-        <div class="modal-header-left">
-          <span class="material-symbols-outlined" style="color: #a855f7; font-size: 24px;">rate_review</span>
-          <h3 class="modal-title" style="margin-left: 8px;">Share Your Feedback</h3>
+        <div class="modal-header-left feedback-modal-heading">
+          <span class="material-symbols-outlined feedback-modal-icon" aria-hidden="true">rate_review</span>
+          <h3 class="modal-title feedback-modal-title" data-i18n="feedbackTitle">Share feedback</h3>
         </div>
-        <button class="close-btn" id="feedbackModalClose" aria-label="Close feedback form">
+        <button class="close-btn" id="feedbackModalClose" aria-label="Close" data-i18n-aria="closeLabel">
           <span class="material-symbols-outlined">close</span>
         </button>
       </div>
       
-      <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px; line-height: 1.4;">
-        Help us optimize the Gemini Enterprise Adoption Portal. Your suggestions will be directly reviewed by the portal's system administrator.
-      </p>
+      <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px; line-height: 1.4;" data-i18n="feedbackDesc">Tell us what would make this portal more useful. Admins read every note.</p>
 
       <form id="formFeedbackSubmit" onsubmit="handleFeedbackSubmit(event)">
         <div class="form-group">
-          <label class="form-label" for="txtFeedbackContent">Feedback & Suggestions</label>
-          <textarea class="select-control" id="txtFeedbackContent" rows="5" style="height: 120px; padding: 12px; resize: none; font-family: inherit; line-height: 1.5; background: var(--bg-primary); border: 1px solid var(--border-glass);" placeholder="What features or workflows would you like to see? Let us know..." required></textarea>
+          <label class="form-label" for="txtFeedbackContent" data-i18n="feedbackLabel">Your feedback</label>
+          <textarea class="select-control" id="txtFeedbackContent" rows="5" style="height: 120px; padding: 12px; resize: none; font-family: inherit; line-height: 1.5; background: var(--bg-primary); border: 1px solid var(--border-glass);" placeholder="What would you like to see?" data-i18n-placeholder="feedbackPlaceholder" required></textarea>
         </div>
         
         <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 16px;">
-          <button class="nav-button" type="button" id="btnCancelFeedback">Cancel</button>
-          <button class="nav-button nav-button-primary" type="submit" style="background: linear-gradient(135deg, #a855f7 0%, #6366f1 100%); border: none;">Submit Feedback</button>
+          <button class="nav-button" type="button" id="btnCancelFeedback" data-i18n="cancel">Cancel</button>
+          <button class="nav-button nav-button-primary" type="submit" style="background: linear-gradient(135deg, #a855f7 0%, #6366f1 100%); border: none;" data-i18n="feedbackSubmit">Send</button>
         </div>
       </form>
     </div>
