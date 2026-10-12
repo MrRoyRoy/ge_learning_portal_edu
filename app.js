@@ -403,30 +403,36 @@ const useCaseHelperPrompts = {
   socratic_tutor: {
     en: [
       {
+        type: "general",
         title: "Prompt to Generate Course Syllabus & Module Outline",
         prompt: `Act as an expert university professor. Generate a comprehensive course syllabus and 14-week module outline for the course '{{COURSE_NAME}}' (Code: {{COURSE_CODE}}). Include course description, 4 core learning objectives mapped to Bloom's taxonomy, weekly lecture topics, required reading titles, and grading breakdown.`
       },
       {
+        type: "general",
         title: "Prompt to Generate Lecture Reading Summary & Key Concepts",
         prompt: `Synthesize the core foundational concepts and terminology for Lecture Week 1-3 of '{{COURSE_NAME}}'. Provide a 500-word executive summary, 10 must-know technical terms with student-friendly definitions, and 5 common student misconceptions with corrections.`
       }
     ],
     "zh-TW": [
       {
+        type: "general",
         title: "生成課程教學大綱與每週單元大綱提示詞",
         prompt: `請扮演資深大學教授。為課程「{{COURSE_NAME}}」（課程代碼：{{COURSE_CODE}}）撰寫一份完整的教學大綱與 14 週單元規劃。包含課程簡介、對應 Bloom 分類法的 4 項核心學習目標、每週講義主題、必讀文獻清單及評分比重。`
       },
       {
+        type: "general",
         title: "生成前三週講義摘要與核心概念提示詞",
         prompt: `統整「{{COURSE_NAME}}」第 1 至 3 週講義的核心概念與專有名詞。提供 500 字精要摘要、10 個關鍵術語之白話解說，以及 5 個學生常見概念誤區與正確觀念導正。`
       }
     ],
     "zh-CN": [
       {
+        type: "general",
         title: "生成课程教学大纲与每周单元大纲提示词",
         prompt: `请扮演资深大学教授。为课程“{{COURSE_NAME}}”（课程代码：{{COURSE_CODE}}）撰写一份完整的教学大纲与 14 周单元规划。包含课程简介、对应 Bloom 分类法的 4 项核心学习目标、每周讲义主题、必读文献清单及评分比重。`
       },
       {
+        type: "general",
         title: "生成前三周讲义摘要与核心概念提示词",
         prompt: `统整“{{COURSE_NAME}}”第 1 至 3 周讲义的核心概念与专有名词。提供 500 字精要摘要、10 个关键术语之白话解说，以及 5 个学生常见概念误区与正确观念导正。`
       }
@@ -435,30 +441,36 @@ const useCaseHelperPrompts = {
   rubric_grading: {
     en: [
       {
+        type: "general",
         title: "Prompt to Generate Assignment Instructions & Guidelines",
         prompt: `Act as an academic instructor. Draft a detailed assignment instruction guide for undergraduate students titled '{{ASSIGNMENT_TITLE}}'. Include the task overview, word count requirements, required citation format, 3 specific guiding questions to address, and submission instructions.`
       },
       {
+        type: "general",
         title: "Prompt to Generate Detailed Analytical Grading Rubric",
         prompt: `Create a rigorous, 4-tier analytical grading rubric for the assignment '{{ASSIGNMENT_TITLE}}'. Structure the rubric into 4 criteria: (1) Argument & Critical Analysis (35%), (2) Evidence & Source Grounding (30%), (3) Structure & Coherence (20%), (4) Academic Writing & Mechanics (15%). For each criterion, describe clear observable indicators across 4 performance levels: Exemplary, Proficient, Developing, and Unsatisfactory.`
       }
     ],
     "zh-TW": [
       {
+        type: "general",
         title: "生成作業指示與撰寫規範提示詞",
         prompt: `請扮演大學課程講師。為名為「{{ASSIGNMENT_TITLE}}」的學期作業撰寫詳細指引。包含作業宗旨說明、字數規範、學術引用格式要求、3 個必須深入探討的核心引導問題，以及繳交截止規範。`
       },
       {
+        type: "general",
         title: "生成詳細分析型評分規準 (Rubric) 提示詞",
         prompt: `為作業「{{ASSIGNMENT_TITLE}}」設計一份嚴謹的四級分析型評分規準 (Rubric)。劃分 4 項指標：(1) 論點深度與批判思維 (35%)、(2) 文獻證據與論證嚴謹度 (30%)、(3) 架構組織與邏輯連貫 (20%)、(4) 學術寫作規範與流暢度 (15%)。每項指標均需具體列出：優異 (Exemplary)、熟練 (Proficient)、發展中 (Developing)、待加強 (Unsatisfactory) 的具體表現描述。`
       }
     ],
     "zh-CN": [
       {
+        type: "general",
         title: "生成作业指引与撰写规范提示词",
         prompt: `请扮演大学课程讲师。为名为“{{ASSIGNMENT_TITLE}}”的学期作业撰写详细指引。包含作业宗旨说明、字数规范、学术引用格式要求、3 个必须深入探讨的核心引导问题，以及提交截止规范。`
       },
       {
+        type: "general",
         title: "生成详细分析型评分规准 (Rubric) 提示词",
         prompt: `为作业“{{ASSIGNMENT_TITLE}}”设计一份严谨的四级分析型评分规准 (Rubric)。划分 4 项指标：(1) 论点深度与批判思维 (35%)、(2) 文献证据与论证严谨度 (30%)、(3) 架构组织与逻辑连贯 (20%)、(4) 学术写作规范与流畅度 (15%)。每项指标均需具体列出：优异 (Exemplary)、熟练 (Proficient)、发展中 (Developing)、待加强 (Unsatisfactory) 的具体表现描述。`
       }
@@ -467,30 +479,36 @@ const useCaseHelperPrompts = {
   curriculum_design: {
     en: [
       {
+        type: "deep_research",
         title: "Prompt to Generate Market Skills & Industry Benchmark Brief",
         prompt: `Conduct a comprehensive skills benchmark for '{{COURSE_TITLE}}' targeting the {{TARGET_INDUSTRY}} industry. Identify the top 5 technical competencies and 3 soft skills most demanded by employers over the past 12 months, citing key industry tools.`
       },
       {
+        type: "general",
         title: "Prompt to Generate Bloom's Taxonomy Course Learning Outcomes",
         prompt: `Design 5 measurable, assessment-aligned Course Learning Outcomes (CLOs) for '{{COURSE_TITLE}}' adhering strictly to Bloom's Revised Taxonomy (spanning Apply, Analyze, Evaluate, and Create levels).`
       }
     ],
     "zh-TW": [
       {
+        type: "deep_research",
         title: "生成產業技能趨勢與市場需求基準提示詞",
         prompt: `針對「{{TARGET_INDUSTRY}}」領域，為新課程「{{COURSE_TITLE}}」進行職場技能基準分析。列出過去一年就業市場需求最高的 5 項核心技術能力與 3 項跨領域軟實力，並註明主流產業工具與認證。`
       },
       {
+        type: "general",
         title: "生成對應 Bloom 分類法的課程學習成效 (CLOs) 提示詞",
         prompt: `嚴格遵循 Bloom 修訂版認知歷程分類法（涵蓋應用、分析、評鑑、創造層級），為「{{COURSE_TITLE}}」設計 5 項具體可評量的課程學習成效 (CLOs)。`
       }
     ],
     "zh-CN": [
       {
+        type: "deep_research",
         title: "生成产业技能趋势与市场需求基准提示词",
         prompt: `针对“{{TARGET_INDUSTRY}}”领域，为新课程“{{COURSE_TITLE}}”进行职场技能基准分析。列出过去一年就业市场需求最高的 5 项核心技术能力与 3 项跨领域软实力，并注明主流产业工具与认证。`
       },
       {
+        type: "general",
         title: "生成对应 Bloom 分类法的课程学习成效 (CLOs) 提示词",
         prompt: `严格遵循 Bloom 修订版认知历程分类法（涵盖应用、分析、评鉴、创造层级），为“{{COURSE_TITLE}}”设计 5 项具体可评估的课程学习成效 (CLOs)。`
       }
@@ -499,30 +517,36 @@ const useCaseHelperPrompts = {
   lab_manual_creator: {
     en: [
       {
+        type: "general",
         title: "Prompt to Generate Laboratory Experiment Concept & Reagents List",
         prompt: `Act as a STEM laboratory coordinator for '{{COURSE_NAME}}'. Create a complete experiment concept sheet for '{{EXPERIMENT_NAME}}'. Include theoretical background, required chemical reagents, glass equipment list, and preparatory setup steps.`
       },
       {
+        type: "general",
         title: "Prompt to Generate Safety Hazards & Protocol Guideline",
         prompt: `Draft an institutional chemical and physical safety protocol for the experiment '{{EXPERIMENT_NAME}}'. Specify GHS hazard pictograms, mandatory PPE, waste disposal procedures, and emergency spill response steps.`
       }
     ],
     "zh-TW": [
       {
+        type: "general",
         title: "生成實驗原理與試劑設備清單提示詞",
         prompt: `請扮演「{{COURSE_NAME}}」實驗室負責人。為實驗「{{EXPERIMENT_NAME}}」撰寫實驗原理與準備手冊。列出理論背景、化學試劑清單、玻璃儀器規格及課前準備步驟。`
       },
       {
+        type: "general",
         title: "生成實驗室安全守則與廢棄物處置規範提示詞",
         prompt: `為實驗「{{EXPERIMENT_NAME}}」制定實驗室安全規範。明確標註 GHS 危害圖示、必備個人防護裝備 (PPE)、廢液分類處理流程與化學品潑濺應急程序。`
       }
     ],
     "zh-CN": [
       {
+        type: "general",
         title: "生成实验原理与试剂设备清单提示词",
         prompt: `请扮演“{{COURSE_NAME}}”实验室负责人。为实验“{{EXPERIMENT_NAME}}”撰写实验原理与准备手册。列出理论背景、化学试剂清单、玻璃仪器规格及课前准备步骤。`
       },
       {
+        type: "general",
         title: "生成实验室安全守则与废弃物处置规范提示词",
         prompt: `为实验“{{EXPERIMENT_NAME}}”制定实验室安全规范。明确标注 GHS 危害图示、必备个人防护装备 (PPE)、废液分类处理流程与化学品泼溅应急程序。`
       }
@@ -531,30 +555,36 @@ const useCaseHelperPrompts = {
   su_advocacy: {
     en: [
       {
+        type: "general",
         title: "Prompt to Generate Student Town Hall Feedback Survey Form",
         prompt: `Draft a 10-question anonymous student campus experience survey for {{INSTITUTION_NAME}} covering {{ACADEMIC_TERM}}. Include questions on library hours, dining affordability, mental health support, and classroom facilities with Likert scales and open-ended feedback prompts.`
       },
       {
+        type: "general",
         title: "Prompt to Generate Qualitative Feedback Transcription Template",
         prompt: `Structure a standardized student feedback transcription template to organize raw town hall notes and survey responses into thematic categories: Academic, Student Welfare, Facilities, and Financial Aid.`
       }
     ],
     "zh-TW": [
       {
+        type: "general",
         title: "生成學生諮詢會回饋問卷範本提示詞",
         prompt: `為 {{INSTITUTION_NAME}} 設計一份「{{ACADEMIC_TERM}} 學生校園生活體驗與權益問卷」（共 10 題）。涵蓋圖書館自修時數、校園餐飲平價化、身心輔導資源及教室設備，結合李克特量表與開放式建議。`
       },
       {
+        type: "general",
         title: "生成質化民意彙整與歸類樣板提示詞",
         prompt: `設計結構化的學生民意資料整理範本，將諮詢會筆記與匿名回饋分類至四大領域：學術教學、學生福利、校園設施及獎助學金。`
       }
     ],
     "zh-CN": [
       {
+        type: "general",
         title: "生成学生咨询会反馈问卷范本提示词",
         prompt: `为 {{INSTITUTION_NAME}} 设计一份“{{ACADEMIC_TERM}} 学生校园生活体验与权益问卷”（共 10 题）。涵盖图书馆自修时数、校园餐饮平价化、身心辅导资源及教室设备，结合李克特量表与开放式建议。`
       },
       {
+        type: "general",
         title: "生成质化民意汇整与归类样板提示词",
         prompt: `设计结构化的学生民意数据整理范本，将咨询会笔记与匿名反馈分类至四大领域：学术教学、学生福利、校园设施及奖助学金。`
       }
@@ -563,30 +593,36 @@ const useCaseHelperPrompts = {
   club_funding: {
     en: [
       {
+        type: "general",
         title: "Prompt to Generate Student Club Event Proposal Template",
         prompt: `Act as a Student Union treasurer. Draft a comprehensive event funding proposal for '{{CLUB_NAME}}' covering the academic year {{ACADEMIC_YEAR}}. Include event purpose, target student participation count, timeline, and measurable campus impact.`
       },
       {
+        type: "general",
         title: "Prompt to Generate Union Subsidy Line-Item Budget Sheet",
         prompt: `Create a compliant line-item budget table for '{{CLUB_NAME}}' detailing speaker honorariums, equipment rental, venue booking, and promotional printing adhering to Student Union grant maximums.`
       }
     ],
     "zh-TW": [
       {
+        type: "general",
         title: "生成學生社團活動企劃書範本提示詞",
         prompt: `請扮演學生會財務顧問。為社團「{{CLUB_NAME}}」撰寫 {{ACADEMIC_YEAR}} 學年度活動補助申請企劃。包含活動宗旨、預估參與人數、籌備進度表及對校園凝聚力之實質效益。`
       },
       {
+        type: "general",
         title: "生成社團預算明細與核銷檢核表提示詞",
         prompt: `為「{{CLUB_NAME}}」編製符合學生會補助規章之逐項預算明細表，詳列講師鐘點費、器材租賃、場地清潔及文宣印製費用，並註記報銷憑證規範。`
       }
     ],
     "zh-CN": [
       {
+        type: "general",
         title: "生成学生社团活动企划书范本提示词",
         prompt: `请扮演学生会财务顾问。为社团“{{CLUB_NAME}}”撰写 {{ACADEMIC_YEAR}} 学年度活动补助申请企划。包含活动宗旨、预估参与人数、筹备进度表及对校园凝聚力之实质效益。`
       },
       {
+        type: "general",
         title: "生成社团预算明细与核销检核表提示词",
         prompt: `为“{{CLUB_NAME}}”编制符合学生会补助规章之逐项预算明细表，详列讲师钟点费、器材租赁、场地清洁及文宣印制费用，并注记报销凭证规范。`
       }
@@ -595,30 +631,36 @@ const useCaseHelperPrompts = {
   su_helpdesk: {
     en: [
       {
+        type: "general",
         title: "Prompt to Generate Student Union Constitution & Venue Policy Summary",
         prompt: `Synthesize the core student governance handbook for {{STUDENT_UNION_NAME}} at {{INSTITUTION_NAME}}. Produce a structured 5-section reference guide covering room reservations, locker allocation, club registration, and dispute escalation.`
       },
       {
+        type: "general",
         title: "Prompt to Generate FAQ Knowledge Base for Club Subsidies",
         prompt: `Create a 12-question frequently asked questions (FAQ) knowledge base for student societies regarding annual budget applications, permissible expense receipts, and claim submission deadlines.`
       }
     ],
     "zh-TW": [
       {
+        type: "general",
         title: "生成學生會會章與場地借用規範摘要提示詞",
         prompt: `為 {{INSTITUTION_NAME}} 的 {{STUDENT_UNION_NAME}} 統整核心學生自治手冊。整理五大章節摘要：學生活動中心場地預約、置物櫃申請、新社團成立認證與爭議申訴程序。`
       },
       {
+        type: "general",
         title: "生成社團補助與福利常見問題集 (FAQ) 提示詞",
         prompt: `為各學生社團編製一份 12 題常見問答集 (FAQ)，詳細解答年度補助金請領資格、合格單據報銷規定及審核進度查詢。`
       }
     ],
     "zh-CN": [
       {
+        type: "general",
         title: "生成学生会会章与场地借用规范摘要提示词",
         prompt: `为 {{INSTITUTION_NAME}} 的 {{STUDENT_UNION_NAME}} 统整核心学生自治手册。整理五大章节摘要：学生活动中心场地预约、储物柜申请、新社团成立认证与争议申诉程序。`
       },
       {
+        type: "general",
         title: "生成社团补助与福利常见问题集 (FAQ) 提示词",
         prompt: `为各学生社团编制一份 12 题常见问答集 (FAQ)，详细解答年度补助金申领资格、合格单据报销规定及审核进度查询。`
       }
@@ -627,30 +669,36 @@ const useCaseHelperPrompts = {
   visual_campaign: {
     en: [
       {
+        type: "general",
         title: "Prompt to Generate Campus Orientation Narrative Arc & Character Brief",
         prompt: `Act as an interactive narrative designer. Outline a 4-chapter campus orientation story game for {{EVENT_NAME}} at {{INSTITUTION_NAME}} targeting {{TARGET_AUDIENCE}}. Include 3 distinct student guide personas and campus riddle checkpoints.`
       },
       {
+        type: "general",
         title: "Prompt to Generate Image & Video Generation Art Directives",
         prompt: `Write 3 high-detail text-to-image prompts and 2 motion video prompts for {{EVENT_NAME}}. Specify art style (modern anime/3D cinematic vector), student diversity, campus architectural lighting, and 16:9 aspect ratios.`
       }
     ],
     "zh-TW": [
       {
+        type: "general",
         title: "生成迎新探索劇情架構與角色設定提示詞",
         prompt: `請扮演互動敘事設計師。為 {{INSTITUTION_NAME}} 的「{{EVENT_NAME}}」（目標對象：{{TARGET_AUDIENCE}}）規劃四章節校園解謎冒險故事。包含 3 位特色學長姐導覽角色設定與標誌性建築關卡線索。`
       },
       {
+        type: "general",
         title: "生成圖像與動畫生成風格指令提示詞",
         prompt: `為「{{EVENT_NAME}}」撰寫 3 組高畫質文字生圖提示詞及 2 組 5 秒動態影片提示詞。規範繪圖風格（3D 寫實電影級向量感）、學生多元性、校園自然採光及 16:9 構圖比。`
       }
     ],
     "zh-CN": [
       {
+        type: "general",
         title: "生成迎新探索剧情架构与角色设定提示词",
         prompt: `请扮演互动叙事设计师。为 {{INSTITUTION_NAME}} 的“{{EVENT_NAME}}”（目标对象：{{TARGET_AUDIENCE}}）规划四章节校园解谜冒险故事。包含 3 位特色学长姐导览角色设定与标志性建筑关卡线索。`
       },
       {
+        type: "general",
         title: "生成图像与动画生成风格指令提示词",
         prompt: `为“{{EVENT_NAME}}”撰写 3 组高画质文字生图提示词及 2 组 5 秒动态视频提示词。规范绘图风格（3D 写实电影级矢量感）、学生多元性、校园自然采光及 16:9 构图比。`
       }
@@ -659,30 +707,36 @@ const useCaseHelperPrompts = {
   at_risk_cohort: {
     en: [
       {
+        type: "general",
         title: "Prompt to Generate Learning Analytics Anonymized Cohort Schema",
         prompt: `Create an anonymized synthetic CSV schema for student learning analytics tracking in {{DEPARTMENT_NAME}} for {{COHORT_SEMESTER}}. Include fields for LMS login frequency, assignment submission lag, quiz averages, and midterm exam scores.`
       },
       {
+        type: "general",
         title: "Prompt to Generate Academic Advisor Supportive Outreach Email",
         prompt: `Draft an empathetic, encouraging check-in email template from an academic advisor to a student flagged for declining attendance in {{DEPARTMENT_NAME}}. Maintain a non-punitive, supportive tone inviting them to office hours.`
       }
     ],
     "zh-TW": [
       {
+        type: "general",
         title: "生成學習成效匿名數據欄位樣板提示詞",
         prompt: `為「{{DEPARTMENT_NAME}}」在「{{COHORT_SEMESTER}}」學期的學習預警建立去識別化資料欄位範本。涵蓋 LMS 登入頻率、作業遲交天數、小考平均值及期中考落後指標。`
       },
       {
+        type: "general",
         title: "生成學業導師關懷與輔導信函範本提示詞",
         prompt: `以學業導師視角撰寫一封溫暖、不帶評判意味的關懷信函，發送給在「{{DEPARTMENT_NAME}}」出席率下降的學生，邀請其前來諮詢時間討論學習支援資源。`
       }
     ],
     "zh-CN": [
       {
+        type: "general",
         title: "生成学习成效匿名数据字段样板提示词",
         prompt: `为“{{DEPARTMENT_NAME}}”在“{{COHORT_SEMESTER}}”学期的学习预警建立去标识化数据字段范本。涵盖 LMS 登录频率、作业迟交天数、小测平均值及期中考落后指标。`
       },
       {
+        type: "general",
         title: "生成学业导师关怀与辅导信函范本提示词",
         prompt: `以学业导师视角撰写一封温暖、不带评判意味的关怀信函，发送给在“{{DEPARTMENT_NAME}}”出席率下降的学生，邀请其前来咨询时间讨论学习支持资源。`
       }
@@ -691,30 +745,36 @@ const useCaseHelperPrompts = {
   accreditation_reports: {
     en: [
       {
+        type: "general",
         title: "Prompt to Generate Departmental Evidence Collection Template",
         prompt: `Draft a comprehensive departmental self-study evidence collection checklist for {{PROGRAM_NAME}} aligned with {{ACCREDITATION_BODY}} standards. Include curriculum matrices, syllabus archives, and assessment artifacts.`
       },
       {
+        type: "general",
         title: "Prompt to Generate Faculty Qualifications & Curriculum Matrix",
         prompt: `Create an accreditation-compliant tabular matrix mapping {{PROGRAM_NAME}} courses to faculty terminal degree qualifications, research publications, and course learning outcomes.`
       }
     ],
     "zh-TW": [
       {
+        type: "general",
         title: "生成系所自我評鑑佐證清單提示詞",
         prompt: `依據「{{ACCREDITATION_BODY}}」認證評鑑標準，為「{{PROGRAM_NAME}}」制定自評報告佐證資料收集清單。包含核心課程配比、教學大綱存檔及學習成效審查檔案。`
       },
       {
+        type: "general",
         title: "生成師資專長與課程對照矩陣提示詞",
         prompt: `編製符合評鑑規範之表格矩陣，將「{{PROGRAM_NAME}}」各必選修課程與任課教師之最高學位、學術研究專長及課程成效指標進行嚴謹對應。`
       }
     ],
     "zh-CN": [
       {
+        type: "general",
         title: "生成系所自我评估佐证清单提示词",
         prompt: `依据“{{ACCREDITATION_BODY}}”认证评估标准，为“{{PROGRAM_NAME}}”制定自评报告佐证数据收集清单。包含核心课程配比、教学大纲存档及学习成效审查档案。`
       },
       {
+        type: "general",
         title: "生成师资专长与课程对照矩阵提示词",
         prompt: `编制符合评估规范之表格矩阵，将“{{PROGRAM_NAME}}”各必选修课程与任课教师之最高学位、学术研究专长及课程成效指标进行严谨对应。`
       }
@@ -723,30 +783,36 @@ const useCaseHelperPrompts = {
   workforce_federation: {
     en: [
       {
+        type: "general",
         title: "Prompt to Generate SAML 2.0 / OIDC IdP Metadata Specification",
         prompt: `Draft a technical configuration specification for federating campus Identity Provider ({{IDP_PROVIDER}}) with Google Cloud Workforce Identity for domain {{INSTITUTION_DOMAIN}}. Detail attribute mappings for NameID, email, roles, and department codes.`
       },
       {
+        type: "general",
         title: "Prompt to Generate Attribute Condition & RBAC Role Matrix",
         prompt: `Create a role-based access control (RBAC) assertion condition table mapping institutional student, lecturer, and administrative groups to Gemini Enterprise permission tiers.`
       }
     ],
     "zh-TW": [
       {
+        type: "general",
         title: "生成 SAML 2.0 / OIDC 身份聯合技術規格提示詞",
         prompt: `為校園網域 {{INSTITUTION_DOMAIN}} 撰寫整合身分提供者 ({{IDP_PROVIDER}}) 至 Google Cloud Workforce Identity 的部署規格書。詳列 NameID、主要電子郵件、角色群組與系所代碼映射規則。`
       },
       {
+        type: "general",
         title: "生成屬性條件與 RBAC 角色授權矩陣提示詞",
         prompt: `設計基於角色存取控制 (RBAC) 的屬性判定表，將全校學生、教師與行政人員 SSO 群組對應至 Gemini Enterprise 的權限層級。`
       }
     ],
     "zh-CN": [
       {
+        type: "general",
         title: "生成 SAML 2.0 / OIDC 身份联合技术规格提示词",
         prompt: `为校园网域 {{INSTITUTION_DOMAIN}} 撰写整合身份提供者 ({{IDP_PROVIDER}}) 至 Google Cloud Workforce Identity 的部署规格书。详列 NameID、主要电子邮件、角色群组与系所代码映射规则。`
       },
       {
+        type: "general",
         title: "生成属性条件与 RBAC 角色授权矩阵提示词",
         prompt: `设计基于角色访问控制 (RBAC) 的属性判定表，将全校学生、教师与行政人员 SSO 群组对应至 Gemini Enterprise 的权限层级。`
       }
@@ -755,30 +821,36 @@ const useCaseHelperPrompts = {
   sao_scavenger_hunt: {
     en: [
       {
+        type: "general",
         title: "Prompt to Generate Campus Landmarks Trivia & Cultural Clues",
         prompt: `Create 5 clever rhyming riddle clues highlighting landmark locations across {{CAMPUS_NAME}} for the {{FESTIVAL_NAME}} celebration. Each riddle should describe architectural features of the campus without stating its name.`
       },
       {
+        type: "general",
         title: "Prompt to Generate QR Checkpoint Mini-Challenge Prompts",
         prompt: `Design 5 quick two-question cultural trivia mini-challenges for QR checkpoints during {{FESTIVAL_NAME}} that students can answer on mobile devices to earn digital red packet stamps.`
       }
     ],
     "zh-TW": [
       {
+        type: "general",
         title: "生成校園地標文化謎題與線索提示詞",
         prompt: `為「{{CAMPUS_NAME}}」慶祝「{{FESTIVAL_NAME}}」設計 5 則押韻的校園地標尋寶謎語。透過建築物特色引導學生探索圖書館、鐘樓、學生活動中心等地標。`
       },
       {
+        type: "general",
         title: "生成 QR 關卡文化小測驗與挑戰提示詞",
         prompt: `為「{{FESTIVAL_NAME}}」設計 5 個打卡關卡的快問快答（每關 2 題），使學生可透過手機掃描即時作答並解鎖數位紅包章。`
       }
     ],
     "zh-CN": [
       {
+        type: "general",
         title: "生成校园地标文化谜题与线索提示词",
         prompt: `为“{{CAMPUS_NAME}}”庆祝“{{FESTIVAL_NAME}}”设计 5 则押韵的校园地标寻宝谜语。透过建筑物特色引导学生探索图书馆、钟楼、学生活动中心等地标。`
       },
       {
+        type: "general",
         title: "生成 QR 关卡文化小测验与挑战提示词",
         prompt: `为“{{FESTIVAL_NAME}}”设计 5 个打卡关卡的快问快答（每关 2 题），使学生可通过手机扫描即时作答并解锁数字红包章。`
       }
@@ -787,30 +859,36 @@ const useCaseHelperPrompts = {
   finance_compliance: {
     en: [
       {
+        type: "general",
         title: "Prompt to Generate Society Expense Reimbursement Policy Guide",
         prompt: `Draft an official student organization finance compliance guideline outlining reimbursable expenses, non-allowable expenditures (e.g. alcohol, tips over 15%), and mandatory invoice attachment criteria.`
       },
       {
+        type: "general",
         title: "Prompt to Generate Audit Discrepancy Notice & Appeal Letter",
         prompt: `Draft a formal yet polite financial audit deduction notice addressed to {{SOCIETY_NAME}} regarding event claim '{{EVENT_NAME}}' with itemized disallowed expenses and step-by-step appeal procedures.`
       }
     ],
     "zh-TW": [
       {
+        type: "general",
         title: "生成社團經費報銷手冊與審核準則提示詞",
         prompt: `編撰一份學生社團經費核銷指引，明確條列可報銷項目、禁止報銷項目（如酒精飲料、逾 15% 小費）及發票憑證正規化要求。`
       },
       {
+        type: "general",
         title: "生成單據不合規扣除通知與申訴信範本提示詞",
         prompt: `撰寫一份客氣且規範的財務審核意見書，通知「{{SOCIETY_NAME}}」於「{{EVENT_NAME}}」活動申請中的不合規扣除明細，並附上補件及申訴指引。`
       }
     ],
     "zh-CN": [
       {
+        type: "general",
         title: "生成社团经费报销手册与审核准则提示词",
         prompt: `编撰一份学生社团经费核销指引，明确条列可报销项目、禁止报销项目（如酒精饮料、逾 15% 小费）及发票凭证正规化要求。`
       },
       {
+        type: "general",
         title: "生成单据不合规扣除通知与申诉信范本提示词",
         prompt: `撰写一份客气且规范的财务审核意见书，通知“{{SOCIETY_NAME}}”于“{{EVENT_NAME}}”活动申请中的不合规扣除明细，并附上补件及申诉指引。`
       }
@@ -819,30 +897,36 @@ const useCaseHelperPrompts = {
   security_simulator: {
     en: [
       {
+        type: "general",
         title: "Prompt to Generate Emergency Response SOP & Incident Brief",
         prompt: `Act as a Director of Campus Safety. Draft a standard operating procedure (SOP) brief for campus security personnel managing {{EMERGENCY_SCENARIO}} at {{FACILITY_LOCATION}}. Include initial containment, perimeter isolation, and communications protocol.`
       },
       {
+        type: "general",
         title: "Prompt to Generate Crisis Decision Tree Scenario Table",
         prompt: `Create a 3-stage branching crisis drill scenario table for {{EMERGENCY_SCENARIO}} at {{FACILITY_LOCATION}}. At each stage (0 min, 15 min, 30 min), define 3 tactical options, the operational consequence of each, and evaluation rubric criteria.`
       }
     ],
     "zh-TW": [
       {
+        type: "general",
         title: "生成校園緊急應變 SOP 與情境簡報提示詞",
         prompt: `請扮演校園安保總監。為安保團隊在「{{FACILITY_LOCATION}}」應對「{{EMERGENCY_SCENARIO}}」撰寫應變標準作業程序 (SOP)。包含首要隔離處置、警戒線封鎖與校安通報程序。`
       },
       {
+        type: "general",
         title: "生成三階段危機決策樹演練腳本提示詞",
         prompt: `為「{{FACILITY_LOCATION}}」發生的「{{EMERGENCY_SCENARIO}}」建立三階段演習腳本（0分、15分、30分），每階段提供 3 項戰術選擇、後續連鎖後果及演練評分準則。`
       }
     ],
     "zh-CN": [
       {
+        type: "general",
         title: "生成校园紧急应变 SOP 与情境简报提示词",
         prompt: `请扮演校园安保总监。为安保团队在“{{FACILITY_LOCATION}}”应对“{{EMERGENCY_SCENARIO}}”撰写应变标准作业程序 (SOP)。包含首要隔离处置、警戒线封锁与校安通报程序。`
       },
       {
+        type: "general",
         title: "生成三阶段危机决策树演练脚本提示词",
         prompt: `为“{{FACILITY_LOCATION}}”发生的“{{EMERGENCY_SCENARIO}}”建立三阶段演习脚本（0分、15分、30分），每阶段提供 3 项战术选择、后续连锁后果及演练评分准则。`
       }
@@ -923,7 +1007,7 @@ const uiTranslations = {
     adminBrandText: "Admin Control",
     adminMenuNavigationTitle: "Menu Navigation",
     adminPortalTitle: "GEMINI EDUCATION MANAGEMENT",
-    adminPortalSubtitle: "Configure users, update learning playbooks, and analyze the last 6 months deployment metrics.",
+    adminPortalSubtitle: "Configure users, update learning playbooks, and analyze the last 6 months of usage metrics.",
     adminTabUsersText: "Users Provisioning",
     adminTabAnalyticsText: "System Analytics",
     adminTabCasesText: "Use Cases CRUD",
@@ -941,12 +1025,10 @@ const uiTranslations = {
     adminLabelTotalUsers: "Total Registered Users",
     adminLabelTotalUseCases: "Total Use Cases",
     adminLabelTotalLikes: "User Liked Counts",
-    adminLabelTotalDeployments: "Cases Deployed Counts",
     adminChartTitle: "6-Month Portal Adoption Metrics",
-    adminChartDesc: "Detailed aggregation charting Views, Likes, and Deployed actions across the academic term.",
+    adminChartDesc: "Views, likes and Try it launches across the academic term.",
     adminLabelViewsLegend: "PAGE VIEWS",
     adminLabelLikesLegend: "USER LIKES",
-    adminLabelDeploymentsLegend: "DEPLOYMENTS",
     adminCrudTitle: "Playbook Content Master Management",
     adminBtnExportText: "Extract All (JSON)",
     adminBtnCreateCaseText: "Add Use Case",
@@ -991,7 +1073,6 @@ const uiTranslations = {
     btnAdminFormSave: "Save Changes",
     sidebarFeaturesTitle: "Filter by GE Feature",
     filterLiked: "My Liked Cases",
-    filterDeployed: "My Deployed Cases",
     adminFormLabelDualModeCheckbox: "Enable Dual-Mode Template (Supports Standalone & Advanced workflows)",
     adminFormDescDualModeCheckbox: "When enabled, this playbook supports both standard manual file workflows and advanced integration modes, automatically managing standard prompt variables."
   },
@@ -1084,12 +1165,10 @@ const uiTranslations = {
     adminLabelTotalUsers: "已註冊使用者總數",
     adminLabelTotalUseCases: "學習案例總數",
     adminLabelTotalLikes: "使用者按讚計數",
-    adminLabelTotalDeployments: "部署案例計數",
     adminChartTitle: "近 6 個月門戶導入分析圖表",
     adminChartDesc: "詳細彙整整個學期期間的使用者瀏覽量、按讚次數與實際部署操作統計。",
     adminLabelViewsLegend: "頁面瀏覽量",
     adminLabelLikesLegend: "使用者按讚",
-    adminLabelDeploymentsLegend: "案例部署數",
     adminCrudTitle: "學習案例內容主檔管理 (CRUD)",
     adminBtnExportText: "匯出案例 (JSON)",
     adminBtnCreateCaseText: "新增使用案例",
@@ -1134,7 +1213,6 @@ const uiTranslations = {
     btnAdminFormSave: "儲存變更",
     sidebarFeaturesTitle: "按 CE 功能篩選",
     filterLiked: "我的收藏案例",
-    filterDeployed: "我的部署案例",
     adminFormLabelDualModeCheckbox: "啟用雙重模式範本 (支援獨立與進階連接器工作流程)",
     adminFormDescDualModeCheckbox: "啟用後，此案例同時支援手動上傳與進階連接器模式，標準提示詞與步驟將由系統自動處理。"
   },
@@ -1228,12 +1306,10 @@ const uiTranslations = {
     adminLabelTotalUsers: "已注册使用者总数",
     adminLabelTotalUseCases: "学习案例总数",
     adminLabelTotalLikes: "使用者点赞计数",
-    adminLabelTotalDeployments: "部署案例计数",
     adminChartTitle: "近 6 个月门户导入分析图表",
     adminChartDesc: "详细汇总整个学期期间的使用者浏览量、点赞次数与实际部署操作统计。",
     adminLabelViewsLegend: "页面浏览量",
     adminLabelLikesLegend: "使用者点赞",
-    adminLabelDeploymentsLegend: "案例部署数",
     adminCrudTitle: "学习案例内容主档管理 (CRUD)",
     adminBtnExportText: "导出案例 (JSON)",
     adminBtnCreateCaseText: "新增使用案例",
@@ -1278,7 +1354,6 @@ const uiTranslations = {
     btnAdminFormSave: "保存变更",
     sidebarFeaturesTitle: "按 CE 功能筛选",
     filterLiked: "我的点赞案例",
-    filterDeployed: "我的部署案例",
     adminFormLabelDualModeCheckbox: "启用双重模式范本 (支持独立与进阶连接器工作流程)",
     adminFormDescDualModeCheckbox: "启用后，此案例同时支持手动上传与进阶连接器模式，标准提示词与步骤将由系统自动处理。"
   }
@@ -2011,6 +2086,10 @@ const appState = {
   activeFilterFeature: "all",
   activeFilterStatus: "all",
   activeFilterCategory: "all",
+  // typeof guard: server.js evaluates this file in a vm sandbox that has no sessionStorage
+  sortBy: (typeof sessionStorage !== "undefined" && sessionStorage.getItem("ge_sort_by")) || "popular", // popular | newest | az
+  geAppLink: null, // per-user Gemini Enterprise app URL (null for admins / unset)
+  isSuper: false, // true only for the super admin account
   activeLanguage: "en" // default language
 };
 
@@ -2121,42 +2200,7 @@ function updateUILanguage() {
   safeSetText("labelLang", t.labelLang);
   safeSetHTML("btnStart", `<span class="material-symbols-outlined">rocket_launch</span> ${t.btnStart}`);
   
-  // Sidebar titles (with robust fallback selectors to match index.html elements)
-  const sidebarProfileTitle = document.getElementById("sidebarProfileTitle") || document.getElementById("titleContextProfile");
-  if (sidebarProfileTitle) sidebarProfileTitle.textContent = t.sidebarProfileTitle;
-  
-  const sidebarConnectorsTitle = document.getElementById("sidebarConnectorsTitle");
-  if (sidebarConnectorsTitle) sidebarConnectorsTitle.textContent = t.sidebarConnectorsTitle;
-  
-  const sidebarFeaturesTitle = document.getElementById("sidebarFeaturesTitle") || document.getElementById("titleNavigation");
-  if (sidebarFeaturesTitle) sidebarFeaturesTitle.textContent = t.sidebarFeaturesTitle || "Filter by GE Feature";
-  
-  const sidebarStatusTitle = document.getElementById("sidebarStatusTitle") || document.getElementById("titleFilters");
-  if (sidebarStatusTitle) sidebarStatusTitle.textContent = t.sidebarStatusTitle;
-
   safeSetText("btnChangeContextText", t.btnChangeContextText);
-
-  // Static sidebar filter items
-  const statusFilterItems = document.querySelectorAll(".status-filter-item");
-  statusFilterItems.forEach(item => {
-    const status = item.getAttribute("data-status");
-    if (status === "all") {
-      item.innerHTML = `<span class="material-symbols-outlined">check_circle</span> ${t.showAllCases || "Show All"}`;
-    } else if (status === "unlocked") {
-      item.innerHTML = `<span class="material-symbols-outlined">cloud_done</span> ${t.standardToolsOnly || "Ready to Deploy"}`;
-    } else if (status === "integration") {
-      item.innerHTML = `<span class="material-symbols-outlined">lock_open_right</span> ${t.integrationRequired || "Requires Connectors"}`;
-    } else if (status === "liked") {
-      item.innerHTML = `<span class="material-symbols-outlined">favorite</span> ${t.filterLiked || "My Liked Cases"}`;
-    } else if (status === "deployed") {
-      item.innerHTML = `<span class="material-symbols-outlined">rocket_launch</span> ${t.filterDeployed || "My Deployed Cases"}`;
-    }
-  });
-
-  const featureFilterItems = document.querySelectorAll(".feature-filter-item");
-  if (featureFilterItems.length > 0) {
-    featureFilterItems[0].innerHTML = `<span class="material-symbols-outlined">apps</span> ${t.allCapabilities || "All Capabilities"}`;
-  }
 
   // Onboarding Dropdown roles
   const roleSelect = document.getElementById("wizardRole");
@@ -2188,27 +2232,7 @@ function updateUILanguage() {
     });
   }
 
-  // Dashboard Welcome Msg
-  if (appState.isAdmin === true) {
-    let adminTitle = "Admin View";
-    let adminSub = "Reviewing all playbooks across all roles and levels with full management permissions.";
-    if (lang === "zh-TW") {
-      adminSub = "正在以完整管理權限審查所有角色與學制層級的學習案例。";
-    } else if (lang === "zh-CN") {
-      adminSub = "正在以完整管理权限审查所有角色与学制层级学习案例。";
-    }
-    safeSetText("welcomeMsg", adminTitle);
-    safeSetText("welcomeSubtitle", adminSub);
-  } else if (appState.userRole) {
-    const category = getCategoryByRole(appState.userRole);
-    const translatedHub = t.hubs[category] || t.hubs.academic;
-    const translatedRole = t.roles[appState.userRole] || appState.userRole;
-    safeSetText("welcomeMsg", `${translatedHub} • ${translatedRole}`);
-    safeSetText("welcomeSubtitle", t.wizardDesc);
-  } else {
-    safeSetText("welcomeMsg", t.wizardSubtitle);
-    safeSetText("welcomeSubtitle", t.wizardDesc);
-  }
+  // Results headline ("{n} playbooks for {role}") is computed in renderUseCases()
 
   // Help support roles explanation in wizard
   handleWizardRoleChange();
@@ -2222,7 +2246,7 @@ function updateUILanguage() {
     adminBrand.textContent = t.adminBrandText || "Admin Control";
     safeSetText("adminMenuNavigationTitle", t.adminMenuNavigationTitle || "Menu Navigation");
     safeSetText("adminPortalTitle", t.adminPortalTitle || "GEMINI EDUCATION MANAGEMENT");
-    safeSetText("adminPortalSubtitle", t.adminPortalSubtitle || "Configure users, update learning playbooks, and analyze the last 6 months deployment metrics.");
+    safeSetText("adminPortalSubtitle", t.adminPortalSubtitle || "Configure users, update learning playbooks, and analyze the last 6 months of usage metrics.");
     safeSetText("adminTabUsersText", t.adminTabUsersText || "Users Provisioning");
     safeSetText("adminTabAnalyticsText", t.adminTabAnalyticsText || "System Analytics");
     safeSetText("adminTabCasesText", t.adminTabCasesText || "Use Cases CRUD");
@@ -2246,7 +2270,7 @@ function updateUILanguage() {
     safeSetText("adminLabelTotalUsers", t.adminLabelTotalUsers);
     safeSetText("adminLabelTotalUseCases", t.adminLabelTotalUseCases);
     safeSetText("adminLabelTotalLikes", t.adminLabelTotalLikes);
-    safeSetText("adminLabelTotalDeployments", t.adminLabelTotalDeployments);
+    safeSetText("adminLabelTotalViews", t.adminLabelTotalViews);
 
     safeSetText("adminChartTitle", t.adminChartTitle);
     safeSetText("adminChartDesc", t.adminChartDesc);
@@ -2258,20 +2282,14 @@ function updateUILanguage() {
     if (legendLikes) {
       legendLikes.innerHTML = `<span style="display: inline-block; width: 12px; height: 3px; background: var(--color-danger);"></span> ${t.adminLabelLikesLegend || "USER LIKES"}`;
     }
-    const legendDeployments = document.getElementById("adminLabelDeploymentsLegend");
-    if (legendDeployments) {
-      legendDeployments.innerHTML = `<span style="display: inline-block; width: 12px; height: 3px; background: var(--color-success);"></span> ${t.adminLabelDeploymentsLegend || "DEPLOYMENTS"}`;
+    const legendTries = document.getElementById("adminLabelTriesLegend");
+    if (legendTries) {
+      legendTries.innerHTML = `<span style="display: inline-block; width: 12px; height: 3px; background: var(--color-success);"></span> ${escapeHtml(t.adminLabelTriesLegend || "Try it")}`;
     }
 
     safeSetText("adminCrudTitle", t.adminCrudTitle);
-    const btnExport = document.getElementById("btnAdminExportCases");
-    if (btnExport) {
-      btnExport.innerHTML = `<span class="material-symbols-outlined">download</span> <span id="adminBtnExportText">${t.adminBtnExportText || "Extract All (JSON)"}</span>`;
-    }
-    const btnCreate = document.getElementById("btnAdminCreateCase");
-    if (btnCreate) {
-      btnCreate.innerHTML = `<span class="material-symbols-outlined">add_box</span> <span id="adminBtnCreateCaseText">${t.adminBtnCreateCaseText || "Add Use Case"}</span>`;
-    }
+    safeSetText("adminBtnExportText", t.adminBtnExportText || "Export JSON");
+    safeSetText("adminBtnCreateCaseText", t.adminBtnCreateCaseText || "Add use case");
 
     safeSetText("adminCrudThId", t.adminCrudThId);
     safeSetText("adminCrudThTitle", t.adminCrudThTitle);
@@ -2318,31 +2336,18 @@ function updateUILanguage() {
     safeSetText("adminFormLabelZhcnAdvancedProTip", t.adminFormLabelZhcnAdvancedProTip);
 
     // Localize the AI Drafting instructions block
+    safeSetText("adminFormLabelGeminiPromptTitle", t.adminFormLabelGeminiPromptTitle);
+    safeSetText("adminFormLabelGeminiPromptDesc", t.adminFormLabelGeminiPromptDesc);
     const instructionInput = document.getElementById("formCaseGeminiInstruction");
-    if (lang === "zh-TW") {
-      safeSetText("adminFormLabelGeminiPromptTitle", "使用 Gemini 智能生成 / 優化案例");
-      safeSetText("adminFormLabelGeminiPromptDesc", "輸入您想建立的案例方向，或說明您想對此案例進行的具體修改。Gemini 將會全自動為您編寫高品質的多語言對應、系統提示詞、操作步驟及導入心法。");
-      if (instructionInput) instructionInput.placeholder = "例如：使用 Canvas 模式，為高中化學實驗報告建立一份評分量表指南，重點放在實驗安全上...";
-    } else if (lang === "zh-CN") {
-      safeSetText("adminFormLabelGeminiPromptTitle", "使用 Gemini 智能生成 / 优化案例");
-      safeSetText("adminFormLabelGeminiPromptDesc", "输入您想建立的案例方向，或说明您想对此案例进行的具体修改。Gemini 将会全自动为您编写高质量的多语言对应、系统提示词、操作步骤及导入心法。");
-      if (instructionInput) instructionInput.placeholder = "例如：使用 Canvas 模式，为高中化学实验报告建立一份评分量表指南，重点放在实验安全上...";
-    } else {
-      safeSetText("adminFormLabelGeminiPromptTitle", "Generate/Refine Playbook with Gemini");
-      safeSetText("adminFormLabelGeminiPromptDesc", "Specify what you want to create, or describe the edits you'd like to apply to this playbook. Gemini will generate high-fidelity, localized playbooks, system prompts, steps, and tips.");
-      if (instructionInput) instructionInput.placeholder = "e.g. Create a rubric grading guide for high school chemistry lab reports using Canvas Mode, focusing on safety...";
-    }
+    if (instructionInput) instructionInput.placeholder = t.caseFormDraftPlaceholder;
 
     safeSetText("btnAdminFormCancel", t.btnAdminFormCancel);
     safeSetText("btnAdminFormSave", t.btnAdminFormSave);
   }
-}
 
-function getCategoryByRole(role) {
-  if (["Lecturer", "TA"].includes(role)) return "academic";
-  if (["Student"].includes(role)) return "student";
-  if (["Security", "Finance", "SAO"].includes(role)) return "administrative";
-  return "operational";
+  // V2: translate every [data-i18n] node and refresh the account menus
+  applyI18nAttributes();
+  updateAccountMenus();
 }
 
 // Handle Wizard Role Selector Change (Disable institution level if administrative support role)
@@ -2368,116 +2373,29 @@ function handleWizardRoleChange() {
   }
 }
 
-// Handle Onboarding Completion
-async function handleOnboardingSubmit() {
-  const role = document.getElementById("wizardRole").value;
-  const level = document.getElementById("wizardLevel").value;
-  const lang = document.getElementById("wizardLang").value;
-
-  appState.userRole = role;
-  appState.institutionLevel = level;
-  appState.activeLanguage = lang;
-
-  // Cache in localStorage
-  localStorage.setItem("ge_adoption_profile", JSON.stringify({ role, level, lang }));
-
-  // Hide overlay
-  document.getElementById("wizardOverlay").style.display = "none";
-
-  // Update UI and load content
-  updateUILanguage();
-  updateSidebarContextUI();
-  
-  // Fetch use cases and render
-  await loadUseCasesFromServer();
-  renderUseCases();
-  
-  const welcomeText = uiTranslations[lang].profileSetSuccess;
-  showToast(welcomeText, "success");
-}
-
-// Update Context Profile Cards in UI
+// Update the profile line inside the avatar menu (role · level)
 function updateSidebarContextUI() {
   const lang = appState.activeLanguage || "en";
   const t = uiTranslations[lang];
+  const roleEl = document.getElementById("profileRoleName");
+  const levelEl = document.getElementById("profileInstitutionName");
 
   if (appState.isAdmin === true) {
     document.title = "Admin View";
-
-    const navWelcomeEl = document.getElementById("navbarWelcomeText");
-    if (navWelcomeEl) navWelcomeEl.textContent = "Admin View";
-
-    const sidebarProfileTitle = document.getElementById("sidebarProfileTitle") || document.getElementById("titleContextProfile");
-    if (sidebarProfileTitle) sidebarProfileTitle.textContent = "Admin View";
-
-    const roleEl = document.getElementById("sidebarRole") || document.getElementById("profileRoleName");
-    if (roleEl) roleEl.textContent = "Administrator";
-
-    const levelEl = document.getElementById("sidebarLevel") || document.getElementById("profileInstitutionName");
-    if (levelEl) levelEl.textContent = "Simulation Mode";
-  } else {
-    document.title = "Gemini Enterprise - Edu Portal";
-
-    const roleText = t.roles[appState.userRole] || appState.userRole;
-    const roleEl = document.getElementById("sidebarRole") || document.getElementById("profileRoleName");
-    if (roleEl) roleEl.textContent = roleText;
-    
-    const isSupportRole = ["Security", "Finance", "IT Admin", "SAO"].includes(appState.userRole);
-    const levelEl = document.getElementById("sidebarLevel") || document.getElementById("profileInstitutionName");
-    if (levelEl) {
-      if (isSupportRole) {
-        levelEl.textContent = lang === "en" ? "Global (All Levels)" : (lang === "zh-TW" ? "全局 (所有級別)" : "全局 (所有级别)");
-      } else {
-        const levelText = t.levels[appState.institutionLevel] || appState.institutionLevel;
-        levelEl.textContent = levelText;
-      }
-    }
-
-    // Update navbar welcome text
-    const navWelcomeEl = document.getElementById("navbarWelcomeText");
-    if (navWelcomeEl) navWelcomeEl.textContent = roleText;
+    if (roleEl) roleEl.textContent = t.adminPreviewContext;
+    if (levelEl) levelEl.textContent = t.allRoles;
+    return;
   }
-}
 
-// Configure Connector Toggles
-function setupConnectorToggles() {
-  const toggles = [
-    { id: "toggleOneDrive", key: "onedrive" },
-    { id: "toggleOutlook", key: "outlook" },
-    { id: "toggleLMS", key: "lms" },
-    { id: "toggleGoogle", key: "google" }
-  ];
+  document.title = "Gemini Enterprise - Edu Portal";
+  if (roleEl) roleEl.textContent = t.roles[appState.userRole] || appState.userRole || "";
 
-  toggles.forEach(t => {
-    const el = document.getElementById(t.id);
-    if (!el) {
-      console.warn(`Connector toggle element not found: ${t.id}`);
-      return;
-    }
-    el.addEventListener("change", (e) => {
-      appState.activeConnectors[t.key] = e.target.checked;
-      
-      // Update green visual indicators in sidebar list
-      const indicator = document.getElementById(`indicator-${t.key}`);
-      const lang = appState.activeLanguage || "en";
-      const tTrans = uiTranslations[lang];
-
-      if (e.target.checked) {
-        if (indicator) indicator.classList.add("active");
-        let genericName = t.key.toUpperCase();
-        if (t.key === "onedrive") genericName = lang === "en" ? "Drive Connector" : (lang === "zh-TW" ? "雲端硬碟連接器" : "云端硬盘连接器");
-        else if (t.key === "outlook") genericName = lang === "en" ? "Email Connector" : (lang === "zh-TW" ? "電子郵件連接器" : "电子邮件连接器");
-        else if (t.key === "lms") genericName = lang === "en" ? "LMS Connector" : (lang === "zh-TW" ? "LMS 連接器" : "LMS 连接器");
-        else if (t.key === "google") genericName = lang === "en" ? "Calendar Connector" : (lang === "zh-TW" ? "行事曆連接器" : "日历连接器");
-        showToast(`${genericName} ${tTrans.linkedAndActive}`, "success");
-      } else {
-        if (indicator) indicator.classList.remove("active");
-      }
-      
-      // Re-render dashboard cards
-      renderUseCases();
-    });
-  });
+  const isSupportRole = ["Security", "Finance", "IT Admin", "SAO"].includes(appState.userRole);
+  if (levelEl) {
+    levelEl.textContent = isSupportRole
+      ? (lang === "en" ? "All levels" : (lang === "zh-TW" ? "所有級別" : "所有级别"))
+      : (t.levels[appState.institutionLevel] || appState.institutionLevel || "");
+  }
 }
 
 // Search input handling
@@ -2521,12 +2439,6 @@ function escapeHtml(unsafe) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
-}
-
-// Utility to escape quotes for dynamic inline onClick triggers
-function escapeQuotesForOnClick(str) {
-  if (!str) return "";
-  return String(str).replace(/'/g, "\\'").replace(/"/g, '&quot;');
 }
 
 // Helper to extract bracketed and brace prompt variables (e.g. {{COURSE_CODE}} or [COURSE_CODE])
@@ -2588,87 +2500,6 @@ function getConnectorMeta(connectorName, lang = "en") {
   };
 }
 
-// Build interactive prompt HTML with clickable {{VARIABLE}} token pills
-function buildInteractivePromptHtml(promptText, promptVars, valuesMap = {}) {
-  if (!promptText) return "";
-  const regex = /(?:\{\{([A-Za-z0-9\s/_\-']{1,50})\}\}|\[([A-Za-z0-9\s/_\-']{1,50})\](?!\())/g;
-  let lastIndex = 0;
-  let result = "";
-  let match;
-  while ((match = regex.exec(promptText)) !== null) {
-    result += escapeHtml(promptText.substring(lastIndex, match.index));
-    const rawLabel = (match[1] || match[2]).trim();
-    const token = match[0];
-    const val = valuesMap[token] ? valuesMap[token].trim() : "";
-    const isFilled = Boolean(val);
-    const displayVal = isFilled ? val : rawLabel;
-    
-    result += `<span class="prompt-var-token ${isFilled ? 'is-filled' : ''}" data-token="${escapeHtml(token)}" title="Click to edit {{${escapeHtml(rawLabel)}}}"><span class="token-braces">{{</span><span class="token-name">${escapeHtml(displayVal)}</span><span class="token-braces">}}</span></span>`;
-    lastIndex = regex.lastIndex;
-  }
-  result += escapeHtml(promptText.substring(lastIndex));
-  return result;
-}
-
-// Generate interpolated plain-text prompt for direct clipboard copy
-function getInterpolatedPlainText(promptText, promptVars, valuesMap = {}) {
-  if (!promptText) return "";
-  let result = promptText;
-  promptVars.forEach(v => {
-    const val = valuesMap[v.token] ? valuesMap[v.token].trim() : "";
-    if (val) {
-      result = result.split(v.token).join(val);
-    }
-  });
-  return result;
-}
-
-// Helper to copy step helper prompts to clipboard with visual confirmation
-window.copyHelperPromptToClipboard = function(btn) {
-  try {
-    const details = btn.closest('.helper-prompt-collapsible');
-    if (!details) return;
-    const textEl = details.querySelector('.helper-prompt-text');
-    if (!textEl) return;
-    const textToCopy = textEl.textContent.trim();
-    navigator.clipboard.writeText(textToCopy).then(() => {
-      const originalHtml = btn.innerHTML;
-      const lang = appState.activeLanguage || "en";
-      const copiedText = lang === 'zh-TW' ? '已複製！' : (lang === 'zh-CN' ? '已复制！' : 'Copied!');
-      btn.innerHTML = `<span class="material-symbols-outlined" style="font-size: 14px;">check</span> <span>${copiedText}</span>`;
-      btn.style.borderColor = 'var(--color-success)';
-      btn.style.color = 'var(--color-success)';
-      setTimeout(() => {
-        btn.innerHTML = originalHtml;
-        btn.style.borderColor = '';
-        btn.style.color = '';
-      }, 2000);
-      const toastMsg = lang === 'zh-TW' ? '輔助提示詞已複製至剪貼簿！' : (lang === 'zh-CN' ? '辅助提示词已复制至剪贴板！' : 'Helper prompt copied to clipboard!');
-      showToast(toastMsg, "success");
-    }).catch(err => {
-      console.error('Clipboard copy error:', err);
-    });
-  } catch (err) {
-    console.error('Helper copy error:', err);
-  }
-};
-
-// Ambient mouse glow tracker for hardware-accelerated radial spotlight
-function initMouseGlow() {
-  if (typeof window === "undefined" || typeof document === "undefined") return;
-  let scheduled = false;
-  window.addEventListener("mousemove", (e) => {
-    if (!scheduled) {
-      scheduled = true;
-      requestAnimationFrame(() => {
-        document.documentElement.style.setProperty("--mouse-x", `${e.clientX}px`);
-        document.documentElement.style.setProperty("--mouse-y", `${e.clientY}px`);
-        scheduled = false;
-      });
-    }
-  }, { passive: true });
-}
-
 // Helper to render New and Updated badges for Use Cases created/updated within 5 days
 function getUsecaseBadgeHtml(uc, lang) {
   if (!uc.createdAt) return "";
@@ -2684,589 +2515,64 @@ function getUsecaseBadgeHtml(uc, lang) {
     const diffDaysUpdated = Math.ceil(diffTimeUpdated / (1000 * 60 * 60 * 24));
     isUpdated = diffDaysUpdated <= 5;
   }
+  const tt = uiTranslations[lang] || uiTranslations.en;
   if (isNew) {
-    const newLabel = lang === 'en' ? 'NEW' : (lang === 'zh-TW' ? '新上線' : '新上线');
-    return `<span class="tag tag-new tag-icon-only" title="${newLabel}"><span class="material-symbols-outlined" style="font-size: 14px;">auto_awesome</span></span>`;
+    return `<span class="tag tag-new tag-icon-only" title="${escapeHtml(tt.newLabel || "New")}"><span class="material-symbols-outlined">auto_awesome</span></span>`;
   }
   if (isUpdated) {
-    const updLabel = lang === 'en' ? 'UPDATED' : (lang === 'zh-TW' ? '已更新' : '已更新');
-    return `<span class="tag tag-updated tag-icon-only" title="${updLabel}"><span class="material-symbols-outlined" style="font-size: 14px;">update</span></span>`;
+    return `<span class="tag tag-updated tag-icon-only" title="${escapeHtml(tt.updatedLabel || "Updated")}"><span class="material-symbols-outlined">update</span></span>`;
   }
   return "";
 }
 
-// Render Use Cases Grid (All cards unlocked, colored connector tags, high contrast)
+// Render the flat playbook grid: filter → sort → headline → cards (or empty state)
 function renderUseCases() {
   const container = document.getElementById("useCasesContainer");
   if (!container) return;
-  container.innerHTML = "";
+  bindCardGrid(container);
   const lang = appState.activeLanguage || "en";
   const t = uiTranslations[lang];
+  const list = sortUseCases(filterUseCases(useCasesDb, appState, lang), appState.sortBy, lang);
 
-  // Filter use cases from db based on state
-  const filteredUseCases = useCasesDb.filter(useCase => {
-    let matchesRole = false;
-    const isSupportRole = ["Security", "Finance", "IT Admin", "SAO"].includes(appState.userRole);
+  const headline = document.getElementById("welcomeMsg");
+  if (headline) headline.textContent = formatResultsHeadline(t, list.length, appState);
 
-    if (appState.isAdmin === true) {
-      matchesRole = true;
-    } else if (appState.userRole === "Lecturer" || appState.userRole === "TA") {
-      matchesRole = ["Lecturer", "TA"].includes(useCase.role) || ["academic", "operational", "administrative"].includes(useCase.category) || !useCase.role;
-    } else if (appState.userRole === "Student") {
-      matchesRole = useCase.role === "Student" || useCase.category === "student" || !useCase.role;
-    } else if (isSupportRole) {
-      matchesRole = [appState.userRole, "IT Admin", "Program Leader", "Dean", "SAO"].includes(useCase.role) || 
-                    ["operational", "administrative"].includes(useCase.category) || !useCase.role;
-    } else if (appState.userRole === "Program Leader" || appState.userRole === "Dean") {
-      matchesRole = ["Lecturer", "Program Leader", "Dean"].includes(useCase.role) || ["academic", "operational", "administrative"].includes(useCase.category) || !useCase.role;
-    } else {
-      matchesRole = true;
-    }
-
-    let matchesLevel = true;
-    if (appState.isAdmin === true) {
-      matchesLevel = true;
-    } else if (!isSupportRole && useCase.level && Array.isArray(useCase.level) && useCase.level.length > 0) {
-      matchesLevel = useCase.level.includes("Generic") || useCase.level.includes(appState.institutionLevel) || useCase.level.length === 0;
-    }
-
-    let matchesFeature = true;
-    if (appState.activeFilterFeature !== "all") {
-      matchesFeature = useCase.features.some(f => f.toLowerCase() === appState.activeFilterFeature.toLowerCase());
-    }
-
-    let matchesStatus = true;
-    if (appState.activeFilterStatus === "liked") {
-      matchesStatus = useCase.isLiked === true || useCase.isLiked === 1;
-    } else if (appState.activeFilterStatus === "deployed") {
-      matchesStatus = useCase.isDeployed === true || useCase.isDeployed === 1;
-    }
-
-    let matchesSearch = true;
-    if (appState.searchQuery) {
-      const trans = useCasesTranslations[useCase.id] ? useCasesTranslations[useCase.id][lang] : null;
-      const cTitle = trans ? trans.title : useCase.title;
-      const cSummary = trans ? trans.summary : useCase.summary;
-
-      matchesSearch = cTitle.toLowerCase().includes(appState.searchQuery) || 
-                      cSummary.toLowerCase().includes(appState.searchQuery) ||
-                      (useCase.role && useCase.role.toLowerCase().includes(appState.searchQuery)) ||
-                      useCase.features.some(f => f.toLowerCase().includes(appState.searchQuery));
-    }
-
-    let matchesCategory = true;
-    if (appState.activeFilterCategory && appState.activeFilterCategory !== "all") {
-      const filterCat = appState.activeFilterCategory === "admin" ? "administrative" : appState.activeFilterCategory;
-      matchesCategory = useCase.category === filterCat;
-    }
-
-    return matchesRole && matchesLevel && matchesFeature && matchesStatus && matchesSearch && matchesCategory;
-  });
-
-  const categories = {
-    academic: { title: t.hubs.academic, icon: "school", class: "hub-academic", items: [] },
-    student: { title: t.hubs.student, icon: "diversity_3", class: "hub-student", items: [] },
-    operational: { title: t.hubs.operational, icon: "terminal", class: "hub-operational", items: [] },
-    administrative: { title: t.hubs.administrative, icon: "admin_panel_settings", class: "hub-admin-support", items: [] }
-  };
-
-  filteredUseCases.forEach(uc => {
-    if (categories[uc.category]) {
-      categories[uc.category].items.push(uc);
-    }
-  });
-
-  let renderedCount = 0;
-  Object.keys(categories).forEach(key => {
-    const hub = categories[key];
-    if (hub.items.length === 0) return;
-
-    renderedCount += hub.items.length;
-
-    const hubSection = document.createElement("div");
-    hubSection.className = `hub-section ${hub.class}`;
-
-    const hubHeader = document.createElement("div");
-    hubHeader.className = "hub-header";
-    hubHeader.innerHTML = `
-      <div class="hub-title-wrapper">
-        <div class="hub-icon-badge">
-          <span class="material-symbols-outlined">${hub.icon}</span>
-        </div>
-        <h2 class="hub-title">${hub.title}</h2>
-      </div>
-      <span class="hub-count-tag">${hub.items.length} ${lang === "en" ? "Use Case" + (hub.items.length > 1 ? 's' : '') : (lang === "zh-TW" ? "個案例" : "个案例")}</span>
-    `;
-
-    const cardsGrid = document.createElement("div");
-    cardsGrid.className = "cards-grid";
-
-    hub.items.forEach(uc => {
-      const card = document.createElement("div");
-      card.className = "card glass-panel";
-      card.dataset.ucId = uc.id;
-      card.addEventListener("click", () => openUseCaseModal(uc));
-
-      const trans = useCasesTranslations[uc.id] ? useCasesTranslations[uc.id][lang] : null;
-      const cardTitle = trans ? trans.title : uc.title;
-      const cardSummary = trans ? trans.summary : uc.summary;
-
-      let tagsHtml = "";
-      const badgeHtml = getUsecaseBadgeHtml(uc, lang);
-      if (badgeHtml) tagsHtml += badgeHtml;
-
-      if (uc.isVerified) {
-        const verifiedLabel = lang === 'en' ? 'Verified' : (lang === 'zh-TW' ? '已驗證' : '已验证');
-        tagsHtml += `<span class="tag tag-icon-only" title="${verifiedLabel}" style="background: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.25); color: #10b981;"><span class="material-symbols-outlined" style="font-size: 14px; font-weight: bold;">verified</span></span>`;
-      }
-
-      uc.features.forEach(f => {
-        const icon = getTagIcon('feature', f);
-        tagsHtml += `<span class="tag tag-feature tag-icon-only" title="${escapeHtml(f)}"><span class="material-symbols-outlined" style="font-size: 14px;">${icon}</span></span>`;
-      });
-
-      if (uc.level && uc.level.length > 0) {
-        const displayLevels = uc.level.length > 1 ? ["Generic"] : uc.level;
-        displayLevels.forEach(lvl => {
-          const levelText = t.levels[lvl] || lvl;
-          const icon = getTagIcon('level', lvl);
-          tagsHtml += `<span class="tag tag-level tag-icon-only" title="${escapeHtml(levelText)}"><span class="material-symbols-outlined" style="font-size: 14px;">${icon}</span></span>`;
-        });
-      }
-
-      // Render colored indicator tags for connectors
-      if (uc.connectors && uc.connectors.length > 0) {
-        uc.connectors.forEach(c => {
-          const meta = getConnectorMeta(c, lang);
-          tagsHtml += `<span class="tag tag-icon-only ${meta.class}" title="${escapeHtml(meta.label)}"><span class="material-symbols-outlined" style="font-size: 14px;">${meta.icon}</span></span>`;
-        });
-      }
-
-      // Connector localized bottom label
-      let connectorLabelHtml = "";
-      if (uc.connectors && uc.connectors.length > 0) {
-        connectorLabelHtml = uc.connectors.map(c => {
-          const meta = getConnectorMeta(c, lang);
-          return `<span class="tag tag-full ${meta.class}" style="font-size: 11px; padding: 3px 8px; border-radius: 6px;"><span class="material-symbols-outlined" style="font-size: 13px;">${meta.icon}</span><span>${escapeHtml(meta.label)}</span></span>`;
-        }).join(' ');
-      } else {
-        connectorLabelHtml = `
-          <span class="card-connector-req" style="color: var(--color-success)">
-            <span class="material-symbols-outlined">check_circle</span>
-            ${lang === "en" ? "Standalone Tool" : (lang === "zh-TW" ? "標準工具" : "标准工具")}
-          </span>
-        `;
-      }
-
-      card.innerHTML = `
-        <div class="card-top">
-          <div class="card-tags">${tagsHtml}</div>
-          <h3 class="card-title">${escapeHtml(cardTitle)}</h3>
-          <p class="card-summary">${escapeHtml(cardSummary)}</p>
-        </div>
-        <div class="card-bottom">
-          <span class="tag" style="background: rgba(255,255,255,0.02); border-color: rgba(255,255,255,0.05); color: var(--text-secondary)">${escapeHtml(t.roles[uc.role] || uc.role)}</span>
-          ${connectorLabelHtml}
-        </div>
-      `;
-
-      cardsGrid.appendChild(card);
-    });
-
-    hubSection.appendChild(hubHeader);
-    hubSection.appendChild(cardsGrid);
-    container.appendChild(hubSection);
-  });
-
-  if (renderedCount === 0) {
-    container.innerHTML = `
-      <div class="glass-panel" style="padding: 60px; text-align: center; border-style: dashed;">
-        <span class="material-symbols-outlined" style="font-size: 48px; color: var(--text-muted); margin-bottom: 16px;">search_off</span>
-        <h3 style="font-size: 20px; font-weight: 700; margin-bottom: 8px;">${t.noUseCasesTitle}</h3>
-        <p style="color: var(--text-secondary); max-width: 440px; margin: 0 auto 20px auto; font-size: 14px;">${t.noUseCasesDesc}</p>
-        <button class="nav-button nav-button-primary" style="margin: 0 auto;" id="btnResetFilters">${t.btnResetFilters}</button>
-      </div>
-    `;
-    const resetBtn = document.getElementById("btnResetFilters");
-    if (resetBtn) {
-      resetBtn.addEventListener("click", () => {
-        const searchInput = document.getElementById("searchInput");
-        if (searchInput) searchInput.value = "";
-        appState.searchQuery = "";
-        renderUseCases();
-      });
-    }
-  }
-}
-
-// Quick Unlock Connector fallback (all cards are permanently unlocked)
-window.handleQuickUnlock = function(connectorName) {
-  let toggleId = "";
-  let key = "";
-  const nameLower = (connectorName || "").toLowerCase();
-
-  if (nameLower.includes("drive")) { toggleId = "toggleOneDrive"; key = "onedrive"; }
-  else if (nameLower.includes("email") || nameLower.includes("outlook")) { toggleId = "toggleOutlook"; key = "outlook"; }
-  else if (nameLower.includes("lms")) { toggleId = "toggleLMS"; key = "lms"; }
-  else if (nameLower.includes("calendar") || nameLower.includes("google")) { toggleId = "toggleGoogle"; key = "google"; }
-
-  if (key) {
-    appState.activeConnectors[key] = true;
-    const toggleEl = document.getElementById(toggleId);
-    if (toggleEl) toggleEl.checked = true;
-    const indEl = document.getElementById(`indicator-${key}`);
-    if (indEl) indEl.classList.add("active");
-    renderUseCases();
-    const lang = appState.activeLanguage || "en";
-    const tTrans = uiTranslations[lang];
-    showToast(`${connectorName} ${tTrans.connectorLinkedSuccess || "connector active"}`, "success");
-  }
-};
-
-// Check if a use case has missing connector dependencies (always returns false to unlock all cards)
-function checkMissingConnector(useCase) {
-  return false;
-}
-
-// Modal Detail View Rendering with Enlarged Workbench, 3 Conceptual Steps, and Embedded Helper Prompts
-function openUseCaseModal(useCase) {
-  const overlay = document.getElementById("modalOverlay");
-  if (!overlay) return;
-  const lang = appState.activeLanguage || "en";
-  const t = uiTranslations[lang];
-
-  const trans = useCasesTranslations[useCase.id] ? useCasesTranslations[useCase.id][lang] : null;
-  const title = trans ? trans.title : useCase.title;
-  const summary = trans ? trans.summary : useCase.summary;
-
-  const modalTitleEl = document.getElementById("modalTitle");
-  if (modalTitleEl) modalTitleEl.textContent = title;
-
-  // Set metadata tags - Icon with labels for enlarged cards
-  let tagsHtml = "";
-  if (useCase.isVerified) {
-    const verifiedLabel = lang === 'en' ? 'Verified' : (lang === 'zh-TW' ? '已驗證' : '已验证');
-    tagsHtml += `<span class="tag tag-full" style="background: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.25); color: #10b981; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px;"><span class="material-symbols-outlined" style="font-size: 14px; font-weight: bold;">verified</span><span>${verifiedLabel}</span></span>`;
-  }
-
-  useCase.features.forEach(f => {
-    const icon = getTagIcon('feature', f);
-    tagsHtml += `<span class="tag tag-feature tag-full" style="font-size: 11px;"><span class="material-symbols-outlined" style="font-size: 14px;">${icon}</span><span>${escapeHtml(f)}</span></span>`;
-  });
-
-  if (useCase.level && useCase.level.length > 0) {
-    const displayLevels = useCase.level.length > 1 ? ["Generic"] : useCase.level;
-    displayLevels.forEach(lvl => {
-      const levelText = t.levels[lvl] || lvl;
-      const icon = getTagIcon('level', lvl);
-      tagsHtml += `<span class="tag tag-level tag-full" style="font-size: 11px;"><span class="material-symbols-outlined" style="font-size: 14px;">${icon}</span><span>${escapeHtml(levelText)}</span></span>`;
-    });
-  }
-
-  // Colored tags for connectors in modal header
-  if (useCase.connectors && useCase.connectors.length > 0) {
-    useCase.connectors.forEach(c => {
-      const meta = getConnectorMeta(c, lang);
-      tagsHtml += `<span class="tag tag-full ${meta.class}" style="font-size: 11px;"><span class="material-symbols-outlined" style="font-size: 14px;">${meta.icon}</span><span>${escapeHtml(meta.label)}</span></span>`;
-    });
-  }
-
-  const modalTagsEl = document.getElementById("modalTags");
-  if (modalTagsEl) modalTagsEl.innerHTML = tagsHtml;
-
-  const body = document.getElementById("modalDynamicContent");
-  if (!body) return;
-  body.innerHTML = "";
-
-  // 1. Overview Section
-  const overviewSec = document.createElement("div");
-  overviewSec.className = "modal-section";
-  overviewSec.style.marginBottom = "24px";
-  overviewSec.innerHTML = `
-    <h4 class="section-label">
-      <span class="material-symbols-outlined">info</span> ${t.overviewLabel}
-    </h4>
-    <p style="font-size: 15px; color: var(--text-secondary); line-height: 1.6;">${escapeHtml(summary)}</p>
-  `;
-  body.appendChild(overviewSec);
-
-  // 2. Operational Steps (3 Conceptual Stages with Step 1 Helpers and Step 2 Workbench)
-  const currentSteps = trans?.steps || useCase.steps || [];
-  const currentPrompt = trans?.prompt || useCase.prompt || "";
-  const currentProTip = trans?.proTip || useCase.proTip || "";
-  const connectorGuide = trans ? trans.connectorGuide : useCase.connectorGuide;
-
-  const stepsSec = document.createElement("div");
-  stepsSec.className = "modal-section";
-
-  // Step 1: Setup & Grounding with Embedded Helper Prompts
-  const helperPromptsList = (typeof useCaseHelperPrompts !== 'undefined' && useCaseHelperPrompts[useCase.id]) ? (useCaseHelperPrompts[useCase.id][lang] || useCaseHelperPrompts[useCase.id].en || []) : [];
-  let helperPromptsHtml = "";
-  if (helperPromptsList.length > 0) {
-    const helperHeadingText = lang === 'zh-TW' ? '事前準備輔助提示詞（若尚未備妥教材或規準，可直接複製使用）：' : (lang === 'zh-CN' ? '事前准备辅助提示词（若尚未备妥教材或规准，可直接复制使用）：' : 'Prerequisite Helper Prompts (Use if you do not have documents or rubrics handy):');
-    const helperItems = helperPromptsList.map(hp => `
-      <details class="helper-prompt-collapsible">
-        <summary class="helper-prompt-summary">
-          <div class="helper-prompt-title">
-            <span class="material-symbols-outlined" style="font-size: 15px; color: var(--color-primary);">smart_toy</span>
-            <span>${escapeHtml(hp.title)}</span>
-            <span class="helper-prompt-badge">${t.helperPromptTag || "HELPER PROMPT"}</span>
-          </div>
-          <span class="material-symbols-outlined" style="font-size: 18px; color: var(--text-muted);">expand_more</span>
-        </summary>
-        <div class="helper-prompt-body">
-          <div class="helper-prompt-text">${escapeHtml(hp.prompt)}</div>
-          <button class="helper-copy-btn" onclick="copyHelperPromptToClipboard(this)">
-            <span class="material-symbols-outlined" style="font-size: 14px;">content_copy</span>
-            <span>${t.copyHelperPrompt || "Copy Prompt"}</span>
-          </button>
-        </div>
-      </details>
-    `).join('');
-
-    helperPromptsHtml = `
-      <div class="helper-prompts-container">
-        <div class="helper-prompts-heading">
-          <span class="material-symbols-outlined" style="font-size: 15px; color: var(--color-primary);">auto_awesome</span>
-          <span>${helperHeadingText}</span>
-        </div>
-        ${helperItems}
-      </div>
-    `;
-  }
-
-  // Step 2: Workbench with "Fill in the variables" and "Sample Prompt"
-  const promptVars = extractPromptVariables(currentPrompt);
-  const valuesMap = {};
-  promptVars.forEach(v => { valuesMap[v.token] = ""; });
-
-  let varInputsHtml = "";
-  if (promptVars.length > 0) {
-    promptVars.forEach((v, vIdx) => {
-      varInputsHtml += `
-        <div class="variable-input-group">
-          <label class="variable-label" for="promptVarInput_${vIdx}">{{${escapeHtml(v.label)}}}</label>
-          <input type="text" class="variable-input" id="promptVarInput_${vIdx}" data-token="${escapeHtml(v.token)}" placeholder="${escapeHtml(v.label)}..." />
-        </div>
-      `;
-    });
-  } else {
-    varInputsHtml = `
-      <div style="font-size: 12px; color: var(--text-muted); font-style: italic; padding: 12px 0;">
-        ${lang === "zh-TW" ? "此提示詞無需額外填寫變數即可直接運行。" : (lang === "zh-CN" ? "此提示词无需额外填写变量即可直接运行。" : "This prompt is ready to run without extra variables.")}
-      </div>
-    `;
-  }
-
-  const initialTokensHtml = buildInteractivePromptHtml(currentPrompt, promptVars, valuesMap);
-
-  // Step 3: Human Review, Delivery, Manual Tip Box & Pro-Tip
-  let manualTipHtml = "";
-  if (useCase.connectors && useCase.connectors.length > 0) {
-    manualTipHtml = `
-      <div class="manual-tip-box" style="margin-top: 14px;">
-        <span class="material-symbols-outlined manual-tip-icon">tips_and_updates</span>
-        <div class="manual-tip-content">
-          <div class="manual-tip-title">${lang === "en" ? "No Connector Active? Manual Upload Tip" : (lang === "zh-TW" ? "未啟用連接器？手動上傳提示" : "未启用连接器？手动上传提示")}</div>
-          <p class="manual-tip-text">${lang === "en" ? "If enterprise connectors are not configured or offline, you can directly upload and attach your reference files, rubrics, or lecture notes into the Gemini chat to achieve identical results." : (lang === "zh-TW" ? "若尚未配置企業連接器或處於離線狀態，您可以直接在 Gemini 對話框中手動上傳參考文件、評分規準或教材檔案，即可達到完全相同的分析成效。" : "若尚未配置企业连接器或处于离线状态，您可以直接在 Gemini 对话框中手动上传参考文档、评分规准或教材档案，即可达到完全相同的分析成效。")}</p>
-        </div>
-      </div>
-    `;
-  }
-
-  let guideHtml = "";
-  if (connectorGuide && connectorGuide.steps && connectorGuide.steps.length > 0) {
-    const stepsLi = connectorGuide.steps.map(s => `<li>${escapeHtml(s)}</li>`).join('');
-    guideHtml = `
-      <div class="setup-guide-box" style="margin-top: 14px;">
-        <div class="setup-guide-header">
-          <span class="material-symbols-outlined">settings_suggest</span>
-          ${escapeHtml(connectorGuide.name)} ${lang === "en" ? "Setup Instructions" : (lang === "zh-TW" ? "部署設定指南" : "部署设定指南")}
-        </div>
-        <ol class="setup-steps">${stepsLi}</ol>
-      </div>
-    `;
-  }
-
-  let proTipHtml = "";
-  if (currentProTip) {
-    proTipHtml = `
-      <div class="pro-tip-box" style="margin-top: 14px;">
-        <span class="material-symbols-outlined pro-tip-icon">lightbulb</span>
-        <div class="pro-tip-content">
-          <div class="pro-tip-title">${t.adoptionProTip}</div>
-          <p class="pro-tip-text">${escapeHtml(currentProTip)}</p>
-        </div>
-      </div>
-    `;
-  }
-
-  stepsSec.innerHTML = `
-    <h4 class="section-label">
-      <span class="material-symbols-outlined">route</span> ${t.operationalSteps}
-    </h4>
-    <ul class="steps-list">
-      <!-- Step 1: Setup & Grounding -->
-      <li class="step-item">
-        <div class="step-header">
-          <div class="step-num">1</div>
-          <div class="step-info">
-            <div class="step-title">${t.step1Title || "Setup & Grounding"}</div>
-            <div class="step-desc">${escapeHtml(currentSteps[0] || "Upload course materials and establish knowledge grounding.")}</div>
-          </div>
-        </div>
-        ${helperPromptsHtml}
-      </li>
-
-      <!-- Step 2: Execute Sample Prompt -->
-      <li class="step-item">
-        <div class="step-header">
-          <div class="step-num">2</div>
-          <div class="step-info">
-            <div class="step-title">${t.step2Title || "Execute Sample Prompt"}</div>
-            <div class="step-desc">${escapeHtml(currentSteps[1] || "Configure variables and execute the agent prompt.")}</div>
-          </div>
-        </div>
-        <div class="step-workbench-container" style="margin-top: 14px;">
-          <div class="prompt-workbench-grid">
-            <div class="prompt-variables-panel">
-              <div class="prompt-variables-header">
-                <div class="prompt-variables-title">
-                  <span class="material-symbols-outlined" style="font-size: 16px;">tune</span>
-                  <span>${t.fillVariablesTitle || "Fill in the variables"}</span>
-                </div>
-                <span class="prompt-variables-subtitle">${t.fillVariablesDesc || "Click tokens or type below"}</span>
-              </div>
-              <div class="prompt-variables-grid">
-                ${varInputsHtml}
-              </div>
-            </div>
-            <div class="prompt-box" id="modalPromptText">
-              <div class="prompt-raw-text" id="modalPromptDisplay">${initialTokensHtml}</div>
-              <button class="copy-prompt-btn" onclick="copyPromptToClipboard()">
-                <span class="material-symbols-outlined" style="font-size: 16px;">content_copy</span>
-                ${t.copyPrompt || "Copy Prompt"}
-              </button>
-            </div>
-          </div>
-        </div>
-      </li>
-
-      <!-- Step 3: Human Review & Delivery -->
-      <li class="step-item">
-        <div class="step-header">
-          <div class="step-num">3</div>
-          <div class="step-info">
-            <div class="step-title">${t.step3Title || "Human Review & Delivery"}</div>
-            <div class="step-desc">${escapeHtml(currentSteps[2] || "Review output quality, personalize feedback, and deliver to students or LMS.")}</div>
-          </div>
-        </div>
-        ${manualTipHtml}
-        ${guideHtml}
-        ${proTipHtml}
-      </li>
-    </ul>
-  `;
-
-  body.appendChild(stepsSec);
-
-  // Initialize interactive variable listeners & click-to-focus on {{VARIABLE}} tokens
-  const promptBox = stepsSec.querySelector("#modalPromptText");
-  const promptDisplayEl = stepsSec.querySelector("#modalPromptDisplay");
-
-  if (promptBox) {
-    promptBox.dataset.currentPrompt = currentPrompt;
-  }
-
-  if (promptVars.length > 0 && promptDisplayEl) {
-    // 1. Click token in prompt -> focus matching input field with smooth scroll and pulse animation
-    promptDisplayEl.addEventListener("click", (e) => {
-      const tokenSpan = e.target.closest(".prompt-var-token");
-      if (!tokenSpan) return;
-      const token = tokenSpan.dataset.token;
-      if (!token) return;
-      const input = stepsSec.querySelector(`input[data-token="${CSS.escape(token)}"]`);
-      if (input) {
-        input.focus();
-        input.scrollIntoView({ behavior: "smooth", block: "nearest" });
-        input.classList.remove("pulse-focus");
-        void input.offsetWidth; // force reflow
-        input.classList.add("pulse-focus");
-      }
-    });
-
-    // 2. Input typing -> live interpolate into display and clipboard dataset
-    const varInputs = stepsSec.querySelectorAll(".variable-input");
-    const updateInterpolation = () => {
-      const newHtml = buildInteractivePromptHtml(currentPrompt, promptVars, valuesMap);
-      promptDisplayEl.innerHTML = newHtml;
-      const plainText = getInterpolatedPlainText(currentPrompt, promptVars, valuesMap);
-      if (promptBox) {
-        promptBox.dataset.currentPrompt = plainText;
-      }
-    };
-
-    varInputs.forEach(inp => {
-      inp.addEventListener("input", (e) => {
-        const token = e.target.dataset.token;
-        valuesMap[token] = e.target.value;
-        updateInterpolation();
-      });
-    });
-  }
-
-  overlay.classList.add("active");
+  container.innerHTML = list.length
+    ? list.map(uc => cardHtml(uc, lang, t)).join("")
+    : `<div class="empty-state">
+         <span class="material-symbols-outlined" aria-hidden="true">search_off</span>
+         <h3>${escapeHtml(t.noUseCasesTitle)}</h3>
+         <p>${escapeHtml(t.noUseCasesDesc)}</p>
+         <button type="button" class="nav-button" id="btnResetFilters">${escapeHtml(t.btnResetFilters)}</button>
+       </div>`;
 }
 
 // Close Detail Modal
 function closeModal() {
   const overlay = document.getElementById("modalOverlay");
   if (overlay) overlay.classList.remove("active");
+  document.body.classList.remove("modal-open");
 }
 
-// Interactive Copy Button Logic
-window.copyPromptToClipboard = function() {
-  const container = document.getElementById("modalPromptText");
-  if (!container) return;
-  const lang = appState.activeLanguage || "en";
-  const t = uiTranslations[lang];
-
-  // Extract text from dataset or child text element (clean without copy button text)
-  const text = container.dataset.currentPrompt || container.querySelector(".prompt-raw-text")?.textContent?.trim() || "";
-
-  navigator.clipboard.writeText(text).then(() => {
-    const successCopiedText = t.promptCopiedSuccess;
-    showToast(successCopiedText, "success");
-    const copyBtn = container.querySelector(".copy-prompt-btn");
-    if (copyBtn) {
-      const originalText = copyBtn.innerHTML;
-      copyBtn.innerHTML = `<span class="material-symbols-outlined" style="font-size: 16px; color: var(--color-success)">check_circle</span> ${t.copied}`;
-      setTimeout(() => {
-        copyBtn.innerHTML = originalText;
-      }, 2000);
-    }
-  });
-};
-
-// Premium Toast Notification Manager
+// Toast notifications: 'success' (default) or 'warning'. Long messages stay up longer.
+let toastTimer = null;
 function showToast(message, type = "success") {
   const toast = document.getElementById("toastNotification");
   const toastMsg = document.getElementById("toastMsg");
   const toastIcon = document.getElementById("toastIcon");
+  if (!toast || !toastMsg) return;
 
+  const isWarning = type === "warning" || type === "error";
   toastMsg.textContent = message;
-  if (type === "success") {
-    toastIcon.textContent = "check_circle";
-    toast.style.background = "rgba(16, 185, 129, 0.95)";
-  } else {
-    toastIcon.textContent = "warning";
-    toast.style.background = "rgba(245, 158, 11, 0.95)";
-  }
+  if (toastIcon) toastIcon.textContent = isWarning ? "warning" : "check_circle";
+  toast.classList.toggle("is-warning", isWarning);
+  toast.style.background = "";
 
+  // ~3.5s baseline, +1s per 40 characters beyond 60, capped at 9s
+  const duration = Math.min(9000, 3500 + Math.max(0, String(message).length - 60) * 25);
   toast.classList.add("active");
-  setTimeout(() => {
-    toast.classList.remove("active");
-  }, 3500);
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove("active"), duration);
 }
 
 // Enhance the useCases database with non-essential connector fallbacks and translations
@@ -3311,133 +2617,56 @@ async function loadUseCasesFromServer() {
   }
 }
 
-// 2. Overridden renderUseCases containing interactive Likes & Deployments
-const baseRenderUseCases = renderUseCases;
-renderUseCases = function() {
-  // Call original render engine to establish HTML layout
-  baseRenderUseCases();
-
-  // Post-process DOM to inject Likes and Deployments indicators
-  const cards = document.querySelectorAll("#useCasesContainer .card");
-  cards.forEach(card => {
-    const titleEl = card.querySelector(".card-title");
-    if (!titleEl) return;
-    const titleText = titleEl.textContent.trim();
-
-    // Map card back to local useCasesDb item
-    const uc = useCasesDb.find(u => {
-      const lang = appState.activeLanguage || "en";
-      const trans = useCasesTranslations[u.id] ? useCasesTranslations[u.id][lang] : null;
-      const cTitle = trans ? trans.title : u.title;
-      return cTitle.trim() === titleText;
-    });
-
-    if (!uc) return;
-
-    const cardBottom = card.querySelector(".card-bottom");
-    if (cardBottom) {
-      // Create user preference controls
-      const prefBar = document.createElement("div");
-      prefBar.className = "card-preferences-bar";
-      prefBar.style.display = "flex";
-      prefBar.style.gap = "8px";
-      prefBar.style.alignItems = "center";
-      prefBar.style.marginLeft = "auto";
-      prefBar.style.position = "relative";
-      prefBar.style.zIndex = "10";
-
-      const likeActive = uc.isLiked === true || uc.isLiked === 1;
-      const deployActive = uc.isDeployed === true || uc.isDeployed === 1;
-      const totalLikes = uc.totalLikes || 0;
-
-      prefBar.innerHTML = `
-        <button class="pref-btn btn-like" style="background: none; border: none; padding: 4px; display: inline-flex; align-items: center; cursor: pointer; color: ${likeActive ? 'var(--color-danger)' : 'var(--text-muted)'}; transition: color 0.2s; gap: 4px;" title="Like Use Case">
-          <span class="material-symbols-outlined" style="font-size: 18px; font-variation-settings: 'FILL' ${likeActive ? 1 : 0}">${likeActive ? 'favorite' : 'favorite'}</span>
-          <span class="likes-count" style="font-size: 12px; font-family: inherit; font-weight: 500;">${totalLikes}</span>
-        </button>
-        <button class="pref-btn btn-deploy" style="background: none; border: none; padding: 4px; display: inline-flex; align-items: center; cursor: pointer; color: ${deployActive ? 'var(--color-success)' : 'var(--text-muted)'}; transition: color 0.2s;" title="Active Deployment Status">
-          <span class="material-symbols-outlined" style="font-size: 18px; font-variation-settings: 'FILL' ${deployActive ? 1 : 0}">${deployActive ? 'rocket_launch' : 'rocket_launch'}</span>
-        </button>
-      `;
-
-      cardBottom.appendChild(prefBar);
-
-      // Prevent card detail popup modal when liking or deploying
-      const likeBtn = prefBar.querySelector(".btn-like");
-      likeBtn.addEventListener("click", async (e) => {
-        e.stopPropagation();
-        const newStatus = !uc.isLiked;
-        const resObj = await syncUserPreference(uc.id, 'like', newStatus);
-        if (resObj && resObj.success) {
-          uc.isLiked = newStatus;
-          uc.totalLikes = resObj.totalLikes;
-          likeBtn.style.color = newStatus ? 'var(--color-danger)' : 'var(--text-muted)';
-          likeBtn.querySelector(".material-symbols-outlined").style.fontVariationSettings = `'FILL' ${newStatus ? 1 : 0}`;
-          likeBtn.querySelector(".likes-count").textContent = resObj.totalLikes;
-          showToast(newStatus ? "Added to your favorites!" : "Removed from favorites");
-        }
-      });
-
-      const deployBtn = prefBar.querySelector(".btn-deploy");
-      deployBtn.addEventListener("click", async (e) => {
-        e.stopPropagation();
-        const newStatus = !uc.isDeployed;
-        const success = await syncUserPreference(uc.id, 'deploy', newStatus);
-        if (success) {
-          uc.isDeployed = newStatus;
-          deployBtn.style.color = newStatus ? 'var(--color-success)' : 'var(--text-muted)';
-          deployBtn.querySelector(".material-symbols-outlined").style.fontVariationSettings = `'FILL' ${newStatus ? 1 : 0}`;
-          showToast(newStatus ? "Deployment marked as active!" : "Deployment marked as inactive");
-        }
-      });
-    }
-  });
-};
-
-// Sync Likes & Deployments to DB
-async function syncUserPreference(useCaseId, action, value) {
+/**
+ * Persist a like to the DB.
+ * Resolves to { ok, status, data } so callers can distinguish an expired
+ * session (401), an admin preview (403) and other failures, rather than
+ * failing silently (the original cause of "likes don't stick").
+ */
+async function syncUserPreference(useCaseId, value) {
   try {
-    const endpoint = action === 'like' ? '/api/use-cases/like' : '/api/use-cases/deploy';
-    const bodyKey = action === 'like' ? 'isLiked' : 'isDeployed';
-    const res = await fetch(endpoint, {
+    const res = await fetch('/api/use-cases/like', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ useCaseId, [bodyKey]: value })
+      credentials: 'same-origin',
+      body: JSON.stringify({ useCaseId, isLiked: value })
     });
-    const data = await res.json();
-    return action === 'like' ? { success: data.success, totalLikes: data.totalLikes } : data.success;
+    const data = await res.json().catch(() => ({}));
+    return { ok: res.ok && data.success === true, status: res.status, data };
   } catch (error) {
-    console.error(`Preference sync error (${action}):`, error);
-    return false;
+    console.error('Like sync error:', error);
+    return { ok: false, status: 0, data: {} };
   }
 }
 
+/** Reveal the "Admin portal" item in the user avatar menu (admins previewing the learning portal). */
 function injectAdminBackButton() {
-  if (!document.getElementById("btnBackToAdminDash")) {
-    const backBtn = document.createElement("button");
-    backBtn.className = "nav-button nav-button-primary";
-    backBtn.id = "btnBackToAdminDash";
-    backBtn.style.marginLeft = "12px";
-    backBtn.innerHTML = `<span class="material-symbols-outlined">shield</span> <span>Admin Dash</span>`;
-    backBtn.onclick = () => {
-      sessionStorage.setItem("ge_current_view", "admin");
-      document.getElementById("appLayout").style.display = "none";
-      document.getElementById("adminPortal").style.display = "block";
-      initAdminPortal();
-    };
-    const navRight = document.querySelector(".navbar-right");
-    if (navRight) navRight.appendChild(backBtn);
-  }
+  const btn = document.getElementById("btnBackToAdminDash");
+  if (!btn) return;
+  btn.hidden = false;
+  if (btn.dataset.bound) return;
+  btn.dataset.bound = "1";
+  btn.addEventListener("click", () => {
+    sessionStorage.setItem("ge_current_view", "admin");
+    document.getElementById("userAvatarMenu")?.setAttribute("hidden", "");
+    document.getElementById("appLayout").style.display = "none";
+    document.getElementById("adminPortal").style.display = "block";
+    initAdminPortal();
+  });
 }
 
 // 3. User & Admin Lifecycle Controller (Session checking & Login gating)
 async function initApp() {
   // Execute base configs
   enhanceUseCasesDatabase();
-  initMouseGlow();
+  initParticleField();
   initTheme();
   initLanguage();
   initFeedbackSystem();
+  bindAvatarMenu("userAvatarBtn", "userAvatarMenu");
+  bindAvatarMenu("adminAvatarBtn", "adminAvatarMenu");
+  setupForgotPasswordHandlers();
+  bindUserEditModal();
 
   // Establish base auth elements on start
   const overlay = document.getElementById("wizardOverlay");
@@ -3446,158 +2675,108 @@ async function initApp() {
   const profileCard = document.getElementById("profileCard");
 
   // Reset display status
-  loginCard.style.display = "none";
-  resetCard.style.display = "none";
-  profileCard.style.display = "none";
+  ["loginCard", "resetCard", "profileCard", "forgotCard", "setPasswordCard"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = "none";
+  });
 
-  try {
-    // Validate session
-    const res = await fetch('/api/auth/session');
-    const auth = await res.json();
+  // Restore filter + sort values from sessionStorage before the first render
+  appState.activeFilterCategory = sessionStorage.getItem("ge_active_category") || "all";
+  appState.activeFilterFeature = sessionStorage.getItem("ge_active_feature") || "all";
+  const savedStatus = sessionStorage.getItem("ge_active_status");
+  appState.activeFilterStatus = savedStatus && savedStatus !== "deployed" ? savedStatus : "all";
+  appState.sortBy = sessionStorage.getItem("ge_sort_by") || "popular";
+  initFilterBar();
+  document.getElementById("searchInput")?.addEventListener("input", handleSearchInput);
 
-    if (auth.loggedIn) {
-      appState.userEmail = auth.user.email;
-      appState.isAdmin = auth.user.isAdmin;
-      appState.isAssist = auth.user.isAssist || false;
+  // Email links (?verify= / ?reset=) take priority over any existing session
+  const tok = readAuthTokenFromUrl();
+  if (tok) {
+    appState.activeLanguage = localStorage.getItem("ge_adoption_lang") || "en";
+    updateUILanguage();
+    startTokenFlow(tok.token, tok.kind);
+  } else {
+    try {
+      // Validate session
+      const res = await fetch('/api/auth/session');
+      const auth = await res.json();
 
-      if (appState.isAdmin) {
-        // Admin redirect or simulated view restore
-        const savedView = sessionStorage.getItem("ge_current_view") || "admin";
-        overlay.style.display = "none";
-        
-        if (savedView === "user") {
-          document.getElementById("adminPortal").style.display = "none";
-          document.getElementById("appLayout").style.display = "flex";
-          injectAdminBackButton();
-          
-          appState.userRole = "Lecturer";
-          appState.institutionLevel = "University & College";
-          updateSidebarContextUI();
-          
-          updateUILanguage(); // Make sure admin headers are drawn!
-          await loadUseCasesFromServer();
-          renderUseCases();
-        } else {
-          document.getElementById("appLayout").style.display = "none";
-          document.getElementById("adminPortal").style.display = "block";
-          initAdminPortal();
-        }
-      } else {
-        // Standard user login paths
-        if (auth.user.isTemp) {
-          // Force reset temp accounts
-          overlay.style.display = "flex";
-          resetCard.style.display = "block";
-          setupPasswordResetHandlers();
-        } else {
-          // Check profile onboarding status
-          if (auth.user.role && auth.user.institutionLevel) {
-            // Profile exists in DB
-            appState.userRole = auth.user.role;
-            appState.institutionLevel = auth.user.institutionLevel;
-            appState.activeLanguage = localStorage.getItem("ge_adoption_lang") || "en";
+      if (auth.loggedIn) {
+        appState.userEmail = auth.user.email;
+        appState.isAdmin = auth.user.isAdmin;
+        appState.isAssist = auth.user.isAssist || false;
+        appState.isSuper = auth.user.isSuper ?? (auth.user.email === 'edu_portal_s_admin');
+        // Per-user GE app link drives "Try it"; admins always use the generic Gemini Enterprise URL
+        appState.geAppLink = auth.user.isAdmin ? null : (auth.user.geAppLink || null);
+        appState.activeLanguage = localStorage.getItem("ge_adoption_lang") || appState.activeLanguage || "en";
+        ["navLang", "wizardLang", "adminLang"].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.value = appState.activeLanguage;
+        });
+        updateAccountMenus();
 
-            overlay.style.display = "none";
-            document.getElementById("navLang").value = appState.activeLanguage;
-            document.getElementById("wizardLang").value = appState.activeLanguage;
+        if (appState.isAdmin) {
+          // Admin redirect or simulated view restore
+          const savedView = sessionStorage.getItem("ge_current_view") || "admin";
+          overlay.style.display = "none";
 
-            document.getElementById("navbarWelcomeText").textContent = `Logged in: ${appState.userEmail}`;
+          if (savedView === "user") {
+            document.getElementById("adminPortal").style.display = "none";
+            document.getElementById("appLayout").style.display = "flex";
+            injectAdminBackButton();
 
-            updateUILanguage();
+            appState.userRole = "Lecturer";
+            appState.institutionLevel = "University & College";
             updateSidebarContextUI();
-            
-            // Fetch use cases and render
+            updateUILanguage();
             await loadUseCasesFromServer();
             renderUseCases();
           } else {
-            // New user requires profile configuration
-            overlay.style.display = "flex";
-            profileCard.style.display = "block";
-            setupProfileOnboardingHandlers();
+            document.getElementById("appLayout").style.display = "none";
+            document.getElementById("adminPortal").style.display = "block";
+            initAdminPortal();
           }
+        } else if (auth.user.isTemp) {
+          // Force reset temp accounts
+          overlay.style.display = "flex";
+          resetCard.style.display = "block";
+          updateUILanguage();
+          setupPasswordResetHandlers();
+        } else if (auth.user.role && auth.user.institutionLevel) {
+          // Profile exists in DB
+          appState.userRole = auth.user.role;
+          appState.institutionLevel = auth.user.institutionLevel;
+          overlay.style.display = "none";
+          updateUILanguage();
+          updateSidebarContextUI();
+          await loadUseCasesFromServer();
+          renderUseCases();
+        } else {
+          // New user requires profile configuration
+          overlay.style.display = "flex";
+          profileCard.style.display = "block";
+          updateUILanguage();
+          setupProfileOnboardingHandlers();
         }
+      } else {
+        // Prompt Sign-in
+        overlay.style.display = "flex";
+        loginCard.style.display = "block";
+        appState.activeLanguage = localStorage.getItem("ge_adoption_lang") || "en";
+        updateUILanguage();
+        setupLoginHandlers();
       }
-    } else {
-      // Prompt Sign-in
+    } catch (error) {
+      console.error("Initialization error:", error);
       overlay.style.display = "flex";
       loginCard.style.display = "block";
       setupLoginHandlers();
     }
-  } catch (error) {
-    console.error("Initialization error:", error);
-    overlay.style.display = "flex";
-    loginCard.style.display = "block";
-    setupLoginHandlers();
   }
-
-  // Restore filter values from sessionStorage
-  appState.activeFilterCategory = sessionStorage.getItem("ge_active_category") || "all";
-  appState.activeFilterFeature = sessionStorage.getItem("ge_active_feature") || "all";
-  appState.activeFilterStatus = sessionStorage.getItem("ge_active_status") || "all";
-
-  // Set event listeners for search and feature/status sidebars
-  document.getElementById("searchInput").addEventListener("input", handleSearchInput);
-
-  const categoryItems = document.querySelectorAll(".category-filter-item");
-  categoryItems.forEach(item => {
-    const cat = item.getAttribute("data-category");
-    if (cat === appState.activeFilterCategory) {
-      item.classList.add("active");
-    } else {
-      item.classList.remove("active");
-    }
-    item.addEventListener("click", () => {
-      categoryItems.forEach(i => i.classList.remove("active"));
-      item.classList.add("active");
-      appState.activeFilterCategory = cat;
-      sessionStorage.setItem("ge_active_category", cat);
-      renderUseCases();
-    });
-  });
-
-  const featureItems = document.querySelectorAll(".feature-filter-item");
-  featureItems.forEach(item => {
-    const feat = item.getAttribute("data-feature");
-    if (feat === appState.activeFilterFeature) {
-      item.classList.add("active");
-    } else {
-      item.classList.remove("active");
-    }
-    item.addEventListener("click", () => {
-      featureItems.forEach(i => i.classList.remove("active"));
-      item.classList.add("active");
-      appState.activeFilterFeature = feat;
-      sessionStorage.setItem("ge_active_feature", feat);
-      renderUseCases();
-    });
-  });
-
-  const statusItems = document.querySelectorAll(".status-filter-item");
-  statusItems.forEach(item => {
-    const stat = item.getAttribute("data-status");
-    if (stat === appState.activeFilterStatus) {
-      item.classList.add("active");
-    } else {
-      item.classList.remove("active");
-    }
-    item.addEventListener("click", () => {
-      statusItems.forEach(i => i.classList.remove("active"));
-      item.classList.add("active");
-      appState.activeFilterStatus = stat;
-      sessionStorage.setItem("ge_active_status", stat);
-      renderUseCases();
-    });
-  });
-
-  setupConnectorToggles();
 
   // Profile Context switch trigger
   document.getElementById("btnChangeContext").addEventListener("click", () => {
-    overlay.style.display = "flex";
-    profileCard.style.display = "block";
-    loginCard.style.display = "none";
-    resetCard.style.display = "none";
-
+    showAuthCard("profileCard");
     if (appState.userRole) document.getElementById("wizardRole").value = appState.userRole;
     if (appState.institutionLevel) document.getElementById("wizardLevel").value = appState.institutionLevel;
     document.getElementById("wizardLang").value = appState.activeLanguage;
@@ -3608,79 +2787,16 @@ async function initApp() {
   // Global Logout binding
   document.getElementById("btnLogout").addEventListener("click", triggerUserLogout);
 
-  // Modal details slider close bindings
+  // Modal close bindings: close button, backdrop click, Escape
   document.getElementById("modalClose").addEventListener("click", closeModal);
   document.getElementById("modalOverlay").addEventListener("click", (e) => {
     if (e.target === document.getElementById("modalOverlay")) closeModal();
   });
-
-
-
-  // Mobile responsive sidebar drawer hooks
-  const btnMobileMenu = document.getElementById("btnMobileMenu");
-  const btnMobileSidebarClose = document.getElementById("btnMobileSidebarClose");
-  const sidebarOverlay = document.getElementById("sidebarOverlay");
-  const appSidebar = document.getElementById("appSidebar");
-
-  const openMobileSidebar = () => {
-    if (appSidebar) appSidebar.classList.add("active");
-    if (sidebarOverlay) sidebarOverlay.classList.add("active");
-  };
-
-  const closeMobileSidebar = () => {
-    if (appSidebar) appSidebar.classList.remove("active");
-    if (sidebarOverlay) sidebarOverlay.classList.remove("active");
-  };
-
-  if (btnMobileMenu) {
-    btnMobileMenu.addEventListener("click", openMobileSidebar);
-  }
-
-  if (btnMobileSidebarClose) {
-    btnMobileSidebarClose.addEventListener("click", closeMobileSidebar);
-  }
-
-  if (sidebarOverlay) {
-    sidebarOverlay.addEventListener("click", closeMobileSidebar);
-  }
-
-  // Auto-close sidebar drawer when navigating filters on mobile
-  document.querySelectorAll(".category-filter-item, .feature-filter-item, .status-filter-item").forEach(item => {
-    item.addEventListener("click", closeMobileSidebar);
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    if (document.getElementById("modalOverlay")?.classList.contains("active")) closeModal();
+    else if (document.getElementById("adminUserEditModal")?.classList.contains("active")) closeUserEditModal();
   });
-
-  // Mobile responsive admin sidebar drawer hooks
-  const btnAdminMobileMenu = document.getElementById("btnAdminMobileMenu");
-  const btnAdminMobileSidebarClose = document.getElementById("btnAdminMobileSidebarClose");
-  const adminSidebar = document.getElementById("adminSidebar");
-
-  const openAdminMobileSidebar = () => {
-    if (adminSidebar) adminSidebar.classList.add("active");
-    if (sidebarOverlay) sidebarOverlay.classList.add("active");
-  };
-
-  const closeAdminMobileSidebar = () => {
-    if (adminSidebar) adminSidebar.classList.remove("active");
-    if (sidebarOverlay) sidebarOverlay.classList.remove("active");
-  };
-
-  if (btnAdminMobileMenu) {
-    btnAdminMobileMenu.addEventListener("click", openAdminMobileSidebar);
-  }
-
-  if (btnAdminMobileSidebarClose) {
-    btnAdminMobileSidebarClose.addEventListener("click", closeAdminMobileSidebar);
-  }
-
-  // Close admin sidebar on tab selections or clicking the overlay
-  document.querySelectorAll(".admin-tab-item").forEach(item => {
-    item.addEventListener("click", closeAdminMobileSidebar);
-  });
-  
-  // Make sidebarOverlay close the active admin sidebar too
-  if (sidebarOverlay) {
-    sidebarOverlay.addEventListener("click", closeAdminMobileSidebar);
-  }
 }
 
 // 4. Session Operations (Login, Reset, Profile, Logout)
@@ -3706,7 +2822,7 @@ function setupLoginHandlers() {
     const password = passwordInput.value;
 
     if (!email || !password) {
-      errorMsg.textContent = "Please fill in all authentication fields.";
+      errorMsg.textContent = tr().loginFieldsRequired;
       errorMsg.style.display = "block";
       return;
     }
@@ -3723,16 +2839,16 @@ function setupLoginHandlers() {
         if (data.isAdmin) {
           sessionStorage.setItem("ge_current_view", "admin");
         }
-        showToast("Access Granted. Redirecting...");
+        showToast(tr().loginSuccess);
         setTimeout(() => {
           window.location.reload();
         }, 800);
       } else {
-        errorMsg.textContent = data.message || "Invalid login credentials.";
+        errorMsg.textContent = data.message || tr().loginInvalid;
         errorMsg.style.display = "block";
       }
     } catch (err) {
-      errorMsg.textContent = "Unable to connect to the authentication server.";
+      errorMsg.textContent = tr().networkError;
       errorMsg.style.display = "block";
     }
   };
@@ -3759,14 +2875,14 @@ function setupPasswordResetHandlers() {
     const pass = p1.value;
     const confirm = p2.value;
 
-    if (!pass || pass.length < 6) {
-      errorMsg.textContent = "Password must be at least 6 characters long.";
+    if (!pass || pass.length < 8) {
+      errorMsg.textContent = tr().pwTooShort;
       errorMsg.style.display = "block";
       return;
     }
 
     if (pass !== confirm) {
-      errorMsg.textContent = "Passwords do not match. Please verify.";
+      errorMsg.textContent = tr().pwMismatch;
       errorMsg.style.display = "block";
       return;
     }
@@ -3782,16 +2898,16 @@ function setupPasswordResetHandlers() {
       const data = await res.json();
 
       if (data.success) {
-        showToast("Password updated successfully!");
+        showToast(tr().pwUpdated);
         document.getElementById("resetCard").style.display = "none";
         document.getElementById("profileCard").style.display = "block";
         setupProfileOnboardingHandlers();
       } else {
-        errorMsg.textContent = data.message || "Failed to reset password.";
+        errorMsg.textContent = data.message || tr().pwUpdateFailed;
         errorMsg.style.display = "block";
       }
     } catch (err) {
-      errorMsg.textContent = "Database connection error.";
+      errorMsg.textContent = tr().networkError;
       errorMsg.style.display = "block";
     }
   };
@@ -3828,8 +2944,6 @@ function setupProfileOnboardingHandlers() {
 
         document.getElementById("navLang").value = lang;
         document.getElementById("wizardOverlay").style.display = "none";
-        
-        document.getElementById("navbarWelcomeText").textContent = `Logged in: ${appState.userEmail}`;
 
         updateUILanguage();
         updateSidebarContextUI();
@@ -3837,7 +2951,7 @@ function setupProfileOnboardingHandlers() {
         // Fetch use cases and render
         await loadUseCasesFromServer();
         renderUseCases();
-        showToast("Workspace fully configured!");
+        showToast(tr().workspaceReady);
       }
     } catch (err) {
       console.error("Onboarding saving failed:", err);
@@ -3849,7 +2963,7 @@ async function triggerUserLogout() {
   try {
     sessionStorage.removeItem("ge_current_view");
     await fetch('/api/auth/logout', { method: 'POST' });
-    showToast("Logged out successfully.");
+    showToast(tr().loggedOut);
     setTimeout(() => {
       window.location.reload();
     }, 500);
@@ -3863,162 +2977,69 @@ let currentAdminTab = 'users';
 
 function initAdminPortal() {
   const isAssist = appState.isAssist === true;
-  const isSuperAdmin = (appState.userEmail === 'edu_portal_s_admin');
+  const isSuper = appState.isSuper === true;
 
-  let savedTab = sessionStorage.getItem("ge_current_admin_tab") || "users";
-  if (isAssist && savedTab === "users") {
-    savedTab = "cases";
-  }
-  currentAdminTab = savedTab;
-
+  // Role-gated controls: assistants can't create/import; only super admins batch-generate infographics
   const btnCreate = document.getElementById("btnAdminCreateCase");
-  if (btnCreate) {
-    btnCreate.style.display = isAssist ? "none" : "block";
-  }
-
-  // Hide Users Provisioning sidebar navigation tab for Assist Admin completely
-  const usersNav = document.getElementById("adminTabUsersNav");
-  if (usersNav) {
-    usersNav.style.display = isAssist ? "none" : "flex";
-  }
-
-  // Hide Use Cases Import button for Assist Admin completely
+  if (btnCreate) btnCreate.hidden = isAssist;
   const btnImport = document.getElementById("btnAdminImportCases");
-  if (btnImport) {
-    btnImport.style.display = isAssist ? "none" : "block";
+  if (btnImport) btnImport.hidden = isAssist;
+  const btnGenMissing = document.getElementById("btnAdminGenerateMissing");
+  if (btnGenMissing) {
+    btnGenMissing.hidden = !isSuper;
+    btnGenMissing.onclick = () => generateMissingInfographics(btnGenMissing);
   }
 
-  // Allow both Super Admin and Assist Admin to view Feedbacks list tab
-  const feedbacksNav = document.getElementById("adminTabFeedbacksNav");
-  if (feedbacksNav) {
-    feedbacksNav.style.display = (isSuperAdmin || isAssist) ? "flex" : "none";
-  }
-
-  const tabs = document.querySelectorAll(".admin-tab-item");
-  tabs.forEach(tab => {
-    const target = tab.getAttribute("data-tab");
-    if (target === savedTab) {
-      tab.classList.add("active");
-    } else {
-      tab.classList.remove("active");
-    }
-  });
-
-  document.getElementById("adminTabUsers").style.display = savedTab === 'users' ? 'block' : 'none';
-  document.getElementById("adminTabAnalytics").style.display = savedTab === 'analytics' ? 'block' : 'none';
-  document.getElementById("adminTabCases").style.display = savedTab === 'cases' ? 'block' : 'none';
-  
-  const tabFeedbacks = document.getElementById("adminTabFeedbacks");
-  if (tabFeedbacks) {
-    tabFeedbacks.style.display = savedTab === 'feedbacks' ? 'block' : 'none';
-  }
-
-  if (savedTab === 'users') loadAdminUsers();
-  else if (savedTab === 'analytics') loadAdminStats();
-  else if (savedTab === 'cases') loadAdminUseCases();
-  else if (savedTab === 'feedbacks' && (isSuperAdmin || isAssist)) loadAdminFeedbacks();
-
-  tabs.forEach(tab => {
-    tab.addEventListener("click", () => {
-      tabs.forEach(t => t.classList.remove("active"));
-      tab.classList.add("active");
-      
-      const target = tab.getAttribute("data-tab");
-      currentAdminTab = target;
-      sessionStorage.setItem("ge_current_admin_tab", target);
-
-      document.getElementById("adminTabUsers").style.display = target === 'users' ? 'block' : 'none';
-      document.getElementById("adminTabAnalytics").style.display = target === 'analytics' ? 'block' : 'none';
-      document.getElementById("adminTabCases").style.display = target === 'cases' ? 'block' : 'none';
-      if (tabFeedbacks) {
-        tabFeedbacks.style.display = target === 'feedbacks' ? 'block' : 'none';
-      }
-
-      if (target === 'users') loadAdminUsers();
-      else if (target === 'analytics') loadAdminStats();
-      else if (target === 'cases') loadAdminUseCases();
-      else if (target === 'feedbacks' && (isSuperAdmin || isAssist)) loadAdminFeedbacks();
+  // Bind topbar + tab row only once (initAdminPortal runs again when returning from the preview)
+  if (!appState.adminBound) {
+    appState.adminBound = true;
+    document.querySelectorAll(".admin-tab-item").forEach(tab => {
+      tab.addEventListener("click", () => showAdminTab(tab.dataset.tab));
     });
-  });
+    document.getElementById("btnAdminLogout").addEventListener("click", triggerUserLogout);
+    document.getElementById("btnAdminBackToPortal").addEventListener("click", () => {
+      enterLearningPortalPreview();
+      injectAdminBackButton();
+    });
+  }
 
-  // Admin Logout
-  document.getElementById("btnAdminLogout").addEventListener("click", triggerUserLogout);
+  updateAccountMenus();
+  updateUILanguage();
+  showAdminTab(sessionStorage.getItem("ge_current_admin_tab") || "users");
 
-  // Return to Standard Playbook views
-  document.getElementById("btnAdminBackToPortal").addEventListener("click", () => {
-    sessionStorage.setItem("ge_current_view", "user");
-    document.getElementById("adminPortal").style.display = "none";
-    document.getElementById("appLayout").style.display = "flex";
-    
-    injectAdminBackButton();
-
-    // Default simulation load
-    appState.userRole = "Lecturer";
-    appState.institutionLevel = "University & College";
-    updateSidebarContextUI();
-    updateUILanguage(); // Make sure admin headers are drawn!
-    loadUseCasesFromServer().then(() => renderUseCases());
-  });
-
-  // User tab form hook
+  // User tab form hook. Server returns either { multiple, summary:{success,duplicates,errors}, defaultPassword }
+  // or { email, tempPassword } for a single address.
   const formAddUser = document.getElementById("formAddUser");
   formAddUser.onsubmit = async (e) => {
     e.preventDefault();
+    const t = tr();
     const email = document.getElementById("inputNewUserEmail").value.trim();
     const feedback = document.getElementById("userActionFeedback");
-    feedback.style.display = "none";
+    if (!email) return;
+    const btn = document.getElementById("adminBtnProvision");
+    if (btn) btn.disabled = true;
+    const { ok, data } = await apiJson('/api/admin/users', { method: 'POST', body: { email } });
+    if (btn) btn.disabled = false;
+    if (!ok) { showInline(feedback, escapeHtml(errText(data)), "error"); return; }
 
-    try {
-      const res = await fetch('/api/admin/users', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
-      });
-      const data = await res.json();
-
-      if (data.success) {
-        formAddUser.reset();
-        if (data.multiple) {
-          const succList = data.summary.success.map(e => `<li><code>${e}</code></li>`).join('');
-          const dupList = data.summary.duplicates.length > 0 
-            ? `<div style="margin-top: 8px; font-size: 11px; color: var(--text-secondary);"><strong>Skipped Duplicates:</strong><br>${data.summary.duplicates.join(', ')}</div>` 
-            : '';
-          const errList = data.summary.errors.length > 0 
-            ? `<div style="margin-top: 8px; font-size: 11px; color: var(--color-danger);"><strong>Failed Accounts:</strong><br>${data.summary.errors.join(', ')}</div>` 
-            : '';
-
-          feedback.innerHTML = `
-            <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 4px; padding: 12px; font-size: 13px; color: var(--color-success);">
-              <strong>✅ Multiple User Accounts Provisioned!</strong><br>
-              <div style="margin-top: 6px; font-size: 12px;">
-                Successfully created accounts:
-                <ul style="margin: 4px 0; padding-left: 20px; text-align: left;">${succList || '<li>None</li>'}</ul>
-              </div>
-              Default Temporary Password for all: <strong style="font-family: monospace; background: var(--bg-prompt-box); padding: 2px 6px; border-radius: 4px; color: var(--text-prompt-box); border: 1px solid var(--border-glass);">${data.defaultPassword}</strong>
-              <p style="font-size: 11px; margin-top: 6px; color: var(--text-secondary);">The provisioned users will be prompted to reset their password immediately on their first login.</p>
-              ${dupList}
-              ${errList}
-            </div>
-          `;
-        } else {
-          feedback.innerHTML = `
-            <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 4px; padding: 12px; font-size: 13px; color: var(--color-success);">
-              <strong>✅ User Account Provisioned!</strong><br>
-              Email: <code>${data.email}</code><br>
-              Temporary Password: <strong style="font-family: monospace; background: var(--bg-prompt-box); padding: 2px 6px; border-radius: 4px; color: var(--text-prompt-box); border: 1px solid var(--border-glass);">${data.tempPassword}</strong>
-              <p style="font-size: 11px; margin-top: 4px; color: var(--text-secondary);">Share this credentials with the user. They will be prompted to reset it immediately on sign-in.</p>
-            </div>
-          `;
-        }
-        feedback.style.display = "block";
-        loadAdminUsers();
-      } else {
-        feedback.innerHTML = `<div style="background: var(--color-danger-glow); border: 1px solid rgba(239,68,68,0.2); border-radius: 4px; padding: 10px; color: var(--color-danger); font-size: 12px;">${data.message}</div>`;
-        feedback.style.display = "block";
-      }
-    } catch (err) {
-      console.error(err);
+    formAddUser.reset();
+    if (data.multiple) {
+      const s = data.summary || {};
+      const added = s.success || [], dups = s.duplicates || [], errs = s.errors || [];
+      const lines = [
+        `<p><strong>${escapeHtml(fmt(t.usersAdded, { n: added.length }))}</strong></p>`,
+        dups.length ? `<p>${escapeHtml(fmt(t.usersSkipped, { list: dups.join(", ") }))}</p>` : "",
+        errs.length ? `<p>${escapeHtml(fmt(t.usersFailed, { list: errs.join(", ") }))}</p>` : "",
+        added.length && data.defaultPassword ? copyRowHtml(t.tempPasswordLabel, data.defaultPassword) : ""
+      ];
+      showInline(feedback, lines.join(""), errs.length ? "error" : "success");
+    } else {
+      showInline(feedback,
+        `<p><strong>${escapeHtml(fmt(t.usersAdded, { n: 1 }))}</strong> · ${escapeHtml(data.email || email)}</p>` +
+        (data.tempPassword ? copyRowHtml(t.tempPasswordLabel, data.tempPassword) : ""),
+        "success");
     }
+    loadAdminUsers();
   };
 
   // Case CRUD create/export hooks
@@ -4026,7 +3047,7 @@ function initAdminPortal() {
   document.getElementById("btnAdminExportCases").onclick = () => {
     const checkedBoxes = document.querySelectorAll(".admin-case-checkbox:checked");
     if (checkedBoxes.length === 0) {
-      alert("Please select at least one use case to export by checking the boxes in the table rows.");
+      alert(tr().exportSelectFirst);
       return;
     }
 
@@ -4047,7 +3068,8 @@ function initAdminPortal() {
         proTip: uc.proTip || uc.pro_tip || "",
         connectorGuide: typeof uc.connectorGuide === 'string' ? JSON.parse(uc.connectorGuide) : (uc.connectorGuide || uc.connector_guide || null),
         translations: typeof uc.translations === 'string' ? JSON.parse(uc.translations) : (uc.translations || {}),
-        isVerified: uc.isVerified !== undefined ? uc.isVerified : false
+        isVerified: uc.isVerified !== undefined ? uc.isVerified : false,
+        promptType: uc.promptType || "general"
       };
     });
 
@@ -4075,7 +3097,7 @@ function initAdminPortal() {
         const importedArray = Array.isArray(importData) ? importData : [importData];
 
         if (importedArray.length === 0) {
-          alert("Selected JSON file does not contain any valid playbooks.");
+          alert(tr().importEmpty);
           return;
         }
 
@@ -4099,7 +3121,7 @@ function initAdminPortal() {
           let shouldOverwrite = true;
 
           if (alreadyExists) {
-            shouldOverwrite = confirm(`Use case ID "${uc.id}" ("${uc.title}") already exists in the system.\n\nDo you want to overwrite and replace it?`);
+            shouldOverwrite = confirm(fmt(tr().importConfirmOverwrite, { id: uc.id }));
           }
 
           if (shouldOverwrite) {
@@ -4121,7 +3143,8 @@ function initAdminPortal() {
               proTip: uc.proTip || uc.pro_tip || "",
               connectorGuide: uc.connectorGuide || uc.connector_guide || null,
               translations: uc.translations || {},
-              isVerified: uc.isVerified !== undefined ? uc.isVerified : false
+              isVerified: uc.isVerified !== undefined ? uc.isVerified : false,
+              promptType: uc.promptType || "general"
             };
 
             const res = await fetch(url, {
@@ -4143,7 +3166,7 @@ function initAdminPortal() {
           }
         }
 
-        alert(`Playbook import completed!\n\nSuccessfully Imported: ${createdCount}\nSuccessfully Overwritten: ${updatedCount}\nSkipped/Failed: ${skippedCount}`);
+        alert(fmt(tr().importDone, { created: createdCount, updated: updatedCount, skipped: skippedCount }));
         
         // Reload all data arrays and render lists
         loadAdminUseCases();
@@ -4151,7 +3174,7 @@ function initAdminPortal() {
 
       } catch (err) {
         console.error("Failed to parse or import file:", err);
-        alert("An error occurred. Make sure you selected a valid playbook JSON backup file.");
+        alert(tr().importFailed);
       } finally {
         // Reset the file selector so the user can select the same file again if needed
         e.target.value = "";
@@ -4180,96 +3203,44 @@ function initAdminPortal() {
     e.preventDefault();
     await saveAdminUseCase();
   };
-
-  // Default load
-  loadAdminUsers();
 }
 
 
-// Admin Tab 1: Load users table
+// Admin Tab 1: Load users table (5 columns: email, GE app link, status, created, actions)
 async function loadAdminUsers() {
   const tbody = document.getElementById("adminUsersTableBody");
-  tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 20px; color: var(--text-muted);">Loading users list...</td></tr>`;
+  if (!tbody) return;
+  const t = tr();
+  const emptyRow = (text, cls = "") => `<tr><td colspan="5" class="table-empty ${cls}">${escapeHtml(text)}</td></tr>`;
+  tbody.innerHTML = emptyRow(t.loading);
 
-  try {
-    const res = await fetch('/api/admin/users');
-    const users = await res.json();
+  const { ok, data } = await apiJson('/api/admin/users');
+  const users = Array.isArray(data) ? data : (Array.isArray(data.users) ? data.users : []);
+  if (!ok && !users.length) { tbody.innerHTML = emptyRow(errText(data), "is-error"); return; }
+  if (!users.length) { tbody.innerHTML = emptyRow(t.usersEmpty); return; }
 
-    if (users.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 20px; color: var(--text-muted);">No users registered yet.</td></tr>`;
-      return;
-    }
+  tbody.innerHTML = "";
+  users.forEach(u => {
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td class="cell-strong">${escapeHtml(u.email)}</td>
+      <td>${geLinkCellHtml(u.geAppLink, t)}</td>
+      <td><span class="status-dot ${u.isTemp ? "is-pending" : "is-ok"}">${escapeHtml(u.isTemp ? t.statusTemp : t.statusActive)}</span></td>
+      <td class="muted">${escapeHtml(formatDate(u.createdAt))}</td>
+      <td class="col-actions"><div class="row-actions">
+        <button type="button" class="nav-button btn-sm btn-edit-user">${escapeHtml(t.edit)}</button>
+        <button type="button" class="nav-button btn-sm btn-danger btn-revoke-user">${escapeHtml(t.revoke)}</button>
+      </div></td>`;
+    tbody.appendChild(row);
 
-    tbody.innerHTML = "";
-    users.forEach(u => {
-      const tr = document.createElement("tr");
-      tr.style.borderBottom = "1px solid var(--border-glass)";
-      
-      const date = new Date(u.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
-      const statusText = u.isTemp ? 
-        `<span style="color: var(--color-warning); font-weight: 700;">Temporary (Pending Reset)</span>` : 
-        `<span style="color: var(--color-success); font-weight: 700;">Active Account</span>`;
-
-      tr.innerHTML = `
-        <td style="padding: 12px 8px; font-weight: 500;">${u.email}</td>
-        <td style="padding: 12px 8px;">${statusText}</td>
-        <td style="padding: 12px 8px; color: var(--text-muted);">${date}</td>
-        <td style="padding: 12px 8px; text-align: right; display: flex; gap: 8px; justify-content: flex-end;">
-          <button class="nav-button btn-reset-user" style="height: 28px; padding: 0 10px; font-size: 11px;">Reset Access</button>
-          <button class="nav-button btn-revoke-user" style="height: 28px; padding: 0 10px; font-size: 11px; background: var(--color-danger); border-color: var(--color-danger); color: #ffffff !important;">Revoke</button>
-        </td>
-      `;
-
-      tbody.appendChild(tr);
-
-      // Reset Password button bind
-      tr.querySelector(".btn-reset-user").onclick = async () => {
-        const feedback = document.getElementById("userActionFeedback");
-        feedback.style.display = "none";
-        if (confirm(`Generate a new temporary password for ${u.email}?`)) {
-          try {
-            const r = await fetch('/api/admin/users/reset', {
-              method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ email: u.email })
-            });
-            const data = await r.json();
-            if (data.success) {
-              feedback.innerHTML = `
-                <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 4px; padding: 12px; font-size: 13px; color: var(--color-success);">
-                  <strong>✅ Password Re-Generated!</strong><br>
-                  Email: <code>${data.email}</code><br>
-                  New Temporary Password: <strong style="font-family: monospace; background: var(--bg-prompt-box); padding: 2px 6px; border-radius: 4px; color: var(--text-prompt-box); border: 1px solid var(--border-glass);">${data.tempPassword}</strong>
-                </div>
-              `;
-              feedback.style.display = "block";
-              loadAdminUsers();
-            }
-          } catch (err) { console.error(err); }
-        }
-      };
-
-      // Revoke user bind
-      tr.querySelector(".btn-revoke-user").onclick = async () => {
-        if (confirm(`Are you absolutely sure you want to revoke and delete the account for ${u.email}?`)) {
-          try {
-            const r = await fetch('/api/admin/users', {
-              method: 'DELETE',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ email: u.email })
-            });
-            const data = await r.json();
-            if (data.success) {
-              showToast("User successfully deleted.");
-              loadAdminUsers();
-            }
-          } catch (err) { console.error(err); }
-        }
-      };
-    });
-  } catch (error) {
-    console.error(error);
-  }
+    row.querySelector(".btn-edit-user").onclick = () => openUserEditModal(u);
+    row.querySelector(".btn-revoke-user").onclick = async () => {
+      if (!confirm(fmt(t.confirmRevoke, { email: u.email }))) return;
+      const res = await apiJson('/api/admin/users', { method: 'DELETE', body: { email: u.email } });
+      if (res.ok) { showToast(t.userRevoked); loadAdminUsers(); }
+      else showToast(errText(res.data), "warning");
+    };
+  });
 }
 
 // Admin Tab 2: Load metrics & SVG charts
@@ -4281,7 +3252,7 @@ async function loadAdminStats() {
     document.getElementById("statTotalUsers").textContent = data.totalUsers;
     document.getElementById("statTotalUseCases").textContent = data.totalUseCases;
     document.getElementById("statTotalLikes").textContent = data.totalLikes;
-    document.getElementById("statTotalDeployments").textContent = data.totalDeployments;
+    document.getElementById("statTotalViews").textContent = data.totalViews ?? 0;
 
     renderAdminStatsChart(data.history);
 
@@ -4319,8 +3290,8 @@ async function loadAdminStats() {
                 <div>
                   <div style="font-size: 14px; font-weight: 700; color: var(--text-primary);">${item.title}</div>
                   <div style="display: flex; gap: 8px; margin-top: 4px; align-items: center;">
-                    <span style="font-size: 10px; background: rgba(255,255,255,0.05); color: var(--text-secondary); padding: 2px 8px; border-radius: 12px; font-weight: 500; text-transform: capitalize; border: 1px solid var(--border-hairline);">${categoryName}</span>
-                    <span style="font-size: 10px; background: rgba(255,255,255,0.05); color: var(--text-muted); padding: 2px 8px; border-radius: 12px; font-weight: 500; border: 1px solid var(--border-hairline);">${item.role}</span>
+                    <span style="font-size: 13px; background: rgba(255,255,255,0.05); color: var(--text-secondary); padding: 2px 8px; border-radius: 12px; font-weight: 500; text-transform: capitalize; border: 1px solid var(--border-hairline);">${categoryName}</span>
+                    <span style="font-size: 13px; background: rgba(255,255,255,0.05); color: var(--text-muted); padding: 2px 8px; border-radius: 12px; font-weight: 500; border: 1px solid var(--border-hairline);">${item.role}</span>
                   </div>
                 </div>
               </div>
@@ -4365,14 +3336,14 @@ function renderAdminStatsChart(history) {
   history.forEach(h => {
     if (h.views > maxVal) maxVal = h.views;
     if (h.likes > maxVal) maxVal = h.likes;
-    if (h.deployments > maxVal) maxVal = h.deployments;
+    if (h.tries > maxVal) maxVal = h.tries;
   });
   maxVal = Math.ceil(maxVal / 10) * 10; // Round up to nearest 10 for gridlines
 
   // Calculate coordinates
   const pointsViews = [];
   const pointsLikes = [];
-  const pointsDeploy = [];
+  const pointsTries = [];
 
   const stepX = chartWidth / (history.length - 1);
 
@@ -4380,11 +3351,11 @@ function renderAdminStatsChart(history) {
     const x = paddingLeft + (i * stepX);
     const yViews = paddingTop + chartHeight - ((h.views / maxVal) * chartHeight);
     const yLikes = paddingTop + chartHeight - ((h.likes / maxVal) * chartHeight);
-    const yDeploy = paddingTop + chartHeight - ((h.deployments / maxVal) * chartHeight);
+    const yTries = paddingTop + chartHeight - ((h.tries / maxVal) * chartHeight);
 
     pointsViews.push(`${x},${yViews}`);
     pointsLikes.push(`${x},${yLikes}`);
-    pointsDeploy.push(`${x},${yDeploy}`);
+    pointsTries.push(`${x},${yTries}`);
   });
 
   // Build Gridlines HTML
@@ -4446,25 +3417,25 @@ function renderAdminStatsChart(history) {
     <!-- Trend Lines -->
     <polyline points="${pointsViews.join(' ')}" fill="none" stroke="var(--color-secondary)" stroke-width="2" />
     <polyline points="${pointsLikes.join(' ')}" fill="none" stroke="var(--color-danger)" stroke-width="2" />
-    <polyline points="${pointsDeploy.join(' ')}" fill="none" stroke="var(--color-success)" stroke-width="2" />
+    <polyline points="${pointsTries.join(' ')}" fill="none" stroke="var(--color-success)" stroke-width="2" />
 
     <!-- Data Markers -->
     ${history.map((h, i) => {
       const x = paddingLeft + (i * stepX);
       const yViews = paddingTop + chartHeight - ((h.views / maxVal) * chartHeight);
       const yLikes = paddingTop + chartHeight - ((h.likes / maxVal) * chartHeight);
-      const yDeploy = paddingTop + chartHeight - ((h.deployments / maxVal) * chartHeight);
+      const yTries = paddingTop + chartHeight - ((h.tries / maxVal) * chartHeight);
       return `
         <circle cx="${x}" cy="${yViews}" r="4" fill="var(--bg-dark-base)" stroke="var(--color-secondary)" stroke-width="2" class="chart-dot" style="cursor: pointer;" />
         <circle cx="${x}" cy="${yLikes}" r="4" fill="var(--bg-dark-base)" stroke="var(--color-danger)" stroke-width="2" class="chart-dot" style="cursor: pointer;" />
-        <circle cx="${x}" cy="${yDeploy}" r="4" fill="var(--bg-dark-base)" stroke="var(--color-success)" stroke-width="2" class="chart-dot" style="cursor: pointer;" />
+        <circle cx="${x}" cy="${yTries}" r="4" fill="var(--bg-dark-base)" stroke="var(--color-success)" stroke-width="2" class="chart-dot" style="cursor: pointer;" />
       `;
     }).join('')}
 
     <!-- Interactive Hover Markers -->
     <circle id="hoverViewsCircle" r="5.5" fill="var(--color-secondary)" stroke="#ffffff" stroke-width="1.5" opacity="0" pointer-events="none" />
     <circle id="hoverLikesCircle" r="5.5" fill="var(--color-danger)" stroke="#ffffff" stroke-width="1.5" opacity="0" pointer-events="none" />
-    <circle id="hoverDeploysCircle" r="5.5" fill="var(--color-success)" stroke="#ffffff" stroke-width="1.5" opacity="0" pointer-events="none" />
+    <circle id="hoverTriesCircle" r="5.5" fill="var(--color-success)" stroke="#ffffff" stroke-width="1.5" opacity="0" pointer-events="none" />
   `;
 
   // Interaction handlers
@@ -4490,7 +3461,7 @@ function renderAdminStatsChart(history) {
 
     const yViews = paddingTop + chartHeight - ((h.views / maxVal) * chartHeight);
     const yLikes = paddingTop + chartHeight - ((h.likes / maxVal) * chartHeight);
-    const yDeploy = paddingTop + chartHeight - ((h.deployments / maxVal) * chartHeight);
+    const yTries = paddingTop + chartHeight - ((h.tries / maxVal) * chartHeight);
 
     const hLine = svg.getElementById("hoverLine");
     if (hLine) {
@@ -4501,11 +3472,11 @@ function renderAdminStatsChart(history) {
 
     const cViews = svg.getElementById("hoverViewsCircle");
     const cLikes = svg.getElementById("hoverLikesCircle");
-    const cDeploys = svg.getElementById("hoverDeploysCircle");
+    const cTries = svg.getElementById("hoverTriesCircle");
 
     if (cViews) { cViews.setAttribute("cx", x); cViews.setAttribute("cy", yViews); cViews.setAttribute("opacity", "1"); }
     if (cLikes) { cLikes.setAttribute("cx", x); cLikes.setAttribute("cy", yLikes); cLikes.setAttribute("opacity", "1"); }
-    if (cDeploys) { cDeploys.setAttribute("cx", x); cDeploys.setAttribute("cy", yDeploy); cDeploys.setAttribute("opacity", "1"); }
+    if (cTries) { cTries.setAttribute("cx", x); cTries.setAttribute("cy", yTries); cTries.setAttribute("opacity", "1"); }
 
     tooltip.style.display = "block";
     tooltip.style.opacity = "1";
@@ -4516,23 +3487,13 @@ function renderAdminStatsChart(history) {
     }
     tooltip.style.top = `${Math.min(mouseY - 10, height - 95)}px`;
 
-    const lang = appState.activeLanguage || "en";
-    let labelViews = "Views";
-    let labelLikes = "Likes";
-    let labelDeploys = "Deploys";
-
-    if (lang === "zh-TW") {
-      labelViews = "查看次數";
-      labelLikes = "按讚數";
-      labelDeploys = "部署次數";
-    } else if (lang === "zh-CN") {
-      labelViews = "查看次数";
-      labelLikes = "点赞数";
-      labelDeploys = "部署次数";
-    }
+    const tt = tr();
+    const labelViews = escapeHtml(tt.chartTipViews || "Views");
+    const labelLikes = escapeHtml(tt.chartTipLikes || "Likes");
+    const labelTries = escapeHtml(tt.chartTipTries || "Try it");
 
     tooltip.innerHTML = `
-      <div style="font-weight: 700; margin-bottom: 6px; border-bottom: 1px solid var(--border-glass); padding-bottom: 4px; color: var(--color-primary); font-family: var(--font-heading); font-size: 11px;">${h.month}</div>
+      <div style="font-weight: 700; margin-bottom: 6px; border-bottom: 1px solid var(--border-glass); padding-bottom: 4px; color: var(--color-primary); font-family: var(--font-heading); font-size: 13px;">${h.month}</div>
       <div style="display: flex; justify-content: space-between; gap: 16px; margin-bottom: 3px;">
         <span style="color: var(--text-secondary); display: flex; align-items: center; gap: 4px;"><span style="display: inline-block; width: 6px; height: 6px; background: var(--color-secondary); border-radius: 50%;"></span>${labelViews}:</span>
         <strong style="color: var(--text-primary); font-family: monospace;">${h.views}</strong>
@@ -4542,8 +3503,8 @@ function renderAdminStatsChart(history) {
         <strong style="color: var(--text-primary); font-family: monospace;">${h.likes}</strong>
       </div>
       <div style="display: flex; justify-content: space-between; gap: 16px;">
-        <span style="color: var(--text-secondary); display: flex; align-items: center; gap: 4px;"><span style="display: inline-block; width: 6px; height: 6px; background: var(--color-success); border-radius: 50%;"></span>${labelDeploys}:</span>
-        <strong style="color: var(--text-primary); font-family: monospace;">${h.deployments}</strong>
+        <span style="color: var(--text-secondary); display: flex; align-items: center; gap: 4px;"><span style="display: inline-block; width: 6px; height: 6px; background: var(--color-success); border-radius: 50%;"></span>${labelTries}:</span>
+        <strong style="color: var(--text-primary); font-family: monospace;">${h.tries}</strong>
       </div>
     `;
   });
@@ -4560,88 +3521,85 @@ function renderAdminStatsChart(history) {
 
     const cViews = svg.getElementById("hoverViewsCircle");
     const cLikes = svg.getElementById("hoverLikesCircle");
-    const cDeploys = svg.getElementById("hoverDeploysCircle");
+    const cTries = svg.getElementById("hoverTriesCircle");
 
     if (cViews) cViews.setAttribute("opacity", "0");
     if (cLikes) cLikes.setAttribute("opacity", "0");
-    if (cDeploys) cDeploys.setAttribute("opacity", "0");
+    if (cTries) cTries.setAttribute("opacity", "0");
   }
 
   container.appendChild(svg);
 }
 
-// Admin Tab 3: Load Use Cases CRUD
+// Admin Tab 3: Load Use Cases CRUD (8 columns: check, infographic, ID, title, category, role, verified, actions)
 async function loadAdminUseCases() {
   const tbody = document.getElementById("adminCasesTableBody");
-  tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 20px; color: var(--text-muted);">Loading use cases...</td></tr>`;
+  if (!tbody) return;
+  const t = tr();
+  const emptyRow = (text, cls = "") => `<tr><td colspan="8" class="table-empty ${cls}">${escapeHtml(text)}</td></tr>`;
+  tbody.innerHTML = emptyRow(t.loading);
 
-  try {
-    const res = await fetch('/api/use-cases');
-    const cases = await res.json();
-    appState.loadedAdminUseCases = cases;
+  const { ok, data } = await apiJson('/api/use-cases');
+  const cases = Array.isArray(data) ? data : [];
+  if (!ok && !cases.length) { tbody.innerHTML = emptyRow(errText(data), "is-error"); return; }
+  appState.loadedAdminUseCases = cases;
 
-    // Reset select all checkbox
-    const selectAllCheckbox = document.getElementById("chkAdminSelectAllCases");
-    if (selectAllCheckbox) {
-      selectAllCheckbox.checked = false;
-      selectAllCheckbox.onchange = (e) => {
-        const isChecked = e.target.checked;
-        document.querySelectorAll(".admin-case-checkbox").forEach(cb => {
-          cb.checked = isChecked;
-        });
+  // Reset select-all checkbox
+  const selectAllCheckbox = document.getElementById("chkAdminSelectAllCases");
+  if (selectAllCheckbox) {
+    selectAllCheckbox.checked = false;
+    selectAllCheckbox.onchange = (e) => {
+      document.querySelectorAll(".admin-case-checkbox").forEach(cb => { cb.checked = e.target.checked; });
+    };
+  }
+
+  const activeLang = appState.activeLanguage || "en";
+  const isAssist = appState.isAssist === true;
+  const isSuper = appState.isSuper === true;
+  const categoryLabel = { academic: t.catAcademic, student: t.catStudent, operational: t.catOperational, administrative: t.catAdmin };
+
+  tbody.innerHTML = "";
+  cases.forEach(uc => {
+    const row = document.createElement("tr");
+    const trans = uc.translations ? uc.translations[activeLang] : null;
+    const titleText = (trans && trans.title) ? trans.title : uc.title;
+    const badgeHtml = getUsecaseBadgeHtml(uc, activeLang);
+    const thumb = uc.infographicUrl
+      ? `<a href="${escapeHtml(uc.infographicUrl)}" target="_blank" rel="noopener" title="${escapeHtml(t.infographicOpen)}"><img class="thumb" src="${escapeHtml(uc.infographicUrl)}" alt="" loading="lazy"></a>`
+      : `<span class="muted">${escapeHtml(t.none)}</span>`;
+    const verified = uc.isVerified
+      ? `<span class="tag-verified"><span class="material-symbols-outlined" aria-hidden="true">verified</span>${escapeHtml(t.yes)}</span>`
+      : `<span class="muted">${escapeHtml(t.no)}</span>`;
+
+    row.innerHTML = `
+      <td class="col-check"><input type="checkbox" class="admin-case-checkbox" value="${escapeHtml(uc.id)}" aria-label="${escapeHtml(titleText)}"></td>
+      <td class="col-thumb">${thumb}</td>
+      <td class="cell-mono">${escapeHtml(uc.id)}</td>
+      <td class="cell-strong"><span>${escapeHtml(titleText)}</span>${badgeHtml ? ` ${badgeHtml}` : ""}</td>
+      <td>${escapeHtml(categoryLabel[uc.category] || uc.category || "")}</td>
+      <td class="muted">${escapeHtml((t.roles && t.roles[uc.role]) || uc.role || "")}</td>
+      <td>${verified}</td>
+      <td class="col-actions"><div class="row-actions">
+        ${isSuper ? `<button type="button" class="nav-button btn-sm btn-gen-infographic">${escapeHtml(uc.infographicUrl ? t.regenerate : t.generate)}</button>` : ""}
+        <button type="button" class="nav-button btn-sm btn-edit-case">${escapeHtml(isAssist ? t.view : t.edit)}</button>
+        ${isAssist ? "" : `<button type="button" class="nav-button btn-sm btn-danger btn-delete-case">${escapeHtml(t.deleteLabel)}</button>`}
+      </div></td>`;
+    tbody.appendChild(row);
+
+    row.querySelector(".btn-edit-case").onclick = () => openAdminEditModal(uc);
+    if (!isAssist) row.querySelector(".btn-delete-case").onclick = () => deleteAdminUseCase(uc.id);
+    const genBtn = row.querySelector(".btn-gen-infographic");
+    if (genBtn) {
+      // Single generation takes 10-27s: show a spinner on the button until the server responds
+      genBtn.onclick = async () => {
+        genBtn.disabled = true;
+        genBtn.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(t.generating)}`;
+        const url = await generateInfographic(uc.id);
+        if (url) loadAdminUseCases();
+        else { genBtn.disabled = false; genBtn.textContent = uc.infographicUrl ? t.regenerate : t.generate; }
       };
     }
-
-    tbody.innerHTML = "";
-    const activeLang = appState.activeLanguage || "en";
-    cases.forEach(uc => {
-      const tr = document.createElement("tr");
-      tr.style.borderBottom = "1px solid var(--border-glass)";
-
-      const trans = uc.translations ? uc.translations[activeLang] : null;
-      const titleText = (trans && trans.title) ? trans.title : uc.title;
-
-      let badgeMarkup = "";
-      const badgeHtml = getUsecaseBadgeHtml(uc, activeLang);
-      if (badgeHtml) {
-        badgeMarkup = `<span style="margin-left: 6px;">${badgeHtml}</span>`;
-      }
-
-      const verifiedLabel = uc.isVerified 
-        ? `<span class="tag" style="background: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.25); color: #10b981; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; padding: 2px 6px; text-transform: uppercase; font-size: 10px; letter-spacing: 0.5px; border-radius: 4px;"><span class="material-symbols-outlined" style="font-size: 12px; font-weight: bold;">verified</span>${activeLang === 'en' ? 'Yes' : (activeLang === 'zh-TW' ? '是' : '是')}</span>`
-        : `<span class="tag" style="background: rgba(255,255,255,0.02); border-color: rgba(255,255,255,0.05); color: var(--text-muted); font-size: 10px; padding: 2px 6px; border-radius: 4px;">${activeLang === 'en' ? 'No' : (activeLang === 'zh-TW' ? '否' : '否')}</span>`;
-
-      const isAssist = appState.isAssist === true;
-      tr.innerHTML = `
-        <td style="padding: 12px 8px; text-align: center;">
-          <input type="checkbox" class="admin-case-checkbox" value="${uc.id}" style="cursor: pointer; width: 15px; height: 15px; accent-color: var(--color-primary);">
-        </td>
-        <td style="padding: 12px 8px; font-family: monospace; font-size: 11px; color: var(--color-primary); font-weight: 700;">${uc.id}</td>
-        <td style="padding: 12px 8px; font-weight: 500;">
-          <div style="display: flex; align-items: center; gap: 4px; flex-wrap: wrap;">
-            <span>${titleText}</span>
-            ${badgeMarkup}
-          </div>
-        </td>
-        <td style="padding: 12px 8px; text-transform: capitalize; color: var(--text-secondary);">${uc.category}</td>
-        <td style="padding: 12px 8px; color: var(--text-muted);">${uc.role}</td>
-        <td style="padding: 12px 8px;">${verifiedLabel}</td>
-        <td style="padding: 12px 8px; text-align: right; display: flex; gap: 8px; justify-content: flex-end;">
-          <button class="nav-button btn-edit-case" style="height: 28px; padding: 0 10px; font-size: 11px;">${isAssist ? 'View' : 'Edit'}</button>
-          ${isAssist ? '' : '<button class="nav-button btn-delete-case" style="height: 28px; padding: 0 10px; font-size: 11px; background: var(--color-danger); border-color: var(--color-danger); color: #ffffff !important;">Delete</button>'}
-        </td>
-      `;
-
-      tbody.appendChild(tr);
-
-      tr.querySelector(".btn-edit-case").onclick = () => openAdminEditModal(uc);
-      if (!isAssist) {
-        tr.querySelector(".btn-delete-case").onclick = () => deleteAdminUseCase(uc.id);
-      }
-    });
-  } catch (error) {
-    console.error(error);
-  }
+  });
 }
 
 // CRUD Modal Manager
@@ -4674,7 +3632,7 @@ function openAdminEditModal(uc) {
   if (uc) {
     // EDIT MODE
     editingUseCaseId = uc.id;
-    title.textContent = `Edit Playbook: ${uc.title}`;
+    title.textContent = fmt(tr().caseFormEditTitle, { title: uc.title });
     idInput.value = uc.id;
     idInput.disabled = true; // Immutable
 
@@ -4755,7 +3713,7 @@ function openAdminEditModal(uc) {
   } else {
     // CREATE MODE
     editingUseCaseId = null;
-    title.textContent = "Create New Playbook Template";
+    title.textContent = tr().caseFormCreateTitle;
     idInput.value = "";
     idInput.disabled = false; // Mutable during creation
 
@@ -4792,12 +3750,17 @@ function openAdminEditModal(uc) {
     document.getElementById("formTransZhcnProTip").value = "";
   }
 
+  // V2: prompt type and infographic preview
+  const promptTypeEl = document.getElementById("formCasePromptType");
+  if (promptTypeEl) promptTypeEl.value = (uc && uc.promptType) || "general";
+  updateCaseInfographicPreview(uc || null);
+
   modal.classList.add("active");
 }
 
 async function saveAdminUseCase() {
   if (appState.isAssist) {
-    alert("Administrative assistants are not permitted to save or modify templates.");
+    alert(tr().caseAssistReadonly);
     return;
   }
   const feedback = document.getElementById("adminFormFeedback");
@@ -4813,7 +3776,7 @@ async function saveAdminUseCase() {
   const proTip = document.getElementById("formCaseProTip").value.trim();
 
   if (!id || !title || !category || !role) {
-    feedback.textContent = "ID, Title, Category and Role are mandatory.";
+    feedback.textContent = tr().caseFormRequired;
     feedback.style.display = "block";
     return;
   }
@@ -4861,9 +3824,11 @@ async function saveAdminUseCase() {
   };
 
   const isVerified = document.getElementById("formCaseVerified").checked;
+  const promptTypeEl = document.getElementById("formCasePromptType");
+  const promptType = promptTypeEl ? promptTypeEl.value : "general";
 
   const payload = {
-    id, category, title, role, summary, features, connectors, level, steps, prompt, proTip, translations, isVerified
+    id, category, title, role, summary, features, connectors, level, steps, prompt, proTip, translations, isVerified, promptType
   };
 
   try {
@@ -4880,21 +3845,21 @@ async function saveAdminUseCase() {
 
     if (data.success) {
       document.getElementById("adminCaseEditModal").classList.remove("active");
-      showToast(isEdit ? "Playbook template updated." : "New playbook template added!");
+      showToast(isEdit ? tr().caseUpdated : tr().caseCreated);
       loadAdminUseCases();
       loadUseCasesFromServer().then(() => renderUseCases());
     } else {
-      feedback.textContent = data.error || "Failed to save template. Please verify input ID is unique.";
+      feedback.textContent = data.error || tr().caseSaveFailed;
       feedback.style.display = "block";
     }
   } catch (err) {
-    feedback.textContent = "Server database connection failure.";
+    feedback.textContent = tr().networkError;
     feedback.style.display = "block";
   }
 }
 
 async function deleteAdminUseCase(id) {
-  if (confirm(`Are you absolutely sure you want to delete the template [${id}]? This cannot be undone.`)) {
+  if (confirm(fmt(tr().confirmDeleteCase, { id }))) {
     try {
       const res = await fetch('/api/admin/use-cases', {
         method: 'DELETE',
@@ -4903,7 +3868,7 @@ async function deleteAdminUseCase(id) {
       });
       const data = await res.json();
       if (data.success) {
-        showToast("Playbook template deleted.");
+        showToast(tr().caseDeleted);
         loadAdminUseCases();
         loadUseCasesFromServer().then(() => renderUseCases());
       }
@@ -4932,7 +3897,7 @@ async function triggerGeminiPlaybookGeneration() {
   if (!title && !instruction) {
     if (feedback) {
       feedback.style.display = "block";
-      feedback.textContent = "Please specify either a playbook title or custom instructions so Gemini can draft relevant content.";
+      feedback.textContent = tr().draftNeedInput;
       feedback.scrollIntoView({ behavior: 'smooth' });
     }
     return;
@@ -4954,21 +3919,10 @@ async function triggerGeminiPlaybookGeneration() {
   // Activate dynamic Gemini generating loader overlay
   const loader = document.getElementById("geminiLoadingOverlay");
   if (loader) {
-    const lang = appState.activeLanguage || "en";
     const genLabel = document.getElementById("adminFormLabelGenerating");
     const genDesc = document.getElementById("adminFormLabelGeneratingDesc");
-    if (genLabel && genDesc) {
-      if (lang === "zh-TW") {
-        genLabel.textContent = "Gemini 正在生成學習案例中...";
-        genDesc.textContent = "正在即時優化導引、提示詞與繁體中文本地化資料。";
-      } else if (lang === "zh-CN") {
-        genLabel.textContent = "Gemini 正在生成学习案例中...";
-        genDesc.textContent = "正在即时优化指引、提示词与简体中文本地化数据。";
-      } else {
-        genLabel.textContent = "Gemini is drafting playbook...";
-        genDesc.textContent = "Optimizing guidelines, prompts, and localizations in real-time.";
-      }
-    }
+    if (genLabel) genLabel.textContent = tr().draftingTitle;
+    if (genDesc) genDesc.textContent = tr().draftingDesc;
     loader.classList.add("active");
   }
 
@@ -4976,7 +3930,7 @@ async function triggerGeminiPlaybookGeneration() {
   const originalBtnHtml = btn.innerHTML;
   btn.disabled = true;
   btn.style.opacity = "0.7";
-  btn.innerHTML = `<span class="material-symbols-outlined" style="font-size: 16px; animation: spin 1s linear infinite;">autorenew</span> <span>Generating...</span>`;
+  btn.innerHTML = `<span class="material-symbols-outlined" style="font-size: 16px; animation: spin 1s linear infinite;">autorenew</span> <span>${escapeHtml(tr().drafting)}</span>`;
 
   try {
     const res = await fetch('/api/admin/generate-gemini', {
@@ -5002,7 +3956,7 @@ async function triggerGeminiPlaybookGeneration() {
     }
 
     if (!res.ok || !data || !data.success) {
-      const errMsg = (data && data.error) ? data.error : "Failed to generate content from Gemini.";
+      const errMsg = (data && data.error) ? data.error : tr().draftFailed;
       if (feedback) {
         feedback.style.display = "block";
         feedback.textContent = errMsg;
@@ -5021,7 +3975,7 @@ async function triggerGeminiPlaybookGeneration() {
     if (!editingUseCaseId) {
       // CREATION MODE: Apply suggestions directly!
       applyGeminiSuggestions(aiRes);
-      showToast("Gemini has successfully drafted your new playbook!");
+      showToast(tr().draftDone);
     } else {
       // EDITING MODE: Show Side-by-Side Diff modal!
       showDiffViewer(aiRes);
@@ -5031,7 +3985,7 @@ async function triggerGeminiPlaybookGeneration() {
     console.error("Gemini generation error:", err);
     if (feedback) {
       feedback.style.display = "block";
-      feedback.textContent = "An error occurred during Gemini AI drafting: " + err.message;
+      feedback.textContent = fmt(tr().draftError, { msg: err.message });
       feedback.scrollIntoView({ behavior: 'smooth' });
     }
   } finally {
@@ -5156,6 +4110,10 @@ function showDiffViewer(aiRes) {
   
   scrollContainer.innerHTML = "";
 
+  // Localized "Field · Language" labels for each comparison row
+  const t = tr();
+  const L = (field, langName) => `${field} · ${langName}`;
+
   // Compile list of comparison elements
   const diffItems = [];
 
@@ -5172,94 +4130,94 @@ function showDiffViewer(aiRes) {
 
   // 1. Required Gemini Features
   diffItems.push({
-    label: "Required Gemini Features",
-    current: currentFeatures.join(", ") || "(None)",
-    proposed: proposedFeatures.join(", ") || "(None)"
+    label: t.adminFormLabelFeatures,
+    current: currentFeatures.join(", ") || t.diffNone,
+    proposed: proposedFeatures.join(", ") || t.diffNone
   });
 
   // 2. Required Connectors
   diffItems.push({
-    label: "Required Connectors",
-    current: currentConnectors.join(", ") || "(None)",
-    proposed: proposedConnectors.join(", ") || "(None)"
+    label: t.adminFormLabelConnectors,
+    current: currentConnectors.join(", ") || t.diffNone,
+    proposed: proposedConnectors.join(", ") || t.diffNone
   });
 
   // English Summary
   diffItems.push({
-    label: "English Summary Description",
+    label: L(t.adminFormLabelSummary, t.langNameEn),
     current: document.getElementById("formCaseSummary").value,
     proposed: aiRes.en?.summary || ""
   });
 
   // English Steps
   diffItems.push({
-    label: "English Guide Steps",
+    label: L(t.adminFormLabelSteps, t.langNameEn),
     current: document.getElementById("formCaseSteps").value,
     proposed: Array.isArray(aiRes.en?.steps) ? aiRes.en.steps.join("\n") : ""
   });
   // English Prompt
   diffItems.push({
-    label: "English Prompt Instruction",
+    label: L(t.adminFormLabelPrompt, t.langNameEn),
     current: document.getElementById("formCasePrompt").value,
     proposed: aiRes.en?.prompt || ""
   });
   // English Pro Tip
   diffItems.push({
-    label: "English Pro Tip",
+    label: L(t.adminFormLabelProTip, t.langNameEn),
     current: document.getElementById("formCaseProTip").value,
     proposed: aiRes.en?.proTip || ""
   });
 
   // Traditional Chinese Translations
   diffItems.push({
-    label: "Traditional Chinese Translated Title",
+    label: L(t.adminFormLabelTitle, t.langNameZhTw),
     current: document.getElementById("formTransZhtwTitle").value,
     proposed: aiRes["zh-TW"]?.title || document.getElementById("formCaseTitle").value
   });
   diffItems.push({
-    label: "Traditional Chinese Translated Summary",
+    label: L(t.adminFormLabelSummary, t.langNameZhTw),
     current: document.getElementById("formTransZhtwSummary").value,
     proposed: aiRes["zh-TW"]?.summary || ""
   });
   diffItems.push({
-    label: "Traditional Chinese Steps",
+    label: L(t.adminFormLabelSteps, t.langNameZhTw),
     current: document.getElementById("formTransZhtwSteps").value,
     proposed: Array.isArray(aiRes["zh-TW"]?.steps) ? aiRes["zh-TW"].steps.join("\n") : ""
   });
   diffItems.push({
-    label: "Traditional Chinese Prompt",
+    label: L(t.adminFormLabelPrompt, t.langNameZhTw),
     current: document.getElementById("formTransZhtwPrompt").value,
     proposed: aiRes["zh-TW"]?.prompt || ""
   });
   diffItems.push({
-    label: "Traditional Chinese Pro Tip",
+    label: L(t.adminFormLabelProTip, t.langNameZhTw),
     current: document.getElementById("formTransZhtwProTip").value,
     proposed: aiRes["zh-TW"]?.proTip || ""
   });
 
   // Simplified Chinese Translations
   diffItems.push({
-    label: "Simplified Chinese Translated Title",
+    label: L(t.adminFormLabelTitle, t.langNameZhCn),
     current: document.getElementById("formTransZhcnTitle").value,
     proposed: aiRes["zh-CN"]?.title || document.getElementById("formCaseTitle").value
   });
   diffItems.push({
-    label: "Simplified Chinese Translated Summary",
+    label: L(t.adminFormLabelSummary, t.langNameZhCn),
     current: document.getElementById("formTransZhcnSummary").value,
     proposed: aiRes["zh-CN"]?.summary || ""
   });
   diffItems.push({
-    label: "Simplified Chinese Steps",
+    label: L(t.adminFormLabelSteps, t.langNameZhCn),
     current: document.getElementById("formTransZhcnSteps").value,
     proposed: Array.isArray(aiRes["zh-CN"]?.steps) ? aiRes["zh-CN"].steps.join("\n") : ""
   });
   diffItems.push({
-    label: "Simplified Chinese Prompt",
+    label: L(t.adminFormLabelPrompt, t.langNameZhCn),
     current: document.getElementById("formTransZhcnPrompt").value,
     proposed: aiRes["zh-CN"]?.prompt || ""
   });
   diffItems.push({
-    label: "Simplified Chinese Pro Tip",
+    label: L(t.adminFormLabelProTip, t.langNameZhCn),
     current: document.getElementById("formTransZhcnProTip").value,
     proposed: aiRes["zh-CN"]?.proTip || ""
   });
@@ -5279,10 +4237,10 @@ function showDiffViewer(aiRes) {
     section.style.paddingBottom = "12px";
 
     section.innerHTML = `
-      <div style="font-size: 11px; font-weight: 700; color: ${isDifferent ? 'var(--color-primary)' : 'var(--text-secondary)'}; display: flex; align-items: center; gap: 4px;">
+      <div style="font-size: 13px; font-weight: 700; color: ${isDifferent ? 'var(--color-primary)' : 'var(--text-secondary)'}; display: flex; align-items: center; gap: 4px;">
         <span class="material-symbols-outlined" style="font-size: 14px;">${isDifferent ? 'pending_actions' : 'check_circle'}</span>
-        <span>${item.label}</span>
-        ${isDifferent ? '<span style="font-size: 9px; padding: 2px 6px; border-radius: 4px; background: rgba(79, 70, 229, 0.15); color: var(--color-primary); margin-left: auto;">OPTIMIZED SUGGESTION AVAILABLE</span>' : ''}
+        <span>${escapeHtml(item.label)}</span>
+        ${isDifferent ? `<span style="font-size: 13px; padding: 2px 6px; border-radius: 4px; background: rgba(79, 70, 229, 0.15); color: var(--color-primary); margin-left: auto;">${escapeHtml(t.diffChanged)}</span>` : ''}
       </div>
       <div style="display: flex; flex-direction: column; border: 1px solid ${isDifferent ? 'var(--color-primary)' : 'var(--border-glass)'}; border-radius: 8px; overflow: hidden; background: var(--bg-dark-surface);">
         ${renderLineDiff(item.current, item.proposed)}
@@ -5298,7 +4256,7 @@ function showDiffViewer(aiRes) {
     setTimeout(() => {
       modal.style.display = "none";
     }, 300);
-    showToast("Gemini suggestions applied successfully to form!");
+    showToast(tr().diffApplied);
   };
 
   document.getElementById("btnDiffReject").onclick = () => {
@@ -5306,7 +4264,7 @@ function showDiffViewer(aiRes) {
     setTimeout(() => {
       modal.style.display = "none";
     }, 300);
-    showToast("Gemini suggestions declined. Kept current version.");
+    showToast(tr().diffDeclined);
   };
 
   document.getElementById("adminDiffViewerClose").onclick = () => {
@@ -5446,6 +4404,26 @@ window.initFeedbackSystem = function() {
   modal.addEventListener("click", (e) => {
     if (e.target === modal) hideModal();
   });
+
+  /*
+   * Visibility: the button belongs to the signed-in user portal only. It is hidden while
+   * any auth card is up (login / forgot / set-password / temp reset / profile wizard all
+   * live in #wizardOverlay), in the admin portal, and for admins previewing the portal.
+   * Views are switched by inline `style.display` in many places, so instead of patching
+   * each call site we observe those attributes and re-derive visibility from the DOM.
+   */
+  const appLayout = document.getElementById("appLayout");
+  const wizard = document.getElementById("wizardOverlay");
+  const adminPortal = document.getElementById("adminPortal");
+  const isShown = (el) => !!el && getComputedStyle(el).display !== "none";
+  const sync = () => {
+    btn.hidden = !(appState.userEmail && !appState.isAdmin && isShown(appLayout) && !isShown(wizard) && !isShown(adminPortal));
+  };
+  const observer = new MutationObserver(sync);
+  [appLayout, wizard, adminPortal].filter(Boolean)
+    .forEach(el => observer.observe(el, { attributes: true, attributeFilter: ["style", "class", "hidden"] }));
+  window.syncFeedbackVisibility = sync;
+  sync();
 };
 
 window.handleFeedbackSubmit = async function(event) {
@@ -5464,64 +4442,49 @@ window.handleFeedbackSubmit = async function(event) {
     });
     const data = await res.json();
     if (data.success) {
-      showToast(appState.activeLanguage === 'zh-TW' ? "感謝您的回饋！" : (appState.activeLanguage === 'zh-CN' ? "感谢您的反馈！" : "Feedback submitted successfully!"));
+      showToast(tr().feedbackThanks);
       const modal = document.getElementById("feedbackSubmissionModal");
       if (modal) {
         modal.classList.remove("active");
         modal.style.display = "none";
       }
     } else {
-      alert(data.error || "Failed to submit feedback.");
+      alert(data.error || tr().feedbackFailed);
     }
   } catch (err) {
-    alert("Server connection failure. Please try again.");
+    alert(tr().networkError);
   }
 };
 
 window.loadAdminFeedbacks = async function() {
   const tbody = document.getElementById("adminFeedbacksTableBody");
   if (!tbody) return;
-  tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 24px; color: var(--text-muted);">Loading feedbacks...</td></tr>`;
-  try {
-    const res = await fetch('/api/feedbacks');
-    const data = await res.json();
-    if (!data.success) {
-      tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 24px; color: var(--color-danger);">${data.error || 'Failed to load feedbacks'}</td></tr>`;
-      return;
-    }
-    if (data.feedbacks.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 24px; color: var(--text-muted);">No feedback suggestions submitted yet.</td></tr>`;
-      return;
-    }
-    
-    const isAssist = appState.isAssist === true;
-    let html = '';
-    data.feedbacks.forEach(fb => {
-      const d = new Date(fb.created_at);
-      const dateStr = d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      html += `
-        <tr style="border-bottom: 1px solid var(--border-glass); transition: background 0.2s ease;">
-          <td style="padding: 12px 8px; font-weight: 700; color: var(--text-primary); font-family: var(--font-heading);">${fb.user_email}</td>
-          <td style="padding: 12px 8px; color: var(--text-secondary); line-height: 1.5; white-space: pre-wrap;">${fb.feedback_text}</td>
-          <td style="padding: 12px 8px; color: var(--text-muted); font-size: 11px;">${dateStr}</td>
-          <td style="padding: 12px 8px; text-align: right;">
-            ${isAssist ? '' : `
-            <button class="nav-button" onclick="deleteFeedback(${fb.id})" style="padding: 4px; min-width: auto; border: none; background: transparent; color: var(--text-muted); transition: color 0.2s ease;" onmouseover="this.style.color='var(--color-danger)'" onmouseout="this.style.color='var(--text-muted)'">
-              <span class="material-symbols-outlined" style="font-size: 18px;">close</span>
-            </button>
-            `}
-          </td>
-        </tr>
-      `;
-    });
-    tbody.innerHTML = html;
-  } catch (err) {
-    tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 24px; color: var(--color-danger);">Server connection error.</td></tr>`;
+  const t = tr();
+  const emptyRow = (text, cls = "") => `<tr><td colspan="4" class="table-empty ${cls}">${escapeHtml(text)}</td></tr>`;
+  tbody.innerHTML = emptyRow(t.loading);
+  const { ok, data } = await apiJson('/api/feedbacks');
+  if (!ok || !data || !data.success) {
+    tbody.innerHTML = emptyRow(errText(data, t.networkError), "is-error");
+    return;
   }
+  if (!data.feedbacks.length) {
+    tbody.innerHTML = emptyRow(t.feedbackEmpty || "No feedback yet.");
+    return;
+  }
+  const isAssist = appState.isAssist === true;
+  tbody.innerHTML = data.feedbacks.map(fb => `
+    <tr>
+      <td class="cell-strong">${escapeHtml(fb.user_email || "")}</td>
+      <td class="cell-pre">${escapeHtml(fb.feedback_text || "")}</td>
+      <td class="muted">${escapeHtml(formatDateTime(fb.created_at))}</td>
+      <td class="col-actions">
+        ${isAssist ? '' : `<button type="button" class="icon-btn btn-sm" onclick="deleteFeedback(${Number(fb.id)})" title="${escapeHtml(t.deleteLabel)}" aria-label="${escapeHtml(t.deleteLabel)}"><span class="material-symbols-outlined">close</span></button>`}
+      </td>
+    </tr>`).join("");
 };
 
 window.deleteFeedback = async function(id) {
-  if (!confirm("Are you sure you want to dismiss this feedback?")) return;
+  if (!confirm(tr().confirmDismissFeedback)) return;
   try {
     const res = await fetch('/api/feedbacks/delete', {
       method: 'POST',
@@ -5530,12 +4493,2528 @@ window.deleteFeedback = async function(id) {
     });
     const data = await res.json();
     if (data.success) {
-      showToast("Feedback dismissed successfully.");
+      showToast(tr().feedbackDismissed);
       loadAdminFeedbacks();
     } else {
-      alert(data.error || "Failed to dismiss feedback.");
+      alert(data.error || tr().dismissFailed);
     }
   } catch (err) {
-    alert("Server connection failure.");
+    alert(tr().networkError);
   }
 };
+
+
+// ============================================================================
+// V2 UI LAYER — topbar, filter bar, flat card grid, modal workbench, Try it,
+// particle field, admin users/admins/settings, infographics and token auth.
+// Everything below is declared with hoisted functions or evaluated before
+// DOMContentLoaded, so initApp() can rely on it.
+// ============================================================================
+
+// ---------------------------------------------------------------------------
+// i18n extension: merged into uiTranslations so existing lookups (t.key) see
+// the new, shorter sentence-case copy. Product names stay English everywhere.
+// ---------------------------------------------------------------------------
+const uiTranslationsV2 = {
+  en: {
+    brandName: "GE Adoption Hub",
+    adminBrandText: "Admin console",
+    searchPlaceholder: "Search playbooks",
+    themeToggle: "Toggle theme",
+    avatarMenu: "Account menu",
+    btnChangeContextText: "Switch profile",
+    btnLogoutText: "Log out",
+    btnAdminLogoutText: "Log out",
+    goAdminPortal: "Admin portal",
+    btnAdminBackToPortalText: "Learning portal",
+    adminPreviewContext: "Admin preview",
+    filterCategoryLabel: "Category",
+    catAll: "All categories",
+    catAcademic: "Academic",
+    catStudent: "Student support",
+    catOperational: "Operations",
+    catAdmin: "Administration",
+    filterFeatureLabel: "GE feature",
+    featAll: "All GE features",
+    filterCollectionLabel: "Collection",
+    colAll: "All playbooks",
+    colLiked: "Liked",
+    filterSortLabel: "Sort",
+    sortPopular: "Most popular",
+    sortNewest: "Newest",
+    sortAz: "A–Z",
+    resultsHeadline: "{n} playbooks for {role}",
+    resultsHeadlineOne: "1 playbook for {role}",
+    allRoles: "all roles",
+    rolesPlural: {
+      "Lecturer": "lecturers", "TA": "teaching assistants", "Student": "students",
+      "Program Leader": "program leaders", "Dean": "deans", "IT Admin": "IT admins",
+      "SAO": "student affairs staff", "Security": "security officers", "Finance": "finance staff"
+    },
+    noUseCasesTitle: "No playbooks match",
+    noUseCasesDesc: "Try a different search or filter.",
+    btnResetFilters: "Clear filters",
+    likeLabel: "Like",
+    likedToast: "Added to liked",
+    unlikedToast: "Removed from liked",
+    verifiedLabel: "Verified",
+    newLabel: "New",
+    updatedLabel: "Updated",
+    operationalSteps: "How it works",
+    step1Title: "Set up",
+    step2Title: "Run the prompt",
+    step3Title: "Review and share",
+    helperHeading: "No materials yet? Start here",
+    fillVariablesTitle: "Fill in the variables",
+    samplePrompt: "Sample prompt",
+    copyPrompt: "Copy prompt",
+    copyHelperPrompt: "Copy prompt",
+    copied: "Copied",
+    tryIt: "Try it",
+    promptCopiedSuccess: "Prompt copied",
+    tryCopiedPaste: "Prompt copied. Paste it into Gemini Enterprise.",
+    tryLongCopied: "Prompt also copied, in case the link cuts it short.",
+    tryFillFirst: "Fill in the variables first, or click Try it again to continue.",
+    noVariables: "This prompt runs as is.",
+    infographicOpen: "Open infographic in a new tab",
+    adoptionProTip: "Pro tip",
+    manualTipTitle: "No connector? Upload files instead",
+    manualTipText: "Attach your files, rubrics or notes in the Gemini chat to get the same result.",
+    setupGuideSuffix: "setup",
+    promptTypes: {
+      general: "General query", notebooklm: "NotebookLM", deep_research: "Deep Research",
+      agent_designer: "Agent Designer", canvas: "Canvas Mode", image: "Image Generation", video: "Video Generation"
+    },
+    forgotPassword: "Forgot password?",
+    forgotTitle: "Reset your password",
+    forgotDesc: "Enter your admin email.",
+    forgotSubmit: "Send reset link",
+    forgotDone: "If this is a verified admin email, a reset link is on its way. Otherwise, contact your portal admin.",
+    backToSignIn: "Back to sign in",
+    setPwTitleVerify: "Set your password",
+    setPwTitleReset: "Choose a new password",
+    setPwDesc: "At least 8 characters.",
+    setPwLabel: "New password",
+    setPwConfirmLabel: "Confirm password",
+    setPwSubmit: "Save password",
+    pwTooShort: "Use at least 8 characters.",
+    feedbackEmpty: "No feedback yet.",
+    smtpPasswordReenter: "Re-enter the password.",
+    adminLabelTotalTries: "Tries",
+    pwMismatch: "Passwords don't match.",
+    tokenInvalid: "This link is invalid or has expired.",
+    networkError: "Can't reach the server. Try again.",
+    pwSaved: "Password saved",
+    adminTabUsersText: "Users",
+    adminTabAnalyticsText: "Analytics",
+    adminTabCasesText: "Use cases",
+    adminTabFeedbacksText: "Feedback",
+    adminTabSettingsText: "Settings",
+    adminProvisionTitle: "Add users",
+    adminProvisionDesc: "Separate emails with commas. Users set their own password on first sign-in.",
+    adminProvisionLabelEmail: "Emails",
+    adminBtnProvision: "Add users",
+    usersAdded: "{n} added",
+    usersSkipped: "Already registered: {list}",
+    usersFailed: "Failed: {list}",
+    tempPasswordLabel: "Temporary password",
+    adminsTitle: "Admins",
+    adminsDesc: "Invite people to manage this portal.",
+    inviteEmailLabel: "Email",
+    inviteRoleLabel: "Role",
+    roleSuper: "Super admin",
+    roleAssist: "Assistant admin",
+    sendInvite: "Send invite",
+    invitePreview: "Email isn't set up, so share this link yourself:",
+    copy: "Copy",
+    statusInviteSent: "Invite sent",
+    statusActive: "Active",
+    resend: "Resend",
+    remove: "Remove",
+    invitedBy: "Invited by",
+    adminsEmpty: "No invited admins yet.",
+    confirmRemoveAdmin: "Remove {email} as an admin?",
+    inviteSentToast: "Invite sent",
+    resentToast: "Invite resent",
+    removedToast: "Admin removed",
+    adminRegisteredUsersTitle: "Users",
+    adminThUserEmail: "Email",
+    adminThGeLink: "GE app link",
+    adminThPasswordStatus: "Status",
+    adminThCreatedDate: "Created",
+    adminThAdminActions: "Actions",
+    notSet: "Not set",
+    statusTemp: "Pending first sign-in",
+    edit: "Edit",
+    view: "View",
+    revoke: "Revoke",
+    deleteLabel: "Delete",
+    usersEmpty: "No users yet.",
+    loading: "Loading…",
+    confirmRevoke: "Revoke access for {email}?",
+    userRevoked: "User removed",
+    editUserTitle: "Edit user",
+    geLinkLabel: "GE app link",
+    geLinkHint: "Opens prompts directly in this user's Gemini Enterprise app.",
+    geLinkInvalid: "Use a link that starts with https://",
+    emailInvalid: "Enter a valid email.",
+    resetAccess: "Reset access",
+    resetAccessDesc: "Creates a new temporary password.",
+    confirmReset: "Create a new temporary password for {email}?",
+    save: "Save",
+    cancel: "Cancel",
+    userSaved: "User saved",
+    saveFailed: "Couldn't save. Try again.",
+    adminCrudTitle: "Use cases",
+    adminBtnExportText: "Export JSON",
+    adminBtnImportText: "Import JSON",
+    adminBtnCreateCaseText: "Add use case",
+    adminCrudThId: "ID",
+    adminCrudThTitle: "Title",
+    adminCrudThCategory: "Category",
+    adminCrudThRole: "Role",
+    adminCrudThVerified: "Verified",
+    adminCrudThActions: "Actions",
+    adminCrudThInfographic: "Infographic",
+    none: "None",
+    yes: "Yes",
+    no: "No",
+    generate: "Generate",
+    regenerate: "Regenerate",
+    generating: "Generating…",
+    generateMissing: "Generate missing",
+    genMissingProgress: "Generating infographics. This can take a few minutes.",
+    genMissingDone: "{ok} generated, {fail} failed",
+    genMissingNone: "Every use case already has an infographic.",
+    infographicDone: "Infographic ready",
+    infographicFailed: "Couldn't generate the infographic",
+    formPromptTypeLabel: "Prompt type",
+    formInfographicLabel: "Infographic",
+    adminFeedbackTitle: "Feedback",
+    fbThAuthor: "From",
+    fbThContent: "Feedback",
+    fbThDate: "Submitted",
+    adminLabelTotalUsers: "Users",
+    adminLabelTotalUseCases: "Use cases",
+    adminLabelTotalLikes: "Likes",
+    adminChartTitle: "6-month adoption",
+    adminChartDesc: "Views, likes and Try it launches.",
+    adminLabelViewsLegend: "Views",
+    adminLabelLikesLegend: "Likes",
+    settingsEmailTitle: "Email",
+    settingsEmailDesc: "Used for admin invites and password resets.",
+    smtpPreset: "Provider",
+    presetGmail: "Gmail",
+    presetOutlook: "Outlook.com",
+    presetM365: "Microsoft 365",
+    presetCustom: "Custom",
+    hintGmail: "Use an App Password (needs 2-Step Verification).",
+    hintOutlook: "Use an app password from your Microsoft account.",
+    hintM365: "Your tenant admin must enable SMTP AUTH for this mailbox.",
+    smtpHost: "SMTP host",
+    smtpPort: "Port",
+    smtpSecurity: "Security",
+    secStarttls: "STARTTLS",
+    secSsl: "SSL/TLS",
+    secNone: "None",
+    secNoneWarn: "Without encryption, your password is sent in plain text.",
+    smtpUser: "Username",
+    smtpPassword: "Password",
+    smtpPasswordSaved: "Saved. Leave blank to keep it.",
+    smtpFromName: "From name",
+    smtpFromEmail: "From email",
+    smtpEnabled: "Send emails",
+    statusConnected: "Connected",
+    statusNotTested: "Not tested",
+    statusFailed: "Failed",
+    statusDemo: "Demo mode",
+    lastChanged: "Last changed by {by} · {date}",
+    testTo: "Send test to",
+    sendTest: "Send test email",
+    saveSettings: "Save",
+    testSending: "Sending…",
+    testOk: "Test email sent.",
+    settingsSaved: "Email settings saved",
+    settingsLoadFailed: "Couldn't load email settings.",
+    hostRequired: "Enter the SMTP host.",
+    portInvalid: "Enter a port from 1 to 65535."
+  },
+  "zh-TW": {
+    brandName: "GE Adoption Hub",
+    adminBrandText: "管理主控台",
+    searchPlaceholder: "搜尋案例",
+    themeToggle: "切換主題",
+    avatarMenu: "帳戶選單",
+    btnChangeContextText: "切換身分",
+    btnLogoutText: "登出",
+    btnAdminLogoutText: "登出",
+    goAdminPortal: "管理入口",
+    btnAdminBackToPortalText: "學習入口",
+    adminPreviewContext: "管理員預覽",
+    filterCategoryLabel: "類別",
+    catAll: "所有類別",
+    catAcademic: "教學",
+    catStudent: "學生支援",
+    catOperational: "營運",
+    catAdmin: "行政",
+    filterFeatureLabel: "GE 功能",
+    featAll: "所有 GE 功能",
+    filterCollectionLabel: "收藏",
+    colAll: "所有案例",
+    colLiked: "已按讚",
+    filterSortLabel: "排序",
+    sortPopular: "最受歡迎",
+    sortNewest: "最新",
+    sortAz: "名稱 A–Z",
+    resultsHeadline: "{n} 個適合{role}的案例",
+    resultsHeadlineOne: "1 個適合{role}的案例",
+    allRoles: "所有角色",
+    rolesPlural: {
+      "Lecturer": "講師", "TA": "助教", "Student": "學生",
+      "Program Leader": "課程主任", "Dean": "院長", "IT Admin": "IT 管理員",
+      "SAO": "學生事務人員", "Security": "保安人員", "Finance": "財務人員"
+    },
+    noUseCasesTitle: "沒有符合的案例",
+    noUseCasesDesc: "試試其他搜尋或篩選條件。",
+    btnResetFilters: "清除篩選",
+    likeLabel: "讚好",
+    likedToast: "已加入讚好",
+    unlikedToast: "已移除讚好",
+    verifiedLabel: "已驗證",
+    newLabel: "新",
+    updatedLabel: "已更新",
+    operationalSteps: "運作方式",
+    step1Title: "準備",
+    step2Title: "執行提示詞",
+    step3Title: "審閱與分享",
+    helperHeading: "還沒有資料？從這裡開始",
+    fillVariablesTitle: "填寫變數",
+    samplePrompt: "範例提示詞",
+    copyPrompt: "複製提示詞",
+    copyHelperPrompt: "複製提示詞",
+    copied: "已複製",
+    tryIt: "立即試用",
+    promptCopiedSuccess: "已複製提示詞",
+    tryCopiedPaste: "已複製提示詞，請貼到 Gemini Enterprise。",
+    tryLongCopied: "提示詞也已複製，以防連結截斷內容。",
+    tryFillFirst: "請先填寫變數，或再按一次「立即試用」繼續。",
+    noVariables: "此提示詞可直接使用。",
+    infographicOpen: "在新分頁開啟資訊圖表",
+    adoptionProTip: "實用提示",
+    manualTipTitle: "沒有連接器？改為上傳檔案",
+    manualTipText: "在 Gemini 對話中附上檔案、評分準則或筆記，即可得到相同結果。",
+    setupGuideSuffix: "設定",
+    promptTypes: {
+      general: "一般查詢", notebooklm: "NotebookLM", deep_research: "Deep Research",
+      agent_designer: "Agent Designer", canvas: "Canvas Mode", image: "Image Generation", video: "Video Generation"
+    },
+    forgotPassword: "忘記密碼？",
+    forgotTitle: "重設密碼",
+    forgotDesc: "輸入你的管理員電郵。",
+    forgotSubmit: "傳送重設連結",
+    forgotDone: "如果這是已驗證的管理員電郵，重設連結即將寄出。否則請聯絡入口網站管理員。",
+    backToSignIn: "返回登入",
+    setPwTitleVerify: "設定密碼",
+    setPwTitleReset: "設定新密碼",
+    setPwDesc: "至少 8 個字元。",
+    setPwLabel: "新密碼",
+    setPwConfirmLabel: "確認密碼",
+    setPwSubmit: "儲存密碼",
+    pwTooShort: "請使用至少 8 個字元。",
+    feedbackEmpty: "尚未有意見回饋。",
+    smtpPasswordReenter: "請重新輸入密碼。",
+    adminLabelTotalTries: "試用次數",
+    pwMismatch: "兩次輸入的密碼不一致。",
+    tokenInvalid: "此連結無效或已過期。",
+    networkError: "無法連線到伺服器，請再試一次。",
+    pwSaved: "已儲存密碼",
+    adminTabUsersText: "使用者",
+    adminTabAnalyticsText: "分析",
+    adminTabCasesText: "案例",
+    adminTabFeedbacksText: "意見回饋",
+    adminTabSettingsText: "設定",
+    adminProvisionTitle: "新增使用者",
+    adminProvisionDesc: "以逗號分隔電郵。使用者首次登入時會自行設定密碼。",
+    adminProvisionLabelEmail: "電郵",
+    adminBtnProvision: "新增使用者",
+    usersAdded: "已新增 {n} 位",
+    usersSkipped: "已註冊：{list}",
+    usersFailed: "失敗：{list}",
+    tempPasswordLabel: "臨時密碼",
+    adminsTitle: "管理員",
+    adminsDesc: "邀請他人管理此入口網站。",
+    inviteEmailLabel: "電郵",
+    inviteRoleLabel: "角色",
+    roleSuper: "超級管理員",
+    roleAssist: "助理管理員",
+    sendInvite: "傳送邀請",
+    invitePreview: "電郵尚未設定，請自行分享此連結：",
+    copy: "複製",
+    statusInviteSent: "已傳送邀請",
+    statusActive: "啟用中",
+    resend: "重新傳送",
+    remove: "移除",
+    invitedBy: "邀請者",
+    adminsEmpty: "尚未邀請任何管理員。",
+    confirmRemoveAdmin: "要移除管理員 {email} 嗎？",
+    inviteSentToast: "已傳送邀請",
+    resentToast: "已重新傳送邀請",
+    removedToast: "已移除管理員",
+    adminRegisteredUsersTitle: "使用者",
+    adminThUserEmail: "電郵",
+    adminThGeLink: "GE 應用程式連結",
+    adminThPasswordStatus: "狀態",
+    adminThCreatedDate: "建立日期",
+    adminThAdminActions: "操作",
+    notSet: "未設定",
+    statusTemp: "等待首次登入",
+    edit: "編輯",
+    view: "檢視",
+    revoke: "撤銷",
+    deleteLabel: "刪除",
+    usersEmpty: "尚無使用者。",
+    loading: "載入中…",
+    confirmRevoke: "要撤銷 {email} 的存取權嗎？",
+    userRevoked: "已移除使用者",
+    editUserTitle: "編輯使用者",
+    geLinkLabel: "GE 應用程式連結",
+    geLinkHint: "直接在此使用者的 Gemini Enterprise 應用程式中開啟提示詞。",
+    geLinkInvalid: "請使用以 https:// 開頭的連結",
+    emailInvalid: "請輸入有效的電郵。",
+    resetAccess: "重設存取權",
+    resetAccessDesc: "建立新的臨時密碼。",
+    confirmReset: "要為 {email} 建立新的臨時密碼嗎？",
+    save: "儲存",
+    cancel: "取消",
+    userSaved: "已儲存使用者",
+    saveFailed: "無法儲存，請再試一次。",
+    adminCrudTitle: "案例",
+    adminBtnExportText: "匯出 JSON",
+    adminBtnImportText: "匯入 JSON",
+    adminBtnCreateCaseText: "新增案例",
+    adminCrudThId: "ID",
+    adminCrudThTitle: "標題",
+    adminCrudThCategory: "類別",
+    adminCrudThRole: "角色",
+    adminCrudThVerified: "已驗證",
+    adminCrudThActions: "操作",
+    adminCrudThInfographic: "資訊圖表",
+    none: "無",
+    yes: "是",
+    no: "否",
+    generate: "產生",
+    regenerate: "重新產生",
+    generating: "產生中…",
+    generateMissing: "產生缺少的圖表",
+    genMissingProgress: "正在產生資訊圖表，可能需要幾分鐘。",
+    genMissingDone: "已產生 {ok} 個，失敗 {fail} 個",
+    genMissingNone: "所有案例都已有資訊圖表。",
+    infographicDone: "資訊圖表已完成",
+    infographicFailed: "無法產生資訊圖表",
+    formPromptTypeLabel: "提示詞類型",
+    formInfographicLabel: "資訊圖表",
+    adminFeedbackTitle: "意見回饋",
+    fbThAuthor: "提交者",
+    fbThContent: "意見",
+    fbThDate: "提交時間",
+    adminLabelTotalUsers: "使用者",
+    adminLabelTotalUseCases: "案例",
+    adminLabelTotalLikes: "讚好",
+    adminChartTitle: "6 個月採用情況",
+    adminChartDesc: "瀏覽、讚好與部署。",
+    adminLabelViewsLegend: "瀏覽",
+    adminLabelLikesLegend: "讚好",
+    settingsEmailTitle: "電郵",
+    settingsEmailDesc: "用於管理員邀請及密碼重設。",
+    smtpPreset: "服務供應商",
+    presetGmail: "Gmail",
+    presetOutlook: "Outlook.com",
+    presetM365: "Microsoft 365",
+    presetCustom: "自訂",
+    hintGmail: "請使用應用程式密碼（需啟用兩步驟驗證）。",
+    hintOutlook: "請使用 Microsoft 帳戶的應用程式密碼。",
+    hintM365: "租用戶管理員必須為此信箱啟用 SMTP AUTH。",
+    smtpHost: "SMTP 主機",
+    smtpPort: "連接埠",
+    smtpSecurity: "安全性",
+    secStarttls: "STARTTLS",
+    secSsl: "SSL/TLS",
+    secNone: "無",
+    secNoneWarn: "未加密時，密碼會以純文字傳送。",
+    smtpUser: "使用者名稱",
+    smtpPassword: "密碼",
+    smtpPasswordSaved: "已儲存。留空即保留原密碼。",
+    smtpFromName: "寄件者名稱",
+    smtpFromEmail: "寄件者電郵",
+    smtpEnabled: "傳送電郵",
+    statusConnected: "已連線",
+    statusNotTested: "尚未測試",
+    statusFailed: "失敗",
+    statusDemo: "示範模式",
+    lastChanged: "最後由 {by} 於 {date} 修改",
+    testTo: "測試收件者",
+    sendTest: "傳送測試電郵",
+    saveSettings: "儲存",
+    testSending: "傳送中…",
+    testOk: "已傳送測試電郵。",
+    settingsSaved: "已儲存電郵設定",
+    settingsLoadFailed: "無法載入電郵設定。",
+    hostRequired: "請輸入 SMTP 主機。",
+    portInvalid: "請輸入 1 至 65535 的連接埠。"
+  },
+  "zh-CN": {
+    brandName: "GE Adoption Hub",
+    adminBrandText: "管理控制台",
+    searchPlaceholder: "搜索案例",
+    themeToggle: "切换主题",
+    avatarMenu: "账户菜单",
+    btnChangeContextText: "切换身份",
+    btnLogoutText: "退出登录",
+    btnAdminLogoutText: "退出登录",
+    goAdminPortal: "管理入口",
+    btnAdminBackToPortalText: "学习入口",
+    adminPreviewContext: "管理员预览",
+    filterCategoryLabel: "类别",
+    catAll: "所有类别",
+    catAcademic: "教学",
+    catStudent: "学生支持",
+    catOperational: "运营",
+    catAdmin: "行政",
+    filterFeatureLabel: "GE 功能",
+    featAll: "所有 GE 功能",
+    filterCollectionLabel: "收藏",
+    colAll: "所有案例",
+    colLiked: "已点赞",
+    filterSortLabel: "排序",
+    sortPopular: "最受欢迎",
+    sortNewest: "最新",
+    sortAz: "名称 A–Z",
+    resultsHeadline: "{n} 个适合{role}的案例",
+    resultsHeadlineOne: "1 个适合{role}的案例",
+    allRoles: "所有角色",
+    rolesPlural: {
+      "Lecturer": "讲师", "TA": "助教", "Student": "学生",
+      "Program Leader": "课程主任", "Dean": "院长", "IT Admin": "IT 管理员",
+      "SAO": "学生事务人员", "Security": "保安人员", "Finance": "财务人员"
+    },
+    noUseCasesTitle: "没有符合的案例",
+    noUseCasesDesc: "试试其他搜索或筛选条件。",
+    btnResetFilters: "清除筛选",
+    likeLabel: "点赞",
+    likedToast: "已加入点赞",
+    unlikedToast: "已取消点赞",
+    verifiedLabel: "已验证",
+    newLabel: "新",
+    updatedLabel: "已更新",
+    operationalSteps: "运作方式",
+    step1Title: "准备",
+    step2Title: "运行提示词",
+    step3Title: "审阅与分享",
+    helperHeading: "还没有资料？从这里开始",
+    fillVariablesTitle: "填写变量",
+    samplePrompt: "示例提示词",
+    copyPrompt: "复制提示词",
+    copyHelperPrompt: "复制提示词",
+    copied: "已复制",
+    tryIt: "立即试用",
+    promptCopiedSuccess: "已复制提示词",
+    tryCopiedPaste: "已复制提示词，请粘贴到 Gemini Enterprise。",
+    tryLongCopied: "提示词也已复制，以防链接截断内容。",
+    tryFillFirst: "请先填写变量，或再点一次“立即试用”继续。",
+    noVariables: "此提示词可直接使用。",
+    infographicOpen: "在新标签页打开信息图",
+    adoptionProTip: "实用提示",
+    manualTipTitle: "没有连接器？改为上传文件",
+    manualTipText: "在 Gemini 对话中附上文件、评分标准或笔记，即可得到相同结果。",
+    setupGuideSuffix: "设置",
+    promptTypes: {
+      general: "一般查询", notebooklm: "NotebookLM", deep_research: "Deep Research",
+      agent_designer: "Agent Designer", canvas: "Canvas Mode", image: "Image Generation", video: "Video Generation"
+    },
+    forgotPassword: "忘记密码？",
+    forgotTitle: "重置密码",
+    forgotDesc: "输入你的管理员邮箱。",
+    forgotSubmit: "发送重置链接",
+    forgotDone: "如果这是已验证的管理员邮箱，重置链接即将发出。否则请联系门户管理员。",
+    backToSignIn: "返回登录",
+    setPwTitleVerify: "设置密码",
+    setPwTitleReset: "设置新密码",
+    setPwDesc: "至少 8 个字符。",
+    setPwLabel: "新密码",
+    setPwConfirmLabel: "确认密码",
+    setPwSubmit: "保存密码",
+    pwTooShort: "请使用至少 8 个字符。",
+    feedbackEmpty: "暂无反馈。",
+    smtpPasswordReenter: "请重新输入密码。",
+    adminLabelTotalTries: "试用次数",
+    pwMismatch: "两次输入的密码不一致。",
+    tokenInvalid: "此链接无效或已过期。",
+    networkError: "无法连接到服务器，请重试。",
+    pwSaved: "已保存密码",
+    adminTabUsersText: "用户",
+    adminTabAnalyticsText: "分析",
+    adminTabCasesText: "案例",
+    adminTabFeedbacksText: "反馈",
+    adminTabSettingsText: "设置",
+    adminProvisionTitle: "添加用户",
+    adminProvisionDesc: "用逗号分隔邮箱。用户首次登录时会自行设置密码。",
+    adminProvisionLabelEmail: "邮箱",
+    adminBtnProvision: "添加用户",
+    usersAdded: "已添加 {n} 位",
+    usersSkipped: "已注册：{list}",
+    usersFailed: "失败：{list}",
+    tempPasswordLabel: "临时密码",
+    adminsTitle: "管理员",
+    adminsDesc: "邀请他人管理此门户。",
+    inviteEmailLabel: "邮箱",
+    inviteRoleLabel: "角色",
+    roleSuper: "超级管理员",
+    roleAssist: "助理管理员",
+    sendInvite: "发送邀请",
+    invitePreview: "邮件尚未设置，请自行分享此链接：",
+    copy: "复制",
+    statusInviteSent: "已发送邀请",
+    statusActive: "已启用",
+    resend: "重新发送",
+    remove: "移除",
+    invitedBy: "邀请人",
+    adminsEmpty: "尚未邀请任何管理员。",
+    confirmRemoveAdmin: "要移除管理员 {email} 吗？",
+    inviteSentToast: "已发送邀请",
+    resentToast: "已重新发送邀请",
+    removedToast: "已移除管理员",
+    adminRegisteredUsersTitle: "用户",
+    adminThUserEmail: "邮箱",
+    adminThGeLink: "GE 应用链接",
+    adminThPasswordStatus: "状态",
+    adminThCreatedDate: "创建日期",
+    adminThAdminActions: "操作",
+    notSet: "未设置",
+    statusTemp: "等待首次登录",
+    edit: "编辑",
+    view: "查看",
+    revoke: "撤销",
+    deleteLabel: "删除",
+    usersEmpty: "暂无用户。",
+    loading: "加载中…",
+    confirmRevoke: "要撤销 {email} 的访问权限吗？",
+    userRevoked: "已移除用户",
+    editUserTitle: "编辑用户",
+    geLinkLabel: "GE 应用链接",
+    geLinkHint: "直接在此用户的 Gemini Enterprise 应用中打开提示词。",
+    geLinkInvalid: "请使用以 https:// 开头的链接",
+    emailInvalid: "请输入有效的邮箱。",
+    resetAccess: "重置访问权限",
+    resetAccessDesc: "创建新的临时密码。",
+    confirmReset: "要为 {email} 创建新的临时密码吗？",
+    save: "保存",
+    cancel: "取消",
+    userSaved: "已保存用户",
+    saveFailed: "无法保存，请重试。",
+    adminCrudTitle: "案例",
+    adminBtnExportText: "导出 JSON",
+    adminBtnImportText: "导入 JSON",
+    adminBtnCreateCaseText: "添加案例",
+    adminCrudThId: "ID",
+    adminCrudThTitle: "标题",
+    adminCrudThCategory: "类别",
+    adminCrudThRole: "角色",
+    adminCrudThVerified: "已验证",
+    adminCrudThActions: "操作",
+    adminCrudThInfographic: "信息图",
+    none: "无",
+    yes: "是",
+    no: "否",
+    generate: "生成",
+    regenerate: "重新生成",
+    generating: "生成中…",
+    generateMissing: "生成缺少的信息图",
+    genMissingProgress: "正在生成信息图，可能需要几分钟。",
+    genMissingDone: "已生成 {ok} 个，失败 {fail} 个",
+    genMissingNone: "所有案例都已有信息图。",
+    infographicDone: "信息图已完成",
+    infographicFailed: "无法生成信息图",
+    formPromptTypeLabel: "提示词类型",
+    formInfographicLabel: "信息图",
+    adminFeedbackTitle: "反馈",
+    fbThAuthor: "提交者",
+    fbThContent: "反馈",
+    fbThDate: "提交时间",
+    adminLabelTotalUsers: "用户",
+    adminLabelTotalUseCases: "案例",
+    adminLabelTotalLikes: "点赞",
+    adminChartTitle: "6 个月采用情况",
+    adminChartDesc: "浏览、点赞与部署。",
+    adminLabelViewsLegend: "浏览",
+    adminLabelLikesLegend: "点赞",
+    settingsEmailTitle: "邮件",
+    settingsEmailDesc: "用于管理员邀请及密码重置。",
+    smtpPreset: "服务提供商",
+    presetGmail: "Gmail",
+    presetOutlook: "Outlook.com",
+    presetM365: "Microsoft 365",
+    presetCustom: "自定义",
+    hintGmail: "请使用应用专用密码（需启用两步验证）。",
+    hintOutlook: "请使用 Microsoft 账户的应用密码。",
+    hintM365: "租户管理员必须为此邮箱启用 SMTP AUTH。",
+    smtpHost: "SMTP 主机",
+    smtpPort: "端口",
+    smtpSecurity: "安全性",
+    secStarttls: "STARTTLS",
+    secSsl: "SSL/TLS",
+    secNone: "无",
+    secNoneWarn: "未加密时，密码会以明文发送。",
+    smtpUser: "用户名",
+    smtpPassword: "密码",
+    smtpPasswordSaved: "已保存。留空即保留原密码。",
+    smtpFromName: "发件人名称",
+    smtpFromEmail: "发件人邮箱",
+    smtpEnabled: "发送邮件",
+    statusConnected: "已连接",
+    statusNotTested: "尚未测试",
+    statusFailed: "失败",
+    statusDemo: "演示模式",
+    lastChanged: "最后由 {by} 于 {date} 修改",
+    testTo: "测试收件人",
+    sendTest: "发送测试邮件",
+    saveSettings: "保存",
+    testSending: "发送中…",
+    testOk: "已发送测试邮件。",
+    settingsSaved: "已保存邮件设置",
+    settingsLoadFailed: "无法加载邮件设置。",
+    hostRequired: "请输入 SMTP 主机。",
+    portInvalid: "请输入 1 至 65535 的端口。"
+  }
+};
+Object.keys(uiTranslationsV2).forEach(lang => {
+  if (uiTranslations[lang]) Object.assign(uiTranslations[lang], uiTranslationsV2[lang]);
+});
+
+// ---------------------------------------------------------------------------
+// i18n cleanup layer: copy that used to be hard-coded English in index.html /
+// app.js (sign-in, temp password reset, case form, Gemini diff viewer,
+// feedback widget, import/export dialogs). Also shortens the legacy case-form
+// labels to sentence case. Merged last so it wins over the legacy tables.
+// ---------------------------------------------------------------------------
+const uiTranslationsV3 = {
+  en: {
+    // Sign-in
+    loginSubtitle: "Education adoption & playbook portal",
+    loginDesc: "Prompt templates and guides for your school role.",
+    loginPasswordLabel: "Password",
+    btnLoginText: "Sign in",
+    loginFieldsRequired: "Enter your email and password.",
+    loginSuccess: "Signed in. Loading…",
+    loginInvalid: "Wrong email or password.",
+    loggedOut: "Signed out",
+    // Temporary password reset
+    tempResetTitle: "Set a new password",
+    tempResetDesc: "You signed in with a temporary password. Choose your own to continue.",
+    pwPlaceholderMin: "At least 8 characters",
+    pwPlaceholderRepeat: "Re-enter password",
+    btnSubmitResetText: "Save and continue",
+    pwUpdated: "Password updated",
+    pwUpdateFailed: "Couldn't update password.",
+    workspaceReady: "Workspace ready",
+    // Analytics leaderboard
+    leaderboardTitle: "Most popular playbooks",
+    leaderboardDesc: "Ranked by likes.",
+    // Import / export
+    exportSelectFirst: "Select at least one use case to export.",
+    importEmpty: "This file has no playbooks.",
+    importConfirmOverwrite: "\"{id}\" already exists. Replace it?",
+    importDone: "Import complete\n\nAdded: {created}\nReplaced: {updated}\nSkipped: {skipped}",
+    importFailed: "Couldn't import. Choose a valid playbook JSON file.",
+    // Case form
+    caseFormEditTitle: "Edit playbook: {title}",
+    caseFormCreateTitle: "New playbook",
+    adminFormLabelGeminiPromptTitle: "Draft or refine with Gemini",
+    adminFormLabelGeminiPromptDesc: "Describe what to create or change. Gemini drafts the steps, prompt, tip and translations.",
+    caseFormDraftPlaceholder: "e.g. A Canvas Mode rubric for high school chemistry lab reports",
+    caseFormDraftBtn: "Draft with Gemini",
+    caseFormDraftBtnTitle: "Draft with Gemini 3.5 Flash",
+    drafting: "Drafting…",
+    adminFormLabelId: "ID (can't change later)",
+    adminFormLabelCategory: "Category",
+    adminFormLabelTitle: "Title",
+    adminFormLabelRole: "Role",
+    adminFormLabelSummary: "Summary",
+    adminFormLabelFeatures: "GE features",
+    adminFormLabelConnectors: "Connectors",
+    adminFormLabelLevel: "School levels",
+    adminFormLabelSteps: "Steps (one per line)",
+    adminFormLabelPrompt: "Prompt",
+    adminFormLabelProTip: "Pro tip",
+    adminFormLabelZhtwHeader: "Traditional Chinese (繁體中文)",
+    adminFormLabelZhcnHeader: "Simplified Chinese (简体中文)",
+    adminFormLabelZhtwTitle: "Title", adminFormLabelZhcnTitle: "Title",
+    adminFormLabelZhtwSummary: "Summary", adminFormLabelZhcnSummary: "Summary",
+    adminFormLabelZhtwSteps: "Steps (one per line)", adminFormLabelZhcnSteps: "Steps (one per line)",
+    adminFormLabelZhtwPrompt: "Prompt", adminFormLabelZhcnPrompt: "Prompt",
+    adminFormLabelZhtwProTip: "Pro tip", adminFormLabelZhcnProTip: "Pro tip",
+    btnAdminFormCancel: "Cancel",
+    btnAdminFormSave: "Save",
+    caseFormVerified: "Mark as verified",
+    caseFormVerifiedDesc: "Shows a verified badge on the portal.",
+    levelUni: "University & college",
+    levelHigh: "High school",
+    levelPrimary: "Primary school",
+    levelGeneric: "Any level",
+    caseFormTitlePh: "e.g. Chemistry lab safety agent",
+    caseFormSummaryPh: "1–2 sentences on the outcome",
+    caseFormStepsPh: "Upload materials to NotebookLM…",
+    caseFormPromptPh: "You are the class AI assistant…",
+    caseFormProTipPh: "Grounding the agent reduces hallucinations…",
+    caseFormRequired: "ID, title, category and role are required.",
+    caseAssistReadonly: "Assistant admins can't edit playbooks.",
+    caseUpdated: "Playbook updated",
+    caseCreated: "Playbook added",
+    caseSaveFailed: "Couldn't save. Check the ID is unique.",
+    caseDeleted: "Playbook deleted",
+    confirmDeleteCase: "Delete \"{id}\"? This can't be undone.",
+    draftNeedInput: "Add a title or instructions first.",
+    draftFailed: "Gemini couldn't draft this playbook.",
+    draftError: "Drafting failed: {msg}",
+    draftDone: "Draft ready. Review and save.",
+    draftingTitle: "Gemini is drafting…",
+    draftingDesc: "Writing steps, prompt and translations.",
+    // Gemini diff viewer
+    diffTitle: "Review Gemini changes",
+    diffIntro: "Gemini 3.5 Flash suggested the changes below.",
+    diffCurrent: "Current",
+    diffProposed: "Suggested",
+    diffReject: "Keep current",
+    diffAccept: "Apply suggestions",
+    diffChanged: "Changed",
+    diffNone: "(none)",
+    diffApplied: "Suggestions applied",
+    diffDeclined: "Kept current version",
+    langNameEn: "English",
+    langNameZhTw: "Traditional Chinese",
+    langNameZhCn: "Simplified Chinese",
+    // Feedback widget
+    feedbackBtn: "Feedback",
+    feedbackTitle: "Share feedback",
+    feedbackDesc: "Tell us what would make this portal more useful. Admins read every note.",
+    feedbackLabel: "Your feedback",
+    feedbackPlaceholder: "What would you like to see?",
+    feedbackSubmit: "Send",
+    feedbackThanks: "Thanks for your feedback!",
+    feedbackFailed: "Couldn't send feedback.",
+    confirmDismissFeedback: "Dismiss this feedback?",
+    feedbackDismissed: "Feedback dismissed",
+    dismissFailed: "Couldn't dismiss feedback.",
+    closeLabel: "Close"
+  },
+  "zh-TW": {
+    loginSubtitle: "教育導入與案例入口網站",
+    loginDesc: "依您的學校角色提供提示詞範本與操作指南。",
+    loginPasswordLabel: "密碼",
+    btnLoginText: "登入",
+    loginFieldsRequired: "請輸入電郵和密碼。",
+    loginSuccess: "已登入，載入中…",
+    loginInvalid: "電郵或密碼錯誤。",
+    loggedOut: "已登出",
+    tempResetTitle: "設定新密碼",
+    tempResetDesc: "您正以臨時密碼登入，請設定自己的密碼以繼續。",
+    pwPlaceholderMin: "至少 8 個字元",
+    pwPlaceholderRepeat: "再次輸入密碼",
+    btnSubmitResetText: "儲存並繼續",
+    pwUpdated: "密碼已更新",
+    pwUpdateFailed: "無法更新密碼。",
+    workspaceReady: "工作區已就緒",
+    leaderboardTitle: "最受歡迎的案例",
+    leaderboardDesc: "按讚好數排序。",
+    exportSelectFirst: "請至少選擇一個案例以匯出。",
+    importEmpty: "此檔案沒有任何案例。",
+    importConfirmOverwrite: "「{id}」已存在，要取代嗎？",
+    importDone: "匯入完成\n\n新增：{created}\n取代：{updated}\n略過：{skipped}",
+    importFailed: "無法匯入，請選擇有效的案例 JSON 檔案。",
+    caseFormEditTitle: "編輯案例：{title}",
+    caseFormCreateTitle: "新增案例",
+    adminFormLabelGeminiPromptTitle: "使用 Gemini 草擬或優化",
+    adminFormLabelGeminiPromptDesc: "描述要建立或修改的內容，Gemini 會草擬步驟、提示詞、提示與翻譯。",
+    caseFormDraftPlaceholder: "例如：以 Canvas Mode 為高中化學實驗報告製作評分量表",
+    caseFormDraftBtn: "使用 Gemini 草擬",
+    caseFormDraftBtnTitle: "使用 Gemini 3.5 Flash 草擬",
+    drafting: "草擬中…",
+    adminFormLabelId: "ID（建立後無法更改）",
+    adminFormLabelCategory: "類別",
+    adminFormLabelTitle: "標題",
+    adminFormLabelRole: "角色",
+    adminFormLabelSummary: "摘要",
+    adminFormLabelFeatures: "GE 功能",
+    adminFormLabelConnectors: "連接器",
+    adminFormLabelLevel: "適用學校級別",
+    adminFormLabelSteps: "步驟（每行一項）",
+    adminFormLabelPrompt: "提示詞",
+    adminFormLabelProTip: "實用提示",
+    adminFormLabelZhtwHeader: "繁體中文翻譯",
+    adminFormLabelZhcnHeader: "簡體中文翻譯",
+    adminFormLabelZhtwTitle: "標題", adminFormLabelZhcnTitle: "標題",
+    adminFormLabelZhtwSummary: "摘要", adminFormLabelZhcnSummary: "摘要",
+    adminFormLabelZhtwSteps: "步驟（每行一項）", adminFormLabelZhcnSteps: "步驟（每行一項）",
+    adminFormLabelZhtwPrompt: "提示詞", adminFormLabelZhcnPrompt: "提示詞",
+    adminFormLabelZhtwProTip: "實用提示", adminFormLabelZhcnProTip: "實用提示",
+    btnAdminFormCancel: "取消",
+    btnAdminFormSave: "儲存",
+    caseFormVerified: "標記為已驗證",
+    caseFormVerifiedDesc: "在入口網站顯示已驗證徽章。",
+    levelUni: "大專院校",
+    levelHigh: "中學",
+    levelPrimary: "小學",
+    levelGeneric: "不限級別",
+    caseFormTitlePh: "例如：化學實驗室安全 Agent",
+    caseFormSummaryPh: "用 1–2 句說明成果",
+    caseFormStepsPh: "將教材上傳到 NotebookLM…",
+    caseFormPromptPh: "你是班級的 AI 助理…",
+    caseFormProTipPh: "為 Agent 提供依據資料可減少幻覺…",
+    caseFormRequired: "ID、標題、類別及角色為必填。",
+    caseAssistReadonly: "助理管理員無法編輯案例。",
+    caseUpdated: "已更新案例",
+    caseCreated: "已新增案例",
+    caseSaveFailed: "無法儲存，請確認 ID 沒有重複。",
+    caseDeleted: "已刪除案例",
+    confirmDeleteCase: "要刪除「{id}」嗎？此操作無法復原。",
+    draftNeedInput: "請先輸入標題或指示。",
+    draftFailed: "Gemini 無法草擬此案例。",
+    draftError: "草擬失敗：{msg}",
+    draftDone: "草稿已完成，請檢查後儲存。",
+    draftingTitle: "Gemini 正在草擬…",
+    draftingDesc: "正在撰寫步驟、提示詞與翻譯。",
+    diffTitle: "檢視 Gemini 修改",
+    diffIntro: "Gemini 3.5 Flash 建議了以下修改。",
+    diffCurrent: "目前版本",
+    diffProposed: "建議版本",
+    diffReject: "保留目前版本",
+    diffAccept: "套用建議",
+    diffChanged: "已修改",
+    diffNone: "（無）",
+    diffApplied: "已套用建議",
+    diffDeclined: "已保留目前版本",
+    langNameEn: "英文",
+    langNameZhTw: "繁體中文",
+    langNameZhCn: "簡體中文",
+    feedbackBtn: "意見回饋",
+    feedbackTitle: "分享意見",
+    feedbackDesc: "告訴我們如何讓入口網站更實用，管理員會閱讀每則意見。",
+    feedbackLabel: "您的意見",
+    feedbackPlaceholder: "您希望看到哪些功能？",
+    feedbackSubmit: "送出",
+    feedbackThanks: "感謝您的回饋！",
+    feedbackFailed: "無法送出意見。",
+    confirmDismissFeedback: "要移除此意見嗎？",
+    feedbackDismissed: "已移除意見",
+    dismissFailed: "無法移除意見。",
+    closeLabel: "關閉"
+  },
+  "zh-CN": {
+    loginSubtitle: "教育导入与案例门户",
+    loginDesc: "按您的学校角色提供提示词模板与操作指南。",
+    loginPasswordLabel: "密码",
+    btnLoginText: "登录",
+    loginFieldsRequired: "请输入邮箱和密码。",
+    loginSuccess: "已登录，加载中…",
+    loginInvalid: "邮箱或密码错误。",
+    loggedOut: "已退出登录",
+    tempResetTitle: "设置新密码",
+    tempResetDesc: "您正在使用临时密码登录，请设置自己的密码以继续。",
+    pwPlaceholderMin: "至少 8 个字符",
+    pwPlaceholderRepeat: "再次输入密码",
+    btnSubmitResetText: "保存并继续",
+    pwUpdated: "密码已更新",
+    pwUpdateFailed: "无法更新密码。",
+    workspaceReady: "工作区已就绪",
+    leaderboardTitle: "最受欢迎的案例",
+    leaderboardDesc: "按点赞数排序。",
+    exportSelectFirst: "请至少选择一个案例以导出。",
+    importEmpty: "此文件没有任何案例。",
+    importConfirmOverwrite: "“{id}”已存在，要替换吗？",
+    importDone: "导入完成\n\n新增：{created}\n替换：{updated}\n跳过：{skipped}",
+    importFailed: "无法导入，请选择有效的案例 JSON 文件。",
+    caseFormEditTitle: "编辑案例：{title}",
+    caseFormCreateTitle: "新增案例",
+    adminFormLabelGeminiPromptTitle: "使用 Gemini 草拟或优化",
+    adminFormLabelGeminiPromptDesc: "描述要创建或修改的内容，Gemini 会草拟步骤、提示词、提示与翻译。",
+    caseFormDraftPlaceholder: "例如：用 Canvas Mode 为高中化学实验报告制作评分量表",
+    caseFormDraftBtn: "使用 Gemini 草拟",
+    caseFormDraftBtnTitle: "使用 Gemini 3.5 Flash 草拟",
+    drafting: "草拟中…",
+    adminFormLabelId: "ID（创建后无法更改）",
+    adminFormLabelCategory: "类别",
+    adminFormLabelTitle: "标题",
+    adminFormLabelRole: "角色",
+    adminFormLabelSummary: "摘要",
+    adminFormLabelFeatures: "GE 功能",
+    adminFormLabelConnectors: "连接器",
+    adminFormLabelLevel: "适用学校级别",
+    adminFormLabelSteps: "步骤（每行一项）",
+    adminFormLabelPrompt: "提示词",
+    adminFormLabelProTip: "实用提示",
+    adminFormLabelZhtwHeader: "繁体中文翻译",
+    adminFormLabelZhcnHeader: "简体中文翻译",
+    adminFormLabelZhtwTitle: "标题", adminFormLabelZhcnTitle: "标题",
+    adminFormLabelZhtwSummary: "摘要", adminFormLabelZhcnSummary: "摘要",
+    adminFormLabelZhtwSteps: "步骤（每行一项）", adminFormLabelZhcnSteps: "步骤（每行一项）",
+    adminFormLabelZhtwPrompt: "提示词", adminFormLabelZhcnPrompt: "提示词",
+    adminFormLabelZhtwProTip: "实用提示", adminFormLabelZhcnProTip: "实用提示",
+    btnAdminFormCancel: "取消",
+    btnAdminFormSave: "保存",
+    caseFormVerified: "标记为已验证",
+    caseFormVerifiedDesc: "在门户上显示已验证徽章。",
+    levelUni: "大专院校",
+    levelHigh: "中学",
+    levelPrimary: "小学",
+    levelGeneric: "不限级别",
+    caseFormTitlePh: "例如：化学实验室安全 Agent",
+    caseFormSummaryPh: "用 1–2 句说明成果",
+    caseFormStepsPh: "将教材上传到 NotebookLM…",
+    caseFormPromptPh: "你是班级的 AI 助理…",
+    caseFormProTipPh: "为 Agent 提供依据资料可减少幻觉…",
+    caseFormRequired: "ID、标题、类别及角色为必填。",
+    caseAssistReadonly: "助理管理员无法编辑案例。",
+    caseUpdated: "已更新案例",
+    caseCreated: "已新增案例",
+    caseSaveFailed: "无法保存，请确认 ID 没有重复。",
+    caseDeleted: "已删除案例",
+    confirmDeleteCase: "要删除“{id}”吗？此操作无法撤销。",
+    draftNeedInput: "请先输入标题或指示。",
+    draftFailed: "Gemini 无法草拟此案例。",
+    draftError: "草拟失败：{msg}",
+    draftDone: "草稿已完成，请检查后保存。",
+    draftingTitle: "Gemini 正在草拟…",
+    draftingDesc: "正在撰写步骤、提示词与翻译。",
+    diffTitle: "查看 Gemini 修改",
+    diffIntro: "Gemini 3.5 Flash 建议了以下修改。",
+    diffCurrent: "当前版本",
+    diffProposed: "建议版本",
+    diffReject: "保留当前版本",
+    diffAccept: "应用建议",
+    diffChanged: "已修改",
+    diffNone: "（无）",
+    diffApplied: "已应用建议",
+    diffDeclined: "已保留当前版本",
+    langNameEn: "英文",
+    langNameZhTw: "繁体中文",
+    langNameZhCn: "简体中文",
+    feedbackBtn: "意见反馈",
+    feedbackTitle: "分享意见",
+    feedbackDesc: "告诉我们如何让门户更实用，管理员会阅读每条意见。",
+    feedbackLabel: "您的意见",
+    feedbackPlaceholder: "您希望看到哪些功能？",
+    feedbackSubmit: "提交",
+    feedbackThanks: "感谢您的反馈！",
+    feedbackFailed: "无法提交意见。",
+    confirmDismissFeedback: "要移除此意见吗？",
+    feedbackDismissed: "已移除意见",
+    dismissFailed: "无法移除意见。",
+    closeLabel: "关闭"
+  }
+};
+Object.keys(uiTranslationsV3).forEach(lang => {
+  if (uiTranslations[lang]) Object.assign(uiTranslations[lang], uiTranslationsV3[lang]);
+});
+
+// V4: view counts (replace deployments), like error states, overview variables panel, admin views/tries
+const uiTranslationsV4 = {
+  en: {
+    viewsLabel: "Views",
+    viewCountTitle: "{n} views",
+    likeFailed: "Couldn't save your like. Try again.",
+    likeSessionExpired: "Your session has expired. Sign in again to like playbooks.",
+    likeAdminPreview: "Likes are saved for user accounts. Sign in as a user to like playbooks.",
+    fillVariablesHint: "Fill these once. They update every prompt below.",
+    adminLabelTotalViews: "Views",
+    adminLabelTriesLegend: "Try it",
+    adminChartDesc: "Views, likes and Try it launches.",
+    chartTipViews: "Views",
+    chartTipLikes: "Likes",
+    chartTipTries: "Try it"
+  },
+  "zh-TW": {
+    viewsLabel: "瀏覽次數",
+    viewCountTitle: "{n} 次瀏覽",
+    likeFailed: "未能儲存讚好，請再試一次。",
+    likeSessionExpired: "登入已逾時，請重新登入以讚好案例。",
+    likeAdminPreview: "讚好只會儲存於使用者帳戶。請以使用者身分登入。",
+    fillVariablesHint: "只需填寫一次，下方所有提示詞會同步更新。",
+    adminLabelTotalViews: "瀏覽",
+    adminLabelTriesLegend: "立即試用",
+    adminChartDesc: "瀏覽、讚好與立即試用次數。",
+    chartTipViews: "瀏覽",
+    chartTipLikes: "讚好",
+    chartTipTries: "立即試用"
+  },
+  "zh-CN": {
+    viewsLabel: "浏览次数",
+    viewCountTitle: "{n} 次浏览",
+    likeFailed: "未能保存点赞，请重试。",
+    likeSessionExpired: "登录已过期，请重新登录以点赞案例。",
+    likeAdminPreview: "点赞只会保存于用户账户。请以用户身份登录。",
+    fillVariablesHint: "只需填写一次，下方所有提示词会同步更新。",
+    adminLabelTotalViews: "浏览",
+    adminLabelTriesLegend: "立即试用",
+    adminChartDesc: "浏览、点赞与立即试用次数。",
+    chartTipViews: "浏览",
+    chartTipLikes: "点赞",
+    chartTipTries: "立即试用"
+  }
+};
+Object.keys(uiTranslationsV4).forEach(lang => {
+  if (uiTranslations[lang]) Object.assign(uiTranslations[lang], uiTranslationsV4[lang]);
+});
+
+/** Current translation table (falls back to English). */
+const tr = () => uiTranslations[appState.activeLanguage] || uiTranslations.en;
+
+/** Replace {name} placeholders in a template string. Pure. */
+const fmt = (template, vars = {}) =>
+  String(template || "").replace(/\{(\w+)\}/g, (m, k) => (vars[k] !== undefined ? String(vars[k]) : m));
+
+/** Fill every [data-i18n], [data-i18n-placeholder] and [data-i18n-aria] element. */
+function applyI18nAttributes() {
+  const t = tr();
+  document.querySelectorAll("[data-i18n]").forEach(el => {
+    const v = t[el.dataset.i18n];
+    if (typeof v === "string") el.textContent = v;
+  });
+  document.querySelectorAll("[data-i18n-placeholder]").forEach(el => {
+    const v = t[el.dataset.i18nPlaceholder];
+    if (typeof v === "string") el.placeholder = v;
+  });
+  document.querySelectorAll("[data-i18n-aria]").forEach(el => {
+    const v = t[el.dataset.i18nAria];
+    if (typeof v === "string") el.setAttribute("aria-label", v);
+  });
+  document.querySelectorAll("[data-i18n-title]").forEach(el => {
+    const v = t[el.dataset.i18nTitle];
+    if (typeof v === "string") el.title = v;
+  });
+  // Prompt type select in the admin case form uses the shared type labels
+  const typeSelect = document.getElementById("formCasePromptType");
+  if (typeSelect) Array.from(typeSelect.options).forEach(o => { if (t.promptTypes[o.value]) o.textContent = t.promptTypes[o.value]; });
+  document.documentElement.lang = appState.activeLanguage || "en";
+}
+
+// ---------------------------------------------------------------------------
+// Pure helpers: prompt types, Try it URL, variables, filtering and sorting
+// ---------------------------------------------------------------------------
+
+/** Prompt types that Gemini Enterprise can open straight from a ?q= link. */
+const TRYABLE = new Set(["general", "canvas", "image", "video"]);
+
+/** Which actions a prompt of this type supports. Pure. */
+const promptActions = (type) => (TRYABLE.has(type || "general") ? ["copy", "try"] : ["copy"]);
+
+/**
+ * Build the deep link that opens a prompt in the user's GE app. Pure.
+ * Returns null when the user has no GE app link (caller falls back to copy).
+ */
+const buildTryItUrl = (geAppLink, prompt) => {
+  if (!geAppLink) return null;
+  return `${geAppLink}${geAppLink.includes("?") ? "&" : "?"}q=${encodeURIComponent(prompt)}`;
+};
+
+const PROMPT_TYPE_ICONS = {
+  general: "chat", notebooklm: "menu_book", deep_research: "travel_explore",
+  agent_designer: "smart_toy", canvas: "draw", image: "palette", video: "videocam"
+};
+
+/** Acronyms kept upper-case when humanizing variable names. */
+const KEEP_UPPER = new Set(["LMS", "URL", "ID", "PDF", "IT", "TA", "KPI", "HR", "AI", "FAQ", "GPA", "IB", "DSE", "STEM", "SAO", "CSV", "ESG", "SEN", "UK", "US", "HK"]);
+
+/** "COURSE_TITLE" -> "Course title" (acronyms like LMS stay upper-case). Pure. */
+const humanizeVariable = (key) => {
+  const words = String(key || "").replace(/[_\-]+/g, " ").trim().split(/\s+/).filter(Boolean);
+  return words.map((w, i) => {
+    if (KEEP_UPPER.has(w.toUpperCase()) && w === w.toUpperCase()) return w.toUpperCase();
+    const lower = w.toLowerCase();
+    return i === 0 ? lower.charAt(0).toUpperCase() + lower.slice(1) : lower;
+  }).join(" ");
+};
+
+/** Same token grammar as extractPromptVariables: {{KEY}} or [KEY] (not markdown links). */
+const PROMPT_VAR_REGEX = () => /(?:\{\{([A-Za-z0-9\s/_\-']{1,50})\}\}|\[([A-Za-z0-9\s/_\-']{1,50})\](?!\())/g;
+
+/**
+ * Replace every variable token with its value; unfilled ones become "[Human label]"
+ * so the copied text never contains raw {{ }} braces. Pure.
+ */
+const interpolatePrompt = (text, values = {}) =>
+  String(text || "").replace(PROMPT_VAR_REGEX(), (m, a, b) => {
+    const key = (a || b).trim();
+    const val = (values[key] || "").trim();
+    return val || `[${humanizeVariable(key)}]`;
+  });
+
+/**
+ * Render prompt text as HTML with clickable variable chips. Unfilled chips show the
+ * human label (soft style); filled chips show the value in the accent colour. Pure.
+ */
+const renderPromptHtml = (text, values = {}) => {
+  const regex = PROMPT_VAR_REGEX();
+  let out = "", last = 0, m;
+  while ((m = regex.exec(text || "")) !== null) {
+    out += escapeHtml(text.substring(last, m.index));
+    const key = (m[1] || m[2]).trim();
+    const label = humanizeVariable(key);
+    const val = (values[key] || "").trim();
+    out += `<button type="button" class="var-chip${val ? " is-filled" : ""}" data-var-key="${escapeHtml(key)}" title="${escapeHtml(label)}">${escapeHtml(val || label)}</button>`;
+    last = regex.lastIndex;
+  }
+  return out + escapeHtml((text || "").substring(last));
+};
+
+/** Unique variable keys across several prompt texts, in first-seen order. Pure. */
+const collectVariableKeys = (texts) =>
+  [...new Set(texts.flatMap(tx => extractPromptVariables(tx).map(v => v.key)))];
+
+/** Localized title for a use case. */
+const ucTitle = (uc, lang) => (useCasesTranslations[uc.id]?.[lang]?.title) || uc.title || "";
+const ucSummary = (uc, lang) => (useCasesTranslations[uc.id]?.[lang]?.summary) || uc.summary || "";
+const isOn = (v) => v === true || v === 1;
+
+/** Role / level visibility rules (unchanged from v1, now pure). */
+function matchesRoleAndLevel(uc, state) {
+  if (state.isAdmin === true) return true;
+  const role = state.userRole;
+  const isSupportRole = ["Security", "Finance", "IT Admin", "SAO"].includes(role);
+  let roleOk = true;
+  if (role === "Lecturer" || role === "TA") {
+    roleOk = ["Lecturer", "TA"].includes(uc.role) || ["academic", "operational", "administrative"].includes(uc.category) || !uc.role;
+  } else if (role === "Student") {
+    roleOk = uc.role === "Student" || uc.category === "student" || !uc.role;
+  } else if (isSupportRole) {
+    roleOk = [role, "IT Admin", "Program Leader", "Dean", "SAO"].includes(uc.role) || ["operational", "administrative"].includes(uc.category) || !uc.role;
+  } else if (role === "Program Leader" || role === "Dean") {
+    roleOk = ["Lecturer", "Program Leader", "Dean"].includes(uc.role) || ["academic", "operational", "administrative"].includes(uc.category) || !uc.role;
+  }
+  let levelOk = true;
+  if (!isSupportRole && Array.isArray(uc.level) && uc.level.length > 0) {
+    levelOk = uc.level.includes("Generic") || uc.level.includes(state.institutionLevel);
+  }
+  return roleOk && levelOk;
+}
+
+/** Apply search, category, feature and collection filters. Pure. */
+function filterUseCases(list, state, lang) {
+  const q = (state.searchQuery || "").toLowerCase();
+  const cat = state.activeFilterCategory === "admin" ? "administrative" : state.activeFilterCategory;
+  return list.filter(uc => {
+    if (!matchesRoleAndLevel(uc, state)) return false;
+    if (cat && cat !== "all" && uc.category !== cat) return false;
+    if (state.activeFilterFeature && state.activeFilterFeature !== "all" &&
+        !(uc.features || []).some(f => f.toLowerCase() === state.activeFilterFeature.toLowerCase())) return false;
+    if (state.activeFilterStatus === "liked" && !isOn(uc.isLiked)) return false;
+    if (q) {
+      const hay = [ucTitle(uc, lang), ucSummary(uc, lang), uc.role || "", ...(uc.features || [])].join(" ").toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+}
+
+/** Sort without mutating: popular (likes desc), newest (createdAt desc) or az. Pure. */
+function sortUseCases(list, sortBy, lang) {
+  const byTitle = (a, b) => ucTitle(a, lang).localeCompare(ucTitle(b, lang), lang);
+  const time = (uc) => new Date(uc.createdAt || 0).getTime() || 0;
+  const cmp = {
+    popular: (a, b) => (b.totalLikes || 0) - (a.totalLikes || 0) || byTitle(a, b),
+    newest: (a, b) => time(b) - time(a) || byTitle(a, b),
+    az: byTitle
+  }[sortBy] || byTitle;
+  return [...list].sort(cmp);
+}
+
+/** "{n} playbooks for {role}" with the plural role map; admins see "all roles". Pure. */
+function formatResultsHeadline(t, n, state) {
+  const role = state.isAdmin === true ? t.allRoles : (t.rolesPlural?.[state.userRole] || t.allRoles);
+  return fmt(n === 1 ? t.resultsHeadlineOne : t.resultsHeadline, { n, role });
+}
+
+// ---------------------------------------------------------------------------
+// Shared small UI helpers
+// ---------------------------------------------------------------------------
+async function copyText(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch (e) {
+    // Fallback for non-secure contexts
+    const ta = document.createElement("textarea");
+    ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select();
+    let ok = false;
+    try { ok = document.execCommand("copy"); } catch (_) { ok = false; }
+    ta.remove();
+    return ok;
+  }
+}
+
+/** Fetch JSON with graceful handling of non-JSON / network errors. */
+async function apiJson(url, options = {}) {
+  const opts = { ...options };
+  if (opts.body && typeof opts.body !== "string") {
+    opts.body = JSON.stringify(opts.body);
+    opts.headers = { "Content-Type": "application/json", ...(opts.headers || {}) };
+  }
+  try {
+    const res = await fetch(url, opts);
+    let data = {};
+    try { data = await res.json(); } catch (_) { data = {}; }
+    return { ok: res.ok && data.success !== false, status: res.status, data };
+  } catch (err) {
+    return { ok: false, status: 0, data: { message: tr().networkError } };
+  }
+}
+
+const errText = (data) => data?.message || data?.error || tr().saveFailed;
+
+function setFieldError(inputId, message) {
+  const p = document.querySelector(`[data-error-for="${inputId}"]`);
+  const input = document.getElementById(inputId);
+  if (p) p.textContent = message || "";
+  if (input) input.toggleAttribute("aria-invalid", Boolean(message));
+}
+
+function showInline(el, html, kind = "info") {
+  if (!el) return;
+  el.className = `inline-feedback is-${kind}`;
+  el.innerHTML = html;
+  el.hidden = false;
+  el.style.display = "";
+}
+
+const isValidEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v || "").trim());
+const isValidHttpsUrl = (v) => { try { return new URL(v).protocol === "https:"; } catch (_) { return false; } };
+const formatDate = (v) => {
+  const d = new Date(v);
+  return isNaN(d) ? "" : d.toLocaleDateString(appState.activeLanguage || undefined, { year: "numeric", month: "short", day: "numeric" });
+};
+const formatDateTime = (v) => {
+  const d = new Date(v);
+  return isNaN(d) ? "" : d.toLocaleString(appState.activeLanguage || undefined, { dateStyle: "medium", timeStyle: "short" });
+};
+
+/** Copy-able value row (temp passwords, preview links). */
+const copyRowHtml = (label, value) => `
+  <div class="copy-row">
+    <span class="copy-row-label">${escapeHtml(label)}</span>
+    <code class="copy-row-value">${escapeHtml(value)}</code>
+    <button type="button" class="nav-button btn-copy-value" data-copy="${escapeHtml(value)}">
+      <span class="material-symbols-outlined">content_copy</span> ${escapeHtml(tr().copy)}
+    </button>
+  </div>`;
+
+// One delegated listener handles every copy-row button in the document
+document.addEventListener("click", async (e) => {
+  const btn = e.target.closest(".btn-copy-value");
+  if (!btn) return;
+  if (await copyText(btn.dataset.copy || "")) showToast(tr().copied);
+});
+
+// ---------------------------------------------------------------------------
+// Avatar menus (user + admin topbars)
+// ---------------------------------------------------------------------------
+function bindAvatarMenu(btnId, menuId) {
+  const btn = document.getElementById(btnId);
+  const menu = document.getElementById(menuId);
+  if (!btn || !menu || btn.dataset.bound) return;
+  btn.dataset.bound = "1";
+  const setOpen = (open) => {
+    menu.hidden = !open;
+    btn.setAttribute("aria-expanded", String(open));
+  };
+  btn.addEventListener("click", (e) => { e.stopPropagation(); setOpen(menu.hidden); });
+  menu.addEventListener("click", (e) => { if (e.target.closest(".avatar-menu-item")) setOpen(false); });
+  document.addEventListener("click", (e) => { if (!menu.hidden && !menu.contains(e.target)) setOpen(false); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !menu.hidden) { setOpen(false); btn.focus(); } });
+}
+
+/** Fill avatar initials + menu header text for both portals. */
+function updateAccountMenus() {
+  const t = tr();
+  const email = appState.userEmail || "";
+  const initial = (email.trim()[0] || "U").toUpperCase();
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  set("userAvatarInitial", initial);
+  set("adminAvatarInitial", initial);
+  set("userMenuEmail", email);
+  set("adminMenuEmail", email);
+  set("adminMenuRole", appState.isSuper ? t.roleSuper : (appState.isAssist ? t.roleAssist : t.roleSuper));
+  const adminLink = document.getElementById("btnBackToAdminDash");
+  if (adminLink) adminLink.hidden = appState.isAdmin !== true;
+}
+
+// ---------------------------------------------------------------------------
+// Filter bar
+// ---------------------------------------------------------------------------
+function initFilterBar() {
+  const bind = (id, key, storageKey) => {
+    const el = document.getElementById(id);
+    if (!el || el.dataset.bound) return;
+    el.dataset.bound = "1";
+    el.value = appState[key];
+    if (el.value !== appState[key]) { el.value = "all"; appState[key] = el.value; }
+    el.addEventListener("change", () => {
+      appState[key] = el.value;
+      sessionStorage.setItem(storageKey, el.value);
+      renderUseCases();
+    });
+  };
+  bind("filterCategory", "activeFilterCategory", "ge_active_category");
+  bind("filterFeature", "activeFilterFeature", "ge_active_feature");
+  bind("filterCollection", "activeFilterStatus", "ge_active_status");
+  bind("filterSort", "sortBy", "ge_sort_by");
+}
+
+function resetFilters() {
+  appState.searchQuery = "";
+  appState.activeFilterCategory = "all";
+  appState.activeFilterFeature = "all";
+  appState.activeFilterStatus = "all";
+  ["ge_active_category", "ge_active_feature", "ge_active_status"].forEach(k => sessionStorage.removeItem(k));
+  const s = document.getElementById("searchInput"); if (s) s.value = "";
+  [["filterCategory", "all"], ["filterFeature", "all"], ["filterCollection", "all"]].forEach(([id, v]) => {
+    const el = document.getElementById(id); if (el) el.value = v;
+  });
+  renderUseCases();
+}
+
+// ---------------------------------------------------------------------------
+// Likes / view counts shared by cards and the modal
+// ---------------------------------------------------------------------------
+/** Compact number for counters: 950 -> "950", 1234 -> "1.2k". Pure. */
+const compactCount = (n) => {
+  const v = Number(n) || 0;
+  return v >= 1000 ? `${(v / 1000).toFixed(v >= 10000 ? 0 : 1).replace(/\.0$/, "")}k` : String(v);
+};
+
+const prefButtonsHtml = (uc, t) => {
+  const liked = isOn(uc.isLiked);
+  const views = Number(uc.viewCount) || 0;
+  const viewsTitle = escapeHtml(fmt(t.viewCountTitle, { n: views }));
+  return `
+    <button type="button" class="pref-btn btn-like${liked ? " is-active" : ""}" data-uc-id="${escapeHtml(uc.id)}" aria-pressed="${liked}" title="${escapeHtml(t.likeLabel)}" aria-label="${escapeHtml(t.likeLabel)}">
+      <span class="material-symbols-outlined">favorite</span><span class="likes-count">${uc.totalLikes || 0}</span>
+    </button>
+    <span class="view-count" data-uc-id="${escapeHtml(uc.id)}" title="${viewsTitle}" aria-label="${viewsTitle}">
+      <span class="material-symbols-outlined" aria-hidden="true">visibility</span><span class="views-count">${compactCount(views)}</span>
+    </span>`;
+};
+
+/** Update every like button and view counter for a use case (card + modal) in place. */
+function syncPrefButtons(uc) {
+  const sel = CSS.escape(uc.id);
+  const t = tr();
+  document.querySelectorAll(`.btn-like[data-uc-id="${sel}"]`).forEach(b => {
+    b.classList.toggle("is-active", isOn(uc.isLiked));
+    b.setAttribute("aria-pressed", String(isOn(uc.isLiked)));
+    const c = b.querySelector(".likes-count"); if (c) c.textContent = uc.totalLikes || 0;
+  });
+  document.querySelectorAll(`.view-count[data-uc-id="${sel}"]`).forEach(v => {
+    const n = Number(uc.viewCount) || 0;
+    const title = fmt(t.viewCountTitle, { n });
+    v.title = title;
+    v.setAttribute("aria-label", title);
+    const c = v.querySelector(".views-count"); if (c) c.textContent = compactCount(n);
+  });
+}
+
+/**
+ * Toggle a like optimistically: flip the UI immediately, then reconcile with
+ * the server's authoritative count, or roll back and explain why on failure.
+ * Concurrent clicks on the same card are ignored while a request is pending.
+ */
+const pendingLikes = new Set();
+async function togglePreference(ucId) {
+  const uc = useCasesDb.find(u => u.id === ucId);
+  if (!uc || pendingLikes.has(ucId)) return;
+  const t = tr();
+  const prev = { isLiked: uc.isLiked, totalLikes: uc.totalLikes || 0 };
+  const next = !isOn(uc.isLiked);
+  uc.isLiked = next;
+  uc.totalLikes = Math.max(0, prev.totalLikes + (next ? 1 : -1));
+  syncPrefButtons(uc);
+
+  pendingLikes.add(ucId);
+  const res = await syncUserPreference(uc.id, next);
+  pendingLikes.delete(ucId);
+
+  if (res.ok) {
+    uc.isLiked = res.data.isLiked ?? next;
+    uc.totalLikes = res.data.likeCount ?? res.data.totalLikes ?? uc.totalLikes;
+    showToast(next ? t.likedToast : t.unlikedToast);
+  } else {
+    Object.assign(uc, prev);
+    const msg = res.status === 401 ? t.likeSessionExpired : res.status === 403 ? t.likeAdminPreview : t.likeFailed;
+    showToast(msg, "warning");
+  }
+  syncPrefButtons(uc);
+  // The "liked" collection filter depends on this flag, so re-render the grid when it's active
+  if (appState.activeFilterStatus !== "all") renderUseCases();
+}
+
+// ---------------------------------------------------------------------------
+// Card grid
+// ---------------------------------------------------------------------------
+function cardHtml(uc, lang, t) {
+  const badge = getUsecaseBadgeHtml(uc, lang);
+  const verified = uc.isVerified
+    ? `<span class="tag tag-icon-only tag-verified" title="${escapeHtml(t.verifiedLabel)}"><span class="material-symbols-outlined">verified</span></span>` : "";
+  const feats = (uc.features || []).map(f =>
+    `<span class="tag tag-feature tag-icon-only" title="${escapeHtml(f)}"><span class="material-symbols-outlined">${getTagIcon("feature", f)}</span></span>`).join("");
+  const conns = (uc.connectors || []).map(c => {
+    const meta = getConnectorMeta(c, lang);
+    return `<span class="tag tag-icon-only ${meta.class}" title="${escapeHtml(meta.label)}"><span class="material-symbols-outlined">${meta.icon}</span></span>`;
+  }).join("");
+  const title = ucTitle(uc, lang);
+  return `
+    <article class="card" data-uc-id="${escapeHtml(uc.id)}" tabindex="0" role="button" aria-label="${escapeHtml(title)}">
+      <div class="card-tags">${badge}${verified}${feats}${conns}</div>
+      <h3 class="card-title">${escapeHtml(title)}</h3>
+      <p class="card-summary">${escapeHtml(ucSummary(uc, lang))}</p>
+      <div class="card-footer">
+        <span class="card-role">${escapeHtml(t.roles[uc.role] || uc.role || "")}</span>
+        <div class="card-actions">${prefButtonsHtml(uc, t)}</div>
+      </div>
+    </article>`;
+}
+
+/** Bind grid delegation once: card click/Enter opens the modal, pref buttons toggle. */
+function bindCardGrid(container) {
+  if (container.dataset.bound) return;
+  container.dataset.bound = "1";
+  container.addEventListener("click", (e) => {
+    const like = e.target.closest(".btn-like");
+    if (like) {
+      e.stopPropagation();
+      togglePreference(like.dataset.ucId);
+      return;
+    }
+    if (e.target.closest("#btnResetFilters")) { resetFilters(); return; }
+    const card = e.target.closest(".card");
+    if (card) {
+      const uc = useCasesDb.find(u => u.id === card.dataset.ucId);
+      if (uc) openUseCaseModal(uc);
+    }
+  });
+  container.addEventListener("keydown", (e) => {
+    if ((e.key === "Enter" || e.key === " ") && e.target.classList.contains("card")) {
+      e.preventDefault();
+      const uc = useCasesDb.find(u => u.id === e.target.dataset.ucId);
+      if (uc) openUseCaseModal(uc);
+    }
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Particle field: organic droplets that drift on their own and lean away from the pointer.
+// ---------------------------------------------------------------------------
+/**
+ * Algorithm overview
+ * ------------------
+ * 1. Anchors: particles sit on a jittered grid (30px desktop / 42px mobile, ±35%
+ *    jitter). Density is capped at MAX_PARTICLES by widening the spacing:
+ *    spacing = max(base, sqrt(area / MAX_PARTICLES)).
+ * 2. Drift: each particle owns a random phase and two frequencies. Its offset from
+ *    the anchor is a sum of two sines per axis (cheap pseudo-noise), so every
+ *    particle wanders on a smooth, non-repeating-looking Lissajous path.
+ * 3. Focus: a single "focus" point eases toward the pointer (or touch). With no
+ *    pointer it idles on a slow Lissajous loop. `presence` (0..1) eases in when
+ *    the pointer is active and fades out on pointer leave / touch end.
+ * 4. Targets per particle, with d = distance to the focus:
+ *       influence = presence · exp(-d² / 2σ²)          (Gaussian falloff)
+ *       angle*    = blend(flowAngle, awayAngle, influence)   (shortest arc)
+ *       length*   = 3 + 11·influence     scale* = 1 + 0.9·influence
+ *       alpha*    = 0.10 + 0.70·influence + 0.05·twinkle
+ *    flowAngle is a slowly evolving sine flow field, so far-away particles still
+ *    sway gently instead of freezing.
+ * 5. Smoothing: length and scale follow damped springs (velocity += k·error,
+ *    velocity *= damping), giving a soft overshoot; angle and alpha use
+ *    frame-rate independent lerps: x += (x* - x)·(1 - (1 - rate)^(dt/16.7)).
+ * 6. Drawing: each particle is a teardrop (round head + tapered tail) filled in
+ *    the palette colour of its sector around the focus.
+ * The loop pauses while the tab is hidden; reduced-motion users get one settled,
+ * static frame (redrawn on resize).
+ */
+function initParticleField() {
+  const canvas = document.getElementById("fieldCanvas");
+  if (!canvas || !canvas.getContext || canvas.dataset.ready) return;
+  canvas.dataset.ready = "1";
+  const ctx = canvas.getContext("2d");
+  const PALETTE = ["#4285F4", "#EA4335", "#FBBC04", "#34A853", "#A142F4"];
+  const SIGMA = 240;                        // falloff radius (px) of pointer influence
+  const TWO_SIGMA_SQ = 2 * SIGMA * SIGMA;
+  const MAX_PARTICLES = 1200;
+  const FOCUS_EASE = 0.08;                  // focus point catch-up per 60fps frame
+  const PRESENCE_EASE = 0.05;
+  const SPRING_K = 0.12, SPRING_DAMP = 0.78;
+  const ANGLE_RATE = 0.10, ALPHA_RATE = 0.08;
+  const TAU = Math.PI * 2;
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+  let w = 0, h = 0, particles = [], rafId = null, lastTs = 0, time = 0;
+  const focus = { x: 0, y: 0, tx: 0, ty: 0, presence: 0.55, targetPresence: 0.55, active: false };
+
+  /** Shortest signed angular difference b - a, in (-π, π]. Pure. */
+  const angleDelta = (a, b) => {
+    let d = (b - a) % TAU;
+    if (d > Math.PI) d -= TAU;
+    if (d < -Math.PI) d += TAU;
+    return d;
+  };
+  /** Frame-rate independent lerp factor for a per-60fps-frame rate. Pure. */
+  const lerpFactor = (rate, frames) => 1 - Math.pow(1 - rate, frames);
+
+  function layout() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    w = window.innerWidth; h = window.innerHeight;
+    canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
+    canvas.style.width = `${w}px`; canvas.style.height = `${h}px`;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const spacing = Math.max(w < 720 ? 42 : 30, Math.sqrt((w * h) / MAX_PARTICLES));
+    particles = [];
+    for (let y = spacing / 2; y < h; y += spacing) {
+      for (let x = spacing / 2; x < w; x += spacing) {
+        if (particles.length >= MAX_PARTICLES) break;
+        particles.push({
+          ax: x + (Math.random() - 0.5) * spacing * 0.7,
+          ay: y + (Math.random() - 0.5) * spacing * 0.7,
+          phase: Math.random() * TAU,
+          f1: 0.25 + Math.random() * 0.35,   // drift frequencies (rad/s)
+          f2: 0.18 + Math.random() * 0.30,
+          amp: 3 + Math.random() * 5,        // drift amplitude (px)
+          x: 0, y: 0,
+          angle: Math.random() * TAU,
+          len: 3, lenV: 0,
+          scale: 1, scaleV: 0,
+          alpha: 0.1
+        });
+      }
+    }
+    if (!focus.x && !focus.y) { focus.x = focus.tx = w * 0.72; focus.y = focus.ty = h * 0.28; }
+  }
+
+  /** Advance the simulation by `frames` 60fps-frames (dt-normalised). `settle` snaps to targets. */
+  function step(frames, settle = false) {
+    const t = time;
+    // Idle: the focus wanders slowly around the upper-right so the field never looks dead
+    if (!focus.active) {
+      focus.tx = w * (0.72 + 0.10 * Math.sin(t * 0.13));
+      focus.ty = h * (0.30 + 0.12 * Math.sin(t * 0.17 + 1.3));
+    }
+    const fe = settle ? 1 : lerpFactor(FOCUS_EASE, frames);
+    focus.x += (focus.tx - focus.x) * fe;
+    focus.y += (focus.ty - focus.y) * fe;
+    focus.presence += (focus.targetPresence - focus.presence) * (settle ? 1 : lerpFactor(PRESENCE_EASE, frames));
+
+    const aF = settle ? 1 : lerpFactor(ANGLE_RATE, frames);
+    const alF = settle ? 1 : lerpFactor(ALPHA_RATE, frames);
+    for (let i = 0; i < particles.length; i++) {
+      const p = particles[i];
+      // Layered sines approximate smooth noise without a noise table
+      p.x = p.ax + p.amp * (Math.sin(t * p.f1 + p.phase) + 0.5 * Math.sin(t * p.f2 * 1.7 + p.phase * 2.1));
+      p.y = p.ay + p.amp * (Math.cos(t * p.f2 + p.phase * 1.3) + 0.5 * Math.cos(t * p.f1 * 1.4 + p.phase));
+      const dx = p.x - focus.x, dy = p.y - focus.y;
+      const influence = focus.presence * Math.exp(-(dx * dx + dy * dy) / TWO_SIGMA_SQ);
+      const flow = Math.sin(p.ax * 0.004 + t * 0.20) + Math.cos(p.ay * 0.005 - t * 0.15) + p.phase * 0.15;
+      const away = Math.atan2(dy, dx);
+      const targetAngle = flow + angleDelta(flow, away) * Math.min(1, influence * 1.6);
+      const targetLen = 3 + 11 * influence;
+      const targetScale = 1 + 0.9 * influence;
+      const twinkle = 0.5 + 0.5 * Math.sin(t * 1.3 + p.phase * 3);
+      const targetAlpha = 0.10 + 0.70 * influence + 0.05 * twinkle;
+
+      p.angle += angleDelta(p.angle, targetAngle) * aF;
+      p.alpha += (targetAlpha - p.alpha) * alF;
+      if (settle) {
+        p.len = targetLen; p.scale = targetScale; p.lenV = p.scaleV = 0;
+      } else {
+        // Damped springs, integrated in whole-frame sub-steps for stability
+        for (let s = 0, n = Math.max(1, Math.round(frames)); s < n; s++) {
+          p.lenV = (p.lenV + (targetLen - p.len) * SPRING_K) * SPRING_DAMP;
+          p.len += p.lenV;
+          p.scaleV = (p.scaleV + (targetScale - p.scale) * SPRING_K) * SPRING_DAMP;
+          p.scale += p.scaleV;
+        }
+      }
+    }
+  }
+
+  /** Teardrop: round head of radius r at the front, tapered tail behind it. */
+  function draw() {
+    ctx.clearRect(0, 0, w, h);
+    for (let i = 0; i < particles.length; i++) {
+      const p = particles[i];
+      const r = 0.9 * Math.max(0.6, p.scale);
+      const len = Math.max(r * 2, p.len);
+      const c = Math.cos(p.angle), s = Math.sin(p.angle);
+      const hx = p.x + c * (len / 2 - r), hy = p.y + s * (len / 2 - r);   // head centre
+      const tx = p.x - c * (len / 2), ty = p.y - s * (len / 2);           // tail tip
+      const sector = Math.floor(((Math.atan2(p.y - focus.y, p.x - focus.x) + Math.PI) / TAU) * 5) % 5;
+      ctx.globalAlpha = Math.max(0, Math.min(1, p.alpha));
+      ctx.fillStyle = PALETTE[sector];
+      ctx.beginPath();
+      ctx.moveTo(tx, ty);
+      ctx.arc(hx, hy, r, p.angle - Math.PI / 2, p.angle + Math.PI / 2);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function tick(ts) {
+    const dt = lastTs ? Math.min(ts - lastTs, 50) : 16.7;   // clamp long gaps (tab switches)
+    lastTs = ts;
+    time += dt / 1000;
+    step(dt / 16.7);
+    draw();
+    rafId = requestAnimationFrame(tick);
+  }
+  const start = () => {
+    if (rafId || document.hidden || reduceMotion.matches) return;
+    lastTs = 0;
+    rafId = requestAnimationFrame(tick);
+  };
+  const stop = () => { if (rafId) cancelAnimationFrame(rafId); rafId = null; };
+  /** Reduced motion: one fully settled frame, no animation loop. */
+  const renderStatic = () => { step(1, true); draw(); };
+
+  const pointAt = (x, y) => { focus.tx = x; focus.ty = y; focus.active = true; focus.targetPresence = 1; };
+  const release = () => { focus.active = false; focus.targetPresence = 0.55; };
+
+  layout();
+  if (reduceMotion.matches) renderStatic(); else start();
+
+  window.addEventListener("pointermove", (e) => { if (e.pointerType !== "touch") pointAt(e.clientX, e.clientY); }, { passive: true });
+  document.addEventListener("pointerleave", release);
+  document.documentElement.addEventListener("mouseleave", release);
+  window.addEventListener("blur", release);
+  const onTouch = (e) => { const t0 = e.touches[0]; if (t0) pointAt(t0.clientX, t0.clientY); };
+  window.addEventListener("touchstart", onTouch, { passive: true });
+  window.addEventListener("touchmove", onTouch, { passive: true });
+  window.addEventListener("touchend", release, { passive: true });
+  window.addEventListener("touchcancel", release, { passive: true });
+
+  let resizeTimer = null;
+  window.addEventListener("resize", () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => { layout(); if (reduceMotion.matches) renderStatic(); }, 120);
+  });
+  document.addEventListener("visibilitychange", () => { if (document.hidden) stop(); else start(); });
+  reduceMotion.addEventListener?.("change", () => { if (reduceMotion.matches) { stop(); renderStatic(); } else start(); });
+}
+
+// ---------------------------------------------------------------------------
+// Use case modal: hero, How it works, workbench with shared variables, Try it
+// ---------------------------------------------------------------------------
+
+/**
+ * Modal state. `scopes` maps a scope id ("main", "helper-0", …) to its raw prompt
+ * text and type; `values` is shared by every scope so a variable filled once is
+ * filled everywhere. `tryArmed` records a first Try it click with empty variables
+ * so the second click proceeds anyway.
+ */
+const modalState = { useCase: null, scopes: {}, values: {}, tryArmed: {} };
+
+const typeChipHtml = (type, t) => {
+  const key = PROMPT_TYPE_ICONS[type] ? type : "general";
+  return `<span class="type-chip"><span class="material-symbols-outlined">${PROMPT_TYPE_ICONS[key]}</span>${escapeHtml(t.promptTypes[key])}</span>`;
+};
+
+/** Try it (green) + Copy prompt (blue) buttons; colours come from `.btn-try-it` / `.btn-copy-prompt`. */
+const promptActionButtonsHtml = (scope, type, t) => {
+  const acts = promptActions(type);
+  const tryBtn = acts.includes("try")
+    ? `<button type="button" class="nav-button btn-try-it" data-scope="${scope}"><span class="material-symbols-outlined">open_in_new</span>${escapeHtml(t.tryIt)}</button>` : "";
+  const copyBtn = `<button type="button" class="nav-button btn-copy-prompt" data-scope="${scope}"><span class="material-symbols-outlined">content_copy</span>${escapeHtml(t.copyPrompt)}</button>`;
+  return tryBtn + copyBtn;
+};
+
+/** Strip the redundant "Prompt to Generate " prefix from English helper titles. */
+const cleanHelperTitle = (title) => {
+  const s = String(title || "").replace(/^Prompt to Generate\s+/i, "");
+  return s.charAt(0).toUpperCase() + s.slice(1);
+};
+
+function openUseCaseModal(useCase) {
+  const overlay = document.getElementById("modalOverlay");
+  const body = document.getElementById("modalDynamicContent");
+  if (!overlay || !body) return;
+  const lang = appState.activeLanguage || "en";
+  const t = tr();
+  const trans = useCasesTranslations[useCase.id]?.[lang] || null;
+  const title = trans?.title || useCase.title;
+  const summary = trans?.summary || useCase.summary;
+  const steps = trans?.steps || useCase.steps || [];
+  const mainPrompt = trans?.prompt || useCase.prompt || "";
+  const proTip = trans?.proTip || useCase.proTip || "";
+  const connectorGuide = trans?.connectorGuide || useCase.connectorGuide;
+  const mainType = useCase.promptType || "general";
+  const helpers = (typeof useCaseHelperPrompts !== "undefined" && useCaseHelperPrompts[useCase.id])
+    ? (useCaseHelperPrompts[useCase.id][lang] || useCaseHelperPrompts[useCase.id].en || []) : [];
+
+  // Reset modal state for this use case
+  modalState.useCase = useCase;
+  modalState.values = {};
+  modalState.tryArmed = {};
+  modalState.scopes = { main: { text: mainPrompt, type: mainType } };
+  helpers.forEach((hp, i) => { modalState.scopes[`helper-${i}`] = { text: hp.prompt || "", type: hp.type || "general" }; });
+
+  // Header: feature chips + title
+  document.getElementById("modalTitle").textContent = title;
+  const verified = useCase.isVerified
+    ? `<span class="tag tag-full tag-verified"><span class="material-symbols-outlined">verified</span><span>${escapeHtml(t.verifiedLabel)}</span></span>` : "";
+  document.getElementById("modalTags").innerHTML = verified + (useCase.features || []).map(f =>
+    `<span class="tag tag-feature tag-full"><span class="material-symbols-outlined">${getTagIcon("feature", f)}</span><span>${escapeHtml(f)}</span></span>`).join("");
+
+  // Hero: infographic or a quiet placeholder tile of feature icons
+  const heroHtml = useCase.infographicUrl
+    ? `<a class="uc-hero" href="${escapeHtml(useCase.infographicUrl)}" target="_blank" rel="noopener" title="${escapeHtml(t.infographicOpen)}" aria-label="${escapeHtml(t.infographicOpen)}">
+         <img src="${escapeHtml(useCase.infographicUrl)}" alt="${escapeHtml(title)}" decoding="async" fetchpriority="high">
+       </a>`
+    : `<div class="uc-hero uc-hero-placeholder" aria-hidden="true">${(useCase.features || []).map(f =>
+        `<span class="material-symbols-outlined">${getTagIcon("feature", f)}</span>`).join("") || '<span class="material-symbols-outlined">auto_awesome</span>'}</div>`;
+
+  // Step 1 helpers, rendered with chips (no raw braces) and each collapsed
+  const helpersHtml = helpers.length ? `
+    <details class="helpers-group">
+      <summary class="helpers-group-summary"><span class="material-symbols-outlined">auto_awesome</span><span>${escapeHtml(t.helperHeading)}</span><span class="material-symbols-outlined chevron">expand_more</span></summary>
+      <div class="helpers-list">
+        ${helpers.map((hp, i) => `
+          <details class="helper-prompt-collapsible">
+            <summary class="helper-prompt-summary">
+              <span class="helper-prompt-title">${escapeHtml(lang === "en" ? cleanHelperTitle(hp.title) : hp.title)}</span>
+              ${typeChipHtml(hp.type || "general", t)}
+              <span class="material-symbols-outlined chevron">expand_more</span>
+            </summary>
+            <div class="helper-prompt-body">
+              <div class="prompt-raw-text helper-prompt-text" data-prompt-scope="helper-${i}">${renderPromptHtml(hp.prompt || "", {})}</div>
+              <div class="prompt-actions">${promptActionButtonsHtml(`helper-${i}`, hp.type || "general", t)}</div>
+            </div>
+          </details>`).join("")}
+      </div>
+    </details>` : "";
+
+  // Hero variables: union of keys from the main and helper prompts (one input per row)
+  const varKeys = collectVariableKeys([mainPrompt, ...helpers.map(h => h.prompt || "")]);
+  const varInputsHtml = varKeys.map((key, i) => {
+    const label = humanizeVariable(key);
+    return `<div class="variable-input-group">
+          <label class="variable-label" for="promptVarInput_${i}">${escapeHtml(label)}</label>
+          <input type="text" class="variable-input" id="promptVarInput_${i}" data-var-key="${escapeHtml(key)}" placeholder="${escapeHtml(label)}" autocomplete="off">
+        </div>`;
+  }).join("");
+
+  // Step 3 extras
+  const manualTipHtml = (useCase.connectors || []).length ? `
+    <div class="manual-tip-box"><span class="material-symbols-outlined manual-tip-icon">tips_and_updates</span>
+      <div class="manual-tip-content"><div class="manual-tip-title">${escapeHtml(t.manualTipTitle)}</div><p class="manual-tip-text">${escapeHtml(t.manualTipText)}</p></div></div>` : "";
+  const guideHtml = connectorGuide?.steps?.length ? `
+    <div class="setup-guide-box"><div class="setup-guide-header"><span class="material-symbols-outlined">settings_suggest</span>${escapeHtml(connectorGuide.name || "")} ${escapeHtml(t.setupGuideSuffix)}</div>
+      <ol class="setup-steps">${connectorGuide.steps.map(s => `<li>${escapeHtml(s)}</li>`).join("")}</ol></div>` : "";
+  const proTipHtml = proTip ? `
+    <div class="pro-tip-box"><span class="material-symbols-outlined pro-tip-icon">lightbulb</span>
+      <div class="pro-tip-content"><div class="pro-tip-title">${escapeHtml(t.adoptionProTip)}</div><p class="pro-tip-text">${escapeHtml(proTip)}</p></div></div>` : "";
+
+  // Hero variables column: filled once, interpolated into the main and every helper prompt
+  const varsPanelHtml = varKeys.length ? `
+    <section class="uc-vars" id="wbVariables" aria-labelledby="ucVarsTitle">
+      <div class="uc-vars-head">
+        <span class="material-symbols-outlined">tune</span>
+        <h4 class="uc-vars-title" id="ucVarsTitle">${escapeHtml(t.fillVariablesTitle)}</h4>
+        <span class="wb-count">${varKeys.length}</span>
+      </div>
+      <p class="uc-vars-hint">${escapeHtml(t.fillVariablesHint)}</p>
+      <div class="uc-vars-list">${varInputsHtml}</div>
+    </section>` : "";
+
+  body.innerHTML = `
+    <div class="uc-hero-row">
+      ${heroHtml}
+      <div class="uc-hero-side">
+        <p class="uc-summary">${escapeHtml(summary)}</p>
+        <div class="uc-actions"><div class="uc-pref">${prefButtonsHtml(useCase, t)}</div></div>
+        ${varsPanelHtml}
+      </div>
+    </div>
+
+    <section class="uc-how">
+      <h4 class="section-label">${escapeHtml(t.operationalSteps)}</h4>
+      <ol class="steps-list">
+        <li class="step-item">
+          <div class="step-header"><div class="step-num">1</div>
+            <div class="step-info"><div class="step-title">${escapeHtml(t.step1Title)}</div><div class="step-desc">${escapeHtml(steps[0] || "")}</div></div></div>
+          ${helpersHtml}
+        </li>
+        <li class="step-item">
+          <div class="step-header"><div class="step-num">2</div>
+            <div class="step-info"><div class="step-title">${escapeHtml(t.step2Title)}</div><div class="step-desc">${escapeHtml(steps[1] || "")}</div></div></div>
+          <div class="workbench">
+            <details class="wb-panel" id="wbPrompt">
+              <summary class="wb-summary"><span class="material-symbols-outlined">description</span><span>${escapeHtml(t.samplePrompt)}</span>${typeChipHtml(mainType, t)}<span class="material-symbols-outlined chevron">expand_more</span></summary>
+              <div class="prompt-raw-text" id="modalPromptDisplay" data-prompt-scope="main">${renderPromptHtml(mainPrompt, {})}</div>
+              <div class="prompt-actions">${promptActionButtonsHtml("main", mainType, t)}</div>
+            </details>
+          </div>
+        </li>
+        <li class="step-item">
+          <div class="step-header"><div class="step-num">3</div>
+            <div class="step-info"><div class="step-title">${escapeHtml(t.step3Title)}</div><div class="step-desc">${escapeHtml(steps[2] || "")}</div></div></div>
+          ${manualTipHtml}${guideHtml}${proTipHtml}
+        </li>
+      </ol>
+    </section>`;
+
+  bindModalBody(body);
+  overlay.classList.add("active");
+  document.body.classList.add("modal-open");
+  body.scrollTop = 0;
+  recordView(useCase);
+}
+
+/**
+ * Count a view on every modal open: bump the counter optimistically on the card
+ * and in the modal, then reconcile with the server's authoritative total.
+ */
+function recordView(useCase) {
+  useCase.viewCount = (Number(useCase.viewCount) || 0) + 1;
+  syncPrefButtons(useCase);
+  fetch("/api/use-cases/view", {
+    method: "POST", headers: { "Content-Type": "application/json" }, credentials: "same-origin",
+    body: JSON.stringify({ useCaseId: useCase.id })
+  })
+    .then(r => (r.ok ? r.json() : null))
+    .then(data => {
+      if (data && Number.isFinite(Number(data.viewCount))) {
+        useCase.viewCount = Math.max(Number(data.viewCount), 0);
+        syncPrefButtons(useCase);
+      }
+    })
+    .catch(() => {});
+}
+
+/** Re-render every prompt display so chips reflect the shared values. */
+function refreshPromptDisplays() {
+  document.querySelectorAll("#modalDynamicContent [data-prompt-scope]").forEach(el => {
+    const scope = modalState.scopes[el.dataset.promptScope];
+    if (scope) el.innerHTML = renderPromptHtml(scope.text, modalState.values);
+  });
+}
+
+/** Focus the hero variables field for `key`, scroll it into view and pulse it. */
+function focusVariable(key) {
+  const input = document.querySelector(`#modalDynamicContent .variable-input[data-var-key="${CSS.escape(key)}"]`);
+  if (!input) return;
+  input.scrollIntoView({ behavior: "smooth", block: "center" });
+  input.focus({ preventScroll: true });
+  input.classList.remove("pulse-focus");
+  void input.offsetWidth; // restart the CSS animation
+  input.classList.add("pulse-focus");
+}
+
+function bindModalBody(body) {
+  if (body.dataset.bound) return;
+  body.dataset.bound = "1";
+  body.addEventListener("input", (e) => {
+    const input = e.target.closest(".variable-input");
+    if (!input) return;
+    modalState.values[input.dataset.varKey] = input.value;
+    modalState.tryArmed = {};
+    refreshPromptDisplays();
+  });
+  body.addEventListener("click", (e) => {
+    const chip = e.target.closest(".var-chip");
+    if (chip) { e.preventDefault(); focusVariable(chip.dataset.varKey); return; }
+    const tryBtn = e.target.closest(".btn-try-it");
+    if (tryBtn) { onTryIt(tryBtn.dataset.scope); return; }
+    const copyBtn = e.target.closest(".btn-copy-prompt");
+    if (copyBtn) { onCopyPrompt(copyBtn.dataset.scope, copyBtn); return; }
+    const like = e.target.closest(".btn-like");
+    if (like) togglePreference(like.dataset.ucId);
+  });
+}
+
+async function onCopyPrompt(scopeId, btn) {
+  const scope = modalState.scopes[scopeId];
+  if (!scope) return;
+  const t = tr();
+  if (await copyText(interpolatePrompt(scope.text, modalState.values))) {
+    showToast(t.promptCopiedSuccess);
+    if (btn) {
+      const original = btn.innerHTML;
+      btn.innerHTML = `<span class="material-symbols-outlined">check</span>${escapeHtml(t.copied)}`;
+      setTimeout(() => { btn.innerHTML = original; }, 1800);
+    }
+  }
+}
+
+/**
+ * Try it flow:
+ *  1. Empty variables on the first click -> open the panel and focus the first one.
+ *     A second click proceeds with placeholders left in.
+ *  2. With a GE app link -> open it in a new tab and log the try (fire-and-forget).
+ *     Very long links (> 7500 chars) may be truncated, so the prompt is copied too.
+ *  3. Without a link (or for admins previewing) -> copy and tell the user to paste.
+ */
+async function onTryIt(scopeId) {
+  const scope = modalState.scopes[scopeId];
+  if (!scope) return;
+  const t = tr();
+  const empty = extractPromptVariables(scope.text).filter(v => !(modalState.values[v.key] || "").trim());
+  if (empty.length && !modalState.tryArmed[scopeId]) {
+    modalState.tryArmed[scopeId] = true;
+    focusVariable(empty[0].key);
+    showToast(t.tryFillFirst, "warning");
+    return;
+  }
+  modalState.tryArmed[scopeId] = false;
+  const prompt = interpolatePrompt(scope.text, modalState.values);
+  const url = buildTryItUrl(appState.geAppLink, prompt);
+  if (!url) {
+    await copyText(prompt);
+    showToast(t.tryCopiedPaste);
+    return;
+  }
+  window.open(url, "_blank", "noopener");
+  fetch("/api/use-cases/try", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ useCaseId: modalState.useCase?.id })
+  }).catch(() => {});
+  if (url.length > 7500) {
+    await copyText(prompt);
+    showToast(t.tryLongCopied);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Token auth: forgot password + ?verify= / ?reset= set-password flow
+// ---------------------------------------------------------------------------
+function showAuthCard(id) {
+  ["loginCard", "forgotCard", "setPasswordCard", "resetCard", "profileCard"].forEach(cid => {
+    const el = document.getElementById(cid);
+    if (el) el.style.display = cid === id ? "block" : "none";
+  });
+  const overlay = document.getElementById("wizardOverlay");
+  if (overlay) overlay.style.display = "flex";
+}
+
+function setupForgotPasswordHandlers() {
+  const link = document.getElementById("btnForgotPassword");
+  const back = document.getElementById("btnForgotBack");
+  const form = document.getElementById("formForgotPassword");
+  if (!form || form.dataset.bound) return;
+  form.dataset.bound = "1";
+  link?.addEventListener("click", () => {
+    showAuthCard("forgotCard");
+    const login = document.getElementById("loginEmail")?.value || "";
+    const fe = document.getElementById("forgotEmail");
+    if (fe && login.includes("@")) fe.value = login;
+    document.getElementById("forgotMsg").hidden = true;
+  });
+  back?.addEventListener("click", () => showAuthCard("loginCard"));
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const email = document.getElementById("forgotEmail").value.trim();
+    const msg = document.getElementById("forgotMsg");
+    if (!isValidEmail(email)) { showInline(msg, escapeHtml(tr().emailInvalid), "error"); return; }
+    const btn = document.getElementById("btnForgotSubmit");
+    btn.disabled = true;
+    await apiJson("/api/auth/forgot-password", { method: "POST", body: { email } });
+    btn.disabled = false;
+    // Always the same message, so the form never reveals which emails exist
+    showInline(msg, escapeHtml(tr().forgotDone), "info");
+  });
+}
+
+/** Show the set-password card for a verify/reset token. */
+function startTokenFlow(token, kind) {
+  const t = tr();
+  showAuthCard("setPasswordCard");
+  document.getElementById("setPasswordTitle").textContent = kind === "verify" ? t.setPwTitleVerify : t.setPwTitleReset;
+  const form = document.getElementById("formSetPassword");
+  const msg = document.getElementById("setPasswordMsg");
+  form.onsubmit = async (e) => {
+    e.preventDefault();
+    const p1 = document.getElementById("setPassword1").value;
+    const p2 = document.getElementById("setPassword2").value;
+    if (p1.length < 8) { showInline(msg, escapeHtml(tr().pwTooShort), "error"); return; }
+    if (p1 !== p2) { showInline(msg, escapeHtml(tr().pwMismatch), "error"); return; }
+    const btn = document.getElementById("btnSetPasswordSubmit");
+    btn.disabled = true;
+    const { ok, status, data } = await apiJson("/api/auth/complete-token", { method: "POST", body: { token, password: p1 } });
+    btn.disabled = false;
+    if (ok) {
+      showToast(tr().pwSaved);
+      sessionStorage.setItem("ge_current_view", "admin");
+      setTimeout(() => window.location.reload(), 600);
+    } else {
+      showInline(msg, escapeHtml(status === 0 ? tr().networkError : (data.message || data.error || tr().tokenInvalid)), "error");
+    }
+  };
+}
+
+/** Read ?verify= / ?reset= once, then strip the query string from the URL. */
+function readAuthTokenFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const verify = params.get("verify");
+  const reset = params.get("reset");
+  if (verify || reset) {
+    history.replaceState(null, "", window.location.pathname + window.location.hash);
+    return { token: verify || reset, kind: verify ? "verify" : "reset" };
+  }
+  return null;
+}
+
+// ---------------------------------------------------------------------------
+// Admin portal: tabs
+// ---------------------------------------------------------------------------
+const ADMIN_TAB_SECTIONS = {
+  users: "adminTabUsers", analytics: "adminTabAnalytics", cases: "adminTabCases",
+  feedbacks: "adminTabFeedbacks", settings: "adminTabSettings"
+};
+
+/** Tabs the signed-in admin may see. Pure. */
+const allowedAdminTabs = (state) => [
+  ...(state.isAssist ? [] : ["users"]),
+  "analytics", "cases", "feedbacks",
+  ...(state.isSuper ? ["settings"] : [])
+];
+
+function showAdminTab(name) {
+  const allowed = allowedAdminTabs(appState);
+  const tab = allowed.includes(name) ? name : allowed[0];
+  currentAdminTab = tab;
+  sessionStorage.setItem("ge_current_admin_tab", tab);
+  document.querySelectorAll(".admin-tab-item").forEach(btn => {
+    const on = btn.dataset.tab === tab;
+    btn.classList.toggle("active", on);
+    btn.setAttribute("aria-selected", String(on));
+    btn.hidden = !allowed.includes(btn.dataset.tab);
+  });
+  Object.entries(ADMIN_TAB_SECTIONS).forEach(([k, id]) => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = k === tab ? "block" : "none";
+  });
+  if (tab === "users") { loadAdminUsers(); if (appState.isSuper) loadAdminAdmins(); }
+  else if (tab === "analytics") loadAdminStats();
+  else if (tab === "cases") loadAdminUseCases();
+  else if (tab === "feedbacks") loadAdminFeedbacks();
+  else if (tab === "settings") loadSmtpSettings();
+}
+
+/** Switch from the admin portal to the learning portal preview. */
+function enterLearningPortalPreview() {
+  sessionStorage.setItem("ge_current_view", "user");
+  document.getElementById("adminPortal").style.display = "none";
+  document.getElementById("appLayout").style.display = "flex";
+  appState.userRole = "Lecturer";
+  appState.institutionLevel = "University & College";
+  updateAccountMenus();
+  updateSidebarContextUI();
+  updateUILanguage();
+  loadUseCasesFromServer().then(() => renderUseCases());
+}
+
+// ---------------------------------------------------------------------------
+// Admin: Users table + edit modal
+// ---------------------------------------------------------------------------
+const geLinkCellHtml = (link, t) => {
+  if (!link) return `<span class="muted">${escapeHtml(t.notSet)}</span>`;
+  let host = link;
+  try { host = new URL(link).host; } catch (_) { /* keep raw */ }
+  return `<a class="ge-link" href="${escapeHtml(link)}" target="_blank" rel="noopener" title="${escapeHtml(link)}">${escapeHtml(host)}<span class="material-symbols-outlined">open_in_new</span></a>`;
+};
+
+let editingUser = null;
+
+function openUserEditModal(u) {
+  editingUser = u;
+  const modal = document.getElementById("adminUserEditModal");
+  document.getElementById("editUserEmail").value = u.email || "";
+  document.getElementById("editUserGeLink").value = u.geAppLink || "";
+  ["editUserEmail", "editUserGeLink"].forEach(id => setFieldError(id, ""));
+  document.getElementById("editUserFeedback").hidden = true;
+  document.getElementById("editUserTempPw").hidden = true;
+  modal.classList.add("active");
+  setTimeout(() => document.getElementById("editUserEmail").focus(), 50);
+}
+
+function closeUserEditModal() {
+  document.getElementById("adminUserEditModal")?.classList.remove("active");
+  editingUser = null;
+}
+
+function bindUserEditModal() {
+  const form = document.getElementById("formAdminEditUser");
+  if (!form || form.dataset.bound) return;
+  form.dataset.bound = "1";
+  document.getElementById("adminUserEditClose").onclick = closeUserEditModal;
+  document.getElementById("btnEditUserCancel").onclick = closeUserEditModal;
+  document.getElementById("adminUserEditModal").addEventListener("click", (e) => {
+    if (e.target.id === "adminUserEditModal") closeUserEditModal();
+  });
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!editingUser) return;
+    const t = tr();
+    const email = document.getElementById("editUserEmail").value.trim();
+    const geAppLink = document.getElementById("editUserGeLink").value.trim();
+    const emailErr = isValidEmail(email) ? "" : t.emailInvalid;
+    const linkErr = !geAppLink || isValidHttpsUrl(geAppLink) ? "" : t.geLinkInvalid;
+    setFieldError("editUserEmail", emailErr);
+    setFieldError("editUserGeLink", linkErr);
+    if (emailErr || linkErr) return;
+    const btn = document.getElementById("btnEditUserSave");
+    btn.disabled = true;
+    const { ok, data } = await apiJson("/api/admin/users", {
+      method: "PUT", body: { originalEmail: editingUser.email, email, geAppLink }
+    });
+    btn.disabled = false;
+    if (ok) {
+      showToast(t.userSaved);
+      closeUserEditModal();
+      loadAdminUsers();
+    } else if (data.errors && (data.errors.email || data.errors.geAppLink)) {
+      setFieldError("editUserEmail", data.errors.email || "");
+      setFieldError("editUserGeLink", data.errors.geAppLink || "");
+    } else {
+      showInline(document.getElementById("editUserFeedback"), escapeHtml(errText(data)), "error");
+    }
+  });
+
+  document.getElementById("btnEditUserReset").addEventListener("click", async () => {
+    if (!editingUser) return;
+    const t = tr();
+    if (!confirm(fmt(t.confirmReset, { email: editingUser.email }))) return;
+    const { ok, data } = await apiJson("/api/admin/users/reset", { method: "PUT", body: { email: editingUser.email } });
+    const box = document.getElementById("editUserTempPw");
+    if (ok && data.tempPassword) {
+      showInline(box, copyRowHtml(t.tempPasswordLabel, data.tempPassword), "success");
+      loadAdminUsers();
+    } else {
+      showInline(box, escapeHtml(errText(data)), "error");
+    }
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Admin: Admins panel (super only)
+// ---------------------------------------------------------------------------
+async function loadAdminAdmins() {
+  const panel = document.getElementById("adminAdminsPanel");
+  const tbody = document.getElementById("adminAdminsTableBody");
+  if (!panel || !tbody) return;
+  panel.hidden = !appState.isSuper;
+  if (!appState.isSuper) return;
+  bindAdminsPanel();
+  const t = tr();
+  tbody.innerHTML = `<tr><td colspan="5" class="table-empty">${escapeHtml(t.loading)}</td></tr>`;
+  const { ok, data } = await apiJson("/api/admin/admins");
+  const list = Array.isArray(data) ? data : (Array.isArray(data.admins) ? data.admins : []);
+  if (!ok && !list.length) { tbody.innerHTML = `<tr><td colspan="5" class="table-empty">${escapeHtml(errText(data))}</td></tr>`; return; }
+  if (!list.length) { tbody.innerHTML = `<tr><td colspan="5" class="table-empty">${escapeHtml(t.adminsEmpty)}</td></tr>`; return; }
+  tbody.innerHTML = list.map(a => {
+    const verified = a.status ? a.status === "active" : isOn(a.isVerified);
+    return `<tr>
+      <td class="cell-strong">${escapeHtml(a.email)}</td>
+      <td>${escapeHtml(a.role === "super" ? t.roleSuper : t.roleAssist)}</td>
+      <td><span class="status-dot ${verified ? "is-ok" : "is-pending"}">${escapeHtml(verified ? t.statusActive : t.statusInviteSent)}</span></td>
+      <td class="muted">${escapeHtml(a.invitedBy || "")}${a.createdAt ? ` · ${escapeHtml(formatDate(a.createdAt))}` : ""}</td>
+      <td class="col-actions"><div class="row-actions">
+        ${verified ? "" : `<button type="button" class="nav-button btn-sm btn-resend-admin" data-email="${escapeHtml(a.email)}">${escapeHtml(t.resend)}</button>`}
+        <button type="button" class="nav-button btn-sm btn-danger btn-remove-admin" data-email="${escapeHtml(a.email)}">${escapeHtml(t.remove)}</button>
+      </div></td>
+    </tr>`;
+  }).join("");
+}
+
+/** Show the invite outcome; a previewLink means email isn't configured (demo mode). */
+function showInviteResult(data, toastMsg) {
+  const box = document.getElementById("adminInviteResult");
+  const t = tr();
+  if (data.previewLink) showInline(box, `<p>${escapeHtml(t.invitePreview)}</p>${copyRowHtml("", data.previewLink)}`, "info");
+  else box.hidden = true;
+  showToast(toastMsg);
+}
+
+function bindAdminsPanel() {
+  const form = document.getElementById("formInviteAdmin");
+  if (!form || form.dataset.bound) return;
+  form.dataset.bound = "1";
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const t = tr();
+    const email = document.getElementById("inputInviteAdminEmail").value.trim();
+    const role = document.getElementById("selectInviteAdminRole").value;
+    const box = document.getElementById("adminInviteResult");
+    if (!isValidEmail(email)) { showInline(box, escapeHtml(t.emailInvalid), "error"); return; }
+    const btn = document.getElementById("btnSendInvite");
+    btn.disabled = true;
+    const { ok, data } = await apiJson("/api/admin/admins", { method: "POST", body: { email, role } });
+    btn.disabled = false;
+    if (ok) { form.reset(); showInviteResult(data, t.inviteSentToast); loadAdminAdmins(); }
+    else showInline(box, escapeHtml(errText(data)), "error");
+  });
+  document.getElementById("adminAdminsTableBody").addEventListener("click", async (e) => {
+    const t = tr();
+    const resend = e.target.closest(".btn-resend-admin");
+    const remove = e.target.closest(".btn-remove-admin");
+    if (resend) {
+      resend.disabled = true;
+      const { ok, data } = await apiJson("/api/admin/admins/resend", { method: "POST", body: { email: resend.dataset.email } });
+      resend.disabled = false;
+      if (ok) showInviteResult(data, t.resentToast);
+      else showToast(errText(data), "warning");
+    } else if (remove) {
+      if (!confirm(fmt(t.confirmRemoveAdmin, { email: remove.dataset.email }))) return;
+      const { ok, data } = await apiJson("/api/admin/admins", { method: "DELETE", body: { email: remove.dataset.email } });
+      if (ok) { showToast(t.removedToast); loadAdminAdmins(); }
+      else showToast(errText(data), "warning");
+    }
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Admin: infographics (super only)
+// ---------------------------------------------------------------------------
+async function generateInfographic(id) {
+  const { ok, data } = await apiJson(`/api/admin/use-cases/${encodeURIComponent(id)}/infographic`, { method: "POST" });
+  if (ok && data.infographicUrl) {
+    [appState.loadedAdminUseCases || [], useCasesDb].forEach(list => {
+      const uc = list.find(u => u.id === id);
+      if (uc) uc.infographicUrl = data.infographicUrl;
+    });
+    showToast(tr().infographicDone);
+    return data.infographicUrl;
+  }
+  showToast(`${tr().infographicFailed}${data.message || data.error ? `: ${data.message || data.error}` : ""}`, "warning");
+  return null;
+}
+
+/**
+ * Synchronous server batch (~2-3 min). The button shows a spinner and the
+ * "generating" label for the whole request, then the summary toast.
+ */
+async function generateMissingInfographics(btn) {
+  const t = tr();
+  const missing = (appState.loadedAdminUseCases || []).filter(uc => !uc.infographicUrl);
+  if (!missing.length) { showToast(t.genMissingNone); return; }
+  const original = btn.innerHTML;
+  btn.disabled = true;
+  btn.classList.add("is-busy");
+  btn.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(t.generating)}`;
+  showToast(t.genMissingProgress);
+  const { ok, data } = await apiJson("/api/admin/infographics/generate-missing", { method: "POST" });
+  btn.disabled = false;
+  btn.classList.remove("is-busy");
+  btn.innerHTML = original;
+  const results = Array.isArray(data.results) ? data.results : [];
+  if (!ok && !results.length) { showToast(errText(data), "warning"); return; }
+  const okCount = Number(data.generated ?? results.filter(r => r.success).length);
+  const failCount = Number(data.failed ?? results.length - okCount);
+  showToast(fmt(t.genMissingDone, { ok: okCount, fail: failCount }), failCount ? "warning" : "success");
+  loadAdminUseCases();
+  loadUseCasesFromServer();
+}
+
+function updateCaseInfographicPreview(uc) {
+  const t = tr();
+  const url = uc?.infographicUrl || "";
+  const link = document.getElementById("formCaseInfographicLink");
+  const img = document.getElementById("formCaseInfographicImg");
+  const none = document.getElementById("formCaseInfographicNone");
+  const btn = document.getElementById("btnFormCaseGenInfographic");
+  if (!link) return;
+  link.hidden = !url;
+  if (url) { link.href = url; img.src = url; img.alt = uc.title || ""; }
+  none.hidden = Boolean(url);
+  btn.hidden = !(appState.isSuper && uc && uc.id);
+  document.getElementById("btnFormCaseGenInfographicText").textContent = url ? t.regenerate : t.generate;
+  btn.onclick = async () => {
+    btn.disabled = true;
+    document.getElementById("btnFormCaseGenInfographicText").textContent = t.generating;
+    const newUrl = await generateInfographic(uc.id);
+    btn.disabled = false;
+    updateCaseInfographicPreview(newUrl ? { ...uc, infographicUrl: newUrl } : uc);
+    if (newUrl) loadAdminUseCases();
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Admin: Settings → Email (super only)
+// ---------------------------------------------------------------------------
+const SMTP_PRESETS = {
+  gmail: { host: "smtp.gmail.com", port: 587, security: "starttls", hint: "hintGmail" },
+  outlook: { host: "smtp-mail.outlook.com", port: 587, security: "starttls", hint: "hintOutlook" },
+  m365: { host: "smtp.office365.com", port: 587, security: "starttls", hint: "hintM365" },
+  custom: { hint: "" }
+};
+
+/** Which preset matches a saved host (for re-opening the form). Pure. */
+const presetForHost = (host) =>
+  Object.keys(SMTP_PRESETS).find(k => SMTP_PRESETS[k].host && SMTP_PRESETS[k].host === host) || "custom";
+
+let smtpLoaded = null;
+
+/**
+ * Normalise GET/PUT /api/admin/settings/smtp:
+ *   { config:{host,port,security,user,hasPassword,fromName,fromEmail,enabled},
+ *     status:{mode:'demo'|'connected'|'failed'|'not_tested', lastTestAt, lastTestError},
+ *     passwordDecryptFailed, updatedBy, updatedAt }
+ * status.mode maps to testOk: connected → true, failed → false, otherwise null.
+ */
+function normaliseSmtp(data) {
+  const c = data.config || {};
+  const st = data.status || {};
+  const mode = st.mode || "";
+  return {
+    host: c.host || "", port: c.port || "", security: c.security || "starttls",
+    user: c.user || "", hasPassword: Boolean(c.hasPassword),
+    fromName: c.fromName || "", fromEmail: c.fromEmail || "",
+    enabled: c.enabled === undefined ? true : isOn(c.enabled),
+    mode: mode === "demo" ? "demo" : "",
+    testOk: mode === "connected" ? true : (mode === "failed" ? false : null),
+    testAt: st.lastTestAt || null,
+    testError: st.lastTestError || "",
+    passwordDecryptFailed: Boolean(data.passwordDecryptFailed),
+    updatedBy: data.updatedBy || "", updatedAt: data.updatedAt || null
+  };
+}
+
+function renderSmtpStatus(s) {
+  const t = tr();
+  const pill = document.getElementById("smtpStatusPill");
+  if (!pill) return;
+  let cls = "is-muted", text = t.statusNotTested;
+  if (s.mode === "demo") { cls = "is-muted"; text = t.statusDemo; }
+  else if (s.testOk === true) { cls = "is-ok"; text = `${t.statusConnected}${s.testAt ? ` · ${formatDateTime(s.testAt)}` : ""}`; }
+  else if (s.testOk === false) { cls = "is-error"; text = `${t.statusFailed}${s.testError ? `: ${s.testError}` : ""}`; }
+  pill.className = `status-pill ${cls}`;
+  pill.textContent = text;
+  pill.title = text;
+  const changed = document.getElementById("smtpLastChanged");
+  if (changed) changed.textContent = s.updatedBy ? fmt(t.lastChanged, { by: s.updatedBy, date: formatDateTime(s.updatedAt) }) : "";
+}
+
+function applyPresetHint() {
+  const key = document.getElementById("smtpPreset").value;
+  const hintKey = SMTP_PRESETS[key]?.hint;
+  document.getElementById("smtpPresetHint").textContent = hintKey ? tr()[hintKey] : "";
+}
+
+function updateSecurityWarning() {
+  document.getElementById("smtpSecurityWarn").hidden = document.getElementById("smtpSecurity").value !== "none";
+}
+
+function readSmtpForm() {
+  const v = (id) => document.getElementById(id).value.trim();
+  const body = {
+    host: v("smtpHost"), port: Number(v("smtpPort")) || "", security: v("smtpSecurity"),
+    user: v("smtpUser"), fromName: v("smtpFromName"), fromEmail: v("smtpFromEmail"),
+    enabled: document.getElementById("smtpEnabled").checked
+  };
+  const pw = document.getElementById("smtpPassword").value;
+  if (pw) body.password = pw; // blank keeps the stored password
+  return body;
+}
+
+function validateSmtpForm(body) {
+  const t = tr();
+  const errs = {
+    smtpHost: body.host ? "" : t.hostRequired,
+    smtpPort: body.port >= 1 && body.port <= 65535 ? "" : t.portInvalid,
+    smtpFromEmail: !body.fromEmail || isValidEmail(body.fromEmail) ? "" : t.emailInvalid
+  };
+  Object.entries(errs).forEach(([id, m]) => setFieldError(id, m));
+  return !Object.values(errs).some(Boolean);
+}
+
+async function loadSmtpSettings() {
+  bindSmtpForm();
+  const t = tr();
+  const { ok, data } = await apiJson("/api/admin/settings/smtp");
+  if (!ok) {
+    showInline(document.getElementById("smtpTestResult"), escapeHtml(t.settingsLoadFailed), "error");
+    renderSmtpStatus(normaliseSmtp({}));
+    return;
+  }
+  document.getElementById("smtpTestResult").hidden = true;
+  const s = normaliseSmtp(data);
+  smtpLoaded = s;
+  document.getElementById("smtpPreset").value = presetForHost(s.host);
+  document.getElementById("smtpHost").value = s.host;
+  document.getElementById("smtpPort").value = s.port;
+  document.getElementById("smtpSecurity").value = ["starttls", "ssl", "none"].includes(s.security) ? s.security : "starttls";
+  document.getElementById("smtpUser").value = s.user;
+  const pw = document.getElementById("smtpPassword");
+  pw.value = "";
+  pw.placeholder = s.hasPassword && !s.passwordDecryptFailed ? t.smtpPasswordSaved : "";
+  setFieldError("smtpPassword", s.passwordDecryptFailed ? t.smtpPasswordReenter : "");
+  document.getElementById("smtpFromName").value = s.fromName;
+  document.getElementById("smtpFromEmail").value = s.fromEmail;
+  document.getElementById("smtpEnabled").checked = s.enabled;
+  const testTo = document.getElementById("smtpTestTo");
+  if (!testTo.value && isValidEmail(appState.userEmail)) testTo.value = appState.userEmail;
+  ["smtpHost", "smtpPort", "smtpFromEmail"].forEach(id => setFieldError(id, ""));
+  applyPresetHint();
+  updateSecurityWarning();
+  renderSmtpStatus(s);
+}
+
+function bindSmtpForm() {
+  const form = document.getElementById("formSmtpSettings");
+  if (!form || form.dataset.bound) return;
+  form.dataset.bound = "1";
+  document.getElementById("smtpPreset").addEventListener("change", (e) => {
+    const p = SMTP_PRESETS[e.target.value];
+    // Presets only pre-fill; every field stays editable afterwards
+    if (p.host) {
+      document.getElementById("smtpHost").value = p.host;
+      document.getElementById("smtpPort").value = p.port;
+      document.getElementById("smtpSecurity").value = p.security;
+    }
+    applyPresetHint();
+    updateSecurityWarning();
+  });
+  document.getElementById("smtpSecurity").addEventListener("change", updateSecurityWarning);
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const body = readSmtpForm();
+    if (!validateSmtpForm(body)) return;
+    const btn = document.getElementById("btnSmtpSave");
+    btn.disabled = true;
+    const { ok, data } = await apiJson("/api/admin/settings/smtp", { method: "PUT", body });
+    btn.disabled = false;
+    if (ok) { showToast(tr().settingsSaved); loadSmtpSettings(); return; }
+    // 400 → { errors: { host|port|security|fromEmail } } mapped onto the field error slots
+    const fieldMap = { host: "smtpHost", port: "smtpPort", security: "smtpSecurity", fromEmail: "smtpFromEmail" };
+    Object.entries(data.errors || {}).forEach(([k, m]) => fieldMap[k] && setFieldError(fieldMap[k], m));
+    showInline(document.getElementById("smtpTestResult"), escapeHtml(errText(data)), "error");
+  });
+
+  document.getElementById("btnSmtpTest").addEventListener("click", async () => {
+    const t = tr();
+    const body = readSmtpForm();
+    if (!validateSmtpForm(body)) return;
+    const to = document.getElementById("smtpTestTo").value.trim();
+    if (to) body.to = to;
+    const btn = document.getElementById("btnSmtpTest");
+    const box = document.getElementById("smtpTestResult");
+    btn.disabled = true;
+    showInline(box, escapeHtml(t.testSending), "info");
+    const { ok, data } = await apiJson("/api/admin/settings/smtp/test", { method: "POST", body });
+    btn.disabled = false;
+    if (ok && data.ok !== false) {
+      showInline(box, escapeHtml(data.message || t.testOk), "success");
+      renderSmtpStatus({ ...(smtpLoaded || {}), mode: "", testOk: true, testAt: new Date().toISOString() });
+    } else {
+      const err = data.error || data.message || t.statusFailed;
+      showInline(box, `<strong>${escapeHtml(t.statusFailed)}:</strong> ${escapeHtml(err)}`, "error");
+      renderSmtpStatus({ ...(smtpLoaded || {}), mode: "", testOk: false, testError: err });
+    }
+  });
+}

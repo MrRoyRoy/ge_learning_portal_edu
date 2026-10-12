@@ -45,3 +45,15 @@ variable "project_number" {
   type        = string
   default     = ""
 }
+
+variable "settings_encryption_key" {
+  description = "Secret used to derive the AES-256-GCM key that encrypts the SMTP password stored in the app_settings table. Declared as sensitive. Supply via TF_VAR_settings_encryption_key. Changing it makes the stored SMTP password unreadable (it must be re-entered)."
+  type        = string
+  sensitive   = true
+}
+
+variable "infographic_bucket_name" {
+  description = "Globally unique name of the public GCS bucket that stores generated use case infographics."
+  type        = string
+  default     = "ge-edu-demo-usecase-infographics"
+}

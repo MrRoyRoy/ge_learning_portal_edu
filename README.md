@@ -1,320 +1,353 @@
-# Gemini Enterprise - Academic Adoption & Playbook Portal
+# Gemini Enterprise - Edu Portal
 
-[![Live Deployment](https://img.shields.io/badge/Live-Google%20Cloud%20Run-blue?style=for-the-badge&logo=google-cloud&logoColor=white)](#cloud-production-deployment)
-[![Platform Architecture](https://img.shields.io/badge/Architecture-Vanilla%20Minimalism-emerald?style=for-the-badge)](#technology-stack)
-[![Language Support](https://img.shields.io/badge/Localization-EN%20%7C%20ZH--TW%20%7C%20ZH--CN-purple?style=for-the-badge)](#localization-dictionaries)
+[![Cloud Run](https://img.shields.io/badge/Runs%20on-Google%20Cloud%20Run-blue?style=for-the-badge&logo=google-cloud&logoColor=white)](#-deployment)
+[![Stack](https://img.shields.io/badge/Stack-Express%20%2B%20Vanilla%20JS-emerald?style=for-the-badge)](#-architecture)
+[![Languages](https://img.shields.io/badge/Languages-EN%20%7C%20ZH--TW%20%7C%20ZH--CN-purple?style=for-the-badge)](#-localization)
 
-Welcome to the **Gemini Enterprise Edu Portal**, a high-fidelity, premium academic adoption roadmap and playbook orchestration platform. Custom-tailored for academic institutions, this system provides educational leaders, lecturers, support staff, and students with interactive, role-specific Gemini adoption pathways, interactive sandboxes, visual analytics, and persistent feedback collection loops.
-
----
-
-## 📖 Table of Contents
-1. [Core Features](#-core-features)
-2. [Technology Stack](#-technology-stack)
-3. [Architecture & DB Schemas](#-architecture--db-schemas)
-4. [Role-Specific Onboarding & Workflows](#-role-specific-onboarding--workflows)
-5. [Local Development & Setup](#-local-development--setup)
-6. [Cloud Production Deployment](#-cloud-production-deployment)
-7. [Version Control & Release Workflow](#-version-control--release-workflow)
+The **Gemini Enterprise - Edu Portal** is a playbook library for academic institutions adopting Gemini Enterprise. Leaders, lecturers, support staff and students browse role-specific use cases, fill in a prompt's variables once, then copy the prompt or launch it straight into their Gemini Enterprise app. Admins get user provisioning, analytics, playbook editing, infographic generation and email settings.
 
 ---
 
-## 🌟 Core Features
-
-### 📅 Dual-Track Chronological Timeline (View A)
-A symmetrical, highly structured horizontal roadmap divided into key academic semesters: *August*, *September*, *October – November 15*, and *November 16 – January 15*.
-* **Track 1 (Semester-Restricted Milestones)**: Houses four color-coded phase nodes (Indigo, Amber, Emerald, Blue, Coral, Purple) complete with separate progress tracking bars (Tech Provisioning, Launch & Onboard, Evaluation Pilot, Exam Prep & Audit). Clicking nodes slides open a dynamic panel allowing supervisors to assign/unassign adoption playbooks.
-* **Track 2 (Continuous Rolling Initiatives)**: Designed as a continuous, thick progress pipeline capsule with interactive arrowhead anchors to represent semester-independent rolling initiatives (e.g. Identity Providers & Connector Configurations).
-
-### 🌀 Isometric SVG Winding Verification Pipeline (View B)
-An advanced engineering checklist system built on top of a futuristic grid layout:
-* **Metallic 3D Pipeline**: Drawn with linear gradient SVG sheets, sheen gloss layers, and connector rings.
-* **Pulsating Joints**: 5 glowing joints pulsating matching specific timeline phases.
-* **Reactive Strikethroughs**: Completing phase checklist tasks triggers automatic line strikethroughs, joint glows, and dynamically transforms node colors into brilliant emerald rings.
-
-### 🧪 Advanced Prompt Sandbox & Diff Viewer
-* **Dynamic Connectors**: Playbook cards simulate enterprise connector toggles (Drive, Email, Calendar, LMS). If an *essential* connector is toggled off, the card is locked with a modern frosted-glass overlay.
-* **Advanced Usage**: Toggling the advanced connector mode dynamically swaps steps, complex prompt payloads, and pro-tips between manual operations and cloud API workflows.
-* **Gemini LLM Prompt Refiner**: Submit prompt changes to a mock Gemini LLM, which renders side-by-side color-coded syntax Diff comparisons (Current Draft vs Optimized suggestions).
-
-### 📊 Real-time Administrative Telemetry
-* Fully responsive data administration console plotting high-contrast vector line charts of cumulative Page Views, Likes, and Deployments compiled over a rolling 6-month historical log.
-* Dynamic user provisioning tools supporting automatic creation, temporary password force-resets, and role switching.
-
-### 💬 Persistent Universal Feedback Loops
-* A beautiful fixed floating feedback button styled with linear-gradient, scale-up micro-animations, and modern glassmorphism.
-* Automatically records the submitter's email context and provides an exclusive **User Feedbacks** console inside the Admin dashboard, restricted solely to the super-admin account, supporting real-time suggestions review and dismissals (crossing-off).
+## 📖 Contents
+1. [Features](#-features)
+2. [Architecture](#-architecture)
+3. [Database schema](#-database-schema)
+4. [API overview](#-api-overview)
+5. [Local development](#-local-development)
+6. [Environment variables](#-environment-variables)
+7. [Accounts, roles & password recovery](#-accounts-roles--password-recovery)
+8. [Infographics](#-infographics)
+9. [Deployment](#-deployment)
 
 ---
 
-## 🛠 Technology Stack
+## 🌟 Features
 
-* **Client Engine**: Vanilla HTML5, ES6+ JavaScript modules, and Material Symbols font icons.
-* **Visual Styling**: Swiss-minimalist Vanilla CSS (`style.css`) utilizing standard layout grids, CSS variable maps (supporting Light and Dark modes), and dynamic micro-animations. **TailwindCSS is strictly avoided** to preserve precise typography.
-* **Server Framework**: Node.js + Express (`server.js`) supporting session tracking via secure cookies and Bcrypt authentication hashing.
-* **Dual Database Layer**:
-  * *Production*: Scaled PostgreSQL client pooling (`pg`) optimized for container scaling on Google Cloud.
-  * *Development/Fallback*: File-based SQLite database engine (`edu_portal.db`) with automated schema bootstraps.
-* **Isolated VM Sandbox Parser**: Uses a Node.js isolated `vm` context to extract and seed 14 static academic playbooks and translations directly from the client script (`app.js`) upon first boot, preventing data duplication.
+### Playbook library
+* Card grid of playbooks with dropdown filters for **Category**, **GE feature** (Agent Designer, NotebookLM, Deep Research, Canvas Mode, Image Generation, Video Generation), **Collection** (All / Liked) and **Sort** (popular, newest, A–Z). The headline reads "{n} playbooks for {role}".
+* Every card shows a **like** button (heart) and a read-only **view** counter (eye).
+
+### Enlarged use-case card (modal)
+* **Hero:** the generated infographic on the left. On the right: the summary, the like / view row, and a compact **Fill in the variables** column with one input per row. Values are interpolated live into the main prompt and every helper prompt. Clicking a variable chip in a prompt focuses its field. Playbooks without variables show no variables column. Under 900px the hero stacks: image, summary, variables.
+* **How it works:** three steps.
+  1. **Set up**: optional helper prompts, each collapsed.
+  2. **Sample prompt**: collapsed by default, with its prompt-type chip and actions.
+  3. Connector guide, manual-upload tip and pro tip.
+* **Actions:** **Try it** (green) opens `<ge_app_link>?q=<prompt>` in a new tab. **Copy prompt** (blue) copies the interpolated prompt. Both look the same in light and dark mode. If a variable is still empty, the first **Try it** click focuses that field and a second click continues anyway.
+* Each modal open records a `view` event. The counter goes up optimistically and is then reconciled with the server total.
+
+### Prompt types
+
+| `prompt_type` | Actions |
+| :--- | :--- |
+| `general`, `canvas`, `image`, `video` | **Try it** + **Copy prompt** |
+| `notebooklm`, `deep_research`, `agent_designer` | **Copy prompt** only (these features can't be prefilled from a URL) |
+
+### Admin console
+* **Users:** bulk-provision users with temporary passwords. **Edit user** changes a user's email (cascades to preferences, analytics and feedback) and their Gemini Enterprise app link, and can reset access.
+* **Admins** (super admin only): invite by email (`super` or `assist`), resend or remove invites.
+* **Analytics:** total views, likes and tries; a 6-month line chart; a playbook leaderboard.
+* **Use cases:** create, edit, delete, import and export (JSON). Includes Gemini-assisted drafting with a diff viewer, plus infographic **Generate / Regenerate / Generate missing**.
+* **Feedback:** review and dismiss submissions from the floating Feedback button. The button only appears in the user portal.
+* **Settings → Email** (super admin only): SMTP presets (Gmail, Outlook.com, Microsoft 365, Custom) with a test send.
+
+### Localization
+All UI strings live in `uiTranslationsV3` in `app.js` (en / zh-TW / zh-CN) and are applied through `data-i18n`, `data-i18n-placeholder`, `data-i18n-aria` and `data-i18n-title`. Product names (NotebookLM, Gemini, Canvas Mode, Deep Research, Agent Designer, Image Generation, Video Generation) stay in English in every language.
 
 ---
 
-## 🏗 Architecture & DB Schemas
+## 🏗 Architecture
+
+| Layer | Implementation |
+| :--- | :--- |
+| Client | `index.html` + `app.js` (vanilla ES6+, functional helpers) + `style.css` (vanilla CSS variables, light/dark; no Tailwind) |
+| Server | Node.js 20 + Express (`server.js`): REST API, `express-session` cookies, `bcryptjs` hashing, VM-sandbox seeding of the 14 playbooks from `app.js` |
+| Sessions | `lib/session-store.js`: `express-session` store backed by the `sessions` table, with lazy pruning. Sessions survive Cloud Run scale-to-zero and are shared across instances. |
+| Database | `lib/db.js`: PostgreSQL (`pg` pool, Cloud SQL) when `DATABASE_URL` is set, otherwise SQLite (`edu_portal.db`). The schema is created and migrated on boot. |
+| Secrets | `lib/secrets.js`: AES-256-GCM encryption for secret settings (for example the SMTP password) |
+| Email | `lib/mailer.js` (nodemailer). Config comes from the DB (`app_settings.smtp`), then `SMTP_*` env vars, then demo mode. |
+| GCP auth | `lib/gcp.js`: access token from the metadata server (Cloud Run) or local `gcloud`, plus the quota-project header |
+| Infographics | `lib/infographics.js` + `scripts/generate-infographics.js`: Vertex AI `gemini-nano-banana-2.1` (location `global`, 16:9) with the Archimedes mascot reference image `imgs/archimedes-ref.jpg`. Images go to a public GCS bucket. |
+| Hosting | Cloud Run (containerised by the `Dockerfile`) + Cloud SQL for PostgreSQL. Infrastructure lives in `terraform/`. |
 
 ```mermaid
-graph TD
-  Client[Web Client: index.html + app.js] <-->|Fetch REST APIs / Cookies| Express[Express Server: server.js]
-  Express <-->|Dual Pool| DB{DB Dialect Selector}
-  DB -->|Production| PG[(PostgreSQL Pool)]
-  DB -->|Local Fallback| SQLite[(SQLite File: edu_portal.db)]
-  Express -->|Isolated Context Extraction| VM[Node.js VM Sandbox Seeder]
+flowchart LR
+  Browser["Browser: index.html + app.js + style.css"] -->|"REST + session cookie"| Express["Express server.js (Cloud Run)"]
+  Express --> Store["lib/session-store.js"]
+  Express --> DBL["lib/db.js"]
+  Store --> DBL
+  DBL -->|"DATABASE_URL set"| PG[("Cloud SQL PostgreSQL")]
+  DBL -->|"local fallback"| SQLite[("SQLite edu_portal.db")]
+  Express -->|"seed from app.js"| VM["Node vm sandbox"]
+  Express --> Mailer["lib/mailer.js"]
+  Mailer -->|"DB config, then SMTP_* env, then demo"| SMTP["SMTP server"]
+  Express --> Secrets["lib/secrets.js AES-256-GCM"]
+  Express --> Info["lib/infographics.js"]
+  CLI["scripts/generate-infographics.js"] --> Info
+  Info --> GCP["lib/gcp.js token"]
+  Info -->|"prompt + imgs/archimedes-ref.jpg"| Vertex["Vertex AI gemini-nano-banana-2.1"]
+  Info -->|"upload"| GCS[("GCS public bucket")]
+  Browser -->|"img src"| GCS
+  Browser -->|"Try it: ge_app_link?q="| GE["Gemini Enterprise app"]
 ```
 
-### Database Schema Table Definitions
-
-#### 1. Users Table (`users`)
-Stores authorization credentials, context configurations, and force-reset onboarding status:
-* `email` (Primary Key, VARCHAR/TEXT)
-* `password_hash` (TEXT, Not Null)
-* `is_temp_password` (BOOLEAN/INTEGER, Default True)
-* `role` (VARCHAR/TEXT, Default Null)
-* `institution_level` (VARCHAR/TEXT, Default Null)
-* `created_at` (TIMESTAMP)
-
-#### 2. Editable Playbooks (`use_cases`)
-* `id` (Primary Key, VARCHAR/TEXT)
-* `category` (VARCHAR/TEXT)
-* `is_verified` (BOOLEAN/INTEGER, Default False)
-* `translations` (JSONB/TEXT) - Holds multilingual strings.
-* `likes` (INTEGER, Default 0)
-* `deployments` (INTEGER, Default 0)
-
-#### 3. User Feedbacks (`feedbacks`)
-Manages suggestions sent by portal users:
-* `id` (Primary Key, SERIAL/AUTOINCREMENT)
-* `user_email` (VARCHAR/TEXT, Not Null)
-* `feedback_text` (TEXT, Not Null)
-* `created_at` (TIMESTAMP)
-
 ---
 
-## 👥 Role-Specific Onboarding & Workflows
+## 📊 Database schema
 
-To ensure highly targeted adoptions, the portal dynamically adapts its roadmaps, checklists, analytics, and navigation sidebars according to the user's selected role:
+These tables are created by `initializeSchemas()` in `server.js` (and `sessions` by `lib/session-store.js`). Columns added later (`is_verified`, `updated_at`, `ge_app_link`, `infographic_url`, `prompt_type`) are added on boot with idempotent `ALTER TABLE` migrations. Types are shown for PostgreSQL; SQLite uses `TEXT` / `INTEGER` / `DATETIME` equivalents.
 
-| Role Code | User Role | Targeted Responsibilities | Accessible Hubs |
-| :--- | :--- | :--- | :--- |
-| `Lecturer` | **Lecturer / Educator** | Teaching material designs, student engagement, and content creation. | Academic Hub |
-| `TA` | **Teaching Assistant (TA)** | Grading assistance, course administration, and tutorial sessions. | Academic Hub |
-| `Student` | **Student / Club Leader** | Assignment reviews, study groups, and student activities. | Student Center |
-| `Program Leader` | **Program Leader / Dept Head** | Curriculum design, program accreditation, and course coordination. | Academic Hub, Operational Command |
-| `Dean` | **Dean / Educational Leader** | Strategic planning, academic audits, and faculty management. | Academic Hub, Operational Command |
-| `SAO` | **Student Affairs Officer (SAO)** | Student support, extracurricular activities, and counseling. | Student Center, Operational Command |
-| `Finance` | **Financial Administrator** | Budget planning, funding auditing, and procurement control. | Operational Command |
-| `Security` | **Campus Security Officer** | Incident reporting, access logging, and emergency coordination. | Operational Command |
-| `IT Admin` | **IT Administrator / SysAdmin** | Provisioning, identity configurations, and connector integrations. | Operational Command |
+| Table | Columns |
+| :--- | :--- |
+| `users` | `email` PK, `password_hash` NOT NULL, `is_temp_password` BOOLEAN default TRUE (forces a reset on first login), `role`, `institution_level`, `created_at`, `ge_app_link` VARCHAR(1024) (Gemini Enterprise app URL for Try it) |
+| `use_cases` | `id` PK, `category`, `title`, `summary`, `features` (JSON), `connectors` (JSON), `role`, `level` (JSON), `steps` (JSON), `prompt`, `pro_tip`, `connector_guide`, `translations` (JSON), `is_verified` BOOLEAN, `created_at`, `updated_at`, `infographic_url` VARCHAR(1024), `prompt_type` VARCHAR(50) default `'general'` |
+| `user_preferences` | (`user_email` FK→users, `use_case_id` FK→use_cases) composite PK, `is_liked` BOOLEAN, `is_deployed` BOOLEAN (legacy, unused). Both FKs `ON DELETE CASCADE`. |
+| `analytics` | `id` SERIAL PK, `timestamp`, `action` (`view` \| `like` \| `try`; old rows may hold `deploy`), `use_case_id`, `user_email` |
+| `feedbacks` | `id` SERIAL PK, `user_email` NOT NULL, `feedback_text` NOT NULL, `created_at` |
+| `admins` | `email` PK, `password_hash` (NULL until verified), `role` CHECK IN (`super`, `assist`), `is_verified` INTEGER, `invited_by`, `created_at` |
+| `auth_tokens` | `token_hash` PK (SHA-256 of the emailed token), `email`, `purpose` (`verify` \| `reset`), `expires_at` (48 h verify / 1 h reset), `used_at` (single use) |
+| `app_settings` | `key` PK (for example `smtp`), `value` (JSON; secret fields encrypted), `updated_by`, `updated_at` |
+| `sessions` | `sid` PK, `sess` (JSON), `expires` BIGINT (epoch ms) |
 
----
-
-## 🚀 Local Development & Setup
-
-### Prerequisites
-* **Node.js** (v18.x or higher)
-* **npm** (v9.x or higher)
-
-### Installation
-1. Clone the repository and navigate to the project directory:
-   ```bash
-   git clone https://github.com/MrRoyRoy/ge_learning_portal_edu.git
-   cd ge_learning_portal_edu
-   ```
-2. Install package dependencies:
-   ```bash
-   npm install
-   ```
-3. Start the local Express server:
-   ```bash
-   npm run dev
-   # or
-   node server.js
-   ```
-4. Open your web browser and navigate to `http://localhost:3000`.
-
-### Local Testing Accounts & RBAC Matrix
-
-The system enforces a granular **Role-Based Access Control (RBAC)** security matrix between the two administration levels:
-
-| Administrative Feature | 👑 Super-Admin (`edu_portal_s_admin`) | 🧑‍💼 Assistant Admin (`edu_portal_admin`) |
-| :--- | :---: | :---: |
-| **View Telemetry Analytics** | ✅ Yes | ✅ Yes |
-| **Export Use Cases (JSON)** | ✅ Yes | ✅ Yes |
-| **View Verification Checkpoints** | ✅ Yes | ✅ Yes (View-Only) |
-| **View User Feedbacks** | ✅ Yes | ✅ Yes (View-Only) |
-| **Manage (Add/Edit/Delete) Checkpoints** | ✅ Yes | ❌ Blocked |
-| **Manage (Add/Edit/Import) Use Cases** | ✅ Yes | ❌ Blocked |
-| **User Provisioning & Password Resets** | ✅ Yes | ❌ Blocked |
-| **Dismiss/Delete Feedbacks** | ✅ Yes | ❌ Blocked |
-
-* **Super-Admin**:
-  * *Username/Email*: `edu_portal_s_admin`
-  * *Password*: `<YOUR_SUPER_ADMIN_PASSWORD>` (configured via environment or defaults to fallback)
-* **Assistant Admin**:
-  * *Username/Email*: `edu_portal_admin`
-  * *Password*: `<YOUR_ASSISTANT_ADMIN_PASSWORD>` (configured via environment or defaults to fallback)
-
-> [!WARNING]
-> **No Password Recovery Mechanism**: There is currently no automated password recovery flow for admin or super-admin accounts on the portal. Make sure you securely document and do not lose your customized administrative passwords during deployment!
-
----
-
-## 📊 Database Schema & Entity-Relationship (ER) Diagram
-
-The application implements a robust relational schema supported natively by both PostgreSQL (production) and SQLite (development fallback). Multi-row data metrics and checklist states are completely synchronized.
-
-Below is the structured data architecture representing the relational connections between users, preferences, and checklist templates:
+The obsolete `verification_checkpoints` table is dropped on boot.
 
 ```mermaid
 erDiagram
     USERS {
-        string email PK "User unique identifier (lowercase)"
-        string password_hash "Bcrypt salted credentials digest"
-        boolean is_temp_password "Force reset flag on first login"
-        string role "Assigned organizational role code"
-        string institution_level "Targeted school segment"
-        timestamp created_at "Account creation datetime"
+        string email PK
+        string password_hash
+        boolean is_temp_password
+        string role
+        string institution_level
+        string ge_app_link
+        timestamp created_at
     }
     USE_CASES {
-        string id PK "System playbook alphanumeric key"
-        string category "Vertical category grouping"
-        boolean is_verified "Content validation audit flag"
-        text translations "Dynamic internationalized JSON dictionary"
-        integer likes "Aggregated user bookmark counter"
-        integer deployments "Active deployment indicator counter"
-        timestamp created_at "Insertion datetime"
-        timestamp updated_at "Latest modification timestamp"
-    }
-    FEEDBACKS {
-        integer id PK "Auto-increment serial ID"
-        string user_email "Submitter context email address"
-        text feedback_text "User suggestion raw string content"
-        timestamp created_at "Submission timestamp"
-    }
-    VERIFICATION_CHECKPOINTS {
-        string id PK "Checkpoint unique alphanumeric key"
-        string role "Targeted organizational role code"
-        string stage_id "Timeline milestone identifier"
-        text text "English checklist requirement"
-        text text_zh "Traditional Chinese translation fallback"
-        text text_cn "Simplified Chinese translation fallback"
-        timestamp created_at "Creation timestamp"
-        timestamp updated_at "Update timestamp"
+        string id PK
+        string category
+        string title
+        text summary
+        text features
+        text connectors
+        string role
+        text level
+        text steps
+        text prompt
+        text pro_tip
+        text connector_guide
+        text translations
+        boolean is_verified
+        string infographic_url
+        string prompt_type
+        timestamp created_at
+        timestamp updated_at
     }
     USER_PREFERENCES {
-        string email PK "User context identifier"
-        string use_case_id PK "Bookmarked playbook identifier"
-        boolean is_liked "Dynamic bookmark status flag"
-        boolean is_deployed "Dynamic active installation status flag"
-        timestamp updated_at "Interaction update timestamp"
+        string user_email PK, FK
+        string use_case_id PK, FK
+        boolean is_liked
+        boolean is_deployed
     }
     ANALYTICS {
-        integer id PK "Telemetry sequence auto-increment"
-        string user_email "Performer identification context"
-        string use_case_id "Targeted playbook key (nullable)"
-        string action "Action identifier (view | like | deploy)"
-        timestamp timestamp "Event logging datetime"
+        int id PK
+        timestamp timestamp
+        string action
+        string use_case_id
+        string user_email
+    }
+    FEEDBACKS {
+        int id PK
+        string user_email
+        text feedback_text
+        timestamp created_at
+    }
+    ADMINS {
+        string email PK
+        string password_hash
+        string role
+        int is_verified
+        string invited_by
+        timestamp created_at
+    }
+    AUTH_TOKENS {
+        string token_hash PK
+        string email
+        string purpose
+        timestamp expires_at
+        timestamp used_at
+    }
+    APP_SETTINGS {
+        string key PK
+        text value
+        string updated_by
+        timestamp updated_at
+    }
+    SESSIONS {
+        string sid PK
+        text sess
+        bigint expires
     }
 
-    USERS ||--o{ FEEDBACKS : "submits"
-    USERS ||--o{ USER_PREFERENCES : "customizes"
-    USERS ||--o{ ANALYTICS : "triggers"
-    USE_CASES ||--o{ USER_PREFERENCES : "receives"
-    USE_CASES ||--o{ ANALYTICS : "tracks"
+    USERS ||--o{ USER_PREFERENCES : "likes"
+    USE_CASES ||--o{ USER_PREFERENCES : "liked by"
+    USERS ||--o{ ANALYTICS : "logs (by email)"
+    USE_CASES ||--o{ ANALYTICS : "view / like / try"
+    USERS ||--o{ FEEDBACKS : "submits (by email)"
+    ADMINS ||--o{ AUTH_TOKENS : "verify / reset (by email)"
+    ADMINS ||--o{ ADMINS : "invited_by"
 ```
 
 ---
 
-## ☁️ Cloud Production Deployment
+## 🔌 API overview
 
-The portal is scale-optimized for serverless execution on **Google Cloud Run** connected securely to a **Google Cloud SQL PostgreSQL** instance.
+All endpoints return JSON and use the session cookie. "User" means a signed-in standard user (401 `session_expired` / 403 `admin_preview` otherwise). "Super" means a super admin.
 
-### Production Environment Requirements:
-* **Cloud Run Service Service Account**: Needs the **Cloud SQL Client** (`roles/cloudsql.client`) permission to access the serverless instance sockets.
-* **Environment Variables**:
-  * `DATABASE_URL`: Connection string in Unix socket syntax (`postgres://<user>:<pwd>@/<db_name>?host=/cloudsql/<instance_connection_name>`).
-  * `DISABLE_PG_SSL`: Set to `true` (SSL must be bypassed on local Cloud Run Unix sockets).
-  * `NODE_ENV`: Set to `production` (enforces secure session cookies).
+| Method & path | Access | Purpose |
+| :--- | :--- | :--- |
+| `POST /api/auth/login` | Public | Sign in (user email or admin username) |
+| `POST /api/auth/reset-password` | User | Replace a temporary password; save role / level |
+| `GET /api/auth/session` | Public | Current session, role and profile |
+| `POST /api/auth/forgot-password` | Public | Email a reset link (verified DB admins) |
+| `POST /api/auth/complete-token` | Public | Finish `?verify=` / `?reset=` and set a password |
+| `POST /api/auth/logout` | Any | End the session |
+| `GET /api/use-cases` | Signed in | Playbooks with `likeCount`, `viewCount`, the user's like state, `infographicUrl`, `promptType` |
+| `POST /api/use-cases/like` | User | Toggle a like |
+| `POST /api/use-cases/view` | Signed in | Record a view; returns the new `viewCount` |
+| `POST /api/use-cases/try` | Signed in | Log a Try it launch |
+| `POST /api/feedbacks` | User | Submit feedback |
+| `GET /api/feedbacks` · `POST /api/feedbacks/delete` | Admin · Super | List · dismiss feedback |
+| `GET/POST/PUT/DELETE /api/admin/users` · `POST/PUT /api/admin/users/reset` | Admin (writes: Super) | List, provision, edit, delete, reset users |
+| `GET/POST/DELETE /api/admin/admins` · `POST /api/admin/admins/resend` | Super | Manage invited admins |
+| `GET /api/admin/stats` | Admin | Totals and 6-month history (views / likes / tries) |
+| `POST/PUT/DELETE /api/admin/use-cases` · `GET /api/admin/use-cases/export` | Super · Admin | Edit · export playbooks |
+| `POST /api/admin/use-cases/:id/infographic` · `POST /api/admin/infographics/generate-missing` | Super | Generate infographics |
+| `GET/PUT /api/admin/settings/smtp` · `POST /api/admin/settings/smtp/test` | Super | SMTP settings and test send |
+| `POST /api/admin/generate-gemini` | Super | Gemini-assisted playbook drafting |
 
 ---
 
-## 🛠️ Automated Infrastructure Provisioning (Terraform)
+## 🚀 Local development
 
-We provide modular, production-grade **Terraform** configurations to automate spinning up completely fresh environments (dev, staging, or production) in minutes.
+Prerequisites: Node.js 18+ (the container uses 20) and npm.
 
-The scripts reside in the `/terraform` subdirectory and provision:
-1. **Google Cloud APIs**: Automatically activates Cloud Run, Cloud SQL, and Artifact Registry.
-2. **Cloud SQL Instance**: Sets up a PostgreSQL 15 database (`db-f1-micro` tier) in your region.
-3. **Database & Master Credentials**: Provisions the schema database `edu_portal` and secures credentials.
-4. **IAM Permissions Binding**: Grants Cloud SQL Client access to your Cloud Run service identity.
-5. **Cloud Run Service**: Deploys the service linked with connection sockets and correct environment configurations.
-6. **Public Ingress Access Binding**: Configures `allUsers` IAM member for public website viewing.
+```bash
+git clone <REPO_URL>
+cd edu-ge-adoption-portal
+npm install
+npm start               # SQLite is used automatically when DATABASE_URL is unset
+# open http://localhost:8080 (override with PORT)
+```
 
-### How to Deploy a New Environment with Terraform:
+* Set variables in a local `.env` file (loaded by `dotenv`). Never commit it.
+* To use Postgres locally, set `DATABASE_URL` (and `DISABLE_PG_SSL=true` for a local server without TLS).
+* Infographic generation locally uses your `gcloud auth application-default` / `gcloud auth print-access-token` credentials, billed to `GCP_QUOTA_PROJECT`.
 
-#### 1. Navigate to the Terraform Directory:
+---
+
+## ⚙️ Environment variables
+
+| Variable | Required | Purpose |
+| :--- | :---: | :--- |
+| `PORT` | – | HTTP port (default `8080`) |
+| `NODE_ENV` | Prod | `production` turns on secure cookies |
+| `SESSION_SECRET` | Prod | Signs session cookies. Also the fallback encryption key. |
+| `SETTINGS_ENCRYPTION_KEY` | Prod | AES-256-GCM key for secrets in `app_settings`. Use a separate value per environment. |
+| `DATABASE_URL` | Prod | PostgreSQL connection string. When unset, SQLite is used. |
+| `DISABLE_PG_SSL` | Cloud Run | `true` when connecting over the Cloud SQL Unix socket |
+| `SQLITE_PATH` | – | SQLite file path (default `edu_portal.db`) |
+| `SUPER_ADMIN_PASSWORD`, `ADMIN_PASSWORD`, `DEMO_ADMIN_PASSWORD` | Prod | Built-in admin passwords. Always set them via environment or Secret Manager. |
+| `PUBLIC_BASE_URL` | Recommended | Base URL for emailed links (otherwise the request origin is used) |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURITY`, `SMTP_USER`, `SMTP_PASS` / `SMTP_PASSWORD`, `SMTP_FROM`, `SMTP_FROM_NAME`, `SMTP_FROM_EMAIL` | – | SMTP fallback when nothing is saved in Admin → Settings → Email |
+| `INFOGRAPHIC_BUCKET` | – | Public GCS bucket for infographics |
+| `INFOGRAPHIC_MODEL` | – | Default `gemini-nano-banana-2.1` |
+| `INFOGRAPHIC_LOCATION` | – | Default `global` |
+| `INFOGRAPHIC_PROJECT` | – | Vertex project (defaults to `GCP_PROJECT_ID`) |
+| `INFOGRAPHIC_REF_IMAGE` | – | Mascot reference image (default `imgs/archimedes-ref.jpg`) |
+| `INFOGRAPHIC_CONCURRENCY` | – | Worker pool for "Generate missing" (1–4, default 2) |
+| `GCP_PROJECT_ID` / `GOOGLE_CLOUD_PROJECT` | – | GCP project for Vertex and GCS |
+| `GCP_QUOTA_PROJECT`, `GCP_FORCE_QUOTA_HEADER` | – | Quota / billing project header for local credentials |
+
+> [!CAUTION]
+> Never put passwords, connection strings with credentials or encryption keys in this README, in `terraform.tfvars` or in Git. Set them through environment variables or Secret Manager. Ask your administrator for the values.
+
+---
+
+## 🔐 Accounts, roles & password recovery
+
+* **Standard users** are provisioned by an admin with an auto-generated temporary password and must change it on first sign-in. They then pick their role and institution level.
+* **Built-in admin accounts** (`edu_portal_s_admin` = super, `edu_portal_admin` = assist, `demo-admin` = assist) are break-glass logins. Their passwords are set via environment variables. Ask your administrator.
+* **Invited admins** (`admins` table): a super admin invites an email address. The invitee gets a single-use `/?verify=TOKEN` link (48 h) and sets a password. Verified admins can use **Forgot password?**, which sends a `/?reset=TOKEN` link (1 h). Tokens are stored only as SHA-256 hashes.
+
+| Capability | Super | Assist |
+| :--- | :---: | :---: |
+| View analytics, export playbooks, read feedback | ✅ | ✅ |
+| Add / edit / delete / import playbooks, generate infographics | ✅ | ❌ |
+| Provision / edit users, reset access | ✅ | ❌ |
+| Dismiss feedback | ✅ | ❌ |
+| Invite / remove admins, SMTP settings | ✅ | ❌ |
+
+**Email:** configure SMTP in **Admin → Settings → Email**. The SMTP password is encrypted at rest. With no SMTP configured, the portal runs in demo mode: links are written to the server log and shown to the super admin only.
+
+> [!TIP]
+> Gmail and Microsoft 365 usually require an app password (or SMTP AUTH enabled for the mailbox) instead of the normal sign-in password.
+
+---
+
+## 🖼️ Infographics
+
+Each playbook can have a 16:9 infographic generated with Vertex AI `gemini-nano-banana-2.1`. The prompt includes per-case concept hints, and the Archimedes mascot reference (`imgs/archimedes-ref.jpg`) is sent as inline image data so the character stays consistent. Images are uploaded via the GCS JSON API to a public bucket, and the URL (with a `?v=` cache-buster) is stored in `use_cases.infographic_url`.
+
+```bash
+npm run infographics                 # only playbooks without an infographic
+npm run infographics -- --force      # regenerate everything
+npm run infographics -- --id=<id>    # a single playbook
+```
+
+Admins can also generate from **Admin → Use cases**. The Cloud Run service account needs `roles/aiplatform.user` and object-admin access to the bucket. The bucket grants `allUsers` `roles/storage.objectViewer`.
+
+---
+
+## ☁️ Deployment
+
+Target: **Cloud Run** + **Cloud SQL for PostgreSQL**. The Cloud Run service account needs `roles/cloudsql.client`, plus the infographic roles above.
+
+### Deploy from source
+
+```bash
+gcloud run deploy <SERVICE_NAME> \
+  --source . \
+  --region <REGION> \
+  --project <PROJECT_ID> \
+  --allow-unauthenticated \
+  --timeout 600 \
+  --add-cloudsql-instances <PROJECT_ID>:<REGION>:<INSTANCE_NAME> \
+  --set-env-vars NODE_ENV=production,DISABLE_PG_SSL=true,INFOGRAPHIC_BUCKET=<BUCKET_NAME>,PUBLIC_BASE_URL=<https://your-domain> \
+  --set-secrets DATABASE_URL=<DB_URL_SECRET>:latest,SESSION_SECRET=<SESSION_SECRET_NAME>:latest,SETTINGS_ENCRYPTION_KEY=<ENC_KEY_SECRET>:latest,SUPER_ADMIN_PASSWORD=<SUPER_PW_SECRET>:latest,ADMIN_PASSWORD=<ADMIN_PW_SECRET>:latest,DEMO_ADMIN_PASSWORD=<DEMO_PW_SECRET>:latest
+```
+
+* `DATABASE_URL` uses the Cloud SQL Unix socket form `postgres://<DB_USER>:<DB_PASSWORD>@/<DB_NAME>?host=/cloudsql/<INSTANCE_CONNECTION_NAME>`. Keep it in Secret Manager, never in plain env flags or docs.
+* Each environment (dev, prod) needs its own database and its own `SETTINGS_ENCRYPTION_KEY`.
+* On first boot the schema is created, migrations run and the 14 playbooks are seeded.
+
+### Terraform
+
+`terraform/` provisions the APIs, the Cloud SQL instance and database, IAM bindings, the Cloud Run service and public ingress.
+
 ```bash
 cd terraform
-```
-
-#### 2. Initialize the Providers & Modules:
-```bash
 terraform init
-```
-
-#### 3. Customize Your Variables securely:
-Create a custom `terraform.tfvars` file by copying the provided template:
-```bash
-cp terraform.tfvars.example terraform.tfvars
-```
-Edit `terraform.tfvars` to set your project environment attributes:
-```hcl
-project_id       = "<YOUR_GCP_PROJECT_ID>"
-project_number   = "<OPTIONAL_YOUR_GCP_PROJECT_NUMBER>" # Highly recommended: supply this to bypass Cloud Resource Manager API errors!
-region           = "asia-east2"
-service_name     = "edu-ge-learning-portal"
-db_instance_name = "edu-portal-db"
+cp terraform.tfvars.example terraform.tfvars   # project_id, project_number, region, service_name, db_instance_name
+export TF_VAR_db_password=...                  # supply secrets via env / prompt, never in tfvars
+export TF_VAR_super_admin_password=...
+export TF_VAR_admin_password=...
+terraform plan
+terraform apply
 ```
 
 > [!IMPORTANT]
-> **Credential Security & GCP API Best Practices:**
-> * **Bypass Cloud Resource Manager API Errors:** If your target GCP project has organization policies or permissions that prevent read queries to the project data (such as `data.google_project`), you may encounter a `SERVICE_DISABLED` or `403` error. To completely bypass this constraint, simply supply your numeric **`project_number`** inside your `terraform.tfvars` or set `export TF_VAR_project_number="YOUR_PROJECT_NUMBER"`. This skips the project data query entirely!
-> * **Do NOT store passwords on disk:** Never put passwords (like `db_password`, `super_admin_password`, or `admin_password`) in `terraform.tfvars`. This prevents credentials from being committed to Git or stored on disk in plaintext.
-> * **Use Environment Variables:** Instead, export them in your terminal before running Terraform commands. Terraform automatically detects these environment variables:
->   ```bash
->   export TF_VAR_db_password="YOUR_SECURE_PASSWORD"
->   export TF_VAR_super_admin_password="YOUR_SUPER_ADMIN_PASSWORD"
->   export TF_VAR_admin_password="YOUR_ADMIN_PASSWORD"
->   ```
-> * **Interactive Prompt Fallback:** If these environment variables are not set, Terraform will securely prompt you to type the password values in your terminal.
-> * **Note on `ephemeral = true` (Terraform v1.10+):** While Terraform v1.10+ supports ephemeral variables, standard cloud resources (such as `google_sql_user` or the Cloud Run environment variables) are state-tracked and do not support direct ephemeral injection. Therefore, keeping sensitive fields out of tfvars and utilizing terminal `TF_VAR_` environment variables or interactive prompt parameters is the best practice.
-
-#### 4. Preview the Provisioning Infrastructure Plan:
-```bash
-terraform plan
-```
-
-#### 5. Apply and Provision Infrastructure:
-```bash
-terraform apply -auto-approve
-```
-Upon successful provisioning, Terraform will display your active **Service URL** and **Database Connection Name** inside outputs.
+> Resources created manually with `gcloud` (for example the infographics bucket and its IAM) must be added with `terraform import` before the next `apply`. Supplying `project_number` avoids Cloud Resource Manager lookups in restricted projects.
 
 ---
 
-## 📈 Release & Code Update Workflows
-
-To compile and re-deploy your container image via Google Cloud Build and deploy it to Cloud Run, execute:
-```bash
-gcloud run deploy <YOUR_CLOUD_RUN_SERVICE_NAME> --source . --region <YOUR_GCP_REGION> --allow-unauthenticated --project <YOUR_GCP_PROJECT_ID>
-```
-
-*Made with 💜 for advanced agentic software deployments and persistent educational portals.*
+*Gemini Enterprise - Edu Portal: playbooks that go from idea to prompt in one click.*

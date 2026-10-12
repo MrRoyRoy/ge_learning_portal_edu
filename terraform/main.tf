@@ -11,7 +11,9 @@ resource "google_project_service" "apis" {
     "run.googleapis.com",
     "sqladmin.googleapis.com",
     "artifactregistry.googleapis.com",
-    "cloudresourcemanager.googleapis.com"
+    "cloudresourcemanager.googleapis.com",
+    "aiplatform.googleapis.com",
+    "storage.googleapis.com"
   ])
   project            = var.project_id
   service            = each.key
@@ -123,6 +125,18 @@ resource "google_cloud_run_service" "portal_service" {
           value = var.admin_password
         }
 
+        # AES-256-GCM key material used to encrypt the SMTP password stored in app_settings.
+        env {
+          name  = "SETTINGS_ENCRYPTION_KEY"
+          value = var.settings_encryption_key
+        }
+
+        # Public GCS bucket that stores the generated use case infographics.
+        env {
+          name  = "INFOGRAPHIC_BUCKET"
+          value = google_storage_bucket.infographics.name
+        }
+
         resources {
           limits = {
             cpu    = "1000m"
@@ -158,4 +172,39 @@ resource "google_cloud_run_service_iam_member" "public_access" {
   project  = var.project_id
   role     = "roles/run.invoker"
   member   = "allUsers"
+}
+
+# ==========================================
+# 6. Use Case Infographics Bucket (public read)
+# ==========================================
+# Generated infographics are embedded directly in the portal via public
+# storage.googleapis.com URLs, so objects are world-readable. Only the
+# Cloud Run service account may write/overwrite them.
+resource "google_storage_bucket" "infographics" {
+  name                        = var.infographic_bucket_name
+  location                    = var.region
+  project                     = var.project_id
+  uniform_bucket_level_access = true
+  force_destroy               = false
+
+  depends_on = [google_project_service.apis]
+}
+
+resource "google_storage_bucket_iam_member" "infographics_public_read" {
+  bucket = google_storage_bucket.infographics.name
+  role   = "roles/storage.objectViewer"
+  member = "allUsers"
+}
+
+resource "google_storage_bucket_iam_member" "infographics_run_writer" {
+  bucket = google_storage_bucket.infographics.name
+  role   = "roles/storage.objectAdmin"
+  member = "serviceAccount:${local.project_number}-compute@developer.gserviceaccount.com"
+}
+
+# Vertex AI (Gemini text + image generation) for the Cloud Run service account.
+resource "google_project_iam_member" "vertex_ai_user" {
+  project = var.project_id
+  role    = "roles/aiplatform.user"
+  member  = "serviceAccount:${local.project_number}-compute@developer.gserviceaccount.com"
 }
