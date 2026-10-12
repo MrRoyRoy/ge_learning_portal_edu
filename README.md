@@ -25,10 +25,11 @@ The **Gemini Enterprise - Edu Portal** is a playbook library for academic instit
 
 ### Playbook library
 * Card grid of playbooks with dropdown filters for **Category**, **GE feature** (Agent Designer, NotebookLM, Deep Research, Canvas Mode, Image Generation, Video Generation), **Collection** (All / Liked) and **Sort** (popular, newest, A–Z). The headline reads "{n} playbooks for {role}".
-* Every card shows a **like** button (heart) and a read-only **view** counter (eye).
+* Every card shows a **like** button (heart), a read-only **view** counter (eye), neutral GE feature icons and red connector icons.
 
 ### Enlarged use-case card (modal)
-* **Hero:** the generated infographic on the left. On the right: the summary, the like / view row, and a compact **Fill in the variables** column with one input per row. Values are interpolated live into the main prompt and every helper prompt. Clicking a variable chip in a prompt focuses its field. Playbooks without variables show no variables column. Under 900px the hero stacks: image, summary, variables.
+* **Header:** GE feature chips (neutral) and connector chips (Drive / Email / LMS / Calendar Connector, red), the title, and on the right the like button, view counter and close button at the same 44px height. Under 720px the chips and controls share the first row and the title gets the full width.
+* **Hero:** the left column holds the generated infographic with the summary directly below it. The right column holds only the **Fill in the variables** panel, one input per row. Values are interpolated live into the main prompt and every helper prompt. Clicking a variable chip in a prompt focuses its field. Playbooks without variables get a single full-width column. Under 900px the hero stacks: image, summary, variables.
 * **How it works:** three steps.
   1. **Set up**: optional helper prompts, each collapsed.
   2. **Sample prompt**: collapsed by default, with its prompt-type chip and actions.
@@ -100,7 +101,7 @@ These tables are created by `initializeSchemas()` in `server.js` (and `sessions`
 | Table | Columns |
 | :--- | :--- |
 | `users` | `email` PK, `password_hash` NOT NULL, `is_temp_password` BOOLEAN default TRUE (forces a reset on first login), `role`, `institution_level`, `created_at`, `ge_app_link` VARCHAR(1024) (Gemini Enterprise app URL for Try it) |
-| `use_cases` | `id` PK, `category`, `title`, `summary`, `features` (JSON), `connectors` (JSON), `role`, `level` (JSON), `steps` (JSON), `prompt`, `pro_tip`, `connector_guide`, `translations` (JSON), `is_verified` BOOLEAN, `created_at`, `updated_at`, `infographic_url` VARCHAR(1024), `prompt_type` VARCHAR(50) default `'general'` |
+| `use_cases` | `id` PK, `category`, `title`, `summary`, `features` (JSON), `connectors` (JSON), `role`, `level` (JSON), `steps` (JSON), `prompt`, `pro_tip`, `connector_guide`, `translations` (JSON), `is_verified` BOOLEAN (deprecated, unused), `created_at`, `updated_at`, `infographic_url` VARCHAR(1024), `prompt_type` VARCHAR(50) default `'general'` |
 | `user_preferences` | (`user_email` FK→users, `use_case_id` FK→use_cases) composite PK, `is_liked` BOOLEAN, `is_deployed` BOOLEAN (legacy, unused). Both FKs `ON DELETE CASCADE`. |
 | `analytics` | `id` SERIAL PK, `timestamp`, `action` (`view` \| `like` \| `try`; old rows may hold `deploy`), `use_case_id`, `user_email` |
 | `feedbacks` | `id` SERIAL PK, `user_email` NOT NULL, `feedback_text` NOT NULL, `created_at` |
@@ -110,6 +111,8 @@ These tables are created by `initializeSchemas()` in `server.js` (and `sessions`
 | `sessions` | `sid` PK, `sess` (JSON), `expires` BIGINT (epoch ms) |
 
 The obsolete `verification_checkpoints` table is dropped on boot.
+
+> **Deprecated:** `use_cases.is_verified` is no longer used. The use-case "Verified" badge, filter, admin column and checkbox were removed, and the API neither reads, writes nor returns it. The column stays in the schema for backward compatibility with existing databases. (`admins.is_verified` is unrelated and still drives the admin invite / email verification flow.)
 
 ```mermaid
 erDiagram

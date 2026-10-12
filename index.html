@@ -293,12 +293,16 @@
     <div class="modal-content-card">
       <div class="modal-header">
         <div class="modal-header-left">
-          <div id="modalTags" style="display: flex; gap: 6px; flex-wrap: wrap;"></div>
+          <div id="modalTags" class="modal-tags"></div>
           <h3 class="modal-title" id="modalTitle">Use Case Details</h3>
         </div>
-        <button class="close-btn" id="modalClose" aria-label="Close details">
-          <span class="material-symbols-outlined">close</span>
-        </button>
+        <!-- Like + view counter (filled by openUseCaseModal) sit left of the close button -->
+        <div class="modal-header-actions">
+          <div class="uc-pref" id="modalPref"></div>
+          <button class="close-btn" id="modalClose" aria-label="Close details">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
       </div>
 
       <!-- SCROLLABLE DETAIL DATA AREA -->
@@ -501,7 +505,6 @@
                 <th id="adminCrudThTitle">Title</th>
                 <th id="adminCrudThCategory">Category</th>
                 <th id="adminCrudThRole">Role</th>
-                <th id="adminCrudThVerified" data-i18n="adminCrudThVerified">Verified</th>
                 <th class="col-actions"><span class="sr-only" id="adminCrudThActions">Actions</span></th>
               </tr>
             </thead>
@@ -754,15 +757,6 @@
             <textarea class="select-control" id="formCaseSummary" required style="height: 60px; padding: 8px 12px; resize: vertical;" placeholder="1–2 sentences on the outcome" data-i18n-placeholder="caseFormSummaryPh"></textarea>
           </div>
 
-          <!-- Verified Flag Toggle -->
-          <div class="form-group" style="margin-bottom: 16px; border: 1px dashed rgba(16, 185, 129, 0.2); padding: 12px; border-radius: 6px; background: rgba(16, 185, 129, 0.02);">
-            <label style="display: flex; align-items: center; gap: 8px; font-weight: 700; color: #10b981; cursor: pointer; font-size: 13px;">
-              <input type="checkbox" id="formCaseVerified" style="width: 16px; height: 16px; accent-color: #10b981;"> 
-              <span id="adminFormLabelVerifiedCheckbox" data-i18n="caseFormVerified">Mark as verified</span>
-            </label>
-            <div id="adminFormDescVerifiedCheckbox" data-i18n="caseFormVerifiedDesc" style="font-size: 13px; color: var(--text-secondary); margin-left: 24px; margin-top: 4px;">Shows a verified badge on the portal.</div>
-          </div>
-
           <!-- Features and Connectors Checkboxes -->
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
             <div class="form-group">
@@ -970,7 +964,7 @@
         
         <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 16px;">
           <button class="nav-button" type="button" id="btnCancelFeedback" data-i18n="cancel">Cancel</button>
-          <button class="nav-button nav-button-primary" type="submit" style="background: linear-gradient(135deg, #a855f7 0%, #6366f1 100%); border: none;" data-i18n="feedbackSubmit">Send</button>
+          <button class="nav-button nav-button-primary btn-feedback-submit" type="submit" data-i18n="feedbackSubmit">Send</button>
         </div>
       </form>
     </div>

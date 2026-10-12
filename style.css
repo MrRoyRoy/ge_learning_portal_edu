@@ -597,46 +597,33 @@ html[data-theme="light"] .card:hover {
   border-color: var(--border-tag-level);
 }
 
-/* Coloured Connector Indicator Tags */
-.connector-tag-drive {
-  background: rgba(16, 185, 129, 0.12) !important;
-  color: #10b981 !important;
-  border-color: rgba(16, 185, 129, 0.35) !important;
+/* Connector tags: one consistent red scheme for every connector (icon-only on cards, full chips in the modal).
+   Dark (default): #F28B82 on a soft red tint; light: #D93025. */
+:root {
+  --connector-ink: #F28B82;
+  --connector-bg: rgba(242, 139, 130, 0.12);
+  --connector-bg-hover: rgba(242, 139, 130, 0.22);
+  --connector-line: rgba(242, 139, 130, 0.40);
 }
-.connector-tag-drive:hover {
-  background: rgba(16, 185, 129, 0.22) !important;
-  border-color: #10b981 !important;
+html[data-theme="light"] {
+  --connector-ink: #D93025;
+  --connector-bg: rgba(217, 48, 37, 0.08);
+  --connector-bg-hover: rgba(217, 48, 37, 0.14);
+  --connector-line: rgba(217, 48, 37, 0.35);
 }
-
-.connector-tag-email {
-  background: rgba(244, 63, 94, 0.12) !important;
-  color: #f43f5e !important;
-  border-color: rgba(244, 63, 94, 0.35) !important;
+.tag-connector,
+.tag-connector .material-symbols-outlined {
+  color: var(--connector-ink) !important;
 }
-.connector-tag-email:hover {
-  background: rgba(244, 63, 94, 0.22) !important;
-  border-color: #f43f5e !important;
+.tag-connector {
+  background: var(--connector-bg) !important;
+  border-color: var(--connector-line) !important;
 }
-
-.connector-tag-lms {
-  background: rgba(139, 92, 246, 0.12) !important;
-  color: #8b5cf6 !important;
-  border-color: rgba(139, 92, 246, 0.35) !important;
-}
-.connector-tag-lms:hover {
-  background: rgba(139, 92, 246, 0.22) !important;
-  border-color: #8b5cf6 !important;
+.tag-connector:hover {
+  background: var(--connector-bg-hover) !important;
+  border-color: var(--connector-ink) !important;
 }
 
-.connector-tag-calendar {
-  background: rgba(14, 165, 233, 0.12) !important;
-  color: #0ea5e9 !important;
-  border-color: rgba(14, 165, 233, 0.35) !important;
-}
-.connector-tag-calendar:hover {
-  background: rgba(14, 165, 233, 0.22) !important;
-  border-color: #0ea5e9 !important;
-}
 
 .card-title {
   font-family: var(--font-heading);
@@ -2491,7 +2478,7 @@ textarea:focus::placeholder {
   bottom: 24px;
   right: 24px;
   z-index: 999;
-  background: linear-gradient(135deg, #a855f7 0%, #6366f1 100%);
+  background: #1A73E8;
   border: none;
   border-radius: 30px;
   color: white !important;
@@ -2500,13 +2487,14 @@ textarea:focus::placeholder {
   align-items: center;
   gap: 8px;
   cursor: pointer;
-  box-shadow: 0 8px 24px rgba(168, 85, 247, 0.35);
+  box-shadow: 0 8px 24px rgba(26, 115, 232, 0.35);
   transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .floating-feedback-button:hover {
   transform: translateY(-4px) scale(1.04);
-  box-shadow: 0 12px 30px rgba(168, 85, 247, 0.45);
+  background: #1557B0;
+  box-shadow: 0 12px 30px rgba(26, 115, 232, 0.45);
 }
 
 .floating-feedback-button:active {
@@ -3131,12 +3119,6 @@ html[data-theme="light"] .card:hover { box-shadow: var(--shadow-pop); }
 .tag-icon-only .material-symbols-outlined { font-size: 16px; }
 .tag-full { font-size: 13px; text-transform: none; letter-spacing: 0; border-width: 1px; padding: 4px 10px; }
 
-.tag-verified {
-  color: var(--ok) !important;
-  border-color: rgba(52, 168, 83, 0.35) !important;
-  background: rgba(52, 168, 83, 0.10) !important;
-}
-
 .card-title {
   font-size: 20px;
   line-height: 1.3;
@@ -3308,9 +3290,7 @@ a.uc-hero:hover img { transform: scale(1.02); }
 
 .uc-hero-placeholder .material-symbols-outlined { font-size: 44px; }
 
-.uc-hero-side { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
 .uc-summary { font-size: 17px; line-height: 1.6; color: var(--text-secondary); }
-.uc-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
 .uc-pref { display: flex; gap: 8px; }
 .uc-pref .pref-btn { height: 44px; min-width: 44px; }
 
@@ -3860,7 +3840,6 @@ details[open] > summary > .chevron { transform: rotate(180deg); }
 
 @media (max-width: 420px) {
   .topbar .brand-text { display: none; }
-  .uc-actions > .nav-button { flex: 1 1 auto; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -3910,7 +3889,6 @@ html[data-theme="light"] .card:hover { box-shadow: var(--shadow-card-hover); }
 
 /* --- Hero: image stays top-aligned; the right column grows naturally ------ */
 .uc-hero-row { align-items: start; }
-.uc-hero-side { gap: 18px; }
 
 /* --- Hero variables column (fill once, updates every prompt) -------------- */
 .uc-vars {
@@ -3988,7 +3966,7 @@ html[data-theme="light"] .card:hover { box-shadow: var(--shadow-card-hover); }
   min-width: 0;
 }
 .feedback-modal-icon {
-  color: #a855f7;
+  color: var(--accent);
   font-size: 24px;
   line-height: 1;
   flex-shrink: 0;
@@ -4002,6 +3980,70 @@ html[data-theme="light"] .card:hover { box-shadow: var(--shadow-card-hover); }
 
 #feedbackSubmissionModal .modal-header { align-items: center; }
 
-@media (max-width: 720px) {
-  .uc-pref { flex-wrap: wrap; }
+/* ==========================================================================
+   V6 LAYER: modal hero split (image + summary | variables), header like/view
+   actions, connector chips, blue feedback UI.
+   ========================================================================== */
+
+/* --- Modal header: tags row (GE features neutral, connectors red) + title,
+   like / view / close grouped on the right at the 44px control height ------ */
+.modal-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.modal-tags:empty { display: none; }
+.modal-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
 }
+.modal-header-actions .uc-pref { align-items: center; flex-wrap: nowrap; }
+.modal-header-actions .pref-btn { height: var(--control-h); min-width: var(--control-h); }
+.modal-header-actions .view-count { height: var(--control-h); padding: 0 8px; font-size: 14px; }
+
+/* --- Hero: left column = infographic with summary directly below; right
+   column = the variables panel only. `.is-single` (no variables) spans full width */
+.uc-hero-row { grid-template-columns: minmax(0, 1.55fr) minmax(280px, 1fr); align-items: start; }
+.uc-hero-row.is-single { grid-template-columns: minmax(0, 1fr); }
+.uc-hero-main { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.uc-hero-main .uc-summary { margin: 0; }
+
+/* --- Feedback UI: Gemini blue, white text, darker hover, blue focus -------- */
+.floating-feedback-button:focus-visible { outline: 2px solid #1A73E8; outline-offset: 3px; }
+.nav-button.btn-feedback-submit {
+  background: #1A73E8;
+  border-color: #1A73E8;
+  color: #fff !important;
+}
+.nav-button.btn-feedback-submit:hover { background: #1557B0; border-color: #1557B0; }
+.nav-button.btn-feedback-submit:focus-visible { outline: 2px solid #1A73E8; outline-offset: 3px; }
+#feedbackSubmissionModal .select-control:focus,
+#feedbackSubmissionModal textarea:focus {
+  outline: none;
+  border-color: #1A73E8 !important;
+  box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.25);
+}
+
+@media (max-width: 900px) {
+  .uc-hero-row,
+  .uc-hero-row.is-single { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Mobile header: tags + actions share row one, the title takes row two at full width.
+   `display: contents` lifts the tags/title out of .modal-header-left into the header grid. */
+@media (max-width: 720px) {
+  #modalOverlay .modal-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "tags actions" "title title";
+    column-gap: 12px;
+    row-gap: 8px;
+    align-items: center;
+  }
+  #modalOverlay .modal-header > .modal-header-left { display: contents; }
+  #modalOverlay #modalTags { grid-area: tags; min-width: 0; }
+  #modalOverlay #modalTitle { grid-area: title; }
+  #modalOverlay .modal-header-actions { grid-area: actions; gap: 6px; }
+  #modalOverlay .modal-header-actions .view-count { padding: 0 4px; }
+}
+
+/* Light mode: keep hero variable labels neutral (overrides the legacy indigo light-theme label colour) */
+html[data-theme="light"] .uc-vars .variable-label { color: var(--text-secondary); }
