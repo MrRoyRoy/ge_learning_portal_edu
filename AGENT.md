@@ -67,6 +67,7 @@ The portal supports intelligent integration simulation and dynamic prompt custom
 
 * **Nomenclature:**
   * All connector components are named generically in user-facing toasts and badges to ensure product agnosticism (e.g., **Drive Connector**, **Email Connector**, **Calendar Connector**, **LMS Connector**) rather than referencing vendor-specific software.
+  * Every connector icon/chip uses the single `.tag-connector` class (red: `--connector-ink` #F28B82 dark / #D93025 light, soft red tint + red border). GE feature chips stay neutral. Do not reintroduce per-connector colours.
 * **Essential Connectors vs. Optional Connectors:**
   * Use cases that strictly require an active integration carry a `connectorEssential: true` tag and show a locked overlay when their corresponding connector is toggled off.
   * Use cases where integrations are secondary enhancements are tagged with `connectorEssential: false` and remain unlocked at all times.
@@ -74,7 +75,7 @@ The portal supports intelligent integration simulation and dynamic prompt custom
   * Rather than complex dual-prompt switches, playbook detail views feature a streamlined, clean prompt container accompanied by a non-intrusive manual tips box (`.manual-tip-box`) recommending the manual file upload fallback workflow if institutional connectors are inactive or unavailable.
 * **Dynamic "Fill in the Variables" Engine:**
   * Prompts automatically scan for variable tokens (e.g. `[COURSE_NAME]`, `[ASSIGNMENT_TOPIC]`).
-  * A compact variables column (`#wbVariables`, one input per row) renders in the modal hero's right column under the summary and like/view row; nothing renders when there are no variables.
+  * The variables panel (`#wbVariables`, one input per row) is the only content of the modal hero's right column; the left column (`.uc-hero-main`) is the infographic with the summary below it. With no variables the hero is a single full-width column (`.uc-hero-row.is-single`).
   * Editing variable values dynamically interpolates into both the highlighted prompt preview and the instant clipboard copy action.
 * **Collapsible Prompt (Default Closed):**
   * Step instructions display prompts inside a `<details class="prompt-collapsible">` container, collapsed by default to maintain a clean, compact view per modern prompt library standards.
@@ -127,7 +128,15 @@ graph TD
 
 ############# 7. App State & Progress
  
-##### Accomplished Tasks (Latest Session Milestone — 2026-10-12, v4 modal polish)
+##### Accomplished Tasks (Latest Session Milestone — 2026-10-12, v5 modal + cleanup)
+* **Modal v5 (100%):** hero = left column (infographic + summary directly below) / right column = only the variables panel (`.is-single` full width when no variables). Like + view counter moved into the modal header (`#modalPref` in `.modal-header-actions`, left of ×, 44px, own delegated click). Under 720px the header is a grid: tags + controls on row one, full-width title on row two (no overflow at 390px).
+* **Connector chips (100%):** modal header tag row shows connector chips after the GE feature chips; all connector icons/chips use one red `.tag-connector` scheme; `.connector-tag-drive/email/lms/calendar` removed.
+* **Use-case "Verified" removed (100%):** card/modal badge, admin table column (now 7 cols), `formCaseVerified` checkbox + payload, keys `verifiedLabel`, `adminCrudThVerified`, `caseFormVerified(Desc)`, `yes`/`no`, `.tag-verified` CSS. Saved `ge_active_status` other than `liked` → `all`. Server no longer reads/writes/returns `isVerified`; `use_cases.is_verified` kept and documented as deprecated. Admin invite email verification untouched.
+* **Feedback UI blue (100%):** floating button `#1A73E8` (hover `#1557B0`), white text, blue focus ring; modal icon `var(--accent)`; submit `.btn-feedback-submit` blue; textarea focus blue. No purple left.
+* **Bug fix:** SQLite `updated_at` migration used a non-constant default and silently failed on older DBs, so every admin use-case PUT errored (`no such column: updated_at`); now added bare + backfilled.
+* **Verified:** `node --check`, Playwright `test_v3.js` (adapted + new checks: summary under image, variables alone on the right, header like/view/close, no Verified anywhere, red connector chips on cards + modal, blue feedback, admin create/edit without isVerified) — see results below; screenshots `v5_*`.
+
+##### Previous Milestone — 2026-10-12, v4 modal polish
 * **Modal v4 (100%):** "Fill in the variables" moved from the full-width panel into the hero right column (compact `.uc-vars` section, one input per row, hidden when no variables; hero top-aligned, stacks image → summary → variables under 900px). Steps get 24px inner padding (16px mobile), 56px summary rows with 20px padding, roomier prompt body/actions. **Try it** = green `#1e8e3e` (hover `#137333`), **Copy prompt** = blue `#1a73e8` (hover `#1557b0`), white text/icon, same in both themes, coloured focus rings, equal heights; `promptActionButtonsHtml` lost its `primary` option. Dead CSS removed (`.prompt-variables-panel/header/title/subtitle/grid`, old `.uc-vars` grid rules).
 * **README rewrite (100%):** architecture table + mermaid flowchart, exact schema (9 tables incl. `sessions`) + erDiagram, API overview, env var table, Cloud Run + Secret Manager deploy, Terraform. No passwords/secrets in README.
 * **Verified:** `node --check`, Playwright `test_v3.js` (adapted: hero variables column, one-column inputs, green/blue buttons, step padding ≥16px) all passing, no console errors; screenshots `v4_*`.
@@ -149,6 +158,7 @@ graph TD
 * **Cleanup (100%):** remaining hard-coded English strings (login, temp reset, case form, Gemini drafting, diff viewer, feedback modal, toasts/confirms) moved into `uiTranslationsV3` (en / zh-TW / zh-CN, 372 keys each) with `data-i18n*` attributes (`data-i18n-title` added); dead functions removed (`setupConnectorToggles`, `checkMissingConnector`, `handleOnboardingSubmit`, `getCategoryByRole`, etc.); 66 legacy sidebar/hub/lock/switch CSS rules pruned; top-level `sessionStorage` read guarded so the vm seeder works; README rewritten (invites, password recovery, SMTP, Try it, infographics, env vars, new schema). Verified: Playwright 57/57 + zh-TW i18n check, no console errors.
 
 ### Next Steps & Continuous Polish
+0. **v5 deployed to prod (2026-10-12, revision `your-service-00029-z2s`):** modal v5, red connectors, Verified removal, blue feedback, SQLite `updated_at` fix; Playwright `test_v3.js` 157/157 on prod. Dev (`your-dev-service`) is still behind; redeploy it if needed.
 1. **Dev deployed (2026-10-12, revision `your-dev-service-00004-h68`):** `SETTINGS_ENCRYPTION_KEY` + `INFOGRAPHIC_BUCKET` set, timeout 600s; DB-backed sessions (likes fixed); views replace deploys; **Archimedes infographics v2** (raven-graduate mascot, cel-shaded editorial vector, reference `imgs/archimedes-ref.jpg` sent to Nano Banana, per-case `CONCEPT_HINTS`) auto-upgraded via `applySeedInfographics()` (only replaces older `?v=` of the same object); Playwright 109/109 on dev.
    **Prod deployed (2026-10-12, revision `your-service-00028-zh5`)** with v4 modal polish (variables in hero column, green Try it / blue Copy prompt, step padding), own `SETTINGS_ENCRYPTION_KEY`, timeout 600s; Playwright 124/124 on prod. Prod has 7 extra admin-created use cases without infographics → run **Generate missing** in Admin → Use cases. Dev is one revision behind (redeploy dev to match).
 2. **Terraform:** `terraform import` the bucket + IAM created via gcloud before the next `apply`.

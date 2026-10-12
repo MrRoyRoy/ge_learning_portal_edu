@@ -88,7 +88,7 @@ async function initializeSchemas() {
       pro_tip TEXT NOT NULL,
       connector_guide TEXT,
       translations TEXT NOT NULL,   -- JSON translations dictionary
-      is_verified BOOLEAN DEFAULT FALSE,
+      is_verified BOOLEAN DEFAULT FALSE, -- DEPRECATED: use-case "Verified" badge removed; kept for backward compatibility
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
@@ -107,7 +107,7 @@ async function initializeSchemas() {
       pro_tip TEXT NOT NULL,
       connector_guide TEXT,
       translations TEXT NOT NULL,
-      is_verified INTEGER DEFAULT 0,
+      is_verified INTEGER DEFAULT 0, -- DEPRECATED: use-case "Verified" badge removed; kept for backward compatibility
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
@@ -182,6 +182,8 @@ async function initializeSchemas() {
   }
 
   // Dynamic schema migrations for existing databases
+  // use_cases.is_verified is DEPRECATED (the use-case "Verified" badge/filter was removed): the column is still
+  // created so older databases and exports stay compatible, but the API no longer reads, writes or returns it.
   try {
     if (dbType === 'postgres') {
       await query('ALTER TABLE use_cases ADD COLUMN is_verified BOOLEAN DEFAULT FALSE;');
@@ -197,7 +199,9 @@ async function initializeSchemas() {
     if (dbType === 'postgres') {
       await query('ALTER TABLE use_cases ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;');
     } else {
-      await query('ALTER TABLE use_cases ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP;');
+      // SQLite cannot ADD COLUMN with a non-constant default (CURRENT_TIMESTAMP), so add it bare and backfill
+      await query('ALTER TABLE use_cases ADD COLUMN updated_at DATETIME;');
+      await query('UPDATE use_cases SET updated_at = CURRENT_TIMESTAMP WHERE updated_at IS NULL;');
     }
     console.log('🔄 Schema migration: Added "updated_at" column to "use_cases" table.');
   } catch (err) {
@@ -328,7 +332,7 @@ async function seedDatabase() {
 
     console.log(`🌱 Synchronizing all ${useCases.length} simplified use cases from app.js...`);
     for (const uc of useCases) {
-      // Upsert (not DELETE + INSERT) so infographic_url, prompt_type, is_verified and created_at survive every boot
+      // Upsert (not DELETE + INSERT) so infographic_url, prompt_type and created_at survive every boot
       await upsertSeedUseCase(uc, translations[uc.id]);
     }
     await applySeedPromptTypes();
@@ -903,7 +907,6 @@ app.get('/api/use-cases', async (req, res) => {
         proTip: uc.pro_tip,
         connectorGuide: uc.connector_guide ? JSON.parse(uc.connector_guide) : null,
         translations: transObj,
-        isVerified: uc.is_verified === true || uc.is_verified === 1 || uc.is_verified === 'true',
         infographicUrl: uc.infographic_url || null,
         promptType: PROMPT_TYPES.includes(uc.prompt_type) ? uc.prompt_type : 'general',
         isLiked: false,
@@ -1515,13 +1518,12 @@ app.post('/api/admin/use-cases', requireAdmin, async (req, res) => {
   }
 
   try {
-    const isVerifiedVal = dbType === 'postgres' ? (uc.isVerified ? true : false) : (uc.isVerified ? 1 : 0);
     // Imports from the export file may carry an existing infographic; only accept https URLs
     const importedInfographic = parseGeAppLink(uc.infographicUrl);
 
     const insertSql = `
-      INSERT INTO use_cases (id, category, title, summary, features, connectors, role, level, steps, prompt, pro_tip, connector_guide, translations, is_verified, prompt_type, infographic_url)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO use_cases (id, category, title, summary, features, connectors, role, level, steps, prompt, pro_tip, connector_guide, translations, prompt_type, infographic_url)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const params = [
@@ -1538,7 +1540,6 @@ app.post('/api/admin/use-cases', requireAdmin, async (req, res) => {
       uc.proTip || '',
       uc.connectorGuide ? JSON.stringify(uc.connectorGuide) : null,
       JSON.stringify(uc.translations || { en: uc, 'zh-TW': {}, 'zh-CN': {} }),
-      isVerifiedVal,
       uc.promptType || 'general',
       importedInfographic.ok ? importedInfographic.value : null
     ];
@@ -1565,12 +1566,10 @@ app.put('/api/admin/use-cases', requireAdmin, async (req, res) => {
   }
 
   try {
-    const isVerifiedVal = dbType === 'postgres' ? (uc.isVerified ? true : false) : (uc.isVerified ? 1 : 0);
-
     // prompt_type = COALESCE(?, prompt_type): omitting promptType keeps the stored value
     const updateSql = `
       UPDATE use_cases
-      SET category = ?, title = ?, summary = ?, features = ?, connectors = ?, role = ?, level = ?, steps = ?, prompt = ?, pro_tip = ?, connector_guide = ?, translations = ?, is_verified = ?, prompt_type = COALESCE(?, prompt_type), updated_at = CURRENT_TIMESTAMP
+      SET category = ?, title = ?, summary = ?, features = ?, connectors = ?, role = ?, level = ?, steps = ?, prompt = ?, pro_tip = ?, connector_guide = ?, translations = ?, prompt_type = COALESCE(?, prompt_type), updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `;
 
@@ -1587,7 +1586,6 @@ app.put('/api/admin/use-cases', requireAdmin, async (req, res) => {
       uc.proTip || '',
       uc.connectorGuide ? JSON.stringify(uc.connectorGuide) : null,
       JSON.stringify(uc.translations || {}),
-      isVerifiedVal,
       uc.promptType || null,
       uc.id
     ];

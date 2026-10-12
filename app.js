@@ -2407,7 +2407,6 @@ function handleSearchInput(e) {
 // Helper to get Material Symbol icon for feature tags and institution levels
 function getTagIcon(type, name) {
   const n = (name || "").toLowerCase().trim();
-  if (type === "verified") return "verified";
   if (type === "feature") {
     if (n.includes("agent")) return "smart_toy";
     if (n.includes("notebook")) return "menu_book";
@@ -2467,34 +2466,34 @@ function getConnectorMeta(connectorName, lang = "en") {
   const c = (connectorName || "").toLowerCase();
   if (c.includes("drive")) {
     return {
-      class: "connector-tag-drive",
+      class: "tag-connector",
       icon: "folder_shared",
       label: lang === "en" ? "Drive Connector" : (lang === "zh-TW" ? "Drive 連接器" : "Drive 连接器")
     };
   }
   if (c.includes("email") || c.includes("outlook") || c.includes("mail")) {
     return {
-      class: "connector-tag-email",
+      class: "tag-connector",
       icon: "mail",
       label: lang === "en" ? "Email Connector" : (lang === "zh-TW" ? "Email 連接器" : "Email 连接器")
     };
   }
   if (c.includes("lms") || c.includes("canvas") || c.includes("moodle")) {
     return {
-      class: "connector-tag-lms",
+      class: "tag-connector",
       icon: "school",
       label: lang === "en" ? "LMS Connector" : (lang === "zh-TW" ? "LMS 連接器" : "LMS 连接器")
     };
   }
   if (c.includes("calendar") || c.includes("google")) {
     return {
-      class: "connector-tag-calendar",
+      class: "tag-connector",
       icon: "calendar_month",
       label: lang === "en" ? "Calendar Connector" : (lang === "zh-TW" ? "Calendar 連接器" : "Calendar 连接器")
     };
   }
   return {
-    class: "",
+    class: "tag-connector",
     icon: "api",
     label: connectorName
   };
@@ -2684,7 +2683,9 @@ async function initApp() {
   appState.activeFilterCategory = sessionStorage.getItem("ge_active_category") || "all";
   appState.activeFilterFeature = sessionStorage.getItem("ge_active_feature") || "all";
   const savedStatus = sessionStorage.getItem("ge_active_status");
-  appState.activeFilterStatus = savedStatus && savedStatus !== "deployed" ? savedStatus : "all";
+  // Only "all" and "liked" remain; legacy saved values ("deployed", "verified") fall back to "all"
+  appState.activeFilterStatus = savedStatus === "liked" ? "liked" : "all";
+  if (savedStatus && savedStatus !== appState.activeFilterStatus) sessionStorage.setItem("ge_active_status", "all");
   appState.sortBy = sessionStorage.getItem("ge_sort_by") || "popular";
   initFilterBar();
   document.getElementById("searchInput")?.addEventListener("input", handleSearchInput);
@@ -3068,7 +3069,6 @@ function initAdminPortal() {
         proTip: uc.proTip || uc.pro_tip || "",
         connectorGuide: typeof uc.connectorGuide === 'string' ? JSON.parse(uc.connectorGuide) : (uc.connectorGuide || uc.connector_guide || null),
         translations: typeof uc.translations === 'string' ? JSON.parse(uc.translations) : (uc.translations || {}),
-        isVerified: uc.isVerified !== undefined ? uc.isVerified : false,
         promptType: uc.promptType || "general"
       };
     });
@@ -3143,7 +3143,6 @@ function initAdminPortal() {
               proTip: uc.proTip || uc.pro_tip || "",
               connectorGuide: uc.connectorGuide || uc.connector_guide || null,
               translations: uc.translations || {},
-              isVerified: uc.isVerified !== undefined ? uc.isVerified : false,
               promptType: uc.promptType || "general"
             };
 
@@ -3531,12 +3530,12 @@ function renderAdminStatsChart(history) {
   container.appendChild(svg);
 }
 
-// Admin Tab 3: Load Use Cases CRUD (8 columns: check, infographic, ID, title, category, role, verified, actions)
+// Admin Tab 3: Load Use Cases CRUD (7 columns: check, infographic, ID, title, category, role, actions)
 async function loadAdminUseCases() {
   const tbody = document.getElementById("adminCasesTableBody");
   if (!tbody) return;
   const t = tr();
-  const emptyRow = (text, cls = "") => `<tr><td colspan="8" class="table-empty ${cls}">${escapeHtml(text)}</td></tr>`;
+  const emptyRow = (text, cls = "") => `<tr><td colspan="7" class="table-empty ${cls}">${escapeHtml(text)}</td></tr>`;
   tbody.innerHTML = emptyRow(t.loading);
 
   const { ok, data } = await apiJson('/api/use-cases');
@@ -3567,9 +3566,6 @@ async function loadAdminUseCases() {
     const thumb = uc.infographicUrl
       ? `<a href="${escapeHtml(uc.infographicUrl)}" target="_blank" rel="noopener" title="${escapeHtml(t.infographicOpen)}"><img class="thumb" src="${escapeHtml(uc.infographicUrl)}" alt="" loading="lazy"></a>`
       : `<span class="muted">${escapeHtml(t.none)}</span>`;
-    const verified = uc.isVerified
-      ? `<span class="tag-verified"><span class="material-symbols-outlined" aria-hidden="true">verified</span>${escapeHtml(t.yes)}</span>`
-      : `<span class="muted">${escapeHtml(t.no)}</span>`;
 
     row.innerHTML = `
       <td class="col-check"><input type="checkbox" class="admin-case-checkbox" value="${escapeHtml(uc.id)}" aria-label="${escapeHtml(titleText)}"></td>
@@ -3578,7 +3574,6 @@ async function loadAdminUseCases() {
       <td class="cell-strong"><span>${escapeHtml(titleText)}</span>${badgeHtml ? ` ${badgeHtml}` : ""}</td>
       <td>${escapeHtml(categoryLabel[uc.category] || uc.category || "")}</td>
       <td class="muted">${escapeHtml((t.roles && t.roles[uc.role]) || uc.role || "")}</td>
-      <td>${verified}</td>
       <td class="col-actions"><div class="row-actions">
         ${isSuper ? `<button type="button" class="nav-button btn-sm btn-gen-infographic">${escapeHtml(uc.infographicUrl ? t.regenerate : t.generate)}</button>` : ""}
         <button type="button" class="nav-button btn-sm btn-edit-case">${escapeHtml(isAssist ? t.view : t.edit)}</button>
@@ -3687,12 +3682,6 @@ function openAdminEditModal(uc) {
       box.checked = levelArray.includes(box.value);
     });
 
-    // Set verified state
-    const verifiedBox = document.getElementById("formCaseVerified");
-    if (verifiedBox) {
-      verifiedBox.checked = !!uc.isVerified;
-    }
-
     // Translation values pre-population safely
     const trans = uc.translations || {};
     
@@ -3730,11 +3719,6 @@ function openAdminEditModal(uc) {
     document.getElementById("formCaseSteps").value = "";
     document.getElementById("formCasePrompt").value = "";
     document.getElementById("formCaseProTip").value = "";
-    
-    const verifiedBox = document.getElementById("formCaseVerified");
-    if (verifiedBox) {
-      verifiedBox.checked = false;
-    }
 
     // Clear all translation inputs
     document.getElementById("formTransZhtwTitle").value = "";
@@ -3823,12 +3807,11 @@ async function saveAdminUseCase() {
     }
   };
 
-  const isVerified = document.getElementById("formCaseVerified").checked;
   const promptTypeEl = document.getElementById("formCasePromptType");
   const promptType = promptTypeEl ? promptTypeEl.value : "general";
 
   const payload = {
-    id, category, title, role, summary, features, connectors, level, steps, prompt, proTip, translations, isVerified, promptType
+    id, category, title, role, summary, features, connectors, level, steps, prompt, proTip, translations, promptType
   };
 
   try {
@@ -4557,7 +4540,6 @@ const uiTranslationsV2 = {
     likeLabel: "Like",
     likedToast: "Added to liked",
     unlikedToast: "Removed from liked",
-    verifiedLabel: "Verified",
     newLabel: "New",
     updatedLabel: "Updated",
     operationalSteps: "How it works",
@@ -4673,12 +4655,9 @@ const uiTranslationsV2 = {
     adminCrudThTitle: "Title",
     adminCrudThCategory: "Category",
     adminCrudThRole: "Role",
-    adminCrudThVerified: "Verified",
     adminCrudThActions: "Actions",
     adminCrudThInfographic: "Infographic",
     none: "None",
-    yes: "Yes",
-    no: "No",
     generate: "Generate",
     regenerate: "Regenerate",
     generating: "Generating…",
@@ -4780,7 +4759,6 @@ const uiTranslationsV2 = {
     likeLabel: "讚好",
     likedToast: "已加入讚好",
     unlikedToast: "已移除讚好",
-    verifiedLabel: "已驗證",
     newLabel: "新",
     updatedLabel: "已更新",
     operationalSteps: "運作方式",
@@ -4896,12 +4874,9 @@ const uiTranslationsV2 = {
     adminCrudThTitle: "標題",
     adminCrudThCategory: "類別",
     adminCrudThRole: "角色",
-    adminCrudThVerified: "已驗證",
     adminCrudThActions: "操作",
     adminCrudThInfographic: "資訊圖表",
     none: "無",
-    yes: "是",
-    no: "否",
     generate: "產生",
     regenerate: "重新產生",
     generating: "產生中…",
@@ -5003,7 +4978,6 @@ const uiTranslationsV2 = {
     likeLabel: "点赞",
     likedToast: "已加入点赞",
     unlikedToast: "已取消点赞",
-    verifiedLabel: "已验证",
     newLabel: "新",
     updatedLabel: "已更新",
     operationalSteps: "运作方式",
@@ -5119,12 +5093,9 @@ const uiTranslationsV2 = {
     adminCrudThTitle: "标题",
     adminCrudThCategory: "类别",
     adminCrudThRole: "角色",
-    adminCrudThVerified: "已验证",
     adminCrudThActions: "操作",
     adminCrudThInfographic: "信息图",
     none: "无",
-    yes: "是",
-    no: "否",
     generate: "生成",
     regenerate: "重新生成",
     generating: "生成中…",
@@ -5254,8 +5225,6 @@ const uiTranslationsV3 = {
     adminFormLabelZhtwProTip: "Pro tip", adminFormLabelZhcnProTip: "Pro tip",
     btnAdminFormCancel: "Cancel",
     btnAdminFormSave: "Save",
-    caseFormVerified: "Mark as verified",
-    caseFormVerifiedDesc: "Shows a verified badge on the portal.",
     levelUni: "University & college",
     levelHigh: "High school",
     levelPrimary: "Primary school",
@@ -5358,8 +5327,6 @@ const uiTranslationsV3 = {
     adminFormLabelZhtwProTip: "實用提示", adminFormLabelZhcnProTip: "實用提示",
     btnAdminFormCancel: "取消",
     btnAdminFormSave: "儲存",
-    caseFormVerified: "標記為已驗證",
-    caseFormVerifiedDesc: "在入口網站顯示已驗證徽章。",
     levelUni: "大專院校",
     levelHigh: "中學",
     levelPrimary: "小學",
@@ -5460,8 +5427,6 @@ const uiTranslationsV3 = {
     adminFormLabelZhtwProTip: "实用提示", adminFormLabelZhcnProTip: "实用提示",
     btnAdminFormCancel: "取消",
     btnAdminFormSave: "保存",
-    caseFormVerified: "标记为已验证",
-    caseFormVerifiedDesc: "在门户上显示已验证徽章。",
     levelUni: "大专院校",
     levelHigh: "中学",
     levelPrimary: "小学",
@@ -5960,8 +5925,6 @@ async function togglePreference(ucId) {
 // ---------------------------------------------------------------------------
 function cardHtml(uc, lang, t) {
   const badge = getUsecaseBadgeHtml(uc, lang);
-  const verified = uc.isVerified
-    ? `<span class="tag tag-icon-only tag-verified" title="${escapeHtml(t.verifiedLabel)}"><span class="material-symbols-outlined">verified</span></span>` : "";
   const feats = (uc.features || []).map(f =>
     `<span class="tag tag-feature tag-icon-only" title="${escapeHtml(f)}"><span class="material-symbols-outlined">${getTagIcon("feature", f)}</span></span>`).join("");
   const conns = (uc.connectors || []).map(c => {
@@ -5971,7 +5934,7 @@ function cardHtml(uc, lang, t) {
   const title = ucTitle(uc, lang);
   return `
     <article class="card" data-uc-id="${escapeHtml(uc.id)}" tabindex="0" role="button" aria-label="${escapeHtml(title)}">
-      <div class="card-tags">${badge}${verified}${feats}${conns}</div>
+      <div class="card-tags">${badge}${feats}${conns}</div>
       <h3 class="card-title">${escapeHtml(title)}</h3>
       <p class="card-summary">${escapeHtml(ucSummary(uc, lang))}</p>
       <div class="card-footer">
@@ -6262,12 +6225,28 @@ function openUseCaseModal(useCase) {
   modalState.scopes = { main: { text: mainPrompt, type: mainType } };
   helpers.forEach((hp, i) => { modalState.scopes[`helper-${i}`] = { text: hp.prompt || "", type: hp.type || "general" }; });
 
-  // Header: feature chips + title
+  // Header: GE feature chips (neutral) + connector chips (red), then the title
   document.getElementById("modalTitle").textContent = title;
-  const verified = useCase.isVerified
-    ? `<span class="tag tag-full tag-verified"><span class="material-symbols-outlined">verified</span><span>${escapeHtml(t.verifiedLabel)}</span></span>` : "";
-  document.getElementById("modalTags").innerHTML = verified + (useCase.features || []).map(f =>
+  const featureChips = (useCase.features || []).map(f =>
     `<span class="tag tag-feature tag-full"><span class="material-symbols-outlined">${getTagIcon("feature", f)}</span><span>${escapeHtml(f)}</span></span>`).join("");
+  const connectorChips = (useCase.connectors || []).map(c => {
+    const meta = getConnectorMeta(c, lang);
+    return `<span class="tag tag-full ${meta.class}" data-connector="${escapeHtml(c)}"><span class="material-symbols-outlined">${meta.icon}</span><span>${escapeHtml(meta.label)}</span></span>`;
+  }).join("");
+  document.getElementById("modalTags").innerHTML = featureChips + connectorChips;
+
+  // Header actions: like + view counter left of the close button (delegated click bound once)
+  const prefSlot = document.getElementById("modalPref");
+  if (prefSlot) {
+    prefSlot.innerHTML = prefButtonsHtml(useCase, t);
+    if (!prefSlot.dataset.bound) {
+      prefSlot.dataset.bound = "1";
+      prefSlot.addEventListener("click", (e) => {
+        const like = e.target.closest(".btn-like");
+        if (like) togglePreference(like.dataset.ucId);
+      });
+    }
+  }
 
   // Hero: infographic or a quiet placeholder tile of feature icons
   const heroHtml = useCase.infographicUrl
@@ -6330,14 +6309,15 @@ function openUseCaseModal(useCase) {
       <div class="uc-vars-list">${varInputsHtml}</div>
     </section>` : "";
 
+  // Hero: left = infographic with the summary directly below; right = the variables panel alone.
+  // Without variables the left column spans the full width (no empty right column).
   body.innerHTML = `
-    <div class="uc-hero-row">
-      ${heroHtml}
-      <div class="uc-hero-side">
+    <div class="uc-hero-row${varKeys.length ? "" : " is-single"}">
+      <div class="uc-hero-main">
+        ${heroHtml}
         <p class="uc-summary">${escapeHtml(summary)}</p>
-        <div class="uc-actions"><div class="uc-pref">${prefButtonsHtml(useCase, t)}</div></div>
-        ${varsPanelHtml}
       </div>
+      ${varsPanelHtml}
     </div>
 
     <section class="uc-how">
@@ -6431,8 +6411,6 @@ function bindModalBody(body) {
     if (tryBtn) { onTryIt(tryBtn.dataset.scope); return; }
     const copyBtn = e.target.closest(".btn-copy-prompt");
     if (copyBtn) { onCopyPrompt(copyBtn.dataset.scope, copyBtn); return; }
-    const like = e.target.closest(".btn-like");
-    if (like) togglePreference(like.dataset.ucId);
   });
 }
 
