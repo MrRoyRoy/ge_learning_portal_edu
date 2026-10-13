@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node server.js",
     "infographics": "node scripts/generate-infographics.js",
-    "game-assets": "node scripts/generate-game-assets.js"
+    "game-assets": "node scripts/generate-game-assets.js",
+    "favicons": "node scripts/generate-favicons.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
