@@ -7801,6 +7801,9 @@ function renderQuestBubble(item, typewriter) {
   if (!bubble) return;
   const kind = item?.kind || "hint";
   bubble.dataset.kind = kind;
+  // Restart the CSS unroll animation for each news scroll (reflow between remove/add).
+  bubble.classList.remove("is-unrolling");
+  if (kind === "news") { void bubble.offsetWidth; bubble.classList.add("is-unrolling"); }
   const phase = questCurrentPosition().phase;
   $("questBubbleKicker").textContent = kind === "news" ? t.newsKicker : fmt(t.questHintKicker, { phase: t.questPhase?.[phase] || phase });
   const text = item?.kind === "news" ? pickLangText(item.news.title, lang)
