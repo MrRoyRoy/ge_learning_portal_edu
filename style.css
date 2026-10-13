@@ -3072,7 +3072,7 @@ textarea.select-control { height: auto; padding: 10px 12px; line-height: 1.5; }
 /* Cards: equal-height rows; no fixed height so nothing clips */
 .cards-grid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   grid-auto-rows: 1fr;
   gap: 20px;
 }
@@ -4047,3 +4047,397 @@ html[data-theme="light"] .card:hover { box-shadow: var(--shadow-card-hover); }
 
 /* Light mode: keep hero variable labels neutral (overrides the legacy indigo light-theme label colour) */
 html[data-theme="light"] .uc-vars .variable-label { color: var(--text-secondary); }
+
+/* ==========================================================================
+   V6 LAYER: colourful GE feature tags, Quest Run strip (pixel scene, quest
+   bubble, academic timeline, Archie's news drawer), admin News tab, academic
+   calendar settings, case-form timing chips + question repeater.
+   ========================================================================== */
+
+/* --- Feature tone tokens (dark default; light below) ---------------------- */
+:root {
+  --tone-research-ink: #81C995; --tone-research-bg: rgba(129, 201, 149, 0.16); --tone-research-line: rgba(129, 201, 149, 0.40);
+  --tone-create-ink: #8AB4F8;   --tone-create-bg: rgba(138, 180, 248, 0.16);   --tone-create-line: rgba(138, 180, 248, 0.40);
+  --tone-agent-ink: #FDD663;    --tone-agent-bg: rgba(253, 214, 99, 0.16);     --tone-agent-line: rgba(253, 214, 99, 0.40);
+  --tone-connector-ink: #F28B82; --tone-connector-bg: rgba(242, 139, 130, 0.16); --tone-connector-line: rgba(242, 139, 130, 0.40);
+  --quest-gold: #F2C14E;
+  --quest-gold-ink: #3B2A05;
+  --quest-panel: #12151B;
+}
+html[data-theme="light"] {
+  --tone-research-ink: #188038; --tone-research-bg: rgba(24, 128, 56, 0.08); --tone-research-line: rgba(24, 128, 56, 0.35);
+  --tone-create-ink: #1A73E8;   --tone-create-bg: rgba(26, 115, 232, 0.08);  --tone-create-line: rgba(26, 115, 232, 0.35);
+  --tone-agent-ink: #B06000;    --tone-agent-bg: rgba(176, 96, 0, 0.08);     --tone-agent-line: rgba(176, 96, 0, 0.35);
+  --tone-connector-ink: #D93025; --tone-connector-bg: rgba(217, 48, 37, 0.08); --tone-connector-line: rgba(217, 48, 37, 0.35);
+  --quest-panel: #FFFFFF;
+}
+
+/* !important: the legacy .tag-icon-only:hover rule recolours every chip to primary blue. */
+.tag.tone-research, .type-chip.tone-research { color: var(--tone-research-ink) !important; background: var(--tone-research-bg) !important; border-color: var(--tone-research-line) !important; }
+.tag.tone-create, .type-chip.tone-create { color: var(--tone-create-ink) !important; background: var(--tone-create-bg) !important; border-color: var(--tone-create-line) !important; }
+.tag.tone-agent, .type-chip.tone-agent { color: var(--tone-agent-ink) !important; background: var(--tone-agent-bg) !important; border-color: var(--tone-agent-line) !important; }
+.tag.tone-connector, .type-chip.tone-connector { color: var(--tone-connector-ink) !important; background: var(--tone-connector-bg) !important; border-color: var(--tone-connector-line) !important; }
+.tag[class*="tone-"] .material-symbols-outlined, .type-chip[class*="tone-"] .material-symbols-outlined { color: inherit !important; }
+.tag.tag-icon-only[class*="tone-"]:hover { filter: brightness(1.12); }
+
+#filterFeature[data-tone="research"] { color: var(--tone-research-ink); border-color: var(--tone-research-line); background-color: var(--tone-research-bg); }
+#filterFeature[data-tone="create"] { color: var(--tone-create-ink); border-color: var(--tone-create-line); background-color: var(--tone-create-bg); }
+#filterFeature[data-tone="agent"] { color: var(--tone-agent-ink); border-color: var(--tone-agent-line); background-color: var(--tone-agent-bg); }
+#filterFeature option.tone-research { color: var(--tone-research-ink); }
+#filterFeature option.tone-create { color: var(--tone-create-ink); }
+#filterFeature option.tone-agent { color: var(--tone-agent-ink); }
+#filterFeature option:not([class*="tone-"]) { color: var(--text-primary); }
+
+/* --- Quest Run strip ------------------------------------------------------- */
+.quest-strip {
+  margin: 0 0 28px;
+  border: 1px solid var(--line-card);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--quest-panel);
+  max-width: 100%;
+}
+.quest-strip[hidden] { display: none; }
+.quest-scene {
+  position: relative;
+  height: 180px;
+  overflow: hidden;
+  background: #1b2340;
+}
+.quest-scene[hidden] { display: none; }
+.quest-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+/* Bubble: pixel border via stepped box-shadows, tail pointing at the hero. */
+.quest-bubble {
+  position: absolute;
+  top: 14px;
+  left: calc(18% + 48px);
+  right: 16px;
+  max-width: 520px;
+  padding: 10px 14px 10px;
+  background: #FFFDF5;
+  color: #1C1B18;
+  border: 3px solid #1C1B18;
+  border-radius: 4px;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: transform 180ms steps(3), opacity 180ms steps(3);
+  transform-origin: left bottom;
+}
+.quest-bubble::after {
+  content: "";
+  position: absolute;
+  left: -14px;
+  bottom: 18px;
+  width: 0; height: 0;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-right: 12px solid #1C1B18;
+}
+.quest-bubble.is-folding { transform: scale(0.92, 0.2); opacity: 0; }
+.quest-bubble-kicker {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #5B5A55;
+}
+.quest-bubble-text {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.35;
+  min-height: 1.35em;
+  overflow-wrap: anywhere;
+}
+.quest-bubble-body { margin: 0; font-size: 13px; line-height: 1.4; color: #3A3934; overflow-wrap: anywhere; }
+.quest-bubble-body[hidden] { display: none; }
+.quest-bubble-actions { display: flex; align-items: center; gap: 6px; margin-top: 2px; flex-wrap: wrap; }
+.quest-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 32px;
+  padding: 0 10px;
+  border: 2px solid #1C1B18;
+  border-radius: 3px;
+  background: #1A73E8;
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 #1C1B18;
+}
+.quest-action:hover { background: #1557B0; }
+.quest-action:active { transform: translate(2px, 2px); box-shadow: none; }
+.quest-action[hidden] { display: none; }
+.quest-action .material-symbols-outlined { font-size: 16px; }
+.quest-bubble .quest-icon-btn { color: #1C1B18; }
+.quest-bubble .quest-icon-btn:hover { background: rgba(0, 0, 0, 0.08); }
+
+.quest-bubble[data-kind="news"] { background: var(--quest-gold); border-color: #3B2A05; color: var(--quest-gold-ink); }
+.quest-bubble[data-kind="news"]::after { border-right-color: #3B2A05; }
+.quest-bubble[data-kind="news"] .quest-bubble-kicker,
+.quest-bubble[data-kind="news"] .quest-bubble-body { color: #4A3608; }
+.quest-bubble[data-kind="news"] .quest-action { background: #3B2A05; border-color: #3B2A05; box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.35); }
+
+.quest-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.quest-icon-btn:hover { background: var(--accent-soft); color: var(--text-primary); }
+.quest-icon-btn:focus-visible, .quest-action:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.quest-icon-btn[hidden] { display: none; }
+.quest-icon-btn .material-symbols-outlined { font-size: 20px; }
+
+/* --- Timeline -------------------------------------------------------------- */
+.quest-timeline { padding: 10px 16px 12px; border-top: 1px solid var(--line); }
+.quest-strip.is-collapsed .quest-timeline { border-top: 0; }
+.quest-timeline-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.quest-position { font-size: 14px; font-weight: 600; color: var(--text-primary); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.quest-timeline-actions { display: flex; gap: 2px; flex-shrink: 0; }
+.quest-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--err);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+}
+.quest-badge[hidden] { display: none; }
+.quest-track { position: relative; height: 40px; margin-top: 6px; }
+.quest-terms { position: absolute; left: 0; right: 0; top: 0; height: 16px; }
+.quest-term {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  border-radius: 3px;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+.quest-term + .quest-term { border-left: 2px solid var(--quest-panel); }
+.quest-term-label {
+  display: block;
+  padding: 0 6px;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 16px;
+  color: rgba(0, 0, 0, 0.72);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.quest-term-semA, .cal-swatch.quest-term-semA { background: #8AB4F8; }
+.quest-term-winter, .cal-swatch.quest-term-winter { background: #C9D6E8; }
+.quest-term-semB, .cal-swatch.quest-term-semB { background: #81C995; }
+.quest-term-summer, .cal-swatch.quest-term-summer { background: #FDD663; }
+.quest-term.is-current { box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.35); }
+.quest-months { position: absolute; left: 0; right: 0; top: 20px; height: 16px; }
+.quest-month {
+  position: absolute;
+  top: 0;
+  font-size: 10px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  transform: translateX(2px);
+  border-left: 1px solid var(--line-strong);
+  padding-left: 3px;
+  line-height: 14px;
+}
+.quest-today {
+  position: absolute;
+  top: -6px;
+  transform: translateX(-50%);
+  height: 30px;
+  width: 2px;
+  background: var(--err);
+}
+.quest-today .material-symbols-outlined {
+  position: absolute;
+  top: -12px;
+  left: -1px;
+  font-size: 16px;
+  color: var(--err);
+  font-variation-settings: "FILL" 1;
+}
+
+/* --- News drawer ----------------------------------------------------------- */
+.quest-drawer-backdrop { position: fixed; inset: 0; background: var(--bg-modal-overlay); z-index: 1200; }
+.quest-drawer-backdrop[hidden] { display: none; }
+.quest-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(400px, 100vw);
+  background: var(--bg-dark-surface);
+  border-left: 1px solid var(--line-card);
+  box-shadow: var(--shadow-pop);
+  z-index: 1201;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(16px);
+  opacity: 0;
+  transition: transform 200ms ease, opacity 200ms ease;
+}
+.quest-drawer.is-open { transform: none; opacity: 1; }
+.quest-drawer[hidden] { display: none; }
+.quest-drawer:focus { outline: none; }
+.quest-drawer-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 16px 12px 20px; border-bottom: 1px solid var(--line); }
+.quest-drawer-head h2 { margin: 0; font-family: var(--font-heading); font-size: 18px; }
+.quest-drawer-list { list-style: none; margin: 0; padding: 12px 16px 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+.quest-drawer-item { padding: 12px 14px; border: 1px solid var(--line-card); border-radius: var(--radius-md); background: var(--surface-2); }
+.quest-drawer-item.is-pinned { border-color: rgba(242, 193, 78, 0.6); }
+.quest-drawer-item-head { display: flex; align-items: center; gap: 8px; }
+.quest-drawer-item-head .material-symbols-outlined { color: var(--quest-gold); font-size: 18px; }
+.quest-drawer-item h3 { margin: 0; font-size: 15px; font-weight: 700; overflow-wrap: anywhere; }
+.quest-drawer-item p { margin: 6px 0 0; font-size: 14px; color: var(--text-secondary); overflow-wrap: anywhere; }
+.quest-drawer-item-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; }
+.quest-drawer-date { font-size: 12px; color: var(--text-muted); }
+.quest-drawer-empty { padding: 24px 20px; color: var(--text-muted); margin: 0; }
+.quest-drawer-empty[hidden] { display: none; }
+
+/* --- Mobile: shorter scene, compact bubble to the right of the hero ---------
+   The hero sits at 12% of the width (see createQuestRenderer), so the bubble
+   starts just past its 48px sprite and keeps the hero visible. */
+@media (max-width: 640px) {
+  .quest-strip { margin-bottom: 20px; }
+  .quest-scene { height: 132px; }
+  .quest-bubble { top: 8px; left: calc(12% + 60px); right: 8px; max-width: none; padding: 6px 8px; gap: 2px; border-width: 2px; box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.35); }
+  .quest-bubble::after { left: -12px; bottom: 12px; border-top-width: 6px; border-bottom-width: 6px; border-right-width: 10px; }
+  .quest-bubble-text { font-size: 13px; line-height: 1.3; }
+  .quest-bubble-body { display: none; }
+  .quest-bubble-kicker { display: none; }
+  .quest-action { min-height: 28px; font-size: 12px; padding: 0 8px; }
+  .quest-bubble .quest-icon-btn { width: 28px; height: 28px; }
+  .quest-timeline { padding: 8px 12px 10px; }
+  .quest-position { font-size: 13px; }
+  .quest-month.is-odd { display: none; }
+}
+
+/* --- Light theme ----------------------------------------------------------- */
+html[data-theme="light"] .quest-term { box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06); }
+html[data-theme="light"] .quest-drawer { background: #FFFFFF; }
+html[data-theme="light"] .quest-scene { background: #bfe3ff; }
+
+/* --- Admin: shared small controls ----------------------------------------- */
+.nav-button.nav-button-small { min-height: 36px; height: 36px; padding: 0 12px; font-size: 13px; gap: 6px; display: inline-flex; align-items: center; }
+.nav-button.nav-button-small .material-symbols-outlined { font-size: 18px; }
+.nav-button.is-busy { opacity: 0.7; pointer-events: none; }
+.field-counter { margin: 4px 0 0; font-size: 12px; color: var(--text-muted); text-align: right; font-variant-numeric: tabular-nums; }
+.field-counter.is-near { color: var(--warn); }
+.check-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px 16px; margin-top: 8px; }
+.check-grid .check-row { font-size: 14px; }
+.chip-checks { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.chip-check { position: relative; display: inline-flex; cursor: pointer; }
+.chip-check input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.chip-check span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: transparent;
+}
+.chip-check input:checked + span { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+.chip-check input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+.chip-check input:disabled + span { opacity: 0.6; cursor: not-allowed; }
+
+/* --- Admin: News tab ------------------------------------------------------- */
+.news-form-grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(260px, 1fr); gap: 24px; align-items: start; }
+.news-form-fields { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.news-lang-block { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.news-lang-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.news-lang-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 6px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  font-size: 12px;
+  font-weight: 700;
+  align-self: flex-start;
+}
+.news-audience { border: 0; padding: 0; margin: 0; min-width: 0; }
+.news-flags { display: flex; gap: 24px; flex-wrap: wrap; }
+.news-preview-wrap { position: sticky; top: 16px; display: flex; flex-direction: column; gap: 8px; }
+.quest-bubble.quest-bubble-preview { position: relative; top: auto; left: auto; right: auto; max-width: none; margin-left: 14px; }
+.news-cell-title { display: flex; align-items: center; gap: 6px; }
+.news-cell-title .material-symbols-outlined { font-size: 16px; color: var(--quest-gold); }
+.news-cell-aud { font-size: 12px; margin-top: 2px; }
+#adminNewsTableBody td.col-actions { white-space: nowrap; }
+
+/* --- Admin: academic calendar --------------------------------------------- */
+.cal-grid { display: flex; flex-direction: column; gap: 10px; }
+.cal-row { display: grid; grid-template-columns: minmax(130px, 1fr) minmax(0, 1fr) minmax(0, 1fr); gap: 12px; align-items: end; }
+.cal-term { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; padding-bottom: 12px; }
+.cal-swatch { width: 14px; height: 14px; border-radius: 3px; flex-shrink: 0; }
+.cal-field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.cal-preview { margin: 4px 0 0; font-weight: 600; color: var(--text-primary); }
+.cal-preview:empty { display: none; }
+.cal-footer-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* --- Admin: case form timing + Quest Run questions ------------------------ */
+.hint-list { display: flex; flex-direction: column; gap: 10px; margin: 8px 0; }
+.hint-list:empty { display: none; }
+.hint-item { border: 1px solid var(--line-card); border-radius: var(--radius-md); padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; background: var(--surface-2); }
+.hint-item-head { display: flex; align-items: center; justify-content: space-between; }
+.hint-num { font-size: 13px; font-weight: 700; color: var(--text-secondary); }
+.hint-field { display: grid; grid-template-columns: 36px minmax(0, 1fr); align-items: center; gap: 8px; }
+.hint-lang { font-size: 12px; font-weight: 700; color: var(--text-muted); }
+.hint-aud summary { cursor: pointer; font-size: 13px; color: var(--text-secondary); }
+
+@media (max-width: 900px) {
+  .news-form-grid { grid-template-columns: minmax(0, 1fr); }
+  .news-preview-wrap { position: static; }
+}
+@media (max-width: 640px) {
+  .cal-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .cal-term { grid-column: 1 / -1; padding-bottom: 0; }
+}
+
+/* --- Reduced motion: no fold / slide animations (the canvas draws one static frame) */
+@media (prefers-reduced-motion: reduce) {
+  .quest-bubble, .quest-drawer { transition: none !important; }
+  .quest-bubble.is-folding { transform: none; opacity: 1; }
+}
+
+/* Case form Quest fieldsets: drop the browser's default fieldset frame so
+   they line up with the other .form-group blocks. */
+.case-quest-fields { border: 0; margin: 0 0 16px; padding: 0; min-width: 0; }
+.case-quest-fields > legend { padding: 0; margin-bottom: 4px; }
+.case-quest-fields .field-hint { margin: 0 0 8px; }

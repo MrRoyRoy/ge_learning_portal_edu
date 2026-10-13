@@ -128,7 +128,38 @@ graph TD
 
 ############# 7. App State & Progress
  
-##### Accomplished Tasks (Latest Session Milestone — 2026-10-12, v5 modal + cleanup)
+##### Accomplished Tasks (Latest Session Milestone — 2026-10-13, v6 Quest Run + colour tones + News, branch `dev/quest-run`, not yet committed or deployed)
+* **Colour tones (100%):** `toneClass(feature)` adds `tone-*` to card feature chips, modal chips and `typeChipHtml`; `#filterFeature[data-tone]` takes the selected feature's tone. NotebookLM / Deep Research green, Canvas / Video blue, Agent Designer yellow, Image purple. Dark and light variants live in the V6 layer at the end of `style.css`. Connectors stay red.
+* **Quest Run strip (100%):** `lib/quest-core.js` is a UMD module shared by the server and `window.QuestCore`:
+  * calendar defaults and validation, `getAcademicPosition` (term / week / phase)
+  * `HERO_CLASS_BY_ROLE` (Wizard / Warrior / Priest), `pickWeightedHint`, `newsStatus`
+  * The canvas renderer (`createQuestRenderer` at the end of `app.js`):
+    * Draws real sprites from `GET /game/manifest.json`, falling back per asset.
+    * Runs at 30 fps and pauses when off-screen or when the tab is hidden. Reduced motion draws a static frame.
+    * Adds a dusk tint in the dark theme. Archie swoops in with news.
+    * `window.__questDebug` exposes the renderer state for tests.
+  * Timeline: 4 terms, month ticks and a today flag. Example label: "Semester A · Week 7 · Midterms".
+  * Bubble: rotates every 30 s, with pause and collapse; the collapsed state persists.
+  * News: bell badge and drawer; dismissals are kept in localStorage.
+  * `mountQuestRun()` is called from all 4 portal entry paths.
+* **Backend (100%):**
+  * New tables `quest_hints` (22 seeded) and `announcements`; new column `use_cases.timing`; `app_settings.academic_calendar`.
+  * New endpoints: `/api/quest`, `/api/quest/event` (logged to analytics as `hint:<id>` / `news:<id>`), `/api/admin/hints`, `/api/admin/announcements` (adds seen/click counts and returns per-field 400 errors), `/api/admin/settings/calendar` (super), `/api/admin/translate`.
+  * The Gemini drafting schema also returns timing and hints.
+* **Admin UI (100%):**
+  * **News** tab for all admins:
+    * form: trilingual fields with counters, link or playbook, audience chips, dates, pin
+    * live scroll preview, field validation, Translate with Gemini
+    * table with status, reach and clicks
+  * **Settings → Calendar** (super admins only): adjacent terms update together when a date changes, a live "Today" preview, Save, and Reset with a confirmation.
+  * Case form: 7 timing chips (Anytime excludes the others) and up to 3 trilingual quest questions.
+  * All new strings are in `uiTranslationsV6` (en / zh-TW / zh-CN).
+* **Verified:**
+  * `node --check` passes for all changed files.
+  * Playwright `test_v6.js` passes 37/37 (desktop and mobile, light and dark, zh-TW, reduced motion, news publish → scroll → drawer → dismiss, calendar save/reset driving `/api/quest`, case form chips) with no console errors.
+  * The `test_v6_base.js` regression suite also ran. Screenshots are `v6_*`.
+
+##### Previous Milestone — 2026-10-12, v5 modal + cleanup
 * **Modal v5 (100%):** hero = left column (infographic + summary directly below) / right column = only the variables panel (`.is-single` full width when no variables). Like + view counter moved into the modal header (`#modalPref` in `.modal-header-actions`, left of ×, 44px, own delegated click). Under 720px the header is a grid: tags + controls on row one, full-width title on row two (no overflow at 390px).
 * **Connector chips (100%):** modal header tag row shows connector chips after the GE feature chips; all connector icons/chips use one red `.tag-connector` scheme; `.connector-tag-drive/email/lms/calendar` removed.
 * **Use-case "Verified" removed (100%):** card/modal badge, admin table column (now 7 cols), `formCaseVerified` checkbox + payload, keys `verifiedLabel`, `adminCrudThVerified`, `caseFormVerified(Desc)`, `yes`/`no`, `.tag-verified` CSS. Saved `ge_active_status` other than `liked` → `all`. Server no longer reads/writes/returns `isVerified`; `use_cases.is_verified` kept and documented as deprecated. Admin invite email verification untouched.
@@ -158,6 +189,14 @@ graph TD
 * **Cleanup (100%):** remaining hard-coded English strings (login, temp reset, case form, Gemini drafting, diff viewer, feedback modal, toasts/confirms) moved into `uiTranslationsV3` (en / zh-TW / zh-CN, 372 keys each) with `data-i18n*` attributes (`data-i18n-title` added); dead functions removed (`setupConnectorToggles`, `checkMissingConnector`, `handleOnboardingSubmit`, `getCategoryByRole`, etc.); 66 legacy sidebar/hub/lock/switch CSS rules pruned; top-level `sessionStorage` read guarded so the vm seeder works; README rewritten (invites, password recovery, SMTP, Try it, infographics, env vars, new schema). Verified: Playwright 57/57 + zh-TW i18n check, no console errors.
 
 ### Next Steps & Continuous Polish
+00. **v6 Quest Run: deployed to DEV only (2026-10-13, revision `dev-edu-ge-adoption-portal-00005-vhq`, branch `dev/quest-run`, not merged to `main`):**
+    * Playwright `test_v6.js` 37/37 on dev, plus the `test_v6_base.js` regression suite. Sprites ship in the image (`game/`). Mobile card column overflow fixed (`minmax(0,1fr)`).
+    * Prod is untouched. To promote: merge `dev/quest-run` → `main`, deploy `edu-ge-learning-portal`, rerun both suites.
+    * Don't commit `node_modules/sharp` / `node_modules/@img` (macOS binaries for the asset script; `sharp` is a devDependency only).
+    * Set the real academic calendar in Settings → Calendar.
+    * Review and expand the 22 seeded quest questions per role.
+    * Translate with Gemini needs Vertex AI credentials (it returns 502 without them).
+    * Optionally build an admin UI for standalone `quest_hints`; today the questions are edited per playbook in the case form, and the server allows 5 per playbook while the client allows 3.
 0. **v5 deployed to prod (2026-10-12, revision `edu-ge-learning-portal-00029-z2s`):** modal v5, red connectors, Verified removal, blue feedback, SQLite `updated_at` fix; Playwright `test_v3.js` 157/157 on prod. Dev (`dev-edu-ge-adoption-portal`) is still behind; redeploy it if needed.
 1. **Dev deployed (2026-10-12, revision `dev-edu-ge-adoption-portal-00004-h68`):** `SETTINGS_ENCRYPTION_KEY` + `INFOGRAPHIC_BUCKET` set, timeout 600s; DB-backed sessions (likes fixed); views replace deploys; **Archimedes infographics v2** (raven-graduate mascot, cel-shaded editorial vector, reference `imgs/archimedes-ref.jpg` sent to Nano Banana, per-case `CONCEPT_HINTS`) auto-upgraded via `applySeedInfographics()` (only replaces older `?v=` of the same object); Playwright 109/109 on dev.
    **Prod deployed (2026-10-12, revision `edu-ge-learning-portal-00028-zh5`)** with v4 modal polish (variables in hero column, green Try it / blue Copy prompt, step padding), own `SETTINGS_ENCRYPTION_KEY`, timeout 600s; Playwright 124/124 on prod. Prod has 7 extra admin-created use cases without infographics → run **Generate missing** in Admin → Use cases. Dev is one revision behind (redeploy dev to match).

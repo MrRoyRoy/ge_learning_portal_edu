@@ -1,0 +1,60 @@
+{
+  "hero_wizard": {
+    "file": "hero_wizard.png",
+    "frameW": 70,
+    "frameH": 48,
+    "frames": 6,
+    "fps": 10
+  },
+  "hero_warrior": {
+    "file": "hero_warrior.png",
+    "frameW": 64,
+    "frameH": 48,
+    "frames": 6,
+    "fps": 10
+  },
+  "hero_priest": {
+    "file": "hero_priest.png",
+    "frameW": 50,
+    "frameH": 48,
+    "frames": 8,
+    "fps": 10
+  },
+  "archie": {
+    "file": "archie.png",
+    "frameW": 42,
+    "frameH": 32,
+    "frames": 4,
+    "fps": 8
+  },
+  "bg_sky": {
+    "file": "bg_sky.png",
+    "w": 407,
+    "h": 180,
+    "parallax": 0.05
+  },
+  "bg_far": {
+    "file": "bg_far.png",
+    "w": 405,
+    "h": 180,
+    "parallax": 0.2
+  },
+  "bg_mid": {
+    "file": "bg_mid.png",
+    "w": 407,
+    "h": 180,
+    "parallax": 0.45
+  },
+  "bg_near": {
+    "file": "bg_near.png",
+    "w": 406,
+    "h": 180,
+    "parallax": 0.75
+  },
+  "ground": {
+    "file": "ground.png",
+    "w": 207,
+    "h": 48,
+    "parallax": 1
+  }
+}

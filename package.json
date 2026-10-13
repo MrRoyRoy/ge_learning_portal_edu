@@ -5,7 +5,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "infographics": "node scripts/generate-infographics.js"
+    "infographics": "node scripts/generate-infographics.js",
+    "game-assets": "node scripts/generate-game-assets.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -18,5 +19,8 @@
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "sharp": "^0.35.5"
   }
 }

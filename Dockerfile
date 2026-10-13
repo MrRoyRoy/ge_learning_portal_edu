@@ -34,6 +34,8 @@ COPY favicon* ./
 COPY apple-touch-icon.png ./
 # Downscaled Archimedes mascot reference used by lib/infographics.js (INFOGRAPHIC_REF_IMAGE default)
 COPY imgs/archimedes-ref.jpg ./imgs/archimedes-ref.jpg
+# Quest Run pixel-art sprites, parallax layers and manifest.json (built by scripts/generate-game-assets.js)
+COPY game ./game
 
 # Expose standard routing port
 EXPOSE 8080
