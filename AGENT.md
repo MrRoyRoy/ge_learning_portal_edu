@@ -191,7 +191,7 @@ graph TD
 ### Next Steps & Continuous Polish
 00. **v6.2 Quest Run deployed to PROD (2026-10-13, revision `your-service-00030-586`; `dev/quest-run` merged into `main`):**
     * v6.2: Archie's news is shown as a parchment scroll. It has rolled ends, Caveat handwriting (Kaiti fallback for CJK), a red "📜 News from Archie" ribbon and an unroll clip-path animation (`.is-unrolling`), and respects reduced motion.
-    * Dev (`your-dev-service-00006-8v4`) is still on v6.1. Redeploy dev from `main` to match.
+    * Archie favicon: pixel Archie (sprite frame 3) on a parchment tile. Generate it with `npm run favicons` (`scripts/generate-favicons.js`, sharp, PNG-in-ICO packing) into favicon.ico, favicon-32/192/512, favicon.png and apple-touch-icon. Links in `index.html` use `?v=archie1` to bust caches. Deployed to both prod and dev, so dev now matches `main`.
     * v6.1 polish: tone chips are solid Google fills (green #1E8E3E research, blue #1A73E8 create, yellow #FBBC04 agent with dark ink, red #D93025 connectors; white ink); card/panel borders much stronger (`--line-card` dark .34 / light .32); quest bubble right-aligned with a fixed width, hero at 7% (mobile 10%), Archie confined to the lane left of the bubble (`laneRight()` measures the bubble) with random retargets every 4–8s.
     * Playwright `test_v6.js` 37/37 on dev, plus the `test_v6_base.js` regression suite. Sprites ship in the image (`game/`). Mobile card column overflow fixed (`minmax(0,1fr)`).
     * The 7 prod-only admin-created use cases default to timing `anytime` with no quest hints. Add hints in the case form and run **Generate missing** infographics.
