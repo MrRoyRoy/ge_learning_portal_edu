@@ -7,13 +7,16 @@
  * Pipeline:
  *  1. Crop one frame (FRAME_INDEX) out of game/archie.png using the frame size in game/manifest.json.
  *  2. Trim transparent edges so the raven fills the icon.
- *  3. For each target size, composite the raven onto a rounded "parchment" tile.
- *     The raven is near-black, so a warm light tile keeps it legible on both
- *     dark and light browser tab strips.
+ *  3. Add a 1-source-pixel parchment OUTLINE around the silhouette (alpha dilation, see addOutline).
+ *     Browser favicons sit on a TRANSPARENT background; the raven is near-black, so without
+ *     the outline it would vanish on dark tab strips.
+ *  4. For each target size, scale the outlined sprite into a transparent square.
  *     - Pixel art is scaled with nearest-neighbour by the largest INTEGER factor that fits
- *       the safe area, so pixels stay crisp. Below 2x (the 16px icon) an integer
+ *       the safe area, so pixels stay crisp. Below 2x (the 16/32px icons) an integer
  *       scale is impossible, so lanczos is used to keep the silhouette readable.
- *  4. Write PNGs and pack 16/32/48 PNGs into favicon.ico. An ICO file may embed PNG
+ *     - apple-touch-icon is the exception: iOS paints transparent pixels black, so it keeps
+ *       a full-bleed parchment tile (iOS applies its own rounded mask).
+ *  5. Write PNGs and pack 16/32/48 PNGs into favicon.ico. An ICO file may embed PNG
  *     payloads directly: a 6-byte ICONDIR, one 16-byte ICONDIRENTRY per image,
  *     then the raw PNG bytes.
  */
@@ -22,22 +25,11 @@ const path = require('path');
 const sharp = require('sharp');
 
 const ROOT = path.join(__dirname, '..');
-const FRAME_INDEX = 3;          // compact glide pose, reads best at tiny sizes
-const TILE = '#FFF1D0';         // parchment, matches the news scroll
-const EDGE = '#C9A35B';         // thin gold rim
+const FRAME_INDEX = 3;                         // compact glide pose, reads best at tiny sizes
+const OUTLINE = [244, 228, 188];               // parchment #F4E4BC, matches the news scroll
+const TILE = '#FFF1D0';                        // apple-touch background
 
-/** Rounded-square tile SVG. `rounded=false` gives a full-bleed tile (iOS applies its own mask). */
-const tileSvg = (size, rounded) => {
-  const r = rounded ? Math.round(size * 0.22) : 0;
-  const sw = Math.max(1, Math.round(size / 32));
-  return Buffer.from(
-    `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}">
-      <rect x="${sw / 2}" y="${sw / 2}" width="${size - sw}" height="${size - sw}" rx="${r}" ry="${r}"
-        fill="${TILE}" stroke="${rounded ? EDGE : TILE}" stroke-width="${sw}"/></svg>`
-  );
-};
-
-/** Extract and trim the chosen sprite frame → { buf, w, h }. */
+/** Extract and trim the chosen sprite frame → raw RGBA { data, w, h }. */
 const loadFrame = async () => {
   const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'game/manifest.json'), 'utf8'));
   const { file, frameW, frameH } = manifest.archie;
@@ -46,21 +38,48 @@ const loadFrame = async () => {
     .extract({ left: frameW * FRAME_INDEX, top: 0, width: frameW, height: frameH })
     .png()
     .toBuffer();
-  const { data, info } = await sharp(cropped).trim().png().toBuffer({ resolveWithObject: true });
-  return { buf: data, w: info.width, h: info.height };
+  const { data, info } = await sharp(await sharp(cropped).trim().png().toBuffer())
+    .ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  return { data, w: info.width, h: info.height };
 };
 
-/** Render one icon of `size` px; the raven occupies at most `safe` of the tile. */
-const renderIcon = async (frame, size, { rounded = true, safe = 0.84 } = {}) => {
+/**
+ * addOutline(frame) → PNG buffer, 2px larger in each dimension.
+ * Alpha dilation with an 8-neighbourhood: every transparent pixel touching an opaque one
+ * becomes an opaque OUTLINE pixel. Original pixels are copied on top unchanged.
+ */
+const addOutline = ({ data, w, h }) => {
+  const W = w + 2, H = h + 2;
+  const out = Buffer.alloc(W * H * 4);
+  const opaque = (x, y) => x >= 0 && y >= 0 && x < w && y < h && data[(y * w + x) * 4 + 3] > 127;
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      const o = (y * W + x) * 4, sx = x - 1, sy = y - 1;
+      if (opaque(sx, sy)) {
+        data.copy(out, o, (sy * w + sx) * 4, (sy * w + sx) * 4 + 4);
+        out[o + 3] = 255;
+        continue;
+      }
+      let touch = false;
+      for (let dy = -1; dy <= 1 && !touch; dy++) for (let dx = -1; dx <= 1; dx++) if (opaque(sx + dx, sy + dy)) { touch = true; break; }
+      if (touch) { out[o] = OUTLINE[0]; out[o + 1] = OUTLINE[1]; out[o + 2] = OUTLINE[2]; out[o + 3] = 255; }
+    }
+  }
+  return sharp(out, { raw: { width: W, height: H, channels: 4 } }).png().toBuffer().then((buf) => ({ buf, w: W, h: H }));
+};
+
+/** Render one icon of `size` px; the sprite occupies at most `safe` of the square. */
+const renderIcon = async (sprite, size, { tile = false, safe = 0.96 } = {}) => {
   const box = Math.floor(size * safe);
-  const fit = Math.min(box / frame.w, box / frame.h);
+  const fit = Math.min(box / sprite.w, box / sprite.h);
   const scale = fit >= 2 ? Math.floor(fit) : fit;           // integer scale when possible
-  const w = Math.max(1, Math.round(frame.w * scale));
-  const h = Math.max(1, Math.round(frame.h * scale));
-  const raven = await sharp(frame.buf)
+  const w = Math.max(1, Math.round(sprite.w * scale));
+  const h = Math.max(1, Math.round(sprite.h * scale));
+  const raven = await sharp(sprite.buf)
     .resize(w, h, { kernel: fit >= 2 ? 'nearest' : 'lanczos3' })
     .toBuffer();
-  return sharp(tileSvg(size, rounded))
+  const background = tile ? TILE : { r: 0, g: 0, b: 0, alpha: 0 };
+  return sharp({ create: { width: size, height: size, channels: 4, background } })
     .composite([{ input: raven, left: Math.round((size - w) / 2), top: Math.round((size - h) / 2) }])
     .png()
     .toBuffer();
@@ -90,17 +109,17 @@ const packIco = (entries) => {
 };
 
 (async () => {
-  const frame = await loadFrame();
+  const sprite = await addOutline(await loadFrame());
   const out = (name, buf) => {
     fs.writeFileSync(path.join(ROOT, name), buf);
     console.log('wrote', name, buf.length, 'bytes');
   };
-  const [p16, p32, p48] = await Promise.all([16, 32, 48].map((s) => renderIcon(frame, s, { safe: 0.92 })));
+  const [p16, p32, p48] = await Promise.all([16, 32, 48].map((s) => renderIcon(sprite, s)));
   out('favicon-32x32.png', p32);
-  out('favicon.png', await renderIcon(frame, 64));
-  out('favicon-192x192.png', await renderIcon(frame, 192));
-  out('favicon-512x512.png', await renderIcon(frame, 512));
-  out('apple-touch-icon.png', await renderIcon(frame, 180, { rounded: false, safe: 0.78 }));
+  out('favicon.png', await renderIcon(sprite, 64));
+  out('favicon-192x192.png', await renderIcon(sprite, 192));
+  out('favicon-512x512.png', await renderIcon(sprite, 512));
+  out('apple-touch-icon.png', await renderIcon(sprite, 180, { tile: true, safe: 0.78 }));
   out('favicon.ico', packIco([{ size: 16, png: p16 }, { size: 32, png: p32 }, { size: 48, png: p48 }]));
 })().catch((err) => {
   console.error(err);

@@ -56,5 +56,15 @@
     "w": 207,
     "h": 48,
     "parallax": 1
+  },
+  "scroll": {
+    "file": "scroll.png",
+    "w": 160,
+    "h": 64
+  },
+  "wax_seal": {
+    "file": "wax_seal.png",
+    "w": 24,
+    "h": 30
   }
 }

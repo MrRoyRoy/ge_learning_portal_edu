@@ -116,6 +116,30 @@ const ASSETS = [
   {
     name: 'ground', kind: 'layer', h: 48, keyed: true, cropToContent: true, parallax: 1, colors: 16, aspect: '21:9',
     prompt: layerPrompt('a single horizontal platform tile strip: a band of lush green grass on top with a jagged grassy top edge, over brown earth with small stones and roots, the band occupies only the lower third of the image')
+  },
+  /*
+   * kind 'sprite': one static object (no frames). Pipeline: chromaKey → trim to the opaque bbox → area
+   * downscale to targetH → removeSpecks → quantize. Used by the news scroll UI (CSS border-image + overlay).
+   */
+  {
+    name: 'scroll', kind: 'sprite', targetH: 64, colors: 20, aspect: '21:9',
+    prompt: [
+      'Create a pixel-art game UI asset: ONE antique parchment scroll, fully unrolled horizontally, seen straight on from the front.',
+      'At the far left and far right ends the paper is rolled up into a thick cylinder roll (with small dark wooden knob caps at the top and bottom of each roll). The two rolls are identical mirror images.',
+      'Between the rolls is a large, flat, EMPTY sheet of aged cream and tan parchment with soft brown stains, slightly darker burnt edges, and gently wavy top and bottom edges.',
+      'The scroll is centred and spans almost the full width of the image, about one third of the image height. Perfectly symmetric and level, not tilted.',
+      'No writing, no seal, no ribbon, no decoration on the paper.',
+      STYLE, MAGENTA_BG, NO_TEXT
+    ].join('\n')
+  },
+  {
+    name: 'wax_seal', kind: 'sprite', targetH: 30, colors: 10, aspect: '1:1',
+    prompt: [
+      'Create a pixel-art game UI icon: ONE round deep red wax seal with irregular melted blobby edges and a glossy highlight,',
+      'stamped in the centre with an embossed four-pointed sparkle star, with two short red silk ribbon tails hanging down below the seal.',
+      'Front view, centred, filling about 60 percent of the image.',
+      STYLE, MAGENTA_BG, NO_TEXT
+    ].join('\n')
   }
 ];
 
@@ -728,6 +752,21 @@ const parseArgs = (argv) => {
 
 async function processAsset(asset, rawFile) {
   const raw = await readImage(rawFile);
+  if (asset.kind === 'sprite') {
+    // Trim to the opaque bounding box so targetH maps to the object itself, not the canvas.
+    const keyed = chromaKey(raw);
+    let x0 = keyed.w, y0 = keyed.h, x1 = -1, y1 = -1;
+    for (let y = 0; y < keyed.h; y++) for (let x = 0; x < keyed.w; x++) {
+      if (alphaAt(keyed, x, y) > 127) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+    }
+    if (x1 < 0) throw new Error('sprite is empty after chroma key');
+    const box = crop(keyed, x0, y0, x1 - x0 + 1, y1 - y0 + 1);
+    const w = Math.max(1, Math.round(box.w * asset.targetH / box.h));
+    const { img } = quantize(removeSpecks(areaDownscale(box, w, asset.targetH)), asset.colors);
+    fs.writeFileSync(path.join(OUT_DIR, `${asset.name}.png`), await toPng(img));
+    console.log(`  ✓ ${asset.name}.png ${w}x${asset.targetH}`);
+    return { file: `${asset.name}.png`, w, h: asset.targetH };
+  }
   if (asset.kind === 'sheet') {
     const r = buildSheet(chromaKey(raw), asset);
     fs.writeFileSync(path.join(OUT_DIR, `${asset.name}.png`), await toPng(r.img));
