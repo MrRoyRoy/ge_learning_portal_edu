@@ -196,6 +196,9 @@ graph TD
       * `game/wax_seal.png` (24x30) sits bottom-right on desktop and top-right on mobile.
       * The kicker uses the pixel blackletter font "Jacquarda Bastarda 9"; the message stays in Caveat handwriting. The unroll animation is stepped.
       * The admin News preview width was fixed.
+    * v6.4 pixel font: all news text (kicker, headline, body, action button) uses 方舟像素字体 / Ark Pixel 12px proportional (OFL, `fonts/ark-pixel/OFL.txt`, self-hosted, `COPY fonts` in the Dockerfile). The Google Fonts link for Caveat/Jacquarda was removed.
+      * Faces: "Ark Pixel Latin" is an 11KB woff subset made with `pyftsubset` from the release OTF (Brotli isn't installed locally, so the output is woff, not woff2). "Ark Pixel TC"/"Ark Pixel SC" are the full release woff2 files (~550KB), loaded lazily. `--font-news` switches TC/SC by `html[lang]`, with a system CJK fallback for rare hanzi (e.g. 獻).
+      * Sizes stay on the 12px grid (kicker/body 12px, headline 24px desktop / 12px mobile), with no faux bold and no smoothing.
     * Favicon: transparent pixel Archie (sprite frame 3) with a 1px parchment outline so it reads on dark tabs. `apple-touch-icon` keeps a parchment tile because iOS blackens transparency.
       * Generate with `npm run favicons` (`scripts/generate-favicons.js`, sharp, PNG-in-ICO packing).
       * Links use `?v=archie2` to bust caches.
