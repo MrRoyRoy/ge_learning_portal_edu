@@ -36,6 +36,7 @@ COPY apple-touch-icon.png ./
 COPY imgs/archimedes-ref.jpg ./imgs/archimedes-ref.jpg
 # Quest Run pixel-art sprites, parallax layers and manifest.json (built by scripts/generate-game-assets.js)
 COPY game ./game
+COPY fonts ./fonts
 
 # Expose standard routing port
 EXPOSE 8080

@@ -4198,10 +4198,50 @@ html[data-theme="light"] {
    Corners and rolls are drawn at an exact integer scale (--px: 2 desktop, 1 mobile)
    so the pixels stay crisp. Only the plain parchment centre and edge bands
    stretch with the text. The wax seal is a pseudo-element pinned to the
-   bottom-right of the paper, like a sealed letter. Kicker in a pixel blackletter
-   (Jacquarda Bastarda 9), message in handwriting (Caveat, Kaiti for CJK).
+   bottom-right of the paper, like a sealed letter. All news text uses the
+   Ark Pixel font (方舟像素字体, OFL, self-hosted in fonts/ark-pixel) in en, zh-TW
+   and zh-CN; see the @font-face notes below.
    The unroll animation (clip-path from the centre out) restarts from JS whenever
    a news item appears. */
+
+/* Ark Pixel 12px proportional. Three faces, chosen per language:
+   - "Ark Pixel Latin": ~11KB subset (ASCII, Latin-1/Ext-A/B, punctuation, arrows),
+     always listed first so English/ASCII glyphs render the same in every language.
+   - "Ark Pixel TC" / "Ark Pixel SC": full CJK faces (~550KB woff2), used as the
+     fallback for zh-TW / zh-CN via html[lang]. The browser downloads a face only
+     when a news item actually needs it, so the user portal stays light.
+   Pixel fonts are drawn on a 12px grid: sizes must be integer multiples of 12px,
+   with no faux bold and no anti-aliasing, or the glyphs blur. */
+@font-face {
+  font-family: "Ark Pixel Latin";
+  src: url("fonts/ark-pixel/ark-pixel-12px-proportional-latin.woff") format("woff");
+  unicode-range: U+0020-007E, U+00A0-024F, U+2000-206F, U+20AC, U+2122, U+2190-2193;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Ark Pixel TC";
+  src: url("fonts/ark-pixel/ark-pixel-12px-proportional-zh_tw.woff2") format("woff2");
+  font-display: swap;
+}
+@font-face {
+  font-family: "Ark Pixel SC";
+  src: url("fonts/ark-pixel/ark-pixel-12px-proportional-zh_hans.woff2") format("woff2");
+  font-display: swap;
+}
+/* Ark Pixel still lacks some rarer hanzi (e.g. 獻), so a system CJK sans covers the gaps. */
+:root { --font-news: "Ark Pixel Latin", "Ark Pixel TC", "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", monospace; }
+html[lang="zh-CN"] { --font-news: "Ark Pixel Latin", "Ark Pixel SC", "PingFang SC", "Noto Sans SC", "Microsoft YaHei", monospace; }
+.quest-bubble[data-kind="news"] .quest-bubble-kicker,
+.quest-bubble[data-kind="news"] .quest-bubble-text,
+.quest-bubble[data-kind="news"] .quest-bubble-body,
+.quest-bubble[data-kind="news"] .quest-action {
+  font-family: var(--font-news);
+  font-weight: 400;
+  font-synthesis: none;
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: grayscale;
+  letter-spacing: 0;
+}
 .quest-bubble[data-kind="news"] {
   --px: 2;
   padding: 0 4px;
@@ -4232,25 +4272,21 @@ html[data-theme="light"] {
   pointer-events: none;
 }
 .quest-bubble[data-kind="news"] .quest-bubble-kicker {
-  font-family: "Jacquarda Bastarda 9", var(--font-mono);
-  font-size: 20px;
-  font-weight: 400;
-  line-height: 1;
-  letter-spacing: 0.02em;
+  font-size: 12px;
+  line-height: 12px;
   text-transform: none;
   color: #A3191B;
   margin-top: -4px;
 }
 .quest-bubble[data-kind="news"] .quest-bubble-text,
 .quest-bubble[data-kind="news"] .quest-bubble-body {
-  font-family: "Caveat", "Kaiti TC", "STKaiti", "KaiTi", "BiauKai", cursive;
   color: #3B2410;
   padding-right: calc(18px * var(--px)); /* keep text clear of the wax seal */
 }
-.quest-bubble[data-kind="news"] .quest-bubble-text { font-size: 24px; font-weight: 700; line-height: 1.05; }
-.quest-bubble[data-kind="news"] .quest-bubble-body { font-size: 19px; font-weight: 500; line-height: 1.1; color: #5A3A1A; }
+.quest-bubble[data-kind="news"] .quest-bubble-text { font-size: 24px; line-height: 28px; margin-top: 2px; }
+.quest-bubble[data-kind="news"] .quest-bubble-body { font-size: 12px; line-height: 16px; color: #5A3A1A; }
 .quest-bubble[data-kind="news"] .quest-bubble-actions { margin-top: 2px; margin-bottom: -6px; padding-right: calc(18px * var(--px)); }
-.quest-bubble[data-kind="news"] .quest-action { background: #8E1B1B; border-color: #3B2410; box-shadow: 2px 2px 0 #3B2410; }
+.quest-bubble[data-kind="news"] .quest-action { background: #8E1B1B; font-size: 12px; border-color: #3B2410; box-shadow: 2px 2px 0 #3B2410; }
 .quest-bubble[data-kind="news"] .quest-action:hover { background: #6E1414; }
 .quest-bubble[data-kind="news"] .quest-icon-btn { color: #4A2E12; }
 .quest-bubble[data-kind="news"].is-unrolling { animation: quest-scroll-unroll 560ms steps(8, end) both; }
@@ -4263,9 +4299,12 @@ html[data-theme="light"] {
 }
 @media (max-width: 640px) {
   .quest-bubble[data-kind="news"] { --px: 1; padding: 0 2px; border-width: 14px 16px; }
-  .quest-bubble[data-kind="news"] .quest-bubble-kicker { font-size: 15px; margin-top: -2px; }
-  .quest-bubble[data-kind="news"] .quest-bubble-text { font-size: 18px; }
-  .quest-bubble[data-kind="news"] .quest-bubble-body { font-size: 15px; }
+  .quest-bubble[data-kind="news"] .quest-bubble-kicker { margin-top: -2px; }
+  .quest-bubble[data-kind="news"] .quest-bubble-text {
+    font-size: 12px; line-height: 14px; margin-top: 0;
+    padding-right: 26px; /* clear the top-right wax seal on mobile */
+    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
+  }
   .quest-bubble[data-kind="news"] .quest-bubble-actions { margin-bottom: -2px; padding-right: 0; }
   /* Short mobile strip: pin the seal to the top-right corner, clear of the action row. */
   .quest-bubble[data-kind="news"]::after { top: -6px; bottom: auto; right: -4px; }
