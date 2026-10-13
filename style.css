@@ -4189,11 +4189,67 @@ html[data-theme="light"] {
 .quest-bubble .quest-icon-btn { color: #1C1B18; }
 .quest-bubble .quest-icon-btn:hover { background: rgba(0, 0, 0, 0.08); }
 
-.quest-bubble[data-kind="news"] { background: var(--quest-gold); border-color: #3B2A05; color: var(--quest-gold-ink); }
-.quest-bubble[data-kind="news"]::after { border-right-color: #3B2A05; }
-.quest-bubble[data-kind="news"] .quest-bubble-kicker,
-.quest-bubble[data-kind="news"] .quest-bubble-body { color: #4A3608; }
-.quest-bubble[data-kind="news"] .quest-action { background: #3B2A05; border-color: #3B2A05; box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.35); }
+/* --- News = Archie's paper scroll -------------------------------------------
+   Parchment body (layered gradients for fibre + aged edges), two rolled ends drawn
+   as background bands at the left/right edges, handwriting type (Caveat; Kaiti for
+   CJK), a red "NEWS" ribbon kicker, and an unroll animation (clip-path from the
+   centre outwards) restarted by JS each time a news item appears. */
+.quest-bubble[data-kind="news"] {
+  --scroll-roll: 16px;
+  padding: 10px calc(var(--scroll-roll) + 14px) 10px;
+  border: 0;
+  border-radius: 6px;
+  color: #3B2410;
+  background:
+    linear-gradient(90deg, #7A4E22 0, #D9B47A 35%, #F6E3B4 55%, #A87638 100%) left / var(--scroll-roll) 100% no-repeat,
+    linear-gradient(90deg, #A87638 0, #F6E3B4 45%, #D9B47A 65%, #7A4E22 100%) right / var(--scroll-roll) 100% no-repeat,
+    radial-gradient(ellipse at 50% 50%, rgba(255, 248, 225, 0) 55%, rgba(150, 98, 40, 0.28) 100%),
+    repeating-linear-gradient(0deg, rgba(120, 80, 30, 0.035) 0 2px, transparent 2px 5px),
+    #F4E4BC;
+  box-shadow: 0 6px 0 -2px rgba(80, 50, 20, 0.35), 4px 8px 18px rgba(0, 0, 0, 0.35);
+  transform: rotate(-0.6deg);
+  transform-origin: center;
+}
+.quest-bubble[data-kind="news"]::after { display: none; } /* no speech tail: Archie carries the scroll */
+.quest-bubble[data-kind="news"] .quest-bubble-kicker {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 10px 2px 8px;
+  background: #C5221F;
+  color: #FFFFFF;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  border-radius: 2px;
+  transform: rotate(-2deg);
+  box-shadow: 1px 2px 0 rgba(0, 0, 0, 0.3);
+  clip-path: polygon(0 0, 100% 0, calc(100% - 6px) 50%, 100% 100%, 0 100%); /* ribbon notch */
+}
+.quest-bubble[data-kind="news"] .quest-bubble-kicker::before { content: "📜"; letter-spacing: 0; }
+.quest-bubble[data-kind="news"] .quest-bubble-text,
+.quest-bubble[data-kind="news"] .quest-bubble-body {
+  font-family: "Caveat", "Kaiti TC", "STKaiti", "KaiTi", "BiauKai", cursive;
+  color: #3B2410;
+}
+.quest-bubble[data-kind="news"] .quest-bubble-text { font-size: 24px; font-weight: 700; line-height: 1.1; }
+.quest-bubble[data-kind="news"] .quest-bubble-body { font-size: 19px; font-weight: 500; line-height: 1.15; color: #5A3A1A; }
+.quest-bubble[data-kind="news"] .quest-action { background: #7A4E22; border-color: #4A2E12; box-shadow: 2px 2px 0 #4A2E12; }
+.quest-bubble[data-kind="news"] .quest-action:hover { background: #5E3B18; }
+.quest-bubble[data-kind="news"] .quest-icon-btn { color: #4A2E12; }
+.quest-bubble[data-kind="news"].is-unrolling { animation: quest-scroll-unroll 520ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+@keyframes quest-scroll-unroll {
+  from { clip-path: inset(0 calc(50% - 14px) 0 calc(50% - 14px)); }
+  to { clip-path: inset(0 0 0 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .quest-bubble[data-kind="news"].is-unrolling { animation: none; }
+}
+@media (max-width: 640px) {
+  .quest-bubble[data-kind="news"] { --scroll-roll: 10px; padding: 6px calc(var(--scroll-roll) + 8px); }
+  .quest-bubble[data-kind="news"] .quest-bubble-kicker { display: inline-flex; font-size: 9px; padding: 1px 8px 1px 6px; }
+  .quest-bubble[data-kind="news"] .quest-bubble-text { font-size: 18px; }
+}
 
 .quest-icon-btn {
   display: inline-flex;
