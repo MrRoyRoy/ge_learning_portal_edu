@@ -7483,9 +7483,28 @@ function createQuestRenderer(canvas, heroClass) {
     canvas.height = Math.round(st.h * st.dpr);
     st.scale = st.h / QUEST_WORLD_H;
     st.worldW = st.w / st.scale;
+    measureBubble();
   }
 
-  const heroX = () => st.worldW * (st.w < 640 ? 0.12 : 0.18);
+  /** Caches the quest bubble's left edge (CSS px, relative to the canvas) for laneRight(). */
+  function measureBubble() {
+    const bubble = canvas?.parentElement?.querySelector(".quest-bubble");
+    if (!bubble || bubble.hidden) { st.bubbleLeft = 0; return; }
+    const cr = canvas.getBoundingClientRect();
+    const br = bubble.getBoundingClientRect();
+    st.bubbleLeft = br.width > 0 ? br.left - cr.left : 0;
+  }
+
+  const heroX = () => Math.max(40, st.worldW * (st.w < 640 ? 0.1 : 0.07));
+  /**
+   * Right edge (world px) of the left-hand lane used by the hero and Archie: the quest
+   * bubble's left edge minus a margin. Measured from the DOM on resize; falls back to 40%.
+   */
+  const laneRight = () => {
+    const fallback = st.worldW * 0.4;
+    const edge = st.bubbleLeft > 0 ? st.bubbleLeft / st.scale - 26 : fallback;
+    return Math.max(heroX() + 40, Math.min(st.worldW - 24, edge));
+  };
   const feetY = () => QUEST_WORLD_H - QUEST_GROUND_H + QUEST_FEET_INSET;
 
   /** Tiles an image horizontally with a parallax offset. */
@@ -7557,12 +7576,24 @@ function createQuestRenderer(canvas, heroClass) {
   function updateArchie(dt) {
     const a = st.archie;
     const hx = heroX();
-    let tx = hx + 46 + Math.sin(st.t * 0.7) * 18;
-    let ty = 42 + Math.sin(st.t * 1.3) * 10;
+    // Archie's lane spans from just behind the hero to the left edge of the quest bubble,
+    // so he never flies underneath the (right-aligned) DOM bubble.
+    const lane = laneRight();
+    const span = Math.max(40, lane - hx);
+    // Random retarget every 4–8s gives the "drifting apart" feel on top of the sine wander.
+    if (!(st.t < (a.nextPick || 0))) {
+      a.rx = (Math.random() - 0.5) * 0.7 * span;
+      a.ry = (Math.random() - 0.5) * 20;
+      a.nextPick = st.t + 4 + Math.random() * 4;
+      measureBubble();
+    }
+    let tx = hx + span * 0.5 + (a.rx || 0) + Math.sin(st.t * 0.7) * span * 0.15;
+    let ty = 42 + (a.ry || 0) + Math.sin(st.t * 1.3) * 10;
     let k = 6;
     const p = st.swoopAt >= 0 ? (st.t - st.swoopAt) / 1.6 : 2;
-    if (p >= 0 && p < 0.35) { tx = Math.min(st.worldW - 24, hx + 160); ty = 16; k = 14; }
+    if (p >= 0 && p < 0.35) { tx = lane; ty = 16; k = 14; }
     else if (p >= 0.35 && p < 0.75) { tx = hx + 26; ty = feetY() - 62; k = 18; }
+    tx = Math.min(lane, Math.max(16, tx));
     if (!a.init) { a.x = tx; a.y = ty; a.init = true; }
     a.vx += (k * (tx - a.x) - 4.5 * a.vx) * dt;
     a.vy += (k * (ty - a.y) - 4.5 * a.vy) * dt;

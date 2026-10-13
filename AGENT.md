@@ -189,7 +189,8 @@ graph TD
 * **Cleanup (100%):** remaining hard-coded English strings (login, temp reset, case form, Gemini drafting, diff viewer, feedback modal, toasts/confirms) moved into `uiTranslationsV3` (en / zh-TW / zh-CN, 372 keys each) with `data-i18n*` attributes (`data-i18n-title` added); dead functions removed (`setupConnectorToggles`, `checkMissingConnector`, `handleOnboardingSubmit`, `getCategoryByRole`, etc.); 66 legacy sidebar/hub/lock/switch CSS rules pruned; top-level `sessionStorage` read guarded so the vm seeder works; README rewritten (invites, password recovery, SMTP, Try it, infographics, env vars, new schema). Verified: Playwright 57/57 + zh-TW i18n check, no console errors.
 
 ### Next Steps & Continuous Polish
-00. **v6 Quest Run: deployed to DEV only (2026-10-13, revision `your-dev-service-00005-vhq`, branch `dev/quest-run`, not merged to `main`):**
+00. **v6 Quest Run: deployed to DEV only (2026-10-13, revision `your-dev-service-00006-8v4`, branch `dev/quest-run`, not merged to `main`):**
+    * v6.1 polish: tone chips are solid Google fills (green #1E8E3E research, blue #1A73E8 create, yellow #FBBC04 agent with dark ink, red #D93025 connectors; white ink); card/panel borders much stronger (`--line-card` dark .34 / light .32); quest bubble right-aligned with a fixed width, hero at 7% (mobile 10%), Archie confined to the lane left of the bubble (`laneRight()` measures the bubble) with random retargets every 4–8s.
     * Playwright `test_v6.js` 37/37 on dev, plus the `test_v6_base.js` regression suite. Sprites ship in the image (`game/`). Mobile card column overflow fixed (`minmax(0,1fr)`).
     * Prod is untouched. To promote: merge `dev/quest-run` → `main`, deploy `your-service`, rerun both suites.
     * Don't commit `node_modules/sharp` / `node_modules/@img` (macOS binaries for the asset script; `sharp` is a devDependency only).
