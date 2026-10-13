@@ -25,10 +25,27 @@ The **Gemini Enterprise - Edu Portal** is a playbook library for academic instit
 
 ### Playbook library
 * Card grid of playbooks with dropdown filters for **Category**, **GE feature** (Agent Designer, NotebookLM, Deep Research, Canvas Mode, Image Generation, Video Generation), **Collection** (All / Liked) and **Sort** (popular, newest, A–Z). The headline reads "{n} playbooks for {role}".
-* Every card shows a **like** button (heart), a read-only **view** counter (eye), neutral GE feature icons and red connector icons.
+* Every card shows a **like** button (heart), a read-only **view** counter (eye), colour-toned GE feature icons and red connector icons.
+* **Feature colour tones** (`tone-*` classes in `style.css`) are the same on cards, modal chips, playbook-type chips and the GE feature filter (the filter takes the selected feature's tone): NotebookLM / Deep Research green, Canvas Mode / Video Generation blue, Agent Designer yellow, Image Generation purple. Each tone has a light-theme variant for contrast.
+
+### Quest Run strip
+A pixel-art banner above the library (canvas renderer in `app.js`; sprites from `game/manifest.json`, with a drawn fallback for each missing asset).
+* **Hero by role:** Wizard (Lecturer, TA, Program Leader, Dean), Warrior (Student), Priest (SAO, IT Admin, Finance, Security). The mapping is `HERO_CLASS_BY_ROLE` in `lib/quest-core.js`.
+* **Academic timeline:** Semester A, Winter, Semester B and Summer with month ticks and a "today" flag. The label reads, for example, "Semester A · Week 7 · Midterms". The phases are `sem_start`, `teaching`, `midterm`, `finals`, `winter` and `summer`. Defaults are in `DEFAULT_ACADEMIC_CALENDAR`; super admins can override them in **Settings → Calendar**.
+* **Quest bubble:** the hero asks a question that fits the current term and phase, for example "Drowning in essays to mark?". **Open playbook** opens the matching modal.
+  * Questions come from `quest_hints`, filtered by audience and timing and picked with a weighted shuffle (`pickWeightedHint`).
+  * The bubble rotates every 30 s while it's visible. A pause button stops it, and so does hovering or focusing the bubble.
+* **News from Archie:** live announcements arrive as a gold scroll carried by Archie. Pinned news shows first. Users can dismiss an item; dismissals are stored in `localStorage`.
+  * The **bell** shows a count of unseen news. It opens a drawer that lists all live news; Escape closes it.
+* **Performance and accessibility:**
+  * Capped at 30 fps. The loop pauses when the strip is off-screen or the tab is hidden.
+  * `prefers-reduced-motion` draws one static frame.
+  * The strip can be collapsed, and the collapsed state persists.
+  * The dark theme adds a dusk tint. The scene is 180px tall (132px under 640px).
+  * Views and clicks are logged to `analytics` as `quest_view`, `quest_click`, `news_view` and `news_click`.
 
 ### Enlarged use-case card (modal)
-* **Header:** GE feature chips (neutral) and connector chips (Drive / Email / LMS / Calendar Connector, red), the title, and on the right the like button, view counter and close button at the same 44px height. Under 720px the chips and controls share the first row and the title gets the full width.
+* **Header:** GE feature chips (colour-toned) and connector chips (Drive / Email / LMS / Calendar Connector, red), the title, and on the right the like button, view counter and close button at the same 44px height. Under 720px the chips and controls share the first row and the title gets the full width.
 * **Hero:** the left column holds the generated infographic with the summary directly below it. The right column holds only the **Fill in the variables** panel, one input per row. Values are interpolated live into the main prompt and every helper prompt. Clicking a variable chip in a prompt focuses its field. Playbooks without variables get a single full-width column. Under 900px the hero stacks: image, summary, variables.
 * **How it works:** three steps.
   1. **Set up**: optional helper prompts, each collapsed.
@@ -49,11 +66,22 @@ The **Gemini Enterprise - Edu Portal** is a playbook library for academic instit
 * **Admins** (super admin only): invite by email (`super` or `assist`), resend or remove invites.
 * **Analytics:** total views, likes and tries; a 6-month line chart; a playbook leaderboard.
 * **Use cases:** create, edit, delete, import and export (JSON). Includes Gemini-assisted drafting with a diff viewer, plus infographic **Generate / Regenerate / Generate missing**.
+  * The form also sets **Quest timing**: any of the 6 term/phase chips, or "Anytime".
+  * It also holds up to 3 **Quest questions** per playbook (en / zh-TW / zh-CN).
+  * Gemini drafting suggests both.
+* **News** (all admins): create, edit and delete announcements.
+  * Each announcement has a trilingual title and body, an optional link or linked playbook, an audience (roles), a start/end date, and a pin option.
+  * The form shows character counters, a live scroll preview and per-field validation.
+  * **Translate with Gemini** fills in the zh fields. It needs Vertex AI credentials and returns 502 without them.
+  * The table shows each item's status (Scheduled / Live / Ended / Off), its reach (distinct viewers) and its clicks.
 * **Feedback:** review and dismiss submissions from the floating Feedback button. The button only appears in the user portal.
 * **Settings → Email** (super admin only): SMTP presets (Gmail, Outlook.com, Microsoft 365, Custom) with a test send.
+* **Settings → Calendar** (super admin only): edit the start and end dates of the four terms.
+  * Changing a start date moves the previous term's end date to the day before, and changing an end date moves the next term's start date to the day after.
+  * A live "Today: …" preview shows where today falls. **Reset** goes back to the default calendar.
 
 ### Localization
-All UI strings live in `uiTranslationsV3` in `app.js` (en / zh-TW / zh-CN) and are applied through `data-i18n`, `data-i18n-placeholder`, `data-i18n-aria` and `data-i18n-title`. Product names (NotebookLM, Gemini, Canvas Mode, Deep Research, Agent Designer, Image Generation, Video Generation) stay in English in every language.
+All UI strings live in `uiTranslationsV3` (with V4/V6 layers merged on top) in `app.js` (en / zh-TW / zh-CN) and are applied through `data-i18n`, `data-i18n-placeholder`, `data-i18n-aria` and `data-i18n-title`. Product names (NotebookLM, Gemini, Canvas Mode, Deep Research, Agent Designer, Image Generation, Video Generation) stay in English in every language.
 
 ---
 
@@ -69,6 +97,7 @@ All UI strings live in `uiTranslationsV3` in `app.js` (en / zh-TW / zh-CN) and a
 | Email | `lib/mailer.js` (nodemailer). Config comes from the DB (`app_settings.smtp`), then `SMTP_*` env vars, then demo mode. |
 | GCP auth | `lib/gcp.js`: access token from the metadata server (Cloud Run) or local `gcloud`, plus the quota-project header |
 | Infographics | `lib/infographics.js` + `scripts/generate-infographics.js`: Vertex AI `gemini-nano-banana-2.1` (location `global`, 16:9) with the Archimedes mascot reference image `imgs/archimedes-ref.jpg`. Images go to a public GCS bucket. |
+| Quest Run | `lib/quest-core.js` (UMD module shared by the server and the browser as `window.QuestCore`): the academic calendar, term/week/phase position, hero classes and weighted hint picking. Sprites live in `game/`, and `GET /game/manifest.json` lists the assets that exist. |
 | Hosting | Cloud Run (containerised by the `Dockerfile`) + Cloud SQL for PostgreSQL. Infrastructure lives in `terraform/`. |
 
 ```mermaid
@@ -96,18 +125,20 @@ flowchart LR
 
 ## 📊 Database schema
 
-These tables are created by `initializeSchemas()` in `server.js` (and `sessions` by `lib/session-store.js`). Columns added later (`is_verified`, `updated_at`, `ge_app_link`, `infographic_url`, `prompt_type`) are added on boot with idempotent `ALTER TABLE` migrations. Types are shown for PostgreSQL; SQLite uses `TEXT` / `INTEGER` / `DATETIME` equivalents.
+These tables are created by `initializeSchemas()` in `server.js` (and `sessions` by `lib/session-store.js`). Columns added later (`is_verified`, `updated_at`, `ge_app_link`, `infographic_url`, `prompt_type`, `timing`) are added on boot with idempotent `ALTER TABLE` migrations. Types are shown for PostgreSQL; SQLite uses `TEXT` / `INTEGER` / `DATETIME` equivalents.
 
 | Table | Columns |
 | :--- | :--- |
 | `users` | `email` PK, `password_hash` NOT NULL, `is_temp_password` BOOLEAN default TRUE (forces a reset on first login), `role`, `institution_level`, `created_at`, `ge_app_link` VARCHAR(1024) (Gemini Enterprise app URL for Try it) |
-| `use_cases` | `id` PK, `category`, `title`, `summary`, `features` (JSON), `connectors` (JSON), `role`, `level` (JSON), `steps` (JSON), `prompt`, `pro_tip`, `connector_guide`, `translations` (JSON), `is_verified` BOOLEAN (deprecated, unused), `created_at`, `updated_at`, `infographic_url` VARCHAR(1024), `prompt_type` VARCHAR(50) default `'general'` |
+| `use_cases` | `id` PK, `category`, `title`, `summary`, `features` (JSON), `connectors` (JSON), `role`, `level` (JSON), `steps` (JSON), `prompt`, `pro_tip`, `connector_guide`, `translations` (JSON), `is_verified` BOOLEAN (deprecated, unused), `created_at`, `updated_at`, `infographic_url` VARCHAR(1024), `prompt_type` VARCHAR(50) default `'general'`, `timing` (JSON array of phases `sem_start`, `teaching`, `midterm`, `finals`, `winter`, `summer`, or `["anytime"]`; NULL = anytime) |
 | `user_preferences` | (`user_email` FK→users, `use_case_id` FK→use_cases) composite PK, `is_liked` BOOLEAN, `is_deployed` BOOLEAN (legacy, unused). Both FKs `ON DELETE CASCADE`. |
-| `analytics` | `id` SERIAL PK, `timestamp`, `action` (`view` \| `like` \| `try`; old rows may hold `deploy`), `use_case_id`, `user_email` |
+| `analytics` | `id` SERIAL PK, `timestamp`, `action` (`view` \| `like` \| `try` \| `quest_view` \| `quest_click` \| `news_view` \| `news_click`; old rows may hold `deploy`), `use_case_id` (for quest/news events: `hint:<id>` / `news:<id>`), `user_email` |
 | `feedbacks` | `id` SERIAL PK, `user_email` NOT NULL, `feedback_text` NOT NULL, `created_at` |
 | `admins` | `email` PK, `password_hash` (NULL until verified), `role` CHECK IN (`super`, `assist`), `is_verified` INTEGER, `invited_by`, `created_at` |
 | `auth_tokens` | `token_hash` PK (SHA-256 of the emailed token), `email`, `purpose` (`verify` \| `reset`), `expires_at` (48 h verify / 1 h reset), `used_at` (single use) |
-| `app_settings` | `key` PK (for example `smtp`), `value` (JSON; secret fields encrypted), `updated_by`, `updated_at` |
+| `quest_hints` | `id` SERIAL PK, `use_case_id` NOT NULL, `question_en` NOT NULL, `question_zh_tw`, `question_zh_cn`, `audience` (JSON roles; `[]` = everyone), `timing` (JSON; overrides the playbook's timing), `active`, `created_at`. 22 starter questions are seeded on first boot. |
+| `announcements` | `id` SERIAL PK, `title_en` NOT NULL (≤ 120), `title_zh_tw`, `title_zh_cn`, `body_en` / `body_zh_tw` / `body_zh_cn` (≤ 300), `link_url`, `use_case_id`, `audience` (JSON roles), `starts_at` / `ends_at` (`YYYY-MM-DD`, inclusive, compared with the viewer's local date), `pinned`, `active`, `created_by`, `created_at`, `updated_at` |
+| `app_settings` | `key` PK (for example `smtp`, `academic_calendar`), `value` (JSON; secret fields encrypted), `updated_by`, `updated_at` |
 | `sessions` | `sid` PK, `sess` (JSON), `expires` BIGINT (epoch ms) |
 
 The obsolete `verification_checkpoints` table is dropped on boot.
@@ -142,6 +173,7 @@ erDiagram
         boolean is_verified
         string infographic_url
         string prompt_type
+        text timing
         timestamp created_at
         timestamp updated_at
     }
@@ -185,6 +217,33 @@ erDiagram
         string updated_by
         timestamp updated_at
     }
+    QUEST_HINTS {
+        int id PK
+        string use_case_id FK
+        string question_en
+        string question_zh_tw
+        string question_zh_cn
+        text audience
+        text timing
+        int active
+        timestamp created_at
+    }
+    ANNOUNCEMENTS {
+        int id PK
+        string title_en
+        string title_zh_tw
+        string title_zh_cn
+        string body_en
+        string link_url
+        string use_case_id
+        text audience
+        string starts_at
+        string ends_at
+        int pinned
+        int active
+        string created_by
+        timestamp updated_at
+    }
     SESSIONS {
         string sid PK
         text sess
@@ -198,6 +257,8 @@ erDiagram
     USERS ||--o{ FEEDBACKS : "submits (by email)"
     ADMINS ||--o{ AUTH_TOKENS : "verify / reset (by email)"
     ADMINS ||--o{ ADMINS : "invited_by"
+    USE_CASES ||--o{ QUEST_HINTS : "asked about"
+    USE_CASES |o--o{ ANNOUNCEMENTS : "linked from"
 ```
 
 ---
@@ -226,7 +287,14 @@ All endpoints return JSON and use the session cookie. "User" means a signed-in s
 | `POST/PUT/DELETE /api/admin/use-cases` · `GET /api/admin/use-cases/export` | Super · Admin | Edit · export playbooks |
 | `POST /api/admin/use-cases/:id/infographic` · `POST /api/admin/infographics/generate-missing` | Super | Generate infographics |
 | `GET/PUT /api/admin/settings/smtp` · `POST /api/admin/settings/smtp/test` | Super | SMTP settings and test send |
-| `POST /api/admin/generate-gemini` | Super | Gemini-assisted playbook drafting |
+| `POST /api/admin/generate-gemini` | Super | Gemini-assisted playbook drafting (also suggests `timing` and quest questions) |
+| `GET /game/manifest.json` | Public | Quest Run sprite manifest (only assets that exist on disk) |
+| `GET /api/quest` | Signed in | Academic position, hero class, eligible quest hints and live news for the viewer's role |
+| `POST /api/quest/event` | Signed in | Log `quest_view` / `quest_click` / `news_view` / `news_click` |
+| `GET/POST/PUT/DELETE /api/admin/hints` | Admin (writes: Super) | Manage quest questions |
+| `GET/POST/PUT/DELETE /api/admin/announcements` | Admin | Manage news; GET adds `seenCount` and `clickCount`; 400 responses carry per-field `errors` |
+| `GET/PUT/DELETE /api/admin/settings/calendar` | Super | Read, save or reset the academic calendar (validated: ordered, contiguous terms) |
+| `POST /api/admin/translate` | Admin | Gemini translation of news fields into zh-TW / zh-CN |
 
 ---
 

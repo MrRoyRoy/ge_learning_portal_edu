@@ -2133,6 +2133,9 @@ function applyTheme(theme) {
   if (adminThemeIcon) {
     adminThemeIcon.textContent = theme === "dark" ? "dark_mode" : "light_mode";
   }
+
+  // Quest Run fallback layers and timeline colours follow the theme
+  if (typeof questOnThemeChange === "function") questOnThemeChange();
 }
 
 // Language Initialization & Handling
@@ -2348,6 +2351,9 @@ function updateUILanguage() {
   // V2: translate every [data-i18n] node and refresh the account menus
   applyI18nAttributes();
   updateAccountMenus();
+
+  // Quest Run strip + admin quest widgets re-render their dynamic text
+  if (typeof questOnLanguageChange === "function") questOnLanguageChange();
 }
 
 // Handle Wizard Role Selector Change (Disable institution level if administrative support role)
@@ -2427,6 +2433,28 @@ function getTagIcon(type, name) {
   }
   return "label";
 }
+
+/**
+ * Colour family for a GE feature or prompt type (v6 colourful tags):
+ *   research → NotebookLM, Deep Research (green)
+ *   create   → Canvas Mode, Image / Video Generation (blue)
+ *   agent    → Agent Designer (yellow)
+ *   connector→ any "... Connector" (red, matches .tag-connector)
+ * Returns null for neutral items (e.g. the 'general' prompt type).
+ */
+function featureTone(name) {
+  const n = String(name || "").toLowerCase().replace(/_/g, " ");
+  if (!n || n === "general") return null;
+  if (n.includes("connector")) return "connector";
+  if (n.includes("notebook") || n.includes("research")) return "research";
+  if (n.includes("canvas") || n.includes("image") || n.includes("video")) return "create";
+  if (n.includes("agent")) return "agent";
+  return null;
+}
+const toneClass = (name) => {
+  const tone = featureTone(name);
+  return tone ? ` tone-${tone}` : "";
+};
 
 // Helper to extract bracketed prompt variables for dynamic 'Fill in the variables' panel
 // Utility to escape HTML text for raw display
@@ -2732,6 +2760,7 @@ async function initApp() {
             updateUILanguage();
             await loadUseCasesFromServer();
             renderUseCases();
+            mountQuestRun();
           } else {
             document.getElementById("appLayout").style.display = "none";
             document.getElementById("adminPortal").style.display = "block";
@@ -2752,6 +2781,7 @@ async function initApp() {
           updateSidebarContextUI();
           await loadUseCasesFromServer();
           renderUseCases();
+          mountQuestRun();
         } else {
           // New user requires profile configuration
           overlay.style.display = "flex";
@@ -2952,6 +2982,7 @@ function setupProfileOnboardingHandlers() {
         // Fetch use cases and render
         await loadUseCasesFromServer();
         renderUseCases();
+        mountQuestRun();
         showToast(tr().workspaceReady);
       }
     } catch (err) {
@@ -3739,6 +3770,9 @@ function openAdminEditModal(uc) {
   if (promptTypeEl) promptTypeEl.value = (uc && uc.promptType) || "general";
   updateCaseInfographicPreview(uc || null);
 
+  // V6: Quest Run timing + questions (read-only for assistant admins)
+  renderCaseQuestFields({ timing: uc?.timing || ["anytime"], hints: uc?.hints || [] }, isAssist);
+
   modal.classList.add("active");
 }
 
@@ -3810,8 +3844,11 @@ async function saveAdminUseCase() {
   const promptTypeEl = document.getElementById("formCasePromptType");
   const promptType = promptTypeEl ? promptTypeEl.value : "general";
 
+  const questFields = readCaseQuestFields();
   const payload = {
-    id, category, title, role, summary, features, connectors, level, steps, prompt, proTip, translations, promptType
+    id, category, title, role, summary, features, connectors, level, steps, prompt, proTip, translations, promptType,
+    timing: questFields.timing.length ? questFields.timing : ["anytime"],
+    hints: questFields.hints.filter(h => h.question.en)
   };
 
   try {
@@ -3982,6 +4019,9 @@ async function triggerGeminiPlaybookGeneration() {
 }
 
 function applyGeminiSuggestions(aiRes) {
+  // V6: Quest Run timing + questions
+  if (aiRes && (Array.isArray(aiRes.timing) || Array.isArray(aiRes.hints))) applyQuestSuggestions(aiRes);
+
   // English (en)
   const en = aiRes.en || {};
   if (en.title) {
@@ -5529,6 +5569,277 @@ Object.keys(uiTranslationsV4).forEach(lang => {
   if (uiTranslations[lang]) Object.assign(uiTranslations[lang], uiTranslationsV4[lang]);
 });
 
+// V6: Quest Run strip, Archie's news, admin News tab, academic calendar, case-form timing/hints
+const uiTranslationsV6 = {
+  en: {
+    questStripTitle: "Quest Run",
+    questOpenPlaybook: "Open playbook",
+    questPause: "Pause tips",
+    questResume: "Resume tips",
+    questDismiss: "Dismiss",
+    questCollapse: "Hide scene",
+    questExpand: "Show scene",
+    questHintKicker: "Quest · {phase}",
+    questEmpty: "Pick a playbook below to start your quest.",
+    questTimelineLabel: "Academic year",
+    questPositionTemplate: "{term} · Week {week} · {phase}",
+    questPositionBreak: "{term} · Week {week}",
+    questTermFull: { semA: "Semester A", winter: "Winter break", semB: "Semester B", summer: "Summer" },
+    questTermShort: { semA: "Sem A", winter: "Winter", semB: "Sem B", summer: "Summer" },
+    questPhase: { sem_start: "Semester start", teaching: "Teaching", midterm: "Midterms", finals: "Finals", winter: "Winter break", summer: "Summer" },
+    questAnytime: "Anytime",
+    questRoleShort: { Lecturer: "Lecturer", TA: "TA", Student: "Student", "Program Leader": "Program Leader", Dean: "Dean", "IT Admin": "IT Admin", SAO: "SAO", Security: "Security", Finance: "Finance" },
+    newsBellLabel: "News",
+    newsDrawerTitle: "News from Archie",
+    newsDrawerClose: "Close news",
+    newsDrawerEmpty: "No news right now.",
+    newsKicker: "News from Archie",
+    newsOpenLink: "Open link",
+    newsFormTitleNew: "New announcement",
+    newsFormTitleEdit: "Edit announcement",
+    newsFormDesc: "Archie delivers it as a scroll in the Quest Run strip.",
+    newsTranslate: "Translate with Gemini",
+    newsTranslated: "Chinese fields filled in. Check them before you publish.",
+    newsTranslateFailed: "Couldn't translate. Try again or type the translations.",
+    newsTitleLabel: "Title",
+    newsBodyLabel: "Message",
+    newsLinkLabel: "Link",
+    newsLinkNone: "No link",
+    newsLinkUrl: "Web page",
+    newsLinkCase: "Playbook",
+    newsAudienceLabel: "Who sees it",
+    newsAudienceHint: "Leave all unticked to show it to everyone.",
+    newsAudienceAll: "Everyone",
+    newsStartsLabel: "Starts",
+    newsEndsLabel: "Ends",
+    newsNoEnd: "No end date",
+    newsPinnedLabel: "Pin (show first)",
+    newsActiveLabel: "Active",
+    newsPreviewLabel: "Preview",
+    newsPreviewEmpty: "Your title appears here.",
+    newsPublish: "Publish",
+    newsSaveChanges: "Save changes",
+    newsPublished: "Announcement published",
+    newsUpdated: "Announcement updated",
+    newsDeleted: "Announcement deleted",
+    newsConfirmDelete: "Delete \"{title}\"? This can't be undone.",
+    newsEdit: "Edit",
+    newsThTitle: "Title",
+    newsThStatus: "Status",
+    newsThDates: "Dates",
+    newsThSeen: "Seen",
+    newsThClicks: "Clicks",
+    newsTableEmpty: "No announcements yet.",
+    newsStatus: { live: "Live", scheduled: "Scheduled", expired: "Ended", inactive: "Off" },
+    newsErrTitle: "Enter an English title.",
+    newsErrLink: "Enter a link that starts with http:// or https://.",
+    newsErrCase: "Choose a playbook.",
+    newsErrDates: "The end date must be on or after the start date.",
+    adminTabNewsText: "News",
+    settingsCalendarTitle: "Academic calendar",
+    settingsCalendarDesc: "Sets the terms shown on the Quest Run timeline and which tips appear when.",
+    calResetDefault: "Reset to default",
+    calStart: "Starts",
+    calEnd: "Ends",
+    calErrDate: "Enter valid dates for {term}.",
+    calErrGap: "{term} must start the day after the previous term ends.",
+    calPreviewToday: "Today: {position}",
+    calStatusDefault: "Default",
+    calStatusCustom: "Custom",
+    calSaved: "Academic calendar saved",
+    calConfirmReset: "Reset the academic calendar to the default dates?",
+    calResetDone: "Academic calendar reset to default",
+    calLoadFailed: "Couldn't load the academic calendar.",
+    caseFormTimingLabel: "When it matters",
+    caseFormTimingHint: "Tips for this playbook appear more often in these parts of the academic year.",
+    caseFormHintsLabel: "Quest Run questions",
+    caseFormHintsHint: "Short questions the hero asks. Up to 3.",
+    caseFormHintAdd: "Add question",
+    caseFormHintN: "Question {n}",
+    caseFormHintRemove: "Remove question",
+    caseFormHintAudience: "Only for these roles (optional)"
+  },
+  "zh-TW": {
+    questStripTitle: "Quest Run",
+    questOpenPlaybook: "開啟案例",
+    questPause: "暫停提示",
+    questResume: "繼續提示",
+    questDismiss: "略過",
+    questCollapse: "隱藏場景",
+    questExpand: "顯示場景",
+    questHintKicker: "任務 · {phase}",
+    questEmpty: "在下方選一個案例，開始你的任務。",
+    questTimelineLabel: "學年",
+    questPositionTemplate: "{term} · 第 {week} 週 · {phase}",
+    questPositionBreak: "{term} · 第 {week} 週",
+    questTermFull: { semA: "上學期", winter: "寒假", semB: "下學期", summer: "暑假" },
+    questTermShort: { semA: "上學期", winter: "寒假", semB: "下學期", summer: "暑假" },
+    questPhase: { sem_start: "開學", teaching: "授課期", midterm: "期中", finals: "期末", winter: "寒假", summer: "暑假" },
+    questAnytime: "任何時候",
+    questRoleShort: { Lecturer: "講師", TA: "助教", Student: "學生", "Program Leader": "課程主任", Dean: "院長", "IT Admin": "IT 管理員", SAO: "學生事務處", Security: "保安", Finance: "財務" },
+    newsBellLabel: "最新消息",
+    newsDrawerTitle: "Archie 的最新消息",
+    newsDrawerClose: "關閉最新消息",
+    newsDrawerEmpty: "暫時沒有最新消息。",
+    newsKicker: "Archie 的最新消息",
+    newsOpenLink: "開啟連結",
+    newsFormTitleNew: "新公告",
+    newsFormTitleEdit: "編輯公告",
+    newsFormDesc: "Archie 會把公告化成卷軸，送到 Quest Run 橫幅。",
+    newsTranslate: "用 Gemini 翻譯",
+    newsTranslated: "已填入中文欄位，發佈前請先檢查。",
+    newsTranslateFailed: "無法翻譯，請再試一次或自行輸入譯文。",
+    newsTitleLabel: "標題",
+    newsBodyLabel: "內容",
+    newsLinkLabel: "連結",
+    newsLinkNone: "沒有連結",
+    newsLinkUrl: "網頁",
+    newsLinkCase: "案例",
+    newsAudienceLabel: "顯示對象",
+    newsAudienceHint: "全部不勾選即向所有人顯示。",
+    newsAudienceAll: "所有人",
+    newsStartsLabel: "開始日期",
+    newsEndsLabel: "結束日期",
+    newsNoEnd: "沒有結束日期",
+    newsPinnedLabel: "置頂（優先顯示）",
+    newsActiveLabel: "啟用",
+    newsPreviewLabel: "預覽",
+    newsPreviewEmpty: "標題會在這裡顯示。",
+    newsPublish: "發佈",
+    newsSaveChanges: "儲存變更",
+    newsPublished: "已發佈公告",
+    newsUpdated: "已更新公告",
+    newsDeleted: "已刪除公告",
+    newsConfirmDelete: "要刪除「{title}」嗎？此操作無法復原。",
+    newsEdit: "編輯",
+    newsThTitle: "標題",
+    newsThStatus: "狀態",
+    newsThDates: "日期",
+    newsThSeen: "已看",
+    newsThClicks: "點擊",
+    newsTableEmpty: "尚未有公告。",
+    newsStatus: { live: "顯示中", scheduled: "已排程", expired: "已結束", inactive: "已停用" },
+    newsErrTitle: "請輸入英文標題。",
+    newsErrLink: "請輸入以 http:// 或 https:// 開頭的連結。",
+    newsErrCase: "請選擇一個案例。",
+    newsErrDates: "結束日期不可早於開始日期。",
+    adminTabNewsText: "最新消息",
+    settingsCalendarTitle: "學年行事曆",
+    settingsCalendarDesc: "設定 Quest Run 時間軸上的學期，以及各提示的出現時段。",
+    calResetDefault: "還原預設",
+    calStart: "開始",
+    calEnd: "結束",
+    calErrDate: "請為{term}輸入有效日期。",
+    calErrGap: "{term}必須在上一個學期結束的翌日開始。",
+    calPreviewToday: "今天：{position}",
+    calStatusDefault: "預設",
+    calStatusCustom: "自訂",
+    calSaved: "已儲存學年行事曆",
+    calConfirmReset: "要把學年行事曆還原為預設日期嗎？",
+    calResetDone: "已還原預設學年行事曆",
+    calLoadFailed: "無法載入學年行事曆。",
+    caseFormTimingLabel: "適用時段",
+    caseFormTimingHint: "此案例的提示會在這些學年時段更常出現。",
+    caseFormHintsLabel: "Quest Run 問題",
+    caseFormHintsHint: "勇者會問的簡短問題，最多 3 條。",
+    caseFormHintAdd: "新增問題",
+    caseFormHintN: "問題 {n}",
+    caseFormHintRemove: "移除問題",
+    caseFormHintAudience: "只向這些角色顯示（選填）"
+  },
+  "zh-CN": {
+    questStripTitle: "Quest Run",
+    questOpenPlaybook: "打开案例",
+    questPause: "暂停提示",
+    questResume: "继续提示",
+    questDismiss: "忽略",
+    questCollapse: "隐藏场景",
+    questExpand: "显示场景",
+    questHintKicker: "任务 · {phase}",
+    questEmpty: "在下方选一个案例，开始你的任务。",
+    questTimelineLabel: "学年",
+    questPositionTemplate: "{term} · 第 {week} 周 · {phase}",
+    questPositionBreak: "{term} · 第 {week} 周",
+    questTermFull: { semA: "上学期", winter: "寒假", semB: "下学期", summer: "暑假" },
+    questTermShort: { semA: "上学期", winter: "寒假", semB: "下学期", summer: "暑假" },
+    questPhase: { sem_start: "开学", teaching: "授课期", midterm: "期中", finals: "期末", winter: "寒假", summer: "暑假" },
+    questAnytime: "任何时候",
+    questRoleShort: { Lecturer: "讲师", TA: "助教", Student: "学生", "Program Leader": "课程主任", Dean: "院长", "IT Admin": "IT 管理员", SAO: "学生事务处", Security: "保安", Finance: "财务" },
+    newsBellLabel: "最新消息",
+    newsDrawerTitle: "Archie 的最新消息",
+    newsDrawerClose: "关闭最新消息",
+    newsDrawerEmpty: "暂时没有最新消息。",
+    newsKicker: "Archie 的最新消息",
+    newsOpenLink: "打开链接",
+    newsFormTitleNew: "新公告",
+    newsFormTitleEdit: "编辑公告",
+    newsFormDesc: "Archie 会把公告化成卷轴，送到 Quest Run 横幅。",
+    newsTranslate: "用 Gemini 翻译",
+    newsTranslated: "已填入中文字段，发布前请先检查。",
+    newsTranslateFailed: "无法翻译，请重试或自行输入译文。",
+    newsTitleLabel: "标题",
+    newsBodyLabel: "内容",
+    newsLinkLabel: "链接",
+    newsLinkNone: "没有链接",
+    newsLinkUrl: "网页",
+    newsLinkCase: "案例",
+    newsAudienceLabel: "显示对象",
+    newsAudienceHint: "全部不勾选即向所有人显示。",
+    newsAudienceAll: "所有人",
+    newsStartsLabel: "开始日期",
+    newsEndsLabel: "结束日期",
+    newsNoEnd: "没有结束日期",
+    newsPinnedLabel: "置顶（优先显示）",
+    newsActiveLabel: "启用",
+    newsPreviewLabel: "预览",
+    newsPreviewEmpty: "标题会在这里显示。",
+    newsPublish: "发布",
+    newsSaveChanges: "保存更改",
+    newsPublished: "已发布公告",
+    newsUpdated: "已更新公告",
+    newsDeleted: "已删除公告",
+    newsConfirmDelete: "要删除“{title}”吗？此操作无法撤销。",
+    newsEdit: "编辑",
+    newsThTitle: "标题",
+    newsThStatus: "状态",
+    newsThDates: "日期",
+    newsThSeen: "已看",
+    newsThClicks: "点击",
+    newsTableEmpty: "还没有公告。",
+    newsStatus: { live: "显示中", scheduled: "已排程", expired: "已结束", inactive: "已停用" },
+    newsErrTitle: "请输入英文标题。",
+    newsErrLink: "请输入以 http:// 或 https:// 开头的链接。",
+    newsErrCase: "请选择一个案例。",
+    newsErrDates: "结束日期不能早于开始日期。",
+    adminTabNewsText: "最新消息",
+    settingsCalendarTitle: "学年校历",
+    settingsCalendarDesc: "设置 Quest Run 时间轴上的学期，以及各提示的出现时段。",
+    calResetDefault: "恢复默认",
+    calStart: "开始",
+    calEnd: "结束",
+    calErrDate: "请为{term}输入有效日期。",
+    calErrGap: "{term}必须在上一个学期结束的次日开始。",
+    calPreviewToday: "今天：{position}",
+    calStatusDefault: "默认",
+    calStatusCustom: "自定义",
+    calSaved: "已保存学年校历",
+    calConfirmReset: "要把学年校历恢复为默认日期吗？",
+    calResetDone: "已恢复默认学年校历",
+    calLoadFailed: "无法加载学年校历。",
+    caseFormTimingLabel: "适用时段",
+    caseFormTimingHint: "此案例的提示会在这些学年时段更常出现。",
+    caseFormHintsLabel: "Quest Run 问题",
+    caseFormHintsHint: "勇者会问的简短问题，最多 3 条。",
+    caseFormHintAdd: "添加问题",
+    caseFormHintN: "问题 {n}",
+    caseFormHintRemove: "移除问题",
+    caseFormHintAudience: "只向这些角色显示（选填）"
+  }
+};
+Object.keys(uiTranslationsV6).forEach(lang => {
+  if (uiTranslations[lang]) Object.assign(uiTranslations[lang], uiTranslationsV6[lang]);
+});
+
 /** Current translation table (falls back to English). */
 const tr = () => uiTranslations[appState.activeLanguage] || uiTranslations.en;
 
@@ -5831,6 +6142,16 @@ function initFilterBar() {
   bind("filterFeature", "activeFilterFeature", "ge_active_feature");
   bind("filterCollection", "activeFilterStatus", "ge_active_status");
   bind("filterSort", "sortBy", "ge_sort_by");
+  // v6: tint the feature select with the selected feature's colour family.
+  const feat = document.getElementById("filterFeature");
+  if (feat) {
+    const syncTone = () => { feat.dataset.tone = featureTone(feat.value) || ""; };
+    syncTone();
+    if (!feat.dataset.toneBound) {
+      feat.dataset.toneBound = "1";
+      feat.addEventListener("change", syncTone);
+    }
+  }
 }
 
 function resetFilters() {
@@ -5843,6 +6164,7 @@ function resetFilters() {
   [["filterCategory", "all"], ["filterFeature", "all"], ["filterCollection", "all"]].forEach(([id, v]) => {
     const el = document.getElementById(id); if (el) el.value = v;
   });
+  const featSel = document.getElementById("filterFeature"); if (featSel) featSel.dataset.tone = "";
   renderUseCases();
 }
 
@@ -5926,7 +6248,7 @@ async function togglePreference(ucId) {
 function cardHtml(uc, lang, t) {
   const badge = getUsecaseBadgeHtml(uc, lang);
   const feats = (uc.features || []).map(f =>
-    `<span class="tag tag-feature tag-icon-only" title="${escapeHtml(f)}"><span class="material-symbols-outlined">${getTagIcon("feature", f)}</span></span>`).join("");
+    `<span class="tag tag-feature tag-icon-only${toneClass(f)}" title="${escapeHtml(f)}"><span class="material-symbols-outlined">${getTagIcon("feature", f)}</span></span>`).join("");
   const conns = (uc.connectors || []).map(c => {
     const meta = getConnectorMeta(c, lang);
     return `<span class="tag tag-icon-only ${meta.class}" title="${escapeHtml(meta.label)}"><span class="material-symbols-outlined">${meta.icon}</span></span>`;
@@ -6183,7 +6505,7 @@ const modalState = { useCase: null, scopes: {}, values: {}, tryArmed: {} };
 
 const typeChipHtml = (type, t) => {
   const key = PROMPT_TYPE_ICONS[type] ? type : "general";
-  return `<span class="type-chip"><span class="material-symbols-outlined">${PROMPT_TYPE_ICONS[key]}</span>${escapeHtml(t.promptTypes[key])}</span>`;
+  return `<span class="type-chip${toneClass(key)}"><span class="material-symbols-outlined">${PROMPT_TYPE_ICONS[key]}</span>${escapeHtml(t.promptTypes[key])}</span>`;
 };
 
 /** Try it (green) + Copy prompt (blue) buttons; colours come from `.btn-try-it` / `.btn-copy-prompt`. */
@@ -6228,7 +6550,7 @@ function openUseCaseModal(useCase) {
   // Header: GE feature chips (neutral) + connector chips (red), then the title
   document.getElementById("modalTitle").textContent = title;
   const featureChips = (useCase.features || []).map(f =>
-    `<span class="tag tag-feature tag-full"><span class="material-symbols-outlined">${getTagIcon("feature", f)}</span><span>${escapeHtml(f)}</span></span>`).join("");
+    `<span class="tag tag-feature tag-full${toneClass(f)}"><span class="material-symbols-outlined">${getTagIcon("feature", f)}</span><span>${escapeHtml(f)}</span></span>`).join("");
   const connectorChips = (useCase.connectors || []).map(c => {
     const meta = getConnectorMeta(c, lang);
     return `<span class="tag tag-full ${meta.class}" data-connector="${escapeHtml(c)}"><span class="material-symbols-outlined">${meta.icon}</span><span>${escapeHtml(meta.label)}</span></span>`;
@@ -6550,13 +6872,13 @@ function readAuthTokenFromUrl() {
 // ---------------------------------------------------------------------------
 const ADMIN_TAB_SECTIONS = {
   users: "adminTabUsers", analytics: "adminTabAnalytics", cases: "adminTabCases",
-  feedbacks: "adminTabFeedbacks", settings: "adminTabSettings"
+  feedbacks: "adminTabFeedbacks", news: "adminTabNews", settings: "adminTabSettings"
 };
 
 /** Tabs the signed-in admin may see. Pure. */
 const allowedAdminTabs = (state) => [
   ...(state.isAssist ? [] : ["users"]),
-  "analytics", "cases", "feedbacks",
+  "analytics", "cases", "feedbacks", "news",
   ...(state.isSuper ? ["settings"] : [])
 ];
 
@@ -6579,7 +6901,8 @@ function showAdminTab(name) {
   else if (tab === "analytics") loadAdminStats();
   else if (tab === "cases") loadAdminUseCases();
   else if (tab === "feedbacks") loadAdminFeedbacks();
-  else if (tab === "settings") loadSmtpSettings();
+  else if (tab === "news") loadAdminNews();
+  else if (tab === "settings") { loadSmtpSettings(); loadCalendarSettings(); }
 }
 
 /** Switch from the admin portal to the learning portal preview. */
@@ -6592,7 +6915,7 @@ function enterLearningPortalPreview() {
   updateAccountMenus();
   updateSidebarContextUI();
   updateUILanguage();
-  loadUseCasesFromServer().then(() => renderUseCases());
+  loadUseCasesFromServer().then(() => { renderUseCases(); mountQuestRun(); });
 }
 
 // ---------------------------------------------------------------------------
@@ -6995,4 +7318,1197 @@ function bindSmtpForm() {
       renderSmtpStatus({ ...(smtpLoaded || {}), mode: "", testOk: false, testError: err });
     }
   });
+}
+
+// ===========================================================================
+// v6 Quest Run — pixel hero strip, rotating quest bubble, Archie's news scrolls
+// ---------------------------------------------------------------------------
+// Everything below is declared only (no top-level DOM access) because app.js
+// is also evaluated inside the server's vm sandbox for seed data.
+// Pure helpers live in lib/quest-core.js (window.QuestCore).
+// ===========================================================================
+const QUEST_ROTATE_MS = 30000;
+const QUEST_FOLD_MS = 180;
+const QUEST_TYPE_MS = 600;
+const QUEST_LS = { seen: "ge_quest_news_seen", dismissed: "ge_quest_news_dismissed", collapsed: "ge_quest_collapsed" };
+
+/** Mutable state of the strip (one per page). */
+const questState = {
+  data: null, renderer: null, current: null,
+  slot: 0, newsCursor: 0, lastHintId: null,
+  elapsed: 0, timer: null, typeTimer: null,
+  paused: false, hover: false, collapsed: false, drawerOpen: false,
+  viewed: new Set(), bound: false, mountSeq: 0
+};
+
+const questLsGet = (k) => { try { return typeof localStorage !== "undefined" ? localStorage.getItem(k) : null; } catch (_) { return null; } };
+const questLsSet = (k, v) => { try { if (typeof localStorage !== "undefined") localStorage.setItem(k, v); } catch (_) { /* private mode */ } };
+const readQuestIds = (k) => { try { const v = JSON.parse(questLsGet(k) || "[]"); return Array.isArray(v) ? v : []; } catch (_) { return []; } };
+const addQuestId = (k, id) => {
+  const ids = readQuestIds(k);
+  if (!ids.includes(id)) questLsSet(k, JSON.stringify([...ids, id].slice(-200)));
+};
+const pickLangText = (obj, lang) => (obj && (obj[lang] || obj.en)) || "";
+const questReducedMotion = () =>
+  typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const questTheme = () => (typeof document !== "undefined" && document.documentElement.dataset.theme === "light" ? "light" : "dark");
+
+/** News that is live today for this user (server already filtered by audience). */
+const questLiveNews = () => (questState.data?.news || []).filter(n => QuestCore.newsStatus(n, QuestCore.localDateIso()) === "live");
+
+/** "Semester A · Week 7 · Midterms" (breaks omit the phase). Pure given t. */
+const questPositionText = (pos, t) => {
+  const term = t.questTermFull?.[pos.term] || pos.term;
+  const isBreak = pos.term === "winter" || pos.term === "summer";
+  return isBreak
+    ? fmt(t.questPositionBreak, { term, week: pos.week })
+    : fmt(t.questPositionTemplate, { term, week: pos.week, phase: t.questPhase?.[pos.phase] || pos.phase });
+};
+
+const questCurrentPosition = () => QuestCore.getAcademicPosition(new Date(), questState.data?.calendar);
+
+/** Fire-and-forget analytics; *_view events are deduplicated per page load. */
+function recordQuestEvent(action, payload) {
+  const key = `${action}:${payload.useCaseId || payload.newsId}`;
+  if (action.endsWith("_view")) {
+    if (questState.viewed.has(key)) return;
+    questState.viewed.add(key);
+  }
+  apiJson("/api/quest/event", { method: "POST", body: { action, ...payload } });
+}
+
+/**
+ * Fetches /api/quest and (re)builds the strip. Safe to call repeatedly (role
+ * change, preview entry); stale responses are dropped via mountSeq.
+ */
+async function mountQuestRun() {
+  if (typeof document === "undefined" || typeof QuestCore === "undefined") return;
+  const strip = document.getElementById("questStrip");
+  if (!strip) return;
+  const seq = ++questState.mountSeq;
+  const role = appState.userRole || "Lecturer";
+  const { ok, data } = await apiJson(`/api/quest?role=${encodeURIComponent(role)}`);
+  if (seq !== questState.mountSeq) return;
+  if (!ok) { strip.hidden = true; return; }
+  questState.data = data;
+  questState.slot = 0;
+  questState.newsCursor = 0;
+  questState.elapsed = 0;
+  bindQuestControls();
+  strip.hidden = false;
+  questState.collapsed = questLsGet(QUEST_LS.collapsed) === "1";
+  if (questState.renderer) questState.renderer.destroy();
+  questState.renderer = createQuestRenderer(document.getElementById("questCanvas"), data.heroClass || "wizard");
+  applyQuestCollapsed();
+  renderQuestTimeline();
+  updateQuestBell();
+  advanceQuestBubble(true);
+  startQuestTimer();
+}
+
+// ---------------------------------------------------------------------------
+// Canvas renderer
+// ---------------------------------------------------------------------------
+/** Code-drawn hero used when sprites are missing (10×12 px, 3 world px per cell). */
+const QUEST_FALLBACK_HERO = [
+  "...hhhh...", "..hhhhhh..", ".hhhhhhhh.", "...ssss...", "...sdsd...", "...ssss...",
+  "..bbbbbb..", ".sbbbbbbs.", "..bbbbbb..", "..bbbbbb.."
+];
+const QUEST_FALLBACK_LEGS = [["..l....l..", "..l....l.."], ["...l..l...", "...l..l..."]];
+const QUEST_HERO_COLOURS = {
+  wizard: { h: "#3b5bdb", b: "#4c6ef5" },
+  warrior: { h: "#868e96", b: "#c92a2a" },
+  priest: { h: "#f1f3f5", b: "#f59f00" }
+};
+const QUEST_WORLD_H = 180;      // asset space height; scale = canvas css height / 180
+const QUEST_GROUND_H = 48;
+const QUEST_FEET_INSET = 10;    // feet sit on the grass, slightly below the ground's top edge
+const QUEST_SCROLL_SPEED = 40;  // world px / s for parallax factor 1
+const QUEST_LAYERS = ["bg_sky", "bg_far", "bg_mid", "bg_near"];
+
+/**
+ * Creates the Quest Run canvas renderer.
+ *
+ * Drawing model: everything is drawn in "world" units where the scene is 180
+ * units tall (the asset height), so scale = canvas CSS height / 180 and the
+ * world width = CSS width / scale. Layers tile horizontally with their
+ * parallax factor; hero frames are bottom-centre aligned, Archie is centred.
+ *
+ * Loop: rAF capped at 30 fps; runs only while expanded, on screen
+ * (IntersectionObserver) and the tab is visible. Reduced motion draws one
+ * static frame instead of animating. Missing manifest / images fall back to
+ * flat colour layers and pixel matrices per asset.
+ */
+function createQuestRenderer(canvas, heroClass) {
+  const st = {
+    assets: {}, manifest: null, mode: "loading", frames: 0, t: 0, scroll: 0,
+    active: true, onScreen: true, rafId: 0, last: 0,
+    hopAt: -1, swoopAt: -1, carrying: false,
+    archie: { x: 0, y: 40, vx: 0, vy: 0, init: false },
+    w: 0, h: 0, dpr: 1, scale: 1, worldW: 0, destroyed: false
+  };
+  const ctx = canvas ? canvas.getContext("2d") : null;
+  const heroKey = `hero_${heroClass}`;
+
+  const loadImage = (src) => new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
+
+  async function loadAssets() {
+    try {
+      const res = await fetch("game/manifest.json");
+      const manifest = res.ok ? await res.json() : {};
+      st.manifest = manifest || {};
+      const keys = [...QUEST_LAYERS, "ground", heroKey, "archie"].filter(k => st.manifest[k]?.file);
+      const imgs = await Promise.all(keys.map(k => loadImage(`game/${st.manifest[k].file}`)));
+      keys.forEach((k, i) => { if (imgs[i]) st.assets[k] = imgs[i]; });
+    } catch (_) { st.manifest = {}; }
+    const loaded = Object.keys(st.assets).length;
+    st.mode = loaded === 0 ? "fallback" : (loaded >= QUEST_LAYERS.length + 3 ? "sprites" : "mixed");
+    resize();
+    draw();
+    sync();
+  }
+
+  function resize() {
+    if (!canvas || !ctx) return;
+    const rect = canvas.getBoundingClientRect();
+    st.w = Math.max(1, rect.width);
+    st.h = Math.max(1, rect.height);
+    st.dpr = Math.min(2, (typeof window !== "undefined" && window.devicePixelRatio) || 1);
+    canvas.width = Math.round(st.w * st.dpr);
+    canvas.height = Math.round(st.h * st.dpr);
+    st.scale = st.h / QUEST_WORLD_H;
+    st.worldW = st.w / st.scale;
+  }
+
+  const heroX = () => st.worldW * (st.w < 640 ? 0.12 : 0.18);
+  const feetY = () => QUEST_WORLD_H - QUEST_GROUND_H + QUEST_FEET_INSET;
+
+  /** Tiles an image horizontally with a parallax offset. */
+  function tile(img, w, h, y, factor) {
+    const off = ((st.scroll * factor) % w + w) % w;
+    for (let x = -off; x < st.worldW; x += w) ctx.drawImage(img, Math.floor(x), y, w, h);
+  }
+
+  function drawFallbackLayers() {
+    const light = questTheme() === "light";
+    ctx.fillStyle = light ? "#bfe3ff" : "#1b2340";
+    ctx.fillRect(0, 0, st.worldW, QUEST_WORLD_H);
+    // Two sine-wave hill bands at different parallax speeds.
+    [[0.2, light ? "#9cc9a5" : "#26324f", 92, 18, 0.018], [0.45, light ? "#6fae7c" : "#2f4a45", 112, 12, 0.03]]
+      .forEach(([factor, colour, base, amp, freq]) => {
+        ctx.fillStyle = colour;
+        ctx.beginPath();
+        ctx.moveTo(0, QUEST_WORLD_H);
+        for (let x = 0; x <= st.worldW + 4; x += 4) {
+          ctx.lineTo(x, base - Math.sin((x + st.scroll * factor) * freq) * amp);
+        }
+        ctx.lineTo(st.worldW, QUEST_WORLD_H);
+        ctx.fill();
+      });
+  }
+
+  function drawFallbackGround() {
+    const y = QUEST_WORLD_H - QUEST_GROUND_H;
+    ctx.fillStyle = "#6b4a2b";
+    ctx.fillRect(0, y, st.worldW, QUEST_GROUND_H);
+    ctx.fillStyle = "#3f9b3f";
+    ctx.fillRect(0, y, st.worldW, 9);
+    // Moving grass tufts sell the scroll direction.
+    ctx.fillStyle = "#2f7d32";
+    const off = st.scroll % 24;
+    for (let x = -off; x < st.worldW; x += 24) ctx.fillRect(Math.floor(x), y + 9, 6, 3);
+  }
+
+  function drawHero() {
+    const hopP = st.hopAt >= 0 ? (st.t - st.hopAt) / 0.45 : 2;
+    const lift = hopP >= 0 && hopP <= 1 ? Math.sin(Math.PI * hopP) * 14 : 0;
+    const spec = st.manifest?.[heroKey];
+    const img = st.assets[heroKey];
+    if (img && spec) {
+      const frame = Math.floor(st.t * (spec.fps || 10)) % (spec.frames || 1);
+      ctx.drawImage(img, frame * spec.frameW, 0, spec.frameW, spec.frameH,
+        Math.round(heroX() - spec.frameW / 2), Math.round(feetY() - spec.frameH - lift), spec.frameW, spec.frameH);
+      return;
+    }
+    const px = 3;
+    const colours = { ...QUEST_HERO_COLOURS[heroClass] || QUEST_HERO_COLOURS.wizard, s: "#f1c27d", d: "#222", l: "#5c3d2e" };
+    const rows = [...QUEST_FALLBACK_HERO, ...QUEST_FALLBACK_LEGS[Math.floor(st.t * 6) % 2]];
+    const x0 = Math.round(heroX() - (rows[0].length * px) / 2);
+    const y0 = Math.round(feetY() - rows.length * px - lift);
+    rows.forEach((row, r) => [...row].forEach((c, col) => {
+      if (c === ".") return;
+      ctx.fillStyle = colours[c];
+      ctx.fillRect(x0 + col * px, y0 + r * px, px, px);
+    }));
+  }
+
+  /**
+   * Archie's flight: a damped spring chases a target point. While wandering,
+   * the target drifts on two sines around a spot above-right of the hero.
+   * A swoop (1.6 s) first pulls the target to the top-right, then dives to
+   * just above the hero's head (delivering the scroll), then releases back
+   * to wandering. Spring: a = k·(target − pos) − c·v.
+   */
+  function updateArchie(dt) {
+    const a = st.archie;
+    const hx = heroX();
+    let tx = hx + 46 + Math.sin(st.t * 0.7) * 18;
+    let ty = 42 + Math.sin(st.t * 1.3) * 10;
+    let k = 6;
+    const p = st.swoopAt >= 0 ? (st.t - st.swoopAt) / 1.6 : 2;
+    if (p >= 0 && p < 0.35) { tx = Math.min(st.worldW - 24, hx + 160); ty = 16; k = 14; }
+    else if (p >= 0.35 && p < 0.75) { tx = hx + 26; ty = feetY() - 62; k = 18; }
+    if (!a.init) { a.x = tx; a.y = ty; a.init = true; }
+    a.vx += (k * (tx - a.x) - 4.5 * a.vx) * dt;
+    a.vy += (k * (ty - a.y) - 4.5 * a.vy) * dt;
+    a.x += a.vx * dt;
+    a.y += a.vy * dt;
+  }
+
+  function drawArchie() {
+    const a = st.archie;
+    if (!a.init) updateArchie(0);
+    const spec = st.manifest?.archie;
+    const img = st.assets.archie;
+    // Fast descent = glide on a level-wing frame (1); otherwise flap up/level/down/level.
+    const gliding = a.vy > 60;
+    if (img && spec) {
+      const frame = gliding ? 1 : Math.floor(st.t * (spec.fps || 8)) % (spec.frames || 1);
+      ctx.drawImage(img, frame * spec.frameW, 0, spec.frameW, spec.frameH,
+        Math.round(a.x - spec.frameW / 2), Math.round(a.y - spec.frameH / 2), spec.frameW, spec.frameH);
+    } else {
+      const flap = gliding ? 0 : Math.sin(st.t * 16) * 4;
+      ctx.fillStyle = "#8d6e63";
+      ctx.fillRect(Math.round(a.x - 14), Math.round(a.y - 2 + flap), 8, 4);
+      ctx.fillRect(Math.round(a.x + 6), Math.round(a.y - 2 + flap), 8, 4);
+      ctx.fillStyle = "#a1887f";
+      ctx.fillRect(Math.round(a.x - 7), Math.round(a.y - 8), 14, 16);
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(Math.round(a.x - 5), Math.round(a.y - 5), 4, 4);
+      ctx.fillRect(Math.round(a.x + 1), Math.round(a.y - 5), 4, 4);
+      ctx.fillStyle = "#f59f00";
+      ctx.fillRect(Math.round(a.x - 1), Math.round(a.y), 2, 3);
+    }
+    if (st.carrying) {
+      const sx = Math.round(a.x - 6), sy = Math.round(a.y + 12);
+      ctx.fillStyle = "#f4e2b8";
+      ctx.fillRect(sx, sy, 12, 7);
+      ctx.fillStyle = "#b07a3c";
+      ctx.fillRect(sx - 2, sy - 1, 2, 9);
+      ctx.fillRect(sx + 12, sy - 1, 2, 9);
+      ctx.fillStyle = "#c0392b";
+      ctx.fillRect(sx + 5, sy + 2, 2, 3);
+    }
+  }
+
+  function draw() {
+    if (!ctx || st.destroyed) return;
+    ctx.setTransform(st.dpr * st.scale, 0, 0, st.dpr * st.scale, 0, 0);
+    ctx.imageSmoothingEnabled = false;
+    ctx.clearRect(0, 0, st.worldW, QUEST_WORLD_H);
+    const haveLayers = QUEST_LAYERS.every(k => st.assets[k]);
+    if (haveLayers) {
+      QUEST_LAYERS.forEach(k => {
+        const s = st.manifest[k];
+        tile(st.assets[k], s.w || st.assets[k].naturalWidth, s.h || QUEST_WORLD_H, 0, s.parallax ?? 0.5);
+      });
+    } else drawFallbackLayers();
+    // Dusk tint keeps the daytime art calm against the dark UI.
+    if (questTheme() === "dark") {
+      ctx.fillStyle = "rgba(12, 16, 40, 0.28)";
+      ctx.fillRect(0, 0, st.worldW, QUEST_WORLD_H);
+    }
+    const g = st.manifest?.ground;
+    if (st.assets.ground && g) tile(st.assets.ground, g.w, g.h, QUEST_WORLD_H - g.h, g.parallax ?? 1);
+    else drawFallbackGround();
+    drawHero();
+    drawArchie();
+    st.frames += 1;
+  }
+
+  const shouldRun = () => st.mode !== "loading" && st.active && st.onScreen && !st.destroyed &&
+    !(typeof document !== "undefined" && document.hidden) && !questReducedMotion();
+
+  function loop(now) {
+    st.rafId = 0;
+    if (!shouldRun()) return;
+    st.rafId = requestAnimationFrame(loop);
+    if (!st.last) { st.last = now; return; }
+    // 30 fps cap: skip frames that arrive sooner than ~33 ms.
+    if (now - st.last < 1000 / 30 - 1) return;
+    const dt = Math.min(0.1, (now - st.last) / 1000);
+    st.last = now;
+    st.t += dt;
+    st.scroll += QUEST_SCROLL_SPEED * dt;
+    updateArchie(dt);
+    draw();
+  }
+
+  function sync() {
+    if (shouldRun()) {
+      if (!st.rafId) { st.last = 0; st.rafId = requestAnimationFrame(loop); }
+    } else {
+      if (st.rafId) cancelAnimationFrame(st.rafId);
+      st.rafId = 0;
+      if (st.mode !== "loading" && st.active) draw(); // static frame (reduced motion / paused)
+    }
+  }
+
+  const onVisibility = () => sync();
+  const onResize = () => { resize(); draw(); };
+  let io = null;
+  if (canvas && typeof IntersectionObserver !== "undefined") {
+    io = new IntersectionObserver((entries) => { st.onScreen = entries.some(e => e.isIntersecting); sync(); });
+    io.observe(canvas);
+  }
+  if (typeof document !== "undefined") document.addEventListener("visibilitychange", onVisibility);
+  if (typeof window !== "undefined") window.addEventListener("resize", onResize);
+
+  const api = {
+    hop() { st.hopAt = st.t; if (!st.rafId) draw(); },
+    swoop() { st.swoopAt = st.t; },
+    setCarrying(on) { st.carrying = Boolean(on); if (!st.rafId) draw(); },
+    setActive(on) { st.active = Boolean(on); if (st.active) resize(); sync(); },
+    redraw() { resize(); draw(); },
+    destroy() {
+      st.destroyed = true;
+      if (st.rafId) cancelAnimationFrame(st.rafId);
+      if (io) io.disconnect();
+      if (typeof document !== "undefined") document.removeEventListener("visibilitychange", onVisibility);
+      if (typeof window !== "undefined") window.removeEventListener("resize", onResize);
+    },
+    debug: () => ({ frames: st.frames, mode: st.mode, assets: Object.keys(st.assets), running: Boolean(st.rafId), reducedMotion: questReducedMotion() })
+  };
+  if (typeof window !== "undefined") window.__questDebug = api.debug;
+  if (ctx) { resize(); loadAssets(); }
+  return api;
+}
+
+// ---------------------------------------------------------------------------
+// Bubble rotation
+// ---------------------------------------------------------------------------
+const questIsPaused = () => {
+  const strip = document.getElementById("questStrip");
+  return questState.paused || questState.hover || questState.collapsed || questState.drawerOpen ||
+    document.hidden || !strip || strip.hidden || strip.offsetParent === null;
+};
+
+/** 1 s accumulator: paused time doesn't count towards the 30 s rotation. */
+function startQuestTimer() {
+  if (questState.timer) clearInterval(questState.timer);
+  questState.timer = setInterval(() => {
+    if (questIsPaused()) return;
+    questState.elapsed += 1000;
+    if (questState.elapsed >= QUEST_ROTATE_MS) {
+      questState.elapsed = 0;
+      advanceQuestBubble(false);
+    }
+  }, 1000);
+}
+
+/** Chooses the next slot (news every 4th slot, else a phase-weighted hint) and shows it. */
+function advanceQuestBubble(first) {
+  const d = questState.data;
+  if (!d) return;
+  const plan = QuestCore.planQuestSlot({
+    slotIndex: questState.slot, news: questLiveNews(),
+    seenIds: readQuestIds(QUEST_LS.seen), dismissedIds: readQuestIds(QUEST_LS.dismissed),
+    newsCursor: questState.newsCursor
+  });
+  questState.newsCursor = plan.newsCursor;
+  questState.slot += 1;
+  let item = null;
+  if (plan.kind === "news") item = { kind: "news", news: plan.item };
+  else {
+    const hint = QuestCore.pickWeightedHint(d.hints, questCurrentPosition().phase, questState.lastHintId);
+    if (hint) { questState.lastHintId = hint.id; item = { kind: "hint", hint }; }
+  }
+  showQuestItem(item, !first);
+}
+
+/** Folds the bubble, hops/swoops, then types the new text in (instant under reduced motion). */
+function showQuestItem(item, animate) {
+  const bubble = document.getElementById("questBubble");
+  if (!bubble) return;
+  questState.current = item;
+  clearTimeout(questState.typeTimer);
+  const reduced = questReducedMotion();
+  const r = questState.renderer;
+  if (r) r.setCarrying(item?.kind === "news");
+  if (animate && !reduced) {
+    bubble.classList.add("is-folding");
+    questState.typeTimer = setTimeout(() => {
+      bubble.classList.remove("is-folding");
+      if (r) (item?.kind === "news" ? r.swoop() : r.hop());
+      renderQuestBubble(item, true);
+    }, QUEST_FOLD_MS);
+  } else {
+    if (r && item?.kind === "news" && !reduced) r.swoop();
+    renderQuestBubble(item, false);
+  }
+  if (item?.kind === "news") {
+    addQuestId(QUEST_LS.seen, item.news.id);
+    recordQuestEvent("news_view", { newsId: item.news.id });
+    updateQuestBell();
+  } else if (item?.kind === "hint") {
+    recordQuestEvent("quest_view", { useCaseId: item.hint.useCaseId });
+  }
+}
+
+const findUseCase = (id) => useCasesDb.find(u => u.id === id) || null;
+
+function renderQuestBubble(item, typewriter) {
+  const t = tr();
+  const lang = appState.activeLanguage || "en";
+  const $ = (id) => document.getElementById(id);
+  const bubble = $("questBubble");
+  if (!bubble) return;
+  const kind = item?.kind || "hint";
+  bubble.dataset.kind = kind;
+  const phase = questCurrentPosition().phase;
+  $("questBubbleKicker").textContent = kind === "news" ? t.newsKicker : fmt(t.questHintKicker, { phase: t.questPhase?.[phase] || phase });
+  const text = item?.kind === "news" ? pickLangText(item.news.title, lang)
+    : item?.kind === "hint" ? pickLangText(item.hint.question, lang) : t.questEmpty;
+  const body = item?.kind === "news" ? pickLangText(item.news.body, lang) : "";
+  $("questBubbleFull").textContent = body ? `${text} ${body}` : text;
+  const bodyEl = $("questBubbleBody");
+  bodyEl.textContent = body;
+  bodyEl.hidden = !body;
+
+  // Action: hints open their playbook; news opens its playbook or web link.
+  const action = $("questBubbleAction");
+  let label = "";
+  if (item?.kind === "hint" && findUseCase(item.hint.useCaseId)) label = t.questOpenPlaybook;
+  if (item?.kind === "news") {
+    if (item.news.useCaseId && findUseCase(item.news.useCaseId)) label = t.questOpenPlaybook;
+    else if (item.news.linkUrl) label = t.newsOpenLink;
+  }
+  $("questBubbleActionText").textContent = label;
+  action.hidden = !label;
+  $("questDismissBtn").hidden = kind !== "news";
+
+  const typed = $("questBubbleTyped");
+  clearTimeout(questState.typeTimer);
+  if (!typewriter) { typed.textContent = text; return; }
+  // Typewriter: reveal ~30 steps over QUEST_TYPE_MS regardless of length.
+  const chars = [...text];
+  const step = Math.max(1, Math.ceil(chars.length / 30));
+  const delay = Math.max(10, Math.floor(QUEST_TYPE_MS / Math.ceil(chars.length / step)));
+  let shown = 0;
+  const tick = () => {
+    shown = Math.min(chars.length, shown + step);
+    typed.textContent = chars.slice(0, shown).join("");
+    if (shown < chars.length) questState.typeTimer = setTimeout(tick, delay);
+  };
+  typed.textContent = "";
+  tick();
+}
+
+function openQuestPlaybook(useCaseId) {
+  const uc = findUseCase(useCaseId);
+  if (uc) openUseCaseModal(uc);
+}
+
+/** Opens a news item's target (playbook first, else web link) and logs the click. */
+function openQuestNews(news) {
+  if (!news) return;
+  recordQuestEvent("news_click", { newsId: news.id });
+  if (news.useCaseId && findUseCase(news.useCaseId)) openQuestPlaybook(news.useCaseId);
+  else if (news.linkUrl && typeof window !== "undefined") window.open(news.linkUrl, "_blank", "noopener");
+}
+
+// ---------------------------------------------------------------------------
+// Timeline, bell + drawer, collapse
+// ---------------------------------------------------------------------------
+function renderQuestTimeline() {
+  const d = questState.data;
+  const track = document.getElementById("questTrack");
+  const label = document.getElementById("questPositionLabel");
+  if (!d || !track) return;
+  const t = tr();
+  const lang = appState.activeLanguage || "en";
+  const pos = questCurrentPosition();
+  const year = QuestCore.getAcademicYear(new Date(), d.calendar);
+  let monthFmt;
+  try { monthFmt = new Intl.DateTimeFormat(lang, { month: "short" }); } catch (_) { monthFmt = new Intl.DateTimeFormat("en", { month: "short" }); }
+  const pct = (v) => `${(v * 100).toFixed(2)}%`;
+  const terms = year.terms.map(s => `
+    <div class="quest-term quest-term-${s.key}${s.key === pos.term ? " is-current" : ""}" style="left:${pct(s.startPct)};width:${pct(s.endPct - s.startPct)}">
+      <span class="quest-term-label">${escapeHtml(t.questTermShort?.[s.key] || s.key)}</span>
+    </div>`).join("");
+  const months = year.months.map((m, i) =>
+    `<span class="quest-month${i % 2 ? " is-odd" : ""}" style="left:${pct(m.pct)}">${escapeHtml(monthFmt.format(new Date(m.year, m.month - 1, 1)))}</span>`).join("");
+  track.innerHTML = `<div class="quest-terms">${terms}</div><div class="quest-months">${months}</div>
+    <span class="quest-today" style="left:${pct(year.todayPct)}"><span class="material-symbols-outlined" aria-hidden="true">flag</span></span>`;
+  const text = questPositionText(pos, t);
+  if (label) label.textContent = text;
+  track.setAttribute("aria-label", `${t.questTimelineLabel}: ${text}`);
+}
+
+function updateQuestBell() {
+  const badge = document.getElementById("questBellBadge");
+  if (!badge) return;
+  const seen = new Set(readQuestIds(QUEST_LS.seen));
+  const unseen = questLiveNews().filter(n => !seen.has(n.id)).length;
+  badge.textContent = String(unseen);
+  badge.hidden = unseen === 0;
+}
+
+function renderQuestDrawer() {
+  const t = tr();
+  const lang = appState.activeLanguage || "en";
+  const list = document.getElementById("questDrawerList");
+  const empty = document.getElementById("questDrawerEmpty");
+  if (!list) return;
+  const news = questLiveNews();
+  list.innerHTML = news.map(n => {
+    const title = pickLangText(n.title, lang);
+    const body = pickLangText(n.body, lang);
+    const hasCase = n.useCaseId && findUseCase(n.useCaseId);
+    const actionLabel = hasCase ? t.questOpenPlaybook : (n.linkUrl ? t.newsOpenLink : "");
+    const date = n.startsAt ? formatDate(n.startsAt) : "";
+    return `<li class="quest-drawer-item${n.pinned ? " is-pinned" : ""}">
+      <div class="quest-drawer-item-head">
+        <span class="material-symbols-outlined" aria-hidden="true">${n.pinned ? "push_pin" : "history_edu"}</span>
+        <h3>${escapeHtml(title)}</h3>
+      </div>
+      ${body ? `<p>${escapeHtml(body)}</p>` : ""}
+      <div class="quest-drawer-item-foot">
+        <span class="quest-drawer-date">${escapeHtml(date)}</span>
+        ${actionLabel ? `<button type="button" class="quest-action" data-news-id="${Number(n.id)}"><span>${escapeHtml(actionLabel)}</span><span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span></button>` : ""}
+      </div>
+    </li>`;
+  }).join("");
+  if (empty) empty.hidden = news.length > 0;
+}
+
+function openQuestDrawer() {
+  const drawer = document.getElementById("questDrawer");
+  if (!drawer) return;
+  renderQuestDrawer();
+  questLiveNews().forEach(n => addQuestId(QUEST_LS.seen, n.id));
+  updateQuestBell();
+  questState.drawerOpen = true;
+  drawer.hidden = false;
+  document.getElementById("questDrawerBackdrop").hidden = false;
+  requestAnimationFrame(() => drawer.classList.add("is-open"));
+  document.getElementById("questBellBtn").setAttribute("aria-expanded", "true");
+  setTimeout(() => (document.getElementById("questDrawerClose") || drawer).focus(), 30);
+}
+
+function closeQuestDrawer() {
+  const drawer = document.getElementById("questDrawer");
+  if (!drawer || drawer.hidden) return;
+  questState.drawerOpen = false;
+  drawer.classList.remove("is-open");
+  drawer.hidden = true;
+  document.getElementById("questDrawerBackdrop").hidden = true;
+  const bell = document.getElementById("questBellBtn");
+  bell.setAttribute("aria-expanded", "false");
+  bell.focus();
+}
+
+function applyQuestCollapsed() {
+  const t = tr();
+  const strip = document.getElementById("questStrip");
+  const scene = document.getElementById("questScene");
+  const btn = document.getElementById("questCollapseBtn");
+  if (!strip || !scene || !btn) return;
+  const c = questState.collapsed;
+  strip.classList.toggle("is-collapsed", c);
+  scene.hidden = c;
+  btn.setAttribute("aria-expanded", String(!c));
+  const label = c ? t.questExpand : t.questCollapse;
+  btn.setAttribute("aria-label", label);
+  btn.title = label;
+  btn.dataset.i18nAria = c ? "questExpand" : "questCollapse";
+  btn.dataset.i18nTitle = btn.dataset.i18nAria;
+  btn.querySelector(".material-symbols-outlined").textContent = c ? "expand_more" : "expand_less";
+  if (questState.renderer) questState.renderer.setActive(!c);
+}
+
+function applyQuestPaused() {
+  const t = tr();
+  const btn = document.getElementById("questPauseBtn");
+  if (!btn) return;
+  const p = questState.paused;
+  btn.setAttribute("aria-pressed", String(p));
+  const label = p ? t.questResume : t.questPause;
+  btn.setAttribute("aria-label", label);
+  btn.title = label;
+  btn.dataset.i18nAria = p ? "questResume" : "questPause";
+  btn.dataset.i18nTitle = btn.dataset.i18nAria;
+  btn.querySelector(".material-symbols-outlined").textContent = p ? "play_arrow" : "pause";
+}
+
+/** Binds strip controls once per page. */
+function bindQuestControls() {
+  if (questState.bound) return;
+  questState.bound = true;
+  const $ = (id) => document.getElementById(id);
+  const bubble = $("questBubble");
+  bubble.addEventListener("mouseenter", () => { questState.hover = true; });
+  bubble.addEventListener("mouseleave", () => { questState.hover = false; });
+  bubble.addEventListener("focusin", () => { questState.hover = true; });
+  bubble.addEventListener("focusout", (e) => { if (!bubble.contains(e.relatedTarget)) questState.hover = false; });
+
+  $("questBubbleAction").addEventListener("click", () => {
+    const item = questState.current;
+    if (item?.kind === "hint") {
+      recordQuestEvent("quest_click", { useCaseId: item.hint.useCaseId });
+      openQuestPlaybook(item.hint.useCaseId);
+    } else if (item?.kind === "news") openQuestNews(item.news);
+  });
+  $("questPauseBtn").addEventListener("click", () => { questState.paused = !questState.paused; applyQuestPaused(); });
+  $("questDismissBtn").addEventListener("click", () => {
+    const item = questState.current;
+    if (item?.kind !== "news") return;
+    addQuestId(QUEST_LS.dismissed, item.news.id);
+    questState.elapsed = 0;
+    advanceQuestBubble(false);
+  });
+  $("questCollapseBtn").addEventListener("click", () => {
+    questState.collapsed = !questState.collapsed;
+    questLsSet(QUEST_LS.collapsed, questState.collapsed ? "1" : "0");
+    applyQuestCollapsed();
+  });
+  $("questBellBtn").addEventListener("click", openQuestDrawer);
+  $("questDrawerClose").addEventListener("click", closeQuestDrawer);
+  $("questDrawerBackdrop").addEventListener("click", closeQuestDrawer);
+  $("questDrawer").addEventListener("keydown", (e) => { if (e.key === "Escape") { e.stopPropagation(); closeQuestDrawer(); } });
+  $("questDrawerList").addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-news-id]");
+    if (!btn) return;
+    const news = questLiveNews().find(n => n.id === Number(btn.dataset.newsId));
+    closeQuestDrawer();
+    openQuestNews(news);
+  });
+}
+
+/** Called by applyTheme(). */
+function questOnThemeChange() {
+  if (questState.renderer) questState.renderer.redraw();
+}
+
+/** Called at the end of updateUILanguage(): re-renders dynamic strip + admin text. */
+function questOnLanguageChange() {
+  if (typeof document === "undefined") return;
+  if (questState.data) {
+    renderQuestTimeline();
+    renderQuestBubble(questState.current, false);
+    applyQuestCollapsed();
+    applyQuestPaused();
+    if (questState.drawerOpen) renderQuestDrawer();
+  }
+  if (newsAdminState.bound) { renderNewsAudience(readNewsAudience()); renderNewsTable(); updateNewsPreview(); }
+  if (calendarState.bound) { renderCalendarForm(readCalendarForm()); renderCalendarStatus(); }
+  if (document.getElementById("formCaseTiming")?.dataset.rendered) {
+    const state = readCaseQuestFields();
+    renderCaseQuestFields(state, appState.isAssist === true);
+  }
+}
+
+// ===========================================================================
+// v6 Admin: News tab (announcements Archie delivers)
+// ===========================================================================
+const newsAdminState = { list: [], bound: false, editing: null };
+
+/** Audience checkboxes from QuestCore.ROLES with localised role names. */
+function renderNewsAudience(selected) {
+  const grid = document.getElementById("newsAudienceGrid");
+  if (!grid) return;
+  const t = tr();
+  grid.innerHTML = QuestCore.ROLES.map(r => `
+    <label class="check-row"><input type="checkbox" name="newsAudience" value="${escapeHtml(r)}"${selected.includes(r) ? " checked" : ""}> <span>${escapeHtml(t.questRoleShort?.[r] || r)}</span></label>`).join("");
+}
+const readNewsAudience = () => [...document.querySelectorAll("input[name='newsAudience']:checked")].map(b => b.value);
+
+function updateNewsCounters() {
+  document.querySelectorAll("#formNews [data-counter]").forEach(el => {
+    const p = document.querySelector(`[data-counter-for="${el.id}"]`);
+    if (!p) return;
+    const max = Number(el.dataset.counter);
+    p.textContent = `${[...el.value].length} / ${max}`;
+    p.classList.toggle("is-near", [...el.value].length > max * 0.9);
+  });
+}
+
+function updateNewsPreview() {
+  const lang = appState.activeLanguage || "en";
+  const val = (id) => (document.getElementById(id)?.value || "").trim();
+  const byLang = {
+    en: [val("newsTitleEn"), val("newsBodyEn")],
+    "zh-TW": [val("newsTitleZhTw"), val("newsBodyZhTw")],
+    "zh-CN": [val("newsTitleZhCn"), val("newsBodyZhCn")]
+  };
+  const [title, body] = byLang[lang] && byLang[lang][0] ? byLang[lang] : byLang.en;
+  const pt = document.getElementById("newsPreviewTitle");
+  const pb = document.getElementById("newsPreviewBody");
+  if (pt) pt.textContent = title || tr().newsPreviewEmpty;
+  if (pb) { pb.textContent = body; pb.hidden = !body; }
+}
+
+function syncNewsLinkType() {
+  const type = document.getElementById("newsLinkType").value;
+  document.getElementById("newsLinkUrlGroup").hidden = type !== "url";
+  document.getElementById("newsLinkCaseGroup").hidden = type !== "case";
+}
+
+function fillNewsCaseOptions(selectedId) {
+  const sel = document.getElementById("newsLinkCase");
+  if (!sel) return;
+  const lang = appState.activeLanguage || "en";
+  const cases = (appState.loadedAdminUseCases && appState.loadedAdminUseCases.length) ? appState.loadedAdminUseCases : useCasesDb;
+  sel.innerHTML = cases.map(c => {
+    const title = c.translations?.[lang]?.title || useCasesTranslations?.[c.id]?.[lang]?.title || c.title;
+    return `<option value="${escapeHtml(c.id)}"${c.id === selectedId ? " selected" : ""}>${escapeHtml(title)}</option>`;
+  }).join("");
+}
+
+const NEWS_FIELD_MAP = {
+  titleEn: "newsTitleEn", titleZhTw: "newsTitleZhTw", titleZhCn: "newsTitleZhCn",
+  bodyEn: "newsBodyEn", bodyZhTw: "newsBodyZhTw", bodyZhCn: "newsBodyZhCn",
+  linkUrl: "newsLinkUrl", useCaseId: "newsLinkCase", endsAt: "newsEndsAt", startsAt: "newsEndsAt"
+};
+
+function resetNewsForm(n) {
+  const t = tr();
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v || ""; };
+  newsAdminState.editing = n ? n.id : null;
+  set("newsId", n ? n.id : "");
+  set("newsTitleEn", n?.title?.en); set("newsBodyEn", n?.body?.en);
+  set("newsTitleZhTw", n?.title?.["zh-TW"]); set("newsBodyZhTw", n?.body?.["zh-TW"]);
+  set("newsTitleZhCn", n?.title?.["zh-CN"]); set("newsBodyZhCn", n?.body?.["zh-CN"]);
+  set("newsLinkUrl", n?.linkUrl);
+  set("newsStartsAt", n ? n.startsAt : QuestCore.localDateIso());
+  set("newsEndsAt", n?.endsAt);
+  document.getElementById("newsLinkType").value = n?.useCaseId ? "case" : (n?.linkUrl ? "url" : "none");
+  fillNewsCaseOptions(n?.useCaseId);
+  document.getElementById("newsPinned").checked = Boolean(n?.pinned);
+  document.getElementById("newsActive").checked = n ? Boolean(n.active) : true;
+  renderNewsAudience(n?.audience || []);
+  Object.values(NEWS_FIELD_MAP).forEach(id => setFieldError(id, ""));
+  document.getElementById("newsFormResult").hidden = true;
+  const title = document.getElementById("newsFormTitle");
+  title.dataset.i18n = n ? "newsFormTitleEdit" : "newsFormTitleNew";
+  title.textContent = n ? t.newsFormTitleEdit : t.newsFormTitleNew;
+  document.getElementById("btnNewsCancel").hidden = !n;
+  const save = document.getElementById("btnNewsSave");
+  save.dataset.i18n = n ? "newsSaveChanges" : "newsPublish";
+  save.textContent = n ? t.newsSaveChanges : t.newsPublish;
+  syncNewsLinkType();
+  updateNewsCounters();
+  updateNewsPreview();
+}
+
+function readNewsForm() {
+  const val = (id) => document.getElementById(id).value.trim();
+  const type = document.getElementById("newsLinkType").value;
+  return {
+    title: { en: val("newsTitleEn"), "zh-TW": val("newsTitleZhTw"), "zh-CN": val("newsTitleZhCn") },
+    body: { en: val("newsBodyEn"), "zh-TW": val("newsBodyZhTw"), "zh-CN": val("newsBodyZhCn") },
+    linkUrl: type === "url" ? val("newsLinkUrl") : null,
+    useCaseId: type === "case" ? val("newsLinkCase") : null,
+    audience: readNewsAudience(),
+    startsAt: val("newsStartsAt") || null,
+    endsAt: val("newsEndsAt") || null,
+    pinned: document.getElementById("newsPinned").checked,
+    active: document.getElementById("newsActive").checked
+  };
+}
+
+/** Client-side checks mirror the server's validateAnnouncement(). Returns {field: message}. */
+function validateNewsForm(b) {
+  const t = tr();
+  const errors = {};
+  if (!b.title.en) errors.newsTitleEn = t.newsErrTitle;
+  if (b.linkUrl !== null && !/^https?:\/\/\S+$/i.test(b.linkUrl)) errors.newsLinkUrl = t.newsErrLink;
+  if (b.useCaseId === "") errors.newsLinkCase = t.newsErrCase;
+  if (b.startsAt && b.endsAt && b.endsAt < b.startsAt) errors.newsEndsAt = t.newsErrDates;
+  return errors;
+}
+
+function bindNewsForm() {
+  const form = document.getElementById("formNews");
+  if (!form || newsAdminState.bound) return;
+  newsAdminState.bound = true;
+  form.addEventListener("input", () => { updateNewsCounters(); updateNewsPreview(); });
+  document.getElementById("newsLinkType").addEventListener("change", syncNewsLinkType);
+  document.getElementById("btnNewsCancel").addEventListener("click", () => resetNewsForm(null));
+  document.getElementById("btnNewsTranslate").addEventListener("click", translateNewsForm);
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const t = tr();
+    const body = readNewsForm();
+    Object.values(NEWS_FIELD_MAP).forEach(id => setFieldError(id, ""));
+    const errs = validateNewsForm(body);
+    if (Object.keys(errs).length) {
+      Object.entries(errs).forEach(([id, m]) => setFieldError(id, m));
+      document.getElementById(Object.keys(errs)[0])?.focus();
+      return;
+    }
+    const btn = document.getElementById("btnNewsSave");
+    btn.disabled = true;
+    const id = newsAdminState.editing;
+    const { ok, data } = await apiJson(id ? `/api/admin/announcements/${id}` : "/api/admin/announcements", { method: id ? "PUT" : "POST", body });
+    btn.disabled = false;
+    if (ok) {
+      showToast(id ? t.newsUpdated : t.newsPublished, "success");
+      resetNewsForm(null);
+      loadAdminNews();
+      return;
+    }
+    Object.entries(data.errors || {}).forEach(([k, m]) => NEWS_FIELD_MAP[k] && setFieldError(NEWS_FIELD_MAP[k], m));
+    showInline(document.getElementById("newsFormResult"), escapeHtml(errText(data)), "error");
+  });
+  document.getElementById("adminNewsTableBody").addEventListener("click", async (e) => {
+    const btn = e.target.closest("[data-news-action]");
+    if (!btn) return;
+    const n = newsAdminState.list.find(x => x.id === Number(btn.dataset.id));
+    if (!n) return;
+    if (btn.dataset.newsAction === "edit") {
+      resetNewsForm(n);
+      document.getElementById("formNews").scrollIntoView({ behavior: questReducedMotion() ? "auto" : "smooth", block: "start" });
+      document.getElementById("newsTitleEn").focus({ preventScroll: true });
+      return;
+    }
+    const t = tr();
+    if (!confirm(fmt(t.newsConfirmDelete, { title: pickLangText(n.title, appState.activeLanguage || "en") }))) return;
+    const { ok, data } = await apiJson(`/api/admin/announcements/${n.id}`, { method: "DELETE" });
+    if (!ok) { showToast(errText(data), "warning"); return; }
+    showToast(t.newsDeleted, "success");
+    if (newsAdminState.editing === n.id) resetNewsForm(null);
+    loadAdminNews();
+  });
+}
+
+/** Fills empty zh-TW / zh-CN fields from the English text via Gemini (existing text is kept). */
+async function translateNewsForm() {
+  const t = tr();
+  const title = document.getElementById("newsTitleEn").value.trim();
+  const body = document.getElementById("newsBodyEn").value.trim();
+  if (!title && !body) { setFieldError("newsTitleEn", t.newsErrTitle); return; }
+  const btn = document.getElementById("btnNewsTranslate");
+  btn.disabled = true;
+  btn.classList.add("is-busy");
+  const { ok, data } = await apiJson("/api/admin/translate", { method: "POST", body: { title, body } });
+  btn.disabled = false;
+  btn.classList.remove("is-busy");
+  if (!ok || !data.result) { showToast(errText(data) || t.newsTranslateFailed, "warning"); return; }
+  const fill = (id, v) => { const el = document.getElementById(id); if (el && v) el.value = String(v).slice(0, Number(el.maxLength) || 140); };
+  fill("newsTitleZhTw", data.result["zh-TW"]?.title); fill("newsBodyZhTw", data.result["zh-TW"]?.body);
+  fill("newsTitleZhCn", data.result["zh-CN"]?.title); fill("newsBodyZhCn", data.result["zh-CN"]?.body);
+  updateNewsCounters();
+  updateNewsPreview();
+  showToast(t.newsTranslated, "success");
+}
+
+function renderNewsTable() {
+  const tbody = document.getElementById("adminNewsTableBody");
+  if (!tbody) return;
+  const t = tr();
+  const lang = appState.activeLanguage || "en";
+  if (!newsAdminState.list.length) {
+    tbody.innerHTML = `<tr><td colspan="6" class="table-empty">${escapeHtml(t.newsTableEmpty)}</td></tr>`;
+    return;
+  }
+  const today = QuestCore.localDateIso();
+  tbody.innerHTML = newsAdminState.list.map(n => {
+    const status = QuestCore.newsStatus(n, today);
+    const dates = `${n.startsAt ? formatDate(n.startsAt) : "—"} → ${n.endsAt ? formatDate(n.endsAt) : t.newsNoEnd}`;
+    const aud = n.audience?.length ? n.audience.map(r => t.questRoleShort?.[r] || r).join(", ") : t.newsAudienceAll;
+    return `<tr>
+      <td><div class="news-cell-title">${n.pinned ? `<span class="material-symbols-outlined" aria-label="${escapeHtml(t.newsPinnedLabel)}">push_pin</span>` : ""}<strong>${escapeHtml(pickLangText(n.title, lang))}</strong></div><div class="muted news-cell-aud">${escapeHtml(aud)}</div></td>
+      <td><span class="status-pill ${status === "live" ? "is-ok" : "is-muted"}">${escapeHtml(t.newsStatus?.[status] || status)}</span></td>
+      <td>${escapeHtml(dates)}</td>
+      <td>${Number(n.seenCount) || 0}</td>
+      <td>${Number(n.clickCount) || 0}</td>
+      <td class="col-actions">
+        <button type="button" class="icon-btn btn-sm" data-news-action="edit" data-id="${Number(n.id)}" title="${escapeHtml(t.newsEdit)}" aria-label="${escapeHtml(t.newsEdit)}"><span class="material-symbols-outlined">edit</span></button>
+        <button type="button" class="icon-btn btn-sm" data-news-action="delete" data-id="${Number(n.id)}" title="${escapeHtml(t.deleteLabel)}" aria-label="${escapeHtml(t.deleteLabel)}"><span class="material-symbols-outlined">delete</span></button>
+      </td>
+    </tr>`;
+  }).join("");
+}
+
+async function loadAdminNews() {
+  const first = !newsAdminState.bound;
+  bindNewsForm();
+  if (first) resetNewsForm(null);
+  const tbody = document.getElementById("adminNewsTableBody");
+  const t = tr();
+  if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="table-empty">${escapeHtml(t.loading)}</td></tr>`;
+  // The playbook link picker needs the case list even if the Cases tab was never opened.
+  if (!appState.loadedAdminUseCases?.length) {
+    const res = await apiJson("/api/use-cases");
+    if (Array.isArray(res.data)) appState.loadedAdminUseCases = res.data;
+    if (!newsAdminState.editing) fillNewsCaseOptions(document.getElementById("newsLinkCase")?.value);
+  }
+  const { ok, data } = await apiJson("/api/admin/announcements");
+  if (!ok) {
+    if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="table-empty is-error">${escapeHtml(errText(data))}</td></tr>`;
+    return;
+  }
+  newsAdminState.list = Array.isArray(data.announcements) ? data.announcements : [];
+  renderNewsTable();
+}
+
+// ===========================================================================
+// v6 Admin: Settings → Academic calendar (super admins)
+// ===========================================================================
+const calendarState = { bound: false, loaded: null };
+
+/**
+ * Maps an "MM-DD" onto a concrete YYYY-MM-DD inside the academic year that
+ * starts at semA.start in `startYear` (months before the semA start month
+ * belong to startYear + 1). Lets admins use native date pickers.
+ */
+const mdToIso = (md, semAStartMd, startYear) => {
+  if (!md) return "";
+  const y = md < semAStartMd ? startYear + 1 : startYear;
+  return `${y}-${md}`;
+};
+const isoToMd = (iso) => (iso && /^\d{4}-\d{2}-\d{2}$/.test(iso) ? iso.slice(5) : "");
+/** ISO date ± n days (UTC arithmetic so DST never shifts the result). */
+const shiftIso = (iso, n) => {
+  const [y, m, d] = iso.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d + n)).toISOString().slice(0, 10);
+};
+
+const calendarStartYear = (cal) => {
+  const now = new Date();
+  const md = QuestCore.localDateIso(now).slice(5);
+  return md < cal.semA.start ? now.getFullYear() - 1 : now.getFullYear();
+};
+
+function renderCalendarForm(cal) {
+  const grid = document.getElementById("calGrid");
+  if (!grid) return;
+  const t = tr();
+  const c = cal || QuestCore.DEFAULT_ACADEMIC_CALENDAR;
+  const y = calendarStartYear(c);
+  grid.innerHTML = QuestCore.TERM_ORDER.map(k => `
+    <div class="cal-row" data-term="${k}">
+      <span class="cal-term"><span class="cal-swatch quest-term-${k}" aria-hidden="true"></span>${escapeHtml(t.questTermFull?.[k] || k)}</span>
+      <label class="cal-field"><span class="form-label">${escapeHtml(t.calStart)}</span>
+        <input type="date" class="select-control" id="cal_${k}_start" data-term="${k}" data-edge="start" value="${mdToIso(c[k].start, c.semA.start, y)}"></label>
+      <label class="cal-field"><span class="form-label">${escapeHtml(t.calEnd)}</span>
+        <input type="date" class="select-control" id="cal_${k}_end" data-term="${k}" data-edge="end" value="${mdToIso(c[k].end, c.semA.start, y)}"></label>
+    </div>`).join("");
+  updateCalendarPreview();
+}
+
+const readCalendarForm = () => {
+  if (!document.getElementById("cal_semA_start")) return null;
+  return QuestCore.TERM_ORDER.reduce((acc, k) => ({
+    ...acc,
+    [k]: { start: isoToMd(document.getElementById(`cal_${k}_start`).value), end: isoToMd(document.getElementById(`cal_${k}_end`).value) }
+  }), {});
+};
+
+function updateCalendarPreview() {
+  const t = tr();
+  const cal = readCalendarForm();
+  const preview = document.getElementById("calPreview");
+  const errEl = document.getElementById("calFormError");
+  if (!cal || !preview) return;
+  const check = QuestCore.validateCalendar(cal);
+  if (!check.ok) {
+    const e = check.errors[0];
+    errEl.textContent = fmt(e.code === "invalid_date" ? t.calErrDate : t.calErrGap, { term: t.questTermFull?.[e.term] || e.term || "" });
+    preview.textContent = "";
+    return;
+  }
+  errEl.textContent = "";
+  preview.textContent = fmt(t.calPreviewToday, { position: questPositionText(QuestCore.getAcademicPosition(new Date(), cal), t) });
+}
+
+function renderCalendarStatus() {
+  const t = tr();
+  const s = calendarState.loaded;
+  const pill = document.getElementById("calStatusPill");
+  if (pill && s) {
+    pill.className = `status-pill ${s.isDefault ? "is-muted" : "is-ok"}`;
+    pill.textContent = s.isDefault ? t.calStatusDefault : t.calStatusCustom;
+  }
+  const changed = document.getElementById("calLastChanged");
+  if (changed) changed.textContent = s?.updatedBy ? fmt(t.lastChanged, { by: s.updatedBy, date: formatDateTime(s.updatedAt) }) : "";
+}
+
+/**
+ * Only MM-DD is stored, so the year in each date input is cosmetic. After an
+ * edit, put every input back into a single academic year anchored on the
+ * semA start: the semA start keeps its own year, and any MM-DD earlier in the
+ * calendar year than the semA start belongs to the following year. Without
+ * this, the summer end (set from semA start − 1 day) keeps semA's year and
+ * shows up as earlier than its own start.
+ */
+function normalizeCalendarYears() {
+  const anchor = document.getElementById("cal_semA_start")?.value;
+  if (!anchor) return;
+  const startYear = Number(anchor.slice(0, 4));
+  const anchorMd = anchor.slice(5);
+  QuestCore.TERM_ORDER.forEach(k => ["start", "end"].forEach(edge => {
+    const el = document.getElementById(`cal_${k}_${edge}`);
+    const md = isoToMd(el?.value);
+    if (md) el.value = mdToIso(md, anchorMd, startYear);
+  }));
+}
+
+function bindCalendarForm() {
+  const form = document.getElementById("formCalendarSettings");
+  if (!form || calendarState.bound) return;
+  calendarState.bound = true;
+  // Keeping terms contiguous: moving a start pulls the previous term's end to the day before;
+  // moving an end pushes the next term's start to the day after (wraps summer → semA).
+  form.addEventListener("change", (e) => {
+    const input = e.target.closest("input[data-term]");
+    if (!input || !input.value) { updateCalendarPreview(); return; }
+    const order = QuestCore.TERM_ORDER;
+    const i = order.indexOf(input.dataset.term);
+    if (input.dataset.edge === "start") {
+      const prev = order[(i + order.length - 1) % order.length];
+      document.getElementById(`cal_${prev}_end`).value = shiftIso(input.value, -1);
+    } else {
+      const next = order[(i + 1) % order.length];
+      document.getElementById(`cal_${next}_start`).value = shiftIso(input.value, 1);
+    }
+    normalizeCalendarYears();
+    updateCalendarPreview();
+  });
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const t = tr();
+    const calendar = readCalendarForm();
+    if (!QuestCore.validateCalendar(calendar).ok) { updateCalendarPreview(); return; }
+    const btn = document.getElementById("btnCalSave");
+    btn.disabled = true;
+    const { ok, data } = await apiJson("/api/admin/settings/calendar", { method: "PUT", body: { calendar } });
+    btn.disabled = false;
+    if (!ok) { showInline(document.getElementById("calResult"), escapeHtml(errText(data)), "error"); return; }
+    showToast(t.calSaved, "success");
+    loadCalendarSettings();
+  });
+  document.getElementById("btnCalReset").addEventListener("click", async () => {
+    const t = tr();
+    if (!confirm(t.calConfirmReset)) return;
+    const { ok, data } = await apiJson("/api/admin/settings/calendar", { method: "DELETE" });
+    if (!ok) { showInline(document.getElementById("calResult"), escapeHtml(errText(data)), "error"); return; }
+    showToast(t.calResetDone, "success");
+    loadCalendarSettings();
+  });
+}
+
+async function loadCalendarSettings() {
+  if (!appState.isSuper || !document.getElementById("calendarPanel")) return;
+  bindCalendarForm();
+  const { ok, data } = await apiJson("/api/admin/settings/calendar");
+  const result = document.getElementById("calResult");
+  if (!ok) { showInline(result, escapeHtml(tr().calLoadFailed), "error"); return; }
+  result.hidden = true;
+  calendarState.loaded = data;
+  renderCalendarForm(data.calendar);
+  renderCalendarStatus();
+}
+
+// ===========================================================================
+// v6 Admin: case form — "When it matters" timing chips + Quest Run questions
+// ===========================================================================
+const MAX_CASE_HINTS = 3;
+
+/** Reads the timing chips + hint repeater back into plain data. */
+function readCaseQuestFields() {
+  const timing = [...document.querySelectorAll("input[name='formCaseTiming']:checked")].map(b => b.value);
+  const hints = [...document.querySelectorAll("#formCaseHints .hint-item")].map(row => ({
+    question: {
+      en: row.querySelector("[data-hint-field='en']").value.trim(),
+      "zh-TW": row.querySelector("[data-hint-field='zh-TW']").value.trim(),
+      "zh-CN": row.querySelector("[data-hint-field='zh-CN']").value.trim()
+    },
+    audience: [...row.querySelectorAll("input[data-hint-aud]:checked")].map(b => b.value)
+  }));
+  return { timing, hints };
+}
+
+const hintRowHtml = (h, i, t, disabled) => {
+  const q = h.question || h;
+  const dis = disabled ? " disabled" : "";
+  const aud = Array.isArray(h.audience) ? h.audience : [];
+  const field = (lang, label) => `
+    <label class="hint-field"><span class="hint-lang">${label}</span>
+      <input type="text" class="select-control" maxlength="120" data-hint-field="${lang}" value="${escapeHtml(q[lang] || "")}"${dis}></label>`;
+  return `<div class="hint-item" data-index="${i}">
+    <div class="hint-item-head">
+      <span class="hint-num">${escapeHtml(fmt(t.caseFormHintN, { n: i + 1 }))}</span>
+      ${disabled ? "" : `<button type="button" class="icon-btn btn-sm" data-hint-remove="${i}" title="${escapeHtml(t.caseFormHintRemove)}" aria-label="${escapeHtml(t.caseFormHintRemove)}"><span class="material-symbols-outlined">delete</span></button>`}
+    </div>
+    ${field("en", "EN")}${field("zh-TW", "繁")}${field("zh-CN", "简")}
+    <details class="hint-aud"${aud.length ? " open" : ""}><summary>${escapeHtml(t.caseFormHintAudience)}</summary>
+      <div class="chip-checks">${QuestCore.ROLES.map(r => `<label class="chip-check"><input type="checkbox" data-hint-aud value="${escapeHtml(r)}"${aud.includes(r) ? " checked" : ""}${dis}><span>${escapeHtml(t.questRoleShort?.[r] || r)}</span></label>`).join("")}</div>
+    </details>
+  </div>`;
+};
+
+/** Renders timing chips (QuestCore.TIMINGS) and the hint repeater (max 3). */
+function renderCaseQuestFields(state, disabled) {
+  const t = tr();
+  const timingBox = document.getElementById("formCaseTiming");
+  const hintBox = document.getElementById("formCaseHints");
+  const addBtn = document.getElementById("btnCaseAddHint");
+  if (!timingBox || !hintBox) return;
+  const timing = state.timing && state.timing.length ? state.timing : ["anytime"];
+  const dis = disabled ? " disabled" : "";
+  timingBox.dataset.rendered = "1";
+  timingBox.innerHTML = QuestCore.TIMINGS.map(k => `
+    <label class="chip-check"><input type="checkbox" name="formCaseTiming" value="${k}"${timing.includes(k) ? " checked" : ""}${dis}><span>${escapeHtml(k === "anytime" ? t.questAnytime : (t.questPhase?.[k] || k))}</span></label>`).join("");
+  const hints = (state.hints || []).slice(0, MAX_CASE_HINTS);
+  hintBox.innerHTML = hints.map((h, i) => hintRowHtml(h, i, t, disabled)).join("");
+  if (addBtn) {
+    addBtn.hidden = disabled;
+    addBtn.disabled = hints.length >= MAX_CASE_HINTS;
+  }
+  if (!hintBox.dataset.bound) {
+    hintBox.dataset.bound = "1";
+    hintBox.addEventListener("click", (e) => {
+      const rm = e.target.closest("[data-hint-remove]");
+      if (!rm) return;
+      const s = readCaseQuestFields();
+      s.hints.splice(Number(rm.dataset.hintRemove), 1);
+      renderCaseQuestFields(s, false);
+    });
+    // "Anytime" and specific phases are mutually exclusive.
+    timingBox.addEventListener("change", (e) => {
+      if (e.target.name !== "formCaseTiming") return;
+      const boxes = [...timingBox.querySelectorAll("input[name='formCaseTiming']")];
+      if (e.target.value === "anytime" && e.target.checked) boxes.forEach(b => { if (b.value !== "anytime") b.checked = false; });
+      else if (e.target.checked) boxes.forEach(b => { if (b.value === "anytime") b.checked = false; });
+      if (!boxes.some(b => b.checked)) boxes.find(b => b.value === "anytime").checked = true;
+    });
+    if (addBtn) addBtn.addEventListener("click", () => {
+      const s = readCaseQuestFields();
+      if (s.hints.length >= MAX_CASE_HINTS) return;
+      s.hints.push({ question: { en: "", "zh-TW": "", "zh-CN": "" }, audience: [] });
+      renderCaseQuestFields(s, false);
+      const inputs = hintBox.querySelectorAll("[data-hint-field='en']");
+      if (inputs.length) inputs[inputs.length - 1].focus();
+    });
+  }
+}
+
+/** Applies Gemini's suggested timing / hints (flat {en, zh-TW, zh-CN, audience} shape). */
+function applyQuestSuggestions(aiRes) {
+  const current = readCaseQuestFields();
+  const timing = Array.isArray(aiRes.timing) ? aiRes.timing.filter(x => QuestCore.TIMINGS.includes(x)) : current.timing;
+  const hints = Array.isArray(aiRes.hints)
+    ? aiRes.hints.slice(0, MAX_CASE_HINTS).map(h => ({
+      question: { en: String(h.en || h.question?.en || ""), "zh-TW": String(h["zh-TW"] || h.question?.["zh-TW"] || ""), "zh-CN": String(h["zh-CN"] || h.question?.["zh-CN"] || "") },
+      audience: Array.isArray(h.audience) ? h.audience.filter(r => QuestCore.ROLES.includes(r)) : []
+    }))
+    : current.hints;
+  renderCaseQuestFields({ timing: timing.length ? timing : ["anytime"], hints }, false);
 }

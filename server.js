@@ -15,6 +15,7 @@ const { gcpHeaders } = require('./lib/gcp');
 const mailer = require('./lib/mailer');
 const { encrypt } = require('./lib/secrets');
 const infographics = require('./lib/infographics');
+const QuestCore = require('./lib/quest-core');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -33,6 +34,14 @@ app.use(express.urlencoded({ extended: true }));
 // Explicit Favicon Route Handler
 app.get('/favicon.ico', (req, res) => {
   res.sendFile(path.join(__dirname, 'favicon.ico'));
+});
+
+// Quest Run sprite manifest: an empty object (200) when the asset build has not run, so the client
+// silently falls back to code-drawn pixel art instead of logging a 404.
+app.get('/game/manifest.json', (req, res) => {
+  const file = path.join(__dirname, 'game', 'manifest.json');
+  if (fs.existsSync(file)) return res.sendFile(file);
+  res.json({});
 });
 
 // Serve static assets from project root and public subdirectories (before sessions: no DB lookup per asset)
@@ -213,7 +222,9 @@ async function initializeSchemas() {
     { table: 'users', column: 'ge_app_link', pg: 'VARCHAR(1024)', sqlite: 'TEXT' },
     { table: 'use_cases', column: 'infographic_url', pg: 'VARCHAR(1024)', sqlite: 'TEXT' },
     // 'general' | 'notebooklm' | 'deep_research' | 'agent_designer' | 'canvas' | 'image' | 'video'
-    { table: 'use_cases', column: 'prompt_type', pg: "VARCHAR(50) DEFAULT 'general'", sqlite: "TEXT DEFAULT 'general'" }
+    { table: 'use_cases', column: 'prompt_type', pg: "VARCHAR(50) DEFAULT 'general'", sqlite: "TEXT DEFAULT 'general'" },
+    // Quest Run: JSON array of academic phases when this playbook is most relevant (see lib/quest-core.js TIMINGS)
+    { table: 'use_cases', column: 'timing', pg: `TEXT DEFAULT '["anytime"]'`, sqlite: `TEXT DEFAULT '["anytime"]'` }
   ];
   for (const m of columnMigrations) {
     try {
@@ -283,6 +294,82 @@ async function initializeSchemas() {
   await query(createAuthTokensTable);
   await query(createAppSettingsTable);
 
+  // Quest Run: short "pain point" questions shown in the hero's speech bubble, linked to a playbook.
+  // audience = JSON array of roles ('[]' = everyone); timing = JSON array or NULL (NULL inherits use_cases.timing).
+  // No FK: SQLite runs with foreign keys off, so DELETE /api/admin/use-cases removes hints explicitly.
+  const createQuestHintsTable = dbType === 'postgres' ? `
+    CREATE TABLE IF NOT EXISTS quest_hints (
+      id SERIAL PRIMARY KEY,
+      use_case_id VARCHAR(100) NOT NULL,
+      question_en VARCHAR(255) NOT NULL,
+      question_zh_tw VARCHAR(255),
+      question_zh_cn VARCHAR(255),
+      audience TEXT DEFAULT '[]',
+      timing TEXT,
+      active INTEGER DEFAULT 1,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  ` : `
+    CREATE TABLE IF NOT EXISTS quest_hints (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      use_case_id TEXT NOT NULL,
+      question_en TEXT NOT NULL,
+      question_zh_tw TEXT,
+      question_zh_cn TEXT,
+      audience TEXT DEFAULT '[]',
+      timing TEXT,
+      active INTEGER DEFAULT 1,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+  `;
+
+  // Quest Run news: Archie delivers these as scrolls. starts_at / ends_at are 'YYYY-MM-DD' strings
+  // compared against the viewer's LOCAL date on the client (inclusive range).
+  const createAnnouncementsTable = dbType === 'postgres' ? `
+    CREATE TABLE IF NOT EXISTS announcements (
+      id SERIAL PRIMARY KEY,
+      title_en VARCHAR(120) NOT NULL,
+      title_zh_tw VARCHAR(120),
+      title_zh_cn VARCHAR(120),
+      body_en VARCHAR(300),
+      body_zh_tw VARCHAR(300),
+      body_zh_cn VARCHAR(300),
+      link_url VARCHAR(1024),
+      use_case_id VARCHAR(100),
+      audience TEXT DEFAULT '[]',
+      starts_at VARCHAR(10),
+      ends_at VARCHAR(10),
+      pinned INTEGER DEFAULT 0,
+      active INTEGER DEFAULT 1,
+      created_by VARCHAR(255),
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  ` : `
+    CREATE TABLE IF NOT EXISTS announcements (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title_en TEXT NOT NULL,
+      title_zh_tw TEXT,
+      title_zh_cn TEXT,
+      body_en TEXT,
+      body_zh_tw TEXT,
+      body_zh_cn TEXT,
+      link_url TEXT,
+      use_case_id TEXT,
+      audience TEXT DEFAULT '[]',
+      starts_at TEXT,
+      ends_at TEXT,
+      pinned INTEGER DEFAULT 0,
+      active INTEGER DEFAULT 1,
+      created_by TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+  `;
+
+  await query(createQuestHintsTable);
+  await query(createAnnouncementsTable);
+
   console.log('✅ All database tables verified / created.');
   await seedDatabase();
 }
@@ -337,6 +424,8 @@ async function seedDatabase() {
     }
     await applySeedPromptTypes();
     await applySeedInfographics();
+    await applySeedTiming();
+    await applySeedQuestHints();
     console.log('✅ Use cases database synchronized successfully.');
 
     // Clean up any previously pre-seeded mock analytics data to reflect actual adoption metrics
@@ -444,6 +533,106 @@ async function applySeedPromptTypes() {
   }
   await mailer.writeSetting(query, 'seed_prompt_types_v1', { appliedAt: new Date().toISOString() }, 'system');
   console.log('🔄 Seed migration: Applied default prompt types to seeded use cases.');
+}
+
+/*
+ * Quest Run seed: when each playbook is most relevant in the academic year (timing) and the short
+ * pain-point questions the hero asks (hints). Each hint: [en, zh-TW, zh-CN, audience roles, timing?]
+ * — a hint timing of undefined inherits the use case timing. Every role ends up with ≥ 3 hints.
+ */
+const SEED_QUEST = Object.freeze({
+  socratic_tutor: { timing: ['sem_start', 'midterm', 'finals'], hints: [
+    ['Asking AI questions but not really learning?', '向 AI 發問，卻沒有真正學到東西？', '向 AI 提问，却没有真正学到东西？', ['Student']],
+    ['Want students to find the answers themselves?', '想讓學生自己找到答案？', '想让学生自己找到答案？', ['Lecturer', 'TA']]
+  ] },
+  rubric_grading: { timing: ['midterm', 'finals'], hints: [
+    ['Drowning in essays to mark?', '批改論文批改到喘不過氣？', '批改论文批改到喘不过气？', ['Lecturer', 'TA']],
+    ['Want feedback that matches your rubric?', '想要與評分準則一致的回饋？', '想要与评分标准一致的反馈？', ['TA']]
+  ] },
+  curriculum_design: { timing: ['winter', 'summer'], hints: [
+    ['Is your course still industry-ready?', '你的課程仍然貼近業界需要嗎？', '你的课程仍然贴近行业需求吗？', ['Lecturer', 'Program Leader']]
+  ] },
+  lab_manual_creator: { timing: ['sem_start'], hints: [
+    ['Is your lab guide ready for week 1?', '第一週的實驗指引準備好了嗎？', '第一周的实验指引准备好了吗？', ['TA', 'Lecturer']]
+  ] },
+  su_advocacy: { timing: ['midterm', 'finals'], hints: [
+    ['What are students really saying this term?', '學生這個學期真正在說甚麼？', '学生这个学期真正在说什么？', ['Student', 'Dean']]
+  ] },
+  club_funding: { timing: ['sem_start', 'summer'], hints: [
+    ['Need a budget your club can defend?', '需要一份站得住腳的學會預算？', '需要一份站得住脚的社团预算？', ['Student']],
+    ['Reviewing club budget requests?', '正在審批學會的預算申請？', '正在审批社团的预算申请？', ['Finance', 'SAO'], ['anytime']]
+  ] },
+  su_helpdesk: { timing: ['anytime'], hints: [
+    ['Answering the same policy questions every day?', '每天都在回答同樣的政策問題？', '每天都在回答同样的政策问题？', ['Student', 'SAO']],
+    ['Want a help desk that answers 24/7?', '想要一個全天候解答的服務台？', '想要一个全天候解答的服务台？', ['IT Admin']]
+  ] },
+  visual_campaign: { timing: ['sem_start', 'winter'], hints: [
+    ['Need a campaign people actually notice?', '需要一個真正令人注意的宣傳活動？', '需要一个真正引人注意的宣传活动？', ['Student', 'SAO']],
+    ['Need safety posters people will read?', '需要大家會細看的安全海報？', '需要大家会细看的安全海报？', ['Security'], ['anytime']]
+  ] },
+  at_risk_cohort: { timing: ['midterm'], hints: [
+    ["Who's falling behind before finals?", '期末前，誰正在落後？', '期末前，谁正在掉队？', ['Dean', 'Program Leader', 'Lecturer']]
+  ] },
+  accreditation_reports: { timing: ['summer', 'winter'], hints: [
+    ['Accreditation review coming up?', '評審即將到來？', '评审即将到来？', ['Program Leader', 'Dean']]
+  ] },
+  workforce_federation: { timing: ['summer', 'anytime'], hints: [
+    ['Rolling out sign-in for new staff?', '正在為新同事設定登入？', '正在为新同事设置登录？', ['IT Admin']],
+    ['Drowning in password reset tickets?', '密碼重設的請求多到處理不完？', '密码重置请求多到处理不完？', ['IT Admin'], ['anytime']]
+  ] },
+  sao_scavenger_hunt: { timing: ['winter', 'sem_start'], hints: [
+    ['Planning an orientation or festival event?', '正在籌備迎新或節慶活動？', '正在筹备迎新或节庆活动？', ['SAO', 'Student']]
+  ] },
+  finance_compliance: { timing: ['finals', 'summer'], hints: [
+    ['Year-end claims piling up?', '年終報銷單據堆積如山？', '年终报销单据堆积如山？', ['Finance']],
+    ['Still checking receipts against policy by hand?', '仍在人手逐張核對收據？', '仍在手动逐张核对收据？', ['Finance'], ['anytime']]
+  ] },
+  security_simulator: { timing: ['sem_start'], hints: [
+    ['Safety drill due this term?', '這個學期要進行安全演習？', '这个学期要进行安全演练？', ['Security']],
+    ['Does your team know what to do in an emergency?', '你的團隊知道緊急時該怎樣做嗎？', '你的团队知道紧急时该怎么做吗？', ['Security', 'IT Admin'], ['anytime']]
+  ] }
+});
+
+/** INSERT that resolves to the new row id on both dialects (pg needs RETURNING; sqlite reports lastID). */
+async function insertReturningId(sql, params, run = query) {
+  const result = await run(dbType === 'postgres' ? `${sql} RETURNING id` : sql, params);
+  return dbType === 'postgres' ? result[0].id : result.lastID;
+}
+
+// Timing: filled where NULL, plus a one-time pass (marker `seed_timing_v1`) over rows still on the
+// '["anytime"]' column default. Admin edits made after that pass always win.
+async function applySeedTiming() {
+  const entries = Object.entries(SEED_QUEST).map(([id, q]) => [id, JSON.stringify(q.timing)]);
+  for (const [id, timing] of entries) {
+    await query('UPDATE use_cases SET timing = ? WHERE id = ? AND timing IS NULL', [timing, id]);
+  }
+  const marker = await mailer.readSetting(query, 'seed_timing_v1');
+  if (marker) return;
+  for (const [id, timing] of entries) {
+    await query('UPDATE use_cases SET timing = ? WHERE id = ? AND timing = ?', [timing, id, '["anytime"]']);
+  }
+  await mailer.writeSetting(query, 'seed_timing_v1', { appliedAt: new Date().toISOString() }, 'system');
+  console.log('🔄 Seed migration: Applied default Quest Run timing to seeded use cases.');
+}
+
+// Hints: inserted for a seeded use case only when it has none (so admin edits / deletions of
+// individual hints persist, while a fresh database gets the full set).
+async function applySeedQuestHints() {
+  let inserted = 0;
+  for (const [id, q] of Object.entries(SEED_QUEST)) {
+    const exists = await query('SELECT id FROM use_cases WHERE id = ?', [id]);
+    if (!exists.length) continue;
+    const have = await query('SELECT count(*) as count FROM quest_hints WHERE use_case_id = ?', [id]);
+    if (parseInt(have[0].count || have[0]['count(*)'] || 0) > 0) continue;
+    for (const [en, zhTw, zhCn, audience, timing] of q.hints) {
+      await query(
+        'INSERT INTO quest_hints (use_case_id, question_en, question_zh_tw, question_zh_cn, audience, timing, active) VALUES (?, ?, ?, ?, ?, ?, 1)',
+        [id, en, zhTw, zhCn, JSON.stringify(audience), timing ? JSON.stringify(timing) : null]
+      );
+      inserted += 1;
+    }
+  }
+  if (inserted) console.log(`🌱 Seeded ${inserted} Quest Run hints.`);
 }
 
 /*
@@ -909,6 +1098,7 @@ app.get('/api/use-cases', async (req, res) => {
         translations: transObj,
         infographicUrl: uc.infographic_url || null,
         promptType: PROMPT_TYPES.includes(uc.prompt_type) ? uc.prompt_type : 'general',
+        timing: parseTiming(uc.timing),
         isLiked: false,
         likeCount: likesMap[uc.id] || 0,
         totalLikes: likesMap[uc.id] || 0, // legacy alias of likeCount
@@ -924,6 +1114,16 @@ app.get('/api/use-cases', async (req, res) => {
       const prefs = await query('SELECT use_case_id, is_liked FROM user_preferences WHERE user_email = ?', [email]);
       const likedIds = new Set(prefs.filter(p => p.is_liked === 1 || p.is_liked === true).map(p => p.use_case_id));
       formattedUseCases.forEach(uc => { uc.isLiked = likedIds.has(uc.id); });
+    }
+
+    // Admins edit Quest Run hints inside the case form, so they get the full set per use case
+    if (req.session.user && req.session.user.isAdmin) {
+      const hintRows = await query('SELECT * FROM quest_hints ORDER BY id ASC');
+      const byCase = hintRows.reduce((acc, h) => {
+        (acc[h.use_case_id] = acc[h.use_case_id] || []).push(formatHintRow(h));
+        return acc;
+      }, {});
+      formattedUseCases.forEach(uc => { uc.hints = byCase[uc.id] || []; });
     }
 
     res.json(formattedUseCases);
@@ -1516,14 +1716,18 @@ app.post('/api/admin/use-cases', requireAdmin, async (req, res) => {
   if (uc.promptType !== undefined && uc.promptType !== null && !PROMPT_TYPES.includes(uc.promptType)) {
     return res.status(400).json({ success: false, message: `promptType must be one of: ${PROMPT_TYPES.join(', ')}.` });
   }
+  const timingCheck = validateTimingInput(uc.timing);
+  if (!timingCheck.ok) return res.status(400).json({ success: false, message: timingCheck.message });
+  const hintsCheck = validateHintsInput(uc.hints);
+  if (!hintsCheck.ok) return res.status(400).json({ success: false, message: hintsCheck.message });
 
   try {
     // Imports from the export file may carry an existing infographic; only accept https URLs
     const importedInfographic = parseGeAppLink(uc.infographicUrl);
 
     const insertSql = `
-      INSERT INTO use_cases (id, category, title, summary, features, connectors, role, level, steps, prompt, pro_tip, connector_guide, translations, prompt_type, infographic_url)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO use_cases (id, category, title, summary, features, connectors, role, level, steps, prompt, pro_tip, connector_guide, translations, prompt_type, infographic_url, timing)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const params = [
@@ -1541,10 +1745,12 @@ app.post('/api/admin/use-cases', requireAdmin, async (req, res) => {
       uc.connectorGuide ? JSON.stringify(uc.connectorGuide) : null,
       JSON.stringify(uc.translations || { en: uc, 'zh-TW': {}, 'zh-CN': {} }),
       uc.promptType || 'general',
-      importedInfographic.ok ? importedInfographic.value : null
+      importedInfographic.ok ? importedInfographic.value : null,
+      JSON.stringify(timingCheck.value || ['anytime'])
     ];
 
     await query(insertSql, params);
+    if (hintsCheck.value) await replaceHints(uc.id, hintsCheck.value);
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
@@ -1564,12 +1770,16 @@ app.put('/api/admin/use-cases', requireAdmin, async (req, res) => {
   if (uc.promptType !== undefined && uc.promptType !== null && !PROMPT_TYPES.includes(uc.promptType)) {
     return res.status(400).json({ success: false, message: `promptType must be one of: ${PROMPT_TYPES.join(', ')}.` });
   }
+  const timingCheck = validateTimingInput(uc.timing);
+  if (!timingCheck.ok) return res.status(400).json({ success: false, message: timingCheck.message });
+  const hintsCheck = validateHintsInput(uc.hints);
+  if (!hintsCheck.ok) return res.status(400).json({ success: false, message: hintsCheck.message });
 
   try {
-    // prompt_type = COALESCE(?, prompt_type): omitting promptType keeps the stored value
+    // prompt_type / timing = COALESCE(?, column): omitting the field keeps the stored value
     const updateSql = `
       UPDATE use_cases
-      SET category = ?, title = ?, summary = ?, features = ?, connectors = ?, role = ?, level = ?, steps = ?, prompt = ?, pro_tip = ?, connector_guide = ?, translations = ?, prompt_type = COALESCE(?, prompt_type), updated_at = CURRENT_TIMESTAMP
+      SET category = ?, title = ?, summary = ?, features = ?, connectors = ?, role = ?, level = ?, steps = ?, prompt = ?, pro_tip = ?, connector_guide = ?, translations = ?, prompt_type = COALESCE(?, prompt_type), timing = COALESCE(?, timing), updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `;
 
@@ -1587,10 +1797,12 @@ app.put('/api/admin/use-cases', requireAdmin, async (req, res) => {
       uc.connectorGuide ? JSON.stringify(uc.connectorGuide) : null,
       JSON.stringify(uc.translations || {}),
       uc.promptType || null,
+      timingCheck.value ? JSON.stringify(timingCheck.value) : null,
       uc.id
     ];
 
     await query(updateSql, params);
+    if (hintsCheck.value) await replaceHints(uc.id, hintsCheck.value);
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
@@ -1610,6 +1822,7 @@ app.delete('/api/admin/use-cases', requireAdmin, async (req, res) => {
 
   try {
     await query('DELETE FROM use_cases WHERE id = ?', [id]);
+    await query('DELETE FROM quest_hints WHERE use_case_id = ?', [id]);
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
@@ -1620,6 +1833,7 @@ app.delete('/api/admin/use-cases', requireAdmin, async (req, res) => {
 app.get('/api/admin/use-cases/export', requireAdmin, async (req, res) => {
   try {
     const useCases = await query('SELECT * FROM use_cases ORDER BY id ASC');
+    const hintRows = await query('SELECT * FROM quest_hints ORDER BY id ASC');
     const exportData = useCases.map(uc => ({
       id: uc.id,
       category: uc.category,
@@ -1635,13 +1849,401 @@ app.get('/api/admin/use-cases/export', requireAdmin, async (req, res) => {
       connectorGuide: uc.connector_guide ? JSON.parse(uc.connector_guide) : null,
       translations: JSON.parse(uc.translations || '{}'),
       infographicUrl: uc.infographic_url || null,
-      promptType: PROMPT_TYPES.includes(uc.prompt_type) ? uc.prompt_type : 'general'
+      promptType: PROMPT_TYPES.includes(uc.prompt_type) ? uc.prompt_type : 'general',
+      timing: parseTiming(uc.timing),
+      hints: hintRows.filter(h => h.use_case_id === uc.id).map(formatHintRow)
+        .map(({ question, audience, timing }) => ({ question, audience, timing }))
     }));
 
     res.setHeader('Content-Type', 'application/json');
     res.setHeader('Content-Disposition', 'attachment; filename=ge_adoption_use_cases.json');
     res.send(JSON.stringify(exportData, null, 2));
 
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ==========================================
+// 5b-2. Quest Run (hero strip hints, news, academic calendar)
+// ==========================================
+
+const QUEST_EVENT_ACTIONS = Object.freeze(['quest_view', 'quest_click', 'news_view', 'news_click']);
+const CALENDAR_SETTING_KEY = 'academic_calendar';
+const MAX_HINTS_PER_CASE = 5;
+
+const safeJsonArray = (raw) => {
+  try {
+    const v = typeof raw === 'string' ? JSON.parse(raw) : raw;
+    return Array.isArray(v) ? v : [];
+  } catch (e) {
+    return [];
+  }
+};
+
+/** Stored timing JSON → valid TIMINGS array (never empty; defaults to ['anytime']). */
+function parseTiming(raw) {
+  const list = safeJsonArray(raw).filter(t => QuestCore.TIMINGS.includes(t));
+  return list.length ? list : ['anytime'];
+}
+
+/** quest_hints row → API shape. `timing` is null when the hint inherits the use case timing. */
+function formatHintRow(h) {
+  return {
+    id: h.id,
+    useCaseId: h.use_case_id,
+    question: { en: h.question_en || '', 'zh-TW': h.question_zh_tw || '', 'zh-CN': h.question_zh_cn || '' },
+    audience: safeJsonArray(h.audience).filter(r => QuestCore.ROLES.includes(r)),
+    timing: h.timing ? parseTiming(h.timing) : null,
+    active: h.active === 1 || h.active === true
+  };
+}
+
+/** Optional timing input: undefined/null → { ok, value: null } (keep stored); otherwise a validated array. */
+function validateTimingInput(timing) {
+  if (timing === undefined || timing === null) return { ok: true, value: null };
+  if (!Array.isArray(timing) || !timing.length || !timing.every(t => QuestCore.TIMINGS.includes(t))) {
+    return { ok: false, message: `timing must be a non-empty array of: ${QuestCore.TIMINGS.join(', ')}.` };
+  }
+  return { ok: true, value: [...new Set(timing)] };
+}
+
+/**
+ * Optional hints input for the case form / import. undefined → leave hints untouched; an array
+ * (possibly empty) replaces the whole set. Accepts both the API shape ({question:{en,…}}) and the
+ * flat Gemini shape ({en, 'zh-TW', 'zh-CN'}). Blank English questions are dropped.
+ */
+function validateHintsInput(hints) {
+  if (hints === undefined || hints === null) return { ok: true, value: null };
+  if (!Array.isArray(hints)) return { ok: false, message: 'hints must be an array.' };
+  const cleaned = hints.map((h) => {
+    const q = (h && h.question) || h || {};
+    return {
+      en: String(q.en || '').trim().slice(0, 120),
+      zhTw: String(q['zh-TW'] || '').trim().slice(0, 120),
+      zhCn: String(q['zh-CN'] || '').trim().slice(0, 120),
+      audience: safeJsonArray(h && h.audience).filter(r => QuestCore.ROLES.includes(r)),
+      timing: h && Array.isArray(h.timing) && h.timing.length ? h.timing.filter(t => QuestCore.TIMINGS.includes(t)) : null
+    };
+  }).filter(h => h.en);
+  if (cleaned.length > MAX_HINTS_PER_CASE) return { ok: false, message: `At most ${MAX_HINTS_PER_CASE} hints per playbook.` };
+  return { ok: true, value: cleaned };
+}
+
+/** Replaces every hint of a use case in one transaction. */
+async function replaceHints(useCaseId, hints) {
+  await db.withTransaction(async (q) => {
+    await q('DELETE FROM quest_hints WHERE use_case_id = ?', [useCaseId]);
+    for (const h of hints) {
+      await q(
+        'INSERT INTO quest_hints (use_case_id, question_en, question_zh_tw, question_zh_cn, audience, timing, active) VALUES (?, ?, ?, ?, ?, ?, 1)',
+        [useCaseId, h.en, h.zhTw, h.zhCn, JSON.stringify(h.audience), h.timing && h.timing.length ? JSON.stringify(h.timing) : null]
+      );
+    }
+  });
+}
+
+/** announcements row → API shape (all three languages; the client picks one). */
+function formatAnnouncementRow(n) {
+  return {
+    id: n.id,
+    title: { en: n.title_en || '', 'zh-TW': n.title_zh_tw || '', 'zh-CN': n.title_zh_cn || '' },
+    body: { en: n.body_en || '', 'zh-TW': n.body_zh_tw || '', 'zh-CN': n.body_zh_cn || '' },
+    linkUrl: n.link_url || null,
+    useCaseId: n.use_case_id || null,
+    audience: safeJsonArray(n.audience).filter(r => QuestCore.ROLES.includes(r)),
+    startsAt: n.starts_at || null,
+    endsAt: n.ends_at || null,
+    pinned: n.pinned === 1 || n.pinned === true,
+    active: n.active === 1 || n.active === true,
+    createdBy: n.created_by || null,
+    createdAt: n.created_at,
+    updatedAt: n.updated_at
+  };
+}
+
+const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * Validates an announcement payload. Returns { ok, errors:{field:message}, value } where value holds
+ * column-ready values. Limits: title ≤ 60, body ≤ 140 (per language), http(s) links only, existing
+ * use case, end date ≥ start date, audience ⊆ ROLES.
+ */
+async function validateAnnouncement(body) {
+  const b = body || {};
+  const str = (v, max) => String(v === undefined || v === null ? '' : v).trim().slice(0, max + 1);
+  const title = { en: str(b.title?.en, 60), zhTw: str(b.title?.['zh-TW'], 60), zhCn: str(b.title?.['zh-CN'], 60) };
+  const text = { en: str(b.body?.en, 140), zhTw: str(b.body?.['zh-TW'], 140), zhCn: str(b.body?.['zh-CN'], 140) };
+  const errors = {};
+  if (!title.en) errors.titleEn = 'Enter an English title.';
+  [['titleEn', title.en], ['titleZhTw', title.zhTw], ['titleZhCn', title.zhCn]].forEach(([k, v]) => {
+    if (v.length > 60) errors[k] = 'Keep the title to 60 characters or fewer.';
+  });
+  [['bodyEn', text.en], ['bodyZhTw', text.zhTw], ['bodyZhCn', text.zhCn]].forEach(([k, v]) => {
+    if (v.length > 140) errors[k] = 'Keep the message to 140 characters or fewer.';
+  });
+  const linkUrl = b.linkUrl ? String(b.linkUrl).trim() : '';
+  if (linkUrl && !/^https?:\/\/[^\s]+$/i.test(linkUrl)) errors.linkUrl = 'Enter a link that starts with http:// or https://.';
+  const useCaseId = b.useCaseId ? String(b.useCaseId).trim() : '';
+  if (useCaseId) {
+    const rows = await query('SELECT id FROM use_cases WHERE id = ?', [useCaseId]);
+    if (!rows.length) errors.useCaseId = 'Choose a playbook that exists.';
+  }
+  const startsAt = b.startsAt ? String(b.startsAt) : '';
+  const endsAt = b.endsAt ? String(b.endsAt) : '';
+  if (startsAt && !ISO_DATE_RE.test(startsAt)) errors.startsAt = 'Enter a valid start date.';
+  if (endsAt && !ISO_DATE_RE.test(endsAt)) errors.endsAt = 'Enter a valid end date.';
+  if (startsAt && endsAt && !errors.startsAt && !errors.endsAt && endsAt < startsAt) errors.endsAt = 'The end date must be on or after the start date.';
+  const audienceIn = Array.isArray(b.audience) ? b.audience : [];
+  if (!audienceIn.every(r => QuestCore.ROLES.includes(r))) errors.audience = 'Choose roles from the list.';
+  return {
+    ok: Object.keys(errors).length === 0,
+    errors,
+    value: {
+      title, text,
+      linkUrl: linkUrl || null,
+      useCaseId: useCaseId || null,
+      audience: JSON.stringify([...new Set(audienceIn)]),
+      startsAt: startsAt || null,
+      endsAt: endsAt || null,
+      pinned: b.pinned ? 1 : 0,
+      active: b.active === false || b.active === 0 ? 0 : 1
+    }
+  };
+}
+
+/** The stored academic calendar (validated), or the default. */
+async function readAcademicCalendar() {
+  const setting = await mailer.readSetting(query, CALENDAR_SETTING_KEY);
+  return QuestCore.normalizeCalendar(setting && setting.value);
+}
+
+/**
+ * Everything the Quest Run strip needs in one call. Standard users get their own role; admins
+ * previewing the portal may pass ?role= (defaults to Lecturer). Hints are filtered to active ones
+ * whose audience includes the role, with timing resolved (hint timing, else the use case timing).
+ * News is filtered to active items for the role that have not clearly expired; the client applies
+ * the exact local-date window with QuestCore.newsStatus().
+ */
+app.get('/api/quest', async (req, res) => {
+  const user = req.session.user;
+  if (!user) return res.status(401).json({ success: false, code: 'session_expired', message: 'Your session has expired. Sign in again.' });
+  try {
+    const requested = String(req.query.role || '');
+    const role = user.isAdmin
+      ? (QuestCore.ROLES.includes(requested) ? requested : 'Lecturer')
+      : (QuestCore.ROLES.includes(user.role) ? user.role : 'Lecturer');
+    const calendar = await readAcademicCalendar();
+    const now = new Date();
+    const position = QuestCore.getAcademicPosition(now, calendar);
+
+    const cases = await query('SELECT id, timing FROM use_cases');
+    const timingByCase = Object.fromEntries(cases.map(c => [c.id, parseTiming(c.timing)]));
+    const hints = (await query('SELECT * FROM quest_hints WHERE active = 1 ORDER BY id ASC'))
+      .map(formatHintRow)
+      .filter(h => timingByCase[h.useCaseId] && QuestCore.audienceIncludes(h.audience, role))
+      .map(h => ({ id: h.id, useCaseId: h.useCaseId, question: h.question, audience: h.audience, timing: h.timing || timingByCase[h.useCaseId] }));
+
+    // Server-side filter is deliberately loose (one day of slack for time zones); the client is exact.
+    const yesterday = QuestCore.localDateIso(new Date(now.getTime() - 86400000));
+    const news = (await query('SELECT * FROM announcements WHERE active = 1 ORDER BY pinned DESC, id DESC'))
+      .map(formatAnnouncementRow)
+      .filter(n => QuestCore.audienceIncludes(n.audience, role) && (!n.endsAt || n.endsAt >= yesterday))
+      .map(({ id, title, body, linkUrl, useCaseId, pinned, startsAt, endsAt, active }) => ({ id, title, body, linkUrl, useCaseId, pinned, startsAt, endsAt, active }));
+
+    res.json({
+      success: true, role, heroClass: QuestCore.heroClassForRole(role),
+      calendar, position, today: QuestCore.localDateIso(now), hints, news
+    });
+  } catch (error) {
+    console.error('Quest payload error:', error);
+    res.status(500).json({ success: false, message: 'Failed to load Quest Run.' });
+  }
+});
+
+// Quest Run analytics (deduplicated per page load on the client). News events store use_case_id = 'news:<id>'.
+app.post('/api/quest/event', async (req, res) => {
+  if (!req.session.user) return res.status(401).json({ success: false, message: 'Unauthorized session.' });
+  const { action, hintId, newsId, useCaseId } = req.body || {};
+  if (!QUEST_EVENT_ACTIONS.includes(action)) {
+    return res.status(400).json({ success: false, message: `action must be one of: ${QUEST_EVENT_ACTIONS.join(', ')}.` });
+  }
+  const isNews = action.startsWith('news_');
+  const target = isNews ? (newsId ? `news:${parseInt(newsId, 10) || 0}` : null) : (useCaseId ? String(useCaseId).slice(0, 100) : null);
+  if (!target) return res.status(400).json({ success: false, message: isNews ? 'newsId is required.' : 'useCaseId is required.' });
+  try {
+    await query('INSERT INTO analytics (action, use_case_id, user_email) VALUES (?, ?, ?)', [action, target, req.session.user.email]);
+    res.json({ success: true, hintId: hintId || null });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// --- Admin: hints (all admins may read; super admins write, matching playbook edit rights) ---
+const blockAssistWrites = (req, res, next) => (req.session.user.isAssist
+  ? res.status(403).json({ success: false, message: 'Access denied. Administrative assistants are not authorized to edit playbook hints.' })
+  : next());
+
+app.get('/api/admin/hints', requireAdmin, async (req, res) => {
+  try {
+    const rows = req.query.useCaseId
+      ? await query('SELECT * FROM quest_hints WHERE use_case_id = ? ORDER BY id ASC', [String(req.query.useCaseId)])
+      : await query('SELECT * FROM quest_hints ORDER BY id ASC');
+    res.json({ success: true, hints: rows.map(formatHintRow) });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/** Validates a single admin hint payload for POST/PUT /api/admin/hints. */
+async function validateSingleHint(body, requireUseCase) {
+  const check = validateHintsInput([body || {}]);
+  if (!check.ok || !check.value.length) return { ok: false, message: 'Enter the English question.' };
+  const useCaseId = body && body.useCaseId ? String(body.useCaseId) : '';
+  if (requireUseCase) {
+    const rows = useCaseId ? await query('SELECT id FROM use_cases WHERE id = ?', [useCaseId]) : [];
+    if (!rows.length) return { ok: false, message: 'Choose a playbook that exists.' };
+  }
+  return { ok: true, value: check.value[0], useCaseId, active: body.active === false || body.active === 0 ? 0 : 1 };
+}
+
+app.post('/api/admin/hints', requireAdmin, blockAssistWrites, async (req, res) => {
+  const v = await validateSingleHint(req.body, true);
+  if (!v.ok) return res.status(400).json({ success: false, message: v.message });
+  try {
+    const id = await insertReturningId(
+      'INSERT INTO quest_hints (use_case_id, question_en, question_zh_tw, question_zh_cn, audience, timing, active) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [v.useCaseId, v.value.en, v.value.zhTw, v.value.zhCn, JSON.stringify(v.value.audience), v.value.timing ? JSON.stringify(v.value.timing) : null, v.active]
+    );
+    res.json({ success: true, id });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.put('/api/admin/hints/:id', requireAdmin, blockAssistWrites, async (req, res) => {
+  const v = await validateSingleHint(req.body, false);
+  if (!v.ok) return res.status(400).json({ success: false, message: v.message });
+  try {
+    const result = await query(
+      `UPDATE quest_hints SET question_en = ?, question_zh_tw = ?, question_zh_cn = ?, audience = ?, timing = ?, active = ? WHERE id = ?${dbType === 'postgres' ? ' RETURNING id' : ''}`,
+      [v.value.en, v.value.zhTw, v.value.zhCn, JSON.stringify(v.value.audience), v.value.timing ? JSON.stringify(v.value.timing) : null, v.active, parseInt(req.params.id, 10) || 0]
+    );
+    if (!db.affectedRows(result)) return res.status(404).json({ success: false, message: 'Hint not found.' });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.delete('/api/admin/hints/:id', requireAdmin, blockAssistWrites, async (req, res) => {
+  try {
+    await query('DELETE FROM quest_hints WHERE id = ?', [parseInt(req.params.id, 10) || 0]);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// --- Admin: announcements (News tab — every admin, including assistants) ---
+app.get('/api/admin/announcements', requireAdmin, async (req, res) => {
+  try {
+    const rows = await query('SELECT * FROM announcements ORDER BY pinned DESC, id DESC');
+    // Reach: distinct users who saw the scroll, and total clicks, keyed by 'news:<id>'
+    const seen = await query("SELECT use_case_id, COUNT(DISTINCT user_email) as cnt FROM analytics WHERE action = 'news_view' GROUP BY use_case_id");
+    const clicks = await query("SELECT use_case_id, COUNT(*) as cnt FROM analytics WHERE action = 'news_click' GROUP BY use_case_id");
+    const toMap = (list) => Object.fromEntries(list.map(r => [r.use_case_id, parseInt(r.cnt, 10) || 0]));
+    const seenMap = toMap(seen);
+    const clickMap = toMap(clicks);
+    res.json({
+      success: true,
+      announcements: rows.map(formatAnnouncementRow).map(n => ({ ...n, seenCount: seenMap[`news:${n.id}`] || 0, clickCount: clickMap[`news:${n.id}`] || 0 }))
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.post('/api/admin/announcements', requireAdmin, async (req, res) => {
+  try {
+    const v = await validateAnnouncement(req.body);
+    if (!v.ok) return res.status(400).json({ success: false, message: 'Check the highlighted fields.', errors: v.errors });
+    const x = v.value;
+    const id = await insertReturningId(
+      `INSERT INTO announcements (title_en, title_zh_tw, title_zh_cn, body_en, body_zh_tw, body_zh_cn, link_url, use_case_id, audience, starts_at, ends_at, pinned, active, created_by)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [x.title.en, x.title.zhTw, x.title.zhCn, x.text.en, x.text.zhTw, x.text.zhCn, x.linkUrl, x.useCaseId, x.audience, x.startsAt, x.endsAt, x.pinned, x.active, req.session.user.email]
+    );
+    res.json({ success: true, id });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.put('/api/admin/announcements/:id', requireAdmin, async (req, res) => {
+  try {
+    const v = await validateAnnouncement(req.body);
+    if (!v.ok) return res.status(400).json({ success: false, message: 'Check the highlighted fields.', errors: v.errors });
+    const x = v.value;
+    const result = await query(
+      `UPDATE announcements SET title_en = ?, title_zh_tw = ?, title_zh_cn = ?, body_en = ?, body_zh_tw = ?, body_zh_cn = ?, link_url = ?, use_case_id = ?,
+       audience = ?, starts_at = ?, ends_at = ?, pinned = ?, active = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?${dbType === 'postgres' ? ' RETURNING id' : ''}`,
+      [x.title.en, x.title.zhTw, x.title.zhCn, x.text.en, x.text.zhTw, x.text.zhCn, x.linkUrl, x.useCaseId, x.audience, x.startsAt, x.endsAt, x.pinned, x.active, parseInt(req.params.id, 10) || 0]
+    );
+    if (!db.affectedRows(result)) return res.status(404).json({ success: false, message: 'Announcement not found.' });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.delete('/api/admin/announcements/:id', requireAdmin, async (req, res) => {
+  try {
+    await query('DELETE FROM announcements WHERE id = ?', [parseInt(req.params.id, 10) || 0]);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// --- Super admin: academic calendar (Admin → Settings → Calendar) ---
+app.get('/api/admin/settings/calendar', requireSuper, async (req, res) => {
+  try {
+    const setting = await mailer.readSetting(query, CALENDAR_SETTING_KEY);
+    res.json({
+      success: true,
+      calendar: await readAcademicCalendar(),
+      defaults: QuestCore.DEFAULT_ACADEMIC_CALENDAR,
+      isDefault: !setting,
+      updatedBy: setting ? setting.updatedBy : null,
+      updatedAt: setting ? setting.updatedAt : null
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.put('/api/admin/settings/calendar', requireSuper, async (req, res) => {
+  const cal = req.body && req.body.calendar;
+  const check = QuestCore.validateCalendar(cal);
+  if (!check.ok) {
+    return res.status(400).json({ success: false, message: 'Terms must use valid dates and follow each other with no gaps or overlaps.', errors: check.errors });
+  }
+  try {
+    const value = QuestCore.normalizeCalendar(cal);
+    await mailer.writeSetting(query, CALENDAR_SETTING_KEY, value, req.session.user.email);
+    res.json({ success: true, calendar: value, position: QuestCore.getAcademicPosition(new Date(), value) });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Reset to default: drop the stored override so the built-in calendar applies again.
+app.delete('/api/admin/settings/calendar', requireSuper, async (req, res) => {
+  try {
+    await query('DELETE FROM app_settings WHERE key = ?', [CALENDAR_SETTING_KEY]);
+    const calendar = QuestCore.normalizeCalendar(null);
+    res.json({ success: true, calendar, position: QuestCore.getAcademicPosition(new Date(), calendar) });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
@@ -1891,8 +2493,6 @@ app.post('/api/admin/generate-gemini', requireAdmin, async (req, res) => {
       }
     }
 
-    const url = 'https://aiplatform.googleapis.com/v1/projects/your-gcp-project-id/locations/global/publishers/google/models/gemini-3.5-flash:generateContent';
-
     let promptText = `
 You are the AI Playbook Architect for "Gemini Enterprise - Edu Portal".
 Generate a high-fidelity educational/operational playbook based on the following input parameters:
@@ -1939,6 +2539,10 @@ The JSON object MUST EXACTLY follow this schema:
   "role": "Lecturer",
   "features": ["NotebookLM", "Canvas Mode", "Deep Research", "Agent Designer", "Image Generation", "Video Generation"], // Choose recommended features based on instructions and input
   "connectors": ["Drive Connector", "Email Connector", "LMS Connector", "Calendar Connector"], // Choose recommended connectors based on instructions and input, use product-agnostic naming exactly!
+  "timing": ["midterm"], // When in the academic year this playbook matters most. Any of: "anytime", "sem_start", "teaching", "midterm", "finals", "winter", "summer"
+  "hints": [ // Exactly 2 short pain-point questions (max 60 chars in English) a user in the target audience would ask themselves, answered by this playbook
+    { "en": "Drowning in essays to mark?", "zh-TW": "批改論文批改到喘不過氣？", "zh-CN": "批改论文批改到喘不过气？", "audience": ["Lecturer", "TA"] }
+  ], // audience: any of "Lecturer", "TA", "Student", "Program Leader", "Dean", "IT Admin", "SAO", "Security", "Finance"
   "en": {
     "title": "Suggested High-Fidelity English Title",
     "summary": "Detailed summary describing how this playbook uses Gemini to solve the target challenge.",
@@ -1971,50 +2575,93 @@ Brand Guidelines & Localisation Boundaries:
 
 `;
 
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: await gcpHeaders({ 'Content-Type': 'application/json' }),
-      body: JSON.stringify({
-        contents: {
-          role: 'USER',
-          parts: [{ text: promptText }]
-        }
-      })
-    });
-
-    if (!response.ok) {
-      const errText = await response.text();
-      return res.status(response.status).json({ success: false, error: `Gemini API returned error: ${errText}` });
-    }
-
-    const data = await response.json();
-    let text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!text) {
-      return res.status(500).json({ success: false, error: 'Empty response returned from Gemini.' });
-    }
-
-    // Clean up markdown fences if Gemini returned them despite instructions
-    text = text.trim();
-    if (text.startsWith('```')) {
-      const firstLineBreak = text.indexOf('\n');
-      const lastFence = text.lastIndexOf('```');
-      if (firstLineBreak !== -1 && lastFence > firstLineBreak) {
-        text = text.substring(firstLineBreak + 1, lastFence).trim();
-      }
-    }
-
-    let parsedResult;
-    try {
-      parsedResult = JSON.parse(text);
-    } catch (e) {
-      console.error('Failed to parse Gemini response as JSON. Raw response:', text);
-      return res.status(500).json({ success: false, error: 'Failed to parse Gemini response as JSON. Please try again.', raw: text });
-    }
-
+    const parsedResult = await callGeminiJson(promptText);
     res.json({ success: true, result: parsedResult });
   } catch (error) {
+    if (error.status) {
+      // Upstream / parse failures keep the response shape the admin UI already understands
+      return res.status(error.status).json({ success: false, error: error.message, ...(error.raw ? { raw: error.raw } : {}) });
+    }
     console.error('Gemini content generation error:', error);
     res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * Sends one prompt to Gemini 3.5 Flash (Vertex AI, service-account auth) and returns the parsed JSON reply.
+ * Strips ```json fences if the model adds them despite instructions. Throws an Error carrying `.status`
+ * (upstream HTTP status, or 500 for empty / unparsable output) and `.raw` (model text) for callers to map.
+ */
+async function callGeminiJson(promptText) {
+  const url = 'https://aiplatform.googleapis.com/v1/projects/your-gcp-project-id/locations/global/publishers/google/models/gemini-3.5-flash:generateContent';
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: await gcpHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify({
+      contents: {
+        role: 'USER',
+        parts: [{ text: promptText }]
+      }
+    })
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    throw Object.assign(new Error(`Gemini API returned error: ${errText}`), { status: response.status });
+  }
+
+  const data = await response.json();
+  let text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!text) {
+    throw Object.assign(new Error('Empty response returned from Gemini.'), { status: 500 });
+  }
+
+  // Clean up markdown fences if Gemini returned them despite instructions
+  text = text.trim();
+  if (text.startsWith('```')) {
+    const firstLineBreak = text.indexOf('\n');
+    const lastFence = text.lastIndexOf('```');
+    if (firstLineBreak !== -1 && lastFence > firstLineBreak) {
+      text = text.substring(firstLineBreak + 1, lastFence).trim();
+    }
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch (e) {
+    console.error('Failed to parse Gemini response as JSON. Raw response:', text);
+    throw Object.assign(new Error('Failed to parse Gemini response as JSON. Please try again.'), { status: 500, raw: text });
+  }
+}
+
+// Admin News: translate an English title/body into zh-TW and zh-CN (product names stay English).
+app.post('/api/admin/translate', requireAdmin, async (req, res) => {
+  const title = String(req.body.title || '').trim();
+  const body = String(req.body.body || '').trim();
+  if (!title && !body) {
+    return res.status(400).json({ success: false, message: 'Enter an English title or message to translate.' });
+  }
+  const promptText = `
+Translate this short in-app announcement for a university portal from English into Traditional Chinese (Hong Kong usage, "zh-TW") and Simplified Chinese ("zh-CN").
+Rules:
+1. Keep ALL product and feature names (e.g. "Gemini Enterprise", "Gemini", "NotebookLM", "Canvas Mode", "Deep Research", "Agent Designer", "Image Generation", "Video Generation") in ENGLISH.
+2. Never use the term "Gem" (use "Agent"). Never use the term "Copilot".
+3. Keep it concise: titles at most 30 Chinese characters, messages at most 80 Chinese characters.
+4. Output ONLY raw JSON, no markdown fences, exactly: {"zh-TW":{"title":"...","body":"..."},"zh-CN":{"title":"...","body":"..."}}
+
+English title: ${JSON.stringify(title)}
+English message: ${JSON.stringify(body)}
+`;
+  try {
+    const out = await callGeminiJson(promptText);
+    const pick = (lang) => ({
+      title: String(out?.[lang]?.title || '').slice(0, 60),
+      body: String(out?.[lang]?.body || '').slice(0, 140)
+    });
+    res.json({ success: true, result: { 'zh-TW': pick('zh-TW'), 'zh-CN': pick('zh-CN') } });
+  } catch (error) {
+    console.error('Gemini translate error:', error.message);
+    res.status(502).json({ success: false, message: 'Translation is unavailable right now. Try again or type the translations yourself.' });
   }
 });
 
