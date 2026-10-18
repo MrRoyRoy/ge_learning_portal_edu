@@ -128,7 +128,15 @@ graph TD
 
 ############# 7. App State & Progress
  
-##### Accomplished Tasks (Latest Session Milestone — 2026-10-18, Special Consideration workflow fits Agent Designer limits, commit `189f725` on `main`; dev rev `your-dev-service-00012-wcl`, prod rev `your-service-00036-pw7`; Playwright `test_workflows.js` 32/32 on local and both)
+##### Accomplished Tasks (Latest Session Milestone — 2026-10-18, Special Consideration v3 + Gemini 3.8 drafting, commit `b09e525` on `main`; dev rev `your-dev-service-00013-mxm`, prod rev `your-service-00037-2tz`; Playwright `test_workflows.js` 32/32 and `test_canvas_helpers.js` 15/15 on local, dev and prod)
+* **Special Consideration Workflow Agent v3 (en / zh-TW / zh-CN):** fewer manual steps. STEP 1 · TRIGGER fires when a student's application form lands in `{{INTAKE_FOLDER}}`, then: read application → evidence & policy check → condition routing (5A evidence request / 5B standard decision / 5C escalation) → HUMAN REVIEW (Approve or Reject) → 7A letter + log / 7B returned log. Forward-only, Knowledge Sources on agent nodes, `connectors: []` kept. Variables: OFFICE_NAME, INSTITUTION_NAME, INTAKE_FOLDER, AUTO_LIMIT_DAYS, WELFARE_EMAIL.
+* **New third helper (canvas):** "Prompt to Generate a Sample Student Application Form" (fictional data, sections A–G, two variants: missing evidence and welfare concern).
+* **Admin "Draft / Refine with Gemini":** now uses `GEMINI_MODEL` (default `gemini-3.8-flash`; UI labels say 3.8 Flash). `server.js` has `DRAFT_CONVENTIONS` + pure `buildDraftPrompt` (`{{UPPER_SNAKE}}` variables with identical keys across languages, 3-step pattern, Canvas sentence for documents, promptType rules, Agent Designer limits, connector names, brand rules). Replies pass through new pure `lib/draft-normalize.js` (`[VAR]` → `{{VAR}}`, snake_case id, category / promptType / feature / connector whitelists).
+* **Client:** request sends `promptType`; drafts set the Prompt type select; diff viewer shows a Prompt type row. Category fix: form option `admin` → `administrative`, `normalizeCaseCategory` on load / apply, filter accepts legacy `admin`, boot runs an idempotent `UPDATE use_cases SET category='administrative' WHERE category='admin'`.
+* Live local check: a drafted "Lab Safety Induction Quiz" returned `promptType: canvas`, 4 `{{VARIABLE}}` tokens in en and zh-TW, no `[VAR]` brackets.
+* **Open:** folder trigger may need Drive access in Agent Designer (Drive Connector tag not added, per the no-connector rule); admin-created playbooks still have no helper prompts; scholarship workflow still uses a loop / PAUSE steps / uploads that Agent Designer rejects.
+
+##### Previous Milestone (2026-10-18, Special Consideration workflow fits Agent Designer limits, commit `189f725` on `main`; dev rev `your-dev-service-00012-wcl`, prod rev `your-service-00036-pw7`; Playwright `test_workflows.js` 32/32 on local and both)
 * **Why:** Agent Designer rejected the old flow for three reasons. Forms and steps cannot take file uploads, the approval node has only Approve / Reject (no Edit), and cycles (the "restart from Step 2" loop) are not allowed.
 * **New flow (en / zh-TW / zh-CN):**
   1. KNOWLEDGE SOURCES: policy, evidence rules table and letter templates, attached in the UI to the agent nodes.
