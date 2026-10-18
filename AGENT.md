@@ -128,7 +128,17 @@ graph TD
 
 ############# 7. App State & Progress
  
-##### Accomplished Tasks (Latest Session Milestone — 2026-10-18, Agent Designer workflow playbooks, commit `c2371e9` on `main`; dev rev `your-dev-service-00010-bls`, prod rev `your-service-00034-6pr`; Playwright 30/30 on both)
+##### Accomplished Tasks (Latest Session Milestone — 2026-10-18, Canvas keyword on Step 1 "Set up" helpers, commit `95d7240` on `main`; dev rev `your-dev-service-00011-2p5`, prod rev `your-service-00035-hmk`; Playwright 15/15 on local and both)
+* **26 document-creating helper prompts × 3 languages (78 edits)** in `useCaseHelperPrompts` now end with a Canvas instruction: EN "Use Canvas to create this as an editable document.", zh-TW 「請使用 Canvas 將此內容建立為可編輯文件。」, zh-CN 「请使用 Canvas 将此内容创建为可编辑文档。」. They also switched from `type: "general"` to `type: "canvas"`, so the chip reads Canvas Mode and Try it stays.
+* **Covered:** socratic_tutor #0 #1, rubric_grading #0 #1, curriculum_design #1, lab_manual_creator, su_advocacy, club_funding, su_helpdesk, visual_campaign #0, at_risk_cohort, accreditation_reports, workforce_federation, finance_compliance, security_simulator and special_consideration_workflow (#0 #1 each).
+* **Skipped on purpose (not documents):**
+  * curriculum_design #0 (Deep Research)
+  * visual_campaign #1 (art prompts)
+  * sao_scavenger_hunt (riddles / quiz)
+  * scholarship_application_workflow (summary table from pasted text; interactive Q&A)
+* **Rule for new helpers:** if a Set up prompt produces a document, append the Canvas sentence above and set `type: "canvas"`. Helpers are client-only in `app.js`, so no DB or seed change is needed.
+
+##### Previous Milestone — 2026-10-18, Agent Designer workflow playbooks, commit `c2371e9` on `main`; dev rev `your-dev-service-00010-bls`, prod rev `your-service-00034-6pr`; Playwright 30/30 on both
 * **2 new seeded playbooks (16 total), both `prompt_type = agent_designer` (Copy only), `connectors: []` by design:**
   * `special_consideration_workflow` (admin staff: role `SAO`, category `administrative`, feature Agent Designer). Six steps: intake → evidence check (IF missing → "Awaiting evidence" email and STOP) → policy routing (escalate on > `{{AUTO_LIMIT_DAYS}}` days, final-exam overlap, welfare flag, or 3rd+ request) → STANDARD letter or ESCALATE brief → **human review always** (Approve / Edit / Reject) → close (final letter + log row for staff to send and paste themselves).
   * `scholarship_application_workflow` (student: role `Student`, category `student`, features Agent Designer + Canvas Mode). Seven steps: profile → eligibility (IF a requirement is not met → STOP and suggest alternatives; IF unclear → PAUSE) → story plan → draft → self-score (IF any criterion < 4 → revise, at most 3 loops) → **required mentor review** (the student sends the pack themselves) → final checklist.
