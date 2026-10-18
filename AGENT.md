@@ -128,7 +128,19 @@ graph TD
 
 ############# 7. App State & Progress
  
-##### Accomplished Tasks (Latest Session Milestone — 2026-10-13, v6 Quest Run + colour tones + News, branch `dev/quest-run`, not yet committed or deployed)
+##### Accomplished Tasks (Latest Session Milestone — 2026-10-18, Agent Designer workflow playbooks, commit `c2371e9` on `main`; dev rev `your-dev-service-00010-bls`, prod rev `your-service-00034-6pr`; Playwright 30/30 on both)
+* **2 new seeded playbooks (16 total), both `prompt_type = agent_designer` (Copy only), `connectors: []` by design:**
+  * `special_consideration_workflow` (admin staff: role `SAO`, category `administrative`, feature Agent Designer). Six steps: intake → evidence check (IF missing → "Awaiting evidence" email and STOP) → policy routing (escalate on > `{{AUTO_LIMIT_DAYS}}` days, final-exam overlap, welfare flag, or 3rd+ request) → STANDARD letter or ESCALATE brief → **human review always** (Approve / Edit / Reject) → close (final letter + log row for staff to send and paste themselves).
+  * `scholarship_application_workflow` (student: role `Student`, category `student`, features Agent Designer + Canvas Mode). Seven steps: profile → eligibility (IF a requirement is not met → STOP and suggest alternatives; IF unclear → PAUSE) → story plan → draft → self-score (IF any criterion < 4 → revise, at most 3 loops) → **required mentor review** (the student sends the pack themselves) → final checklist.
+* **No connectors:** files are uploaded into the Agent or pasted into the chat, and a person sends anything that leaves the Agent. No Drive or Email Connector wording appears in any language.
+* **Content:** the English text lives once in `SPECIAL_CONSIDERATION_EN` / `SCHOLARSHIP_COACH_EN` at the top of `app.js`, used by both `useCasesDb` and `useCasesTranslations.en`. zh-TW and zh-CN are written in full. Each playbook has 2 trilingual helper prompts.
+* **Server:**
+  * `SEED_PROMPT_TYPES`, `SEED_QUEST` (timing + 2 hints each) and `SEED_INFOGRAPHIC_VERSIONS` include both ids.
+  * `upsertSeedUseCase` now writes `timing` **on insert only**, because the one-time `seed_timing_v1` pass had already run on dev and prod.
+* **Infographics:** `CONCEPT_HINTS` added in `lib/infographics.js`; images generated and uploaded to the public bucket ("Sort, Then Sign Off", "Draft, Score, Refine").
+* **Verified:** `node --check` passes, and a Playwright modal check passed 30/30 (en + zh-TW: agent_designer copy-only, no connector chips / tips / guide, branches + human review in the prompt, 3 steps, 2 helpers, variables, infographic, no page errors).
+
+##### Previous Milestone — 2026-10-13, v6 Quest Run + colour tones + News (branch `dev/quest-run`, since merged and deployed)
 * **Colour tones (100%):** `toneClass(feature)` adds `tone-*` to card feature chips, modal chips and `typeChipHtml`; `#filterFeature[data-tone]` takes the selected feature's tone. NotebookLM / Deep Research green, Canvas / Video blue, Agent Designer yellow, Image purple. Dark and light variants live in the V6 layer at the end of `style.css`. Connectors stay red.
 * **Quest Run strip (100%):** `lib/quest-core.js` is a UMD module shared by the server and `window.QuestCore`:
   * calendar defaults and validation, `getAcademicPosition` (term / week / phase)
