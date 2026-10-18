@@ -128,7 +128,26 @@ graph TD
 
 ############# 7. App State & Progress
  
-##### Accomplished Tasks (Latest Session Milestone — 2026-10-18, Canvas keyword on Step 1 "Set up" helpers, commit `95d7240` on `main`; dev rev `your-dev-service-00011-2p5`, prod rev `your-service-00035-hmk`; Playwright 15/15 on local and both)
+##### Accomplished Tasks (Latest Session Milestone — 2026-10-18, Special Consideration workflow fits Agent Designer limits, commit `189f725` on `main`; dev rev `your-dev-service-00012-wcl`, prod rev `your-service-00036-pw7`; Playwright `test_workflows.js` 32/32 on local and both)
+* **Why:** Agent Designer rejected the old flow for three reasons. Forms and steps cannot take file uploads, the approval node has only Approve / Reject (no Edit), and cycles (the "restart from Step 2" loop) are not allowed.
+* **New flow (en / zh-TW / zh-CN):**
+  1. KNOWLEDGE SOURCES: policy, evidence rules table and letter templates, attached in the UI to the agent nodes.
+  2. MANUAL TRIGGER form: typed request details, plus an optional Google Drive evidence link that only the reviewer opens. The Agent never opens links, so there is still no connector.
+  3. Evidence and policy check (agent node).
+  4. Condition node routes to 4A evidence request, 4B standard decision or 4C escalation brief. All three continue forward.
+  5. HUMAN REVIEW approval node, Approve or Reject.
+  6. Approve → 6A final letter + log row. Reject → 6B log row "Rejected, returned to staff" with no letter.
+* **Missing evidence:** handled by starting a new run with the same request ID, never by looping back.
+* Steps, summary and pro tip were rewritten to match. The helper prompts and infographic were unchanged.
+* **Open:** `scholarship_application_workflow` has the same Agent Designer conflicts:
+  * a self-score loop back to Step 4
+  * PAUSE / wait steps
+  * a scholarship call that the student uploads
+  * a "help them revise" step after mentor review
+  
+  Restructure it the same way if it gets validated in Agent Designer.
+
+##### Previous Milestone — 2026-10-18, Canvas keyword on Step 1 "Set up" helpers, commit `95d7240` on `main`; dev rev `your-dev-service-00011-2p5`, prod rev `your-service-00035-hmk`; Playwright 15/15 on local and both
 * **26 document-creating helper prompts × 3 languages (78 edits)** in `useCaseHelperPrompts` now end with a Canvas instruction: EN "Use Canvas to create this as an editable document.", zh-TW 「請使用 Canvas 將此內容建立為可編輯文件。」, zh-CN 「请使用 Canvas 将此内容创建为可编辑文档。」. They also switched from `type: "general"` to `type: "canvas"`, so the chip reads Canvas Mode and Try it stays.
 * **Covered:** socratic_tutor #0 #1, rubric_grading #0 #1, curriculum_design #1, lab_manual_creator, su_advocacy, club_funding, su_helpdesk, visual_campaign #0, at_risk_cohort, accreditation_reports, workforce_federation, finance_compliance, security_simulator and special_consideration_workflow (#0 #1 each).
 * **Skipped on purpose (not documents):**
