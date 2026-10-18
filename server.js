@@ -480,7 +480,9 @@ const SEED_PROMPT_TYPES = Object.freeze({
   workforce_federation: 'deep_research',   // IdP federation blueprint from vendor documentation research
   sao_scavenger_hunt: 'general',           // clues + trivia quiz generated in one chat answer
   finance_compliance: 'notebooklm',        // audit uploaded receipts against regulations
-  security_simulator: 'agent_designer'     // interactive multi-branch drill simulation run as an Agent
+  security_simulator: 'agent_designer',    // interactive multi-branch drill simulation run as an Agent
+  special_consideration_workflow: 'agent_designer',   // multi-step triage workflow with routing + staff review
+  scholarship_application_workflow: 'agent_designer'  // multi-step coach workflow with revise loop + mentor review
 });
 
 const PROMPT_TYPES = Object.freeze(['general', 'notebooklm', 'deep_research', 'agent_designer', 'canvas', 'image', 'video']);
@@ -488,10 +490,11 @@ const TEST_USER_GE_APP_LINK = 'https://your-gemini-enterprise-app-link';
 
 async function upsertSeedUseCase(uc, ucTranslations) {
   const translationsObj = ucTranslations || { en: uc, 'zh-TW': {}, 'zh-CN': {} };
-  // Content columns are refreshed from app.js; prompt_type is only written on first insert.
+  // Content columns are refreshed from app.js; prompt_type and timing are only written on first insert
+  // (timing here because the one-time seed_timing_v1 pass has already run on existing databases).
   const upsertSql = `
-    INSERT INTO use_cases (id, category, title, summary, features, connectors, role, level, steps, prompt, pro_tip, connector_guide, translations, prompt_type)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO use_cases (id, category, title, summary, features, connectors, role, level, steps, prompt, pro_tip, connector_guide, translations, prompt_type, timing)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT (id) DO UPDATE SET
       category = excluded.category, title = excluded.title, summary = excluded.summary,
       features = excluded.features, connectors = excluded.connectors, role = excluded.role,
@@ -513,7 +516,8 @@ async function upsertSeedUseCase(uc, ucTranslations) {
     uc.proTip || '',
     uc.connectorGuide ? JSON.stringify(uc.connectorGuide) : null,
     JSON.stringify(translationsObj),
-    SEED_PROMPT_TYPES[uc.id] || 'general'
+    SEED_PROMPT_TYPES[uc.id] || 'general',
+    JSON.stringify((SEED_QUEST[uc.id] && SEED_QUEST[uc.id].timing) || ['anytime'])
   ];
 
   await query(upsertSql, params);
@@ -590,6 +594,14 @@ const SEED_QUEST = Object.freeze({
   security_simulator: { timing: ['sem_start'], hints: [
     ['Safety drill due this term?', '這個學期要進行安全演習？', '这个学期要进行安全演练？', ['Security']],
     ['Does your team know what to do in an emergency?', '你的團隊知道緊急時該怎樣做嗎？', '你的团队知道紧急时该怎么做吗？', ['Security', 'IT Admin'], ['anytime']]
+  ] },
+  special_consideration_workflow: { timing: ['midterm', 'finals'], hints: [
+    ['Extension requests piling up before exams?', '考試前延期申請堆積如山？', '考试前延期申请堆积如山？', ['SAO']],
+    ['Want every special case checked by a person?', '想每宗特殊個案都有真人把關？', '想每份特殊个案都有真人把关？', ['SAO', 'Dean'], ['anytime']]
+  ] },
+  scholarship_application_workflow: { timing: ['sem_start', 'summer'], hints: [
+    ['Scholarship deadline coming up?', '獎學金截止日期快到了？', '奖学金截止日期快到了？', ['Student']],
+    ['Not sure your personal statement is strong enough?', '不肯定你的個人陳述夠不夠好？', '不确定你的个人陈述够不够好？', ['Student'], ['anytime']]
   ] }
 });
 
@@ -647,7 +659,8 @@ const SEED_INFOGRAPHIC_VERSIONS = Object.freeze({
   curriculum_design: 1791780321, finance_compliance: 1791780221, lab_manual_creator: 1791779965,
   rubric_grading: 1791779983, sao_scavenger_hunt: 1791780013, security_simulator: 1791780025,
   socratic_tutor: 1791779825, su_advocacy: 1791780048, su_helpdesk: 1791780242,
-  visual_campaign: 1791780081, workforce_federation: 1791780116
+  visual_campaign: 1791780081, workforce_federation: 1791780116,
+  special_consideration_workflow: 1792321002, scholarship_application_workflow: 1792320981
 });
 
 /*

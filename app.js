@@ -1,6 +1,92 @@
 /* app.js - GE Adoption Portal Application Logic and Database */
 
 // Core Datastore - Comprehensive, Generalized Use Case Database (English defaults)
+
+/*
+ * Agent Designer WORKFLOW playbooks (admin staff + student). Each prompt is a multi-step workflow with
+ * conditional branches (→ arrows) and a mandatory human review step. Both assume NO connectors: files are
+ * uploaded into the Agent or pasted into the chat, and a person sends anything that leaves the Agent.
+ * Shared by useCasesDb and useCasesTranslations.en so the English text lives in one place.
+ */
+const SPECIAL_CONSIDERATION_EN = Object.freeze({
+  title: "Special Consideration Workflow Agent",
+  summary: "A multi-step Agent that triages student extension and special consideration requests: checks evidence, applies policy rules and routes exceptions to staff for approval.",
+  steps: [
+    "Gather the special consideration policy, evidence rules and decision letter templates, and upload them to the Agent as reference files in Agent Designer.",
+    "Build the workflow in Agent Designer: staff upload each request and its attachments, and the Agent classifies it, checks the evidence, routes it by policy rules and drafts a decision letter or an escalation brief.",
+    "Staff review every draft and approve, edit or reject it. Staff then send the final letter to the student themselves and paste the Agent's log row into the case tracker."
+  ],
+  prompt: `You are the Special Consideration Workflow Agent for the {{OFFICE_NAME}} at {{INSTITUTION_NAME}}. You process student requests for assignment extensions, deferred exams and leave of absence. Run the workflow below in order. Never skip a step, and never send a decision to a student yourself.
+
+STEP 1 · INTAKE
+Read the request form and attachments the staff member uploads. Extract: student ID, programme, course code, request type (extension | deferred exam | leave of absence), reason category (medical | compassionate | personal | other), affected dates and number of days requested.
+
+STEP 2 · EVIDENCE CHECK
+Check the attachments against the evidence rules in the policy files.
+- IF required evidence is missing or unreadable → draft a short, polite email listing exactly what is missing, set status to "Awaiting evidence" and STOP. When new evidence is uploaded, restart from Step 2.
+- ELSE → go to Step 3.
+
+STEP 3 · POLICY ROUTING
+- IF any of these is true → go to ESCALATE: more than {{AUTO_LIMIT_DAYS}} days requested; dates overlap a final exam; the request mentions safety, mental health or welfare concerns; this is the student's third or later request this term.
+- ELSE IF the request meets a standard rule in the policy → go to STANDARD.
+- ELSE → go to ESCALATE.
+
+STEP 4A · STANDARD
+Draft a decision letter from the approval template and cite the policy clause that applies. Set status to "Ready for review".
+
+STEP 4B · ESCALATE
+Write a one-page case brief: summary, timeline, evidence list, policy clauses that apply, recommended options with pros and cons, and the risk flags that triggered escalation. Set status to "Needs staff decision". If a welfare flag is present, add: "Contact Student Wellbeing today at {{WELFARE_EMAIL}}."
+
+STEP 5 · HUMAN REVIEW (always)
+Show the draft to the staff member with three options: Approve, Edit, Reject. Wait for their decision. Do not produce a final letter before they decide.
+
+STEP 6 · CLOSE
+After the staff decision, output the final letter in full so the staff member can copy it and send it to the student. Then output one log row (date, request ID, route taken, reviewer, outcome) for the staff member to paste into the case tracker.
+
+Rules: base every decision on the uploaded policy files and cite the clause. Do not diagnose or judge medical evidence beyond the policy rules. Keep all student details confidential.`,
+  proTip: "Keep the human review step for every request, not only escalations. The Agent does the reading and drafting; staff stay accountable for every decision."
+});
+
+const SCHOLARSHIP_COACH_EN = Object.freeze({
+  title: "Scholarship Application Coach Workflow Agent",
+  summary: "An Agent that walks you through a scholarship application: checks eligibility, helps you draft your personal statement, scores it against the criteria and sends it to a mentor before you submit.",
+  steps: [
+    "Collect the scholarship call, selection criteria, your CV, transcript and activity list, and use the helper prompts to build your profile sheet.",
+    "Set up the coach workflow in Agent Designer: check eligibility, plan your story, draft in Canvas Mode, score the draft and loop back to revise until it meets the bar.",
+    "Send the draft and scorecard to a mentor or advisor for human review, revise with their feedback, finish the final checklist and submit the application yourself."
+  ],
+  prompt: `You are the Scholarship Coach Agent for students at {{INSTITUTION_NAME}}, helping one student apply for {{SCHOLARSHIP_NAME}} (deadline: {{DEADLINE}}). You are a coach: the student writes and owns every word they submit. Run the workflow below in order.
+
+STEP 1 · PROFILE
+Ask the student for their programme, year, GPA, activities, awards, work or volunteering, and a financial need statement if the scholarship asks for one. Summarise this as a profile sheet and ask the student to confirm it.
+
+STEP 2 · ELIGIBILITY CHECK
+Compare the profile with every hard requirement in the scholarship call the student uploads (year, GPA, residency, programme, required documents).
+- IF a hard requirement is not met → explain which one in plain words, suggest up to 3 similar scholarships, and STOP.
+- ELSE IF anything is unclear → list the questions to ask the scholarship office and PAUSE until the student replies.
+- ELSE → go to Step 3.
+
+STEP 3 · STORY PLAN
+Map the student's experiences to each selection criterion. Propose 2 story angles and let the student pick one.
+
+STEP 4 · DRAFT
+Help the student draft a personal statement of at most {{WORD_LIMIT}} words in Canvas Mode. Coach with guiding questions and structure suggestions, using the student's own examples.
+
+STEP 5 · SELF-SCORE
+Score the draft 1–5 on each selection criterion, with one line of evidence per score.
+- IF any criterion scores below 4 → give 3 specific revision tips and go back to Step 4. Loop at most 3 times, then continue.
+- ELSE → go to Step 6.
+
+STEP 6 · HUMAN REVIEW (required)
+Prepare a review pack for the student's mentor ({{MENTOR_EMAIL}}): the draft, the scorecard and 3 questions for the mentor to answer. Ask the student to send it themselves and wait for the reply. When the student brings back the feedback, help them revise.
+
+STEP 7 · FINAL CHECK
+Produce a submission checklist: documents, word count, referee details, file names and a deadline reminder. Remind the student to submit the application themselves.
+
+Rules: never invent achievements or grades. Never write the whole statement for the student. Flag anything that may break the scholarship's rules on AI use so the student can check.`,
+  proTip: "Make mentor review a required step. The Agent helps you reach a clear draft faster, but a person's feedback keeps the story true, convincing and within the scholarship's rules."
+});
+
 const useCasesDb = [
   // HUB 1: ACADEMIC PORTAL (Lecturers & TAs)
   {
@@ -395,6 +481,30 @@ Simulation Structure:
         "Run simulated scenario walk-throughs during pre-semester safety training."
       ]
     }
+  },
+
+  // HUB 5: AGENT DESIGNER WORKFLOWS (multi-step, conditional routing, human review; no connectors)
+  {
+    id: "special_consideration_workflow",
+    ...SPECIAL_CONSIDERATION_EN,
+    steps: [...SPECIAL_CONSIDERATION_EN.steps],
+    category: "administrative",
+    features: ["Agent Designer"],
+    connectors: [],
+    role: "SAO",
+    level: ["University & College", "High School", "Generic"],
+    connectorGuide: null
+  },
+  {
+    id: "scholarship_application_workflow",
+    ...SCHOLARSHIP_COACH_EN,
+    steps: [...SCHOLARSHIP_COACH_EN.steps],
+    category: "student",
+    features: ["Agent Designer", "Canvas Mode"],
+    connectors: [],
+    role: "Student",
+    level: ["University & College", "High School", "Generic"],
+    connectorGuide: null
   }
 ];
 
@@ -929,6 +1039,82 @@ const useCaseHelperPrompts = {
         type: "general",
         title: "生成三阶段危机决策树演练脚本提示词",
         prompt: `为“{{FACILITY_LOCATION}}”发生的“{{EMERGENCY_SCENARIO}}”建立三阶段演习脚本（0分、15分、30分），每阶段提供 3 项战术选择、后续连锁后果及演练评分准则。`
+      }
+    ]
+  },
+  special_consideration_workflow: {
+    en: [
+      {
+        type: "general",
+        title: "Prompt to Draft the Evidence Rules Table",
+        prompt: `Act as a student affairs policy officer at {{INSTITUTION_NAME}}. Draft an evidence rules table for special consideration requests. Rows: extension, deferred exam, leave of absence. For each row, list the accepted reasons (medical, compassionate, personal), the evidence required for each reason, the most days the office can approve without escalation (default: {{AUTO_LIMIT_DAYS}}), and who approves. End with a short list of cases that must always go to a human officer.`
+      },
+      {
+        type: "general",
+        title: "Prompt to Draft Decision Letter Templates",
+        prompt: `Write 4 short, warm email templates for the {{OFFICE_NAME}} to send students about special consideration requests: (1) approved, (2) partly approved with new dates, (3) not approved, with the reason and how to appeal, (4) more evidence needed. Use placeholders for student name, course code, dates and policy clause. Keep each under 150 words, in plain English.`
+      }
+    ],
+    "zh-TW": [
+      {
+        type: "general",
+        title: "生成證明文件規則表提示詞",
+        prompt: `請扮演「{{INSTITUTION_NAME}}」學生事務處的政策主任，為特殊考量申請草擬一份證明文件規則表。列：延期交功課、延期考試、休學。每一列列出可接受的原因（醫療、恩恤、個人）、每個原因所需的證明文件、辦事處毋須上報即可批准的最多日數（預設：{{AUTO_LIMIT_DAYS}}），以及審批人。最後列出必須交由真人職員處理的個案類別。`
+      },
+      {
+        type: "general",
+        title: "生成決定信範本提示詞",
+        prompt: `為{{OFFICE_NAME}}撰寫 4 封簡短而親切的電郵範本，通知學生特殊考量申請結果：(1) 批准，(2) 部分批准並附新日期，(3) 不批准，附原因及上訴方法，(4) 需補交證明文件。以佔位符表示學生姓名、科目編號、日期及政策條文。每封不多於 150 字，用語淺白。`
+      }
+    ],
+    "zh-CN": [
+      {
+        type: "general",
+        title: "生成证明材料规则表提示词",
+        prompt: `请扮演“{{INSTITUTION_NAME}}”学生事务处的政策主管，为特殊考量申请草拟一份证明材料规则表。行：作业延期、缓考、休学。每一行列出可接受的原因（医疗、恩恤、个人）、每个原因所需的证明材料、办公室无需上报即可批准的最多天数（默认：{{AUTO_LIMIT_DAYS}}），以及审批人。最后列出必须交由真人职员处理的个案类别。`
+      },
+      {
+        type: "general",
+        title: "生成决定函模板提示词",
+        prompt: `为{{OFFICE_NAME}}撰写 4 封简短而亲切的邮件模板，通知学生特殊考量申请结果：(1) 批准，(2) 部分批准并附新日期，(3) 不批准，附原因及申诉方法，(4) 需补交证明材料。以占位符表示学生姓名、课程编号、日期及政策条文。每封不超过 150 字，用语浅白。`
+      }
+    ]
+  },
+  scholarship_application_workflow: {
+    en: [
+      {
+        type: "general",
+        title: "Prompt to Summarise the Scholarship Call",
+        prompt: `I am applying for {{SCHOLARSHIP_NAME}}. From the scholarship call I paste below, list: (1) hard eligibility requirements, (2) selection criteria and their weighting if given, (3) required documents, (4) word limits and format rules, (5) the deadline and how to submit, (6) any rules on AI use. Put it in a table and flag anything unclear that I should ask the scholarship office about.`
+      },
+      {
+        type: "general",
+        title: "Prompt to Build My Experience Bank",
+        prompt: `Help me turn my CV and activity list into an experience bank for scholarship applications. For each activity, ask me what I did, the challenge, the action I took and the result. Then write each one as a 3-line STAR summary in my own words, and tag it with the qualities it shows (leadership, service, academic excellence, resilience, creativity).`
+      }
+    ],
+    "zh-TW": [
+      {
+        type: "general",
+        title: "生成獎學金章程摘要提示詞",
+        prompt: `我正在申請「{{SCHOLARSHIP_NAME}}」。請根據我在下方貼上的獎學金章程，列出：(1) 硬性資格要求，(2) 評選準則及比重（如有），(3) 所需文件，(4) 字數及格式要求，(5) 截止日期及提交方法，(6) 有關使用 AI 的規定。以表格呈現，並標示我應向獎學金辦事處查詢的不清楚之處。`
+      },
+      {
+        type: "general",
+        title: "生成個人經歷庫提示詞",
+        prompt: `請協助我把履歷及活動清單整理成獎學金申請用的經歷庫。每項活動請先問我：做了甚麼、遇到甚麼挑戰、採取了甚麼行動、結果如何。然後以我自己的語氣寫成 3 行 STAR 摘要，並標示它展現的特質（領導力、服務、學術卓越、抗逆力、創意）。`
+      }
+    ],
+    "zh-CN": [
+      {
+        type: "general",
+        title: "生成奖学金章程摘要提示词",
+        prompt: `我正在申请“{{SCHOLARSHIP_NAME}}”。请根据我在下方粘贴的奖学金章程，列出：(1) 硬性资格要求，(2) 评选标准及权重（如有），(3) 所需材料，(4) 字数及格式要求，(5) 截止日期及提交方式，(6) 有关使用 AI 的规定。以表格呈现，并标出我应向奖学金办公室咨询的不清楚之处。`
+      },
+      {
+        type: "general",
+        title: "生成个人经历库提示词",
+        prompt: `请帮我把简历及活动清单整理成奖学金申请用的经历库。每项活动请先问我：做了什么、遇到什么挑战、采取了什么行动、结果如何。然后用我自己的语气写成 3 行 STAR 摘要，并标出它体现的特质（领导力、服务、学术卓越、抗逆力、创造力）。`
       }
     ]
   }
@@ -2068,6 +2254,166 @@ Simulation Structure:
 3. **封锁与撤离 (30 分钟)**：消防警消协调、警戒线扩大划设及校级对外公关新闻通报。
 4. **复盘评分表**：制定 4 项指标之演练评估表（决策速度、通讯精确度、SOP 落实度与伤者救护优先级）。`,
       proTip: "可利用 Video Generation 产出逼真的事故模拟短片，在演习期间作为突发情境插入题，考验团队在高度压力下的应变能力。"
+    }
+  },
+  special_consideration_workflow: {
+    "en": SPECIAL_CONSIDERATION_EN,
+    "zh-TW": {
+      title: "特殊考量申請工作流程 Agent",
+      summary: "以多步驟 Agent 分流學生的延期及特殊考量申請：核對證明文件、套用政策規則，並把例外個案交由職員審批。",
+      steps: [
+        "準備特殊考量政策、證明文件規則及決定信範本，並在 Agent Designer 上載為 Agent 的參考文件。",
+        "在 Agent Designer 建立工作流程：職員上載每宗申請及附件，Agent 分類申請、核對證明文件、按政策規則分流，並草擬決定信或上報摘要。",
+        "職員檢視每份草稿，批准、修改或拒絕後，才由職員自行把最終信件發給學生，並把 Agent 產生的記錄行貼到個案記錄表。"
+      ],
+      prompt: `你是「{{INSTITUTION_NAME}}」{{OFFICE_NAME}}的特殊考量工作流程 Agent，負責處理學生的延期交功課、延期考試及休學申請。請按以下流程順序執行，不可跳過任何步驟，亦絕不可自行向學生發出決定。
+
+步驟 1 · 接收申請
+閱讀申請表及附件，擷取：學生編號、課程、科目編號、申請類別（延期交功課 | 延期考試 | 休學）、原因類別（醫療 | 恩恤 | 個人 | 其他）、受影響日期及申請日數。
+
+步驟 2 · 核對證明文件
+按政策文件中的證明文件規則核對附件。
+- 如所需文件缺漏或無法辨識 → 草擬一封簡短有禮的電郵，列明欠缺的文件，狀態設為「等待文件」，然後停止。收到新文件後由步驟 2 重新開始。
+- 否則 → 進入步驟 3。
+
+步驟 3 · 政策分流
+- 如符合以下任何一項 → 轉至「上報」：申請日數超過 {{AUTO_LIMIT_DAYS}} 日；日期與期末考試重疊；申請提及人身安全、精神健康或福利問題；學生本學期已是第三次或以上申請。
+- 否則，如申請符合政策中的標準規則 → 轉至「標準處理」。
+- 其他情況 → 轉至「上報」。
+
+步驟 4A · 標準處理
+以核准範本草擬決定信，並引用適用的政策條文。狀態設為「待審核」。
+
+步驟 4B · 上報
+撰寫一頁個案摘要：概要、時序、證明文件清單、適用政策條文、建議方案及其利弊，以及觸發上報的風險標記。狀態設為「需職員決定」。如有福利標記，加上：「請於今天聯絡學生福利組 {{WELFARE_EMAIL}}。」
+
+步驟 5 · 人工審核（每宗申請必須執行）
+向負責職員展示草稿，並提供三個選項：批准、修改、拒絕。等待職員決定，在此之前不可發出任何內容。
+
+步驟 6 · 結案
+職員決定後，輸出最終信件全文，供職員複製並自行發給學生；另輸出一行記錄（日期、申請編號、分流路徑、審核職員、結果），供職員貼到個案記錄表。
+
+規則：每項決定都必須以附件政策為依據並引用條文。不可診斷病情，亦不可在政策規則以外評價證明文件。學生資料必須保密。`,
+      proTip: "建議每宗申請都保留人工審核步驟，而不只限於上報個案。Agent 負責閱讀與草擬，職員則對每項決定負責。"
+    },
+    "zh-CN": {
+      title: "特殊考量申请工作流程 Agent",
+      summary: "以多步骤 Agent 分流学生的延期及特殊考量申请：核对证明材料、套用政策规则，并把例外个案交由职员审批。",
+      steps: [
+        "准备特殊考量政策、证明材料规则及决定函模板，并在 Agent Designer 上传为 Agent 的参考文件。",
+        "在 Agent Designer 建立工作流程：职员上传每份申请及附件，Agent 分类申请、核对证明材料、按政策规则分流，并草拟决定函或上报摘要。",
+        "职员查看每份草稿，批准、修改或拒绝后，才由职员自行把最终信函发给学生，并把 Agent 生成的记录行粘贴到个案记录表。"
+      ],
+      prompt: `你是“{{INSTITUTION_NAME}}”{{OFFICE_NAME}}的特殊考量工作流程 Agent，负责处理学生的作业延期、缓考及休学申请。请按以下流程顺序执行，不可跳过任何步骤，也绝不可自行向学生发出决定。
+
+步骤 1 · 接收申请
+阅读申请表及附件，提取：学号、专业、课程编号、申请类别（作业延期 | 缓考 | 休学）、原因类别（医疗 | 恩恤 | 个人 | 其他）、受影响日期及申请天数。
+
+步骤 2 · 核对证明材料
+按政策文件中的证明材料规则核对附件。
+- 如所需材料缺失或无法识别 → 草拟一封简短有礼的邮件，列明缺少的材料，状态设为“等待材料”，然后停止。收到新材料后从步骤 2 重新开始。
+- 否则 → 进入步骤 3。
+
+步骤 3 · 政策分流
+- 如符合以下任何一项 → 转至“上报”：申请天数超过 {{AUTO_LIMIT_DAYS}} 天；日期与期末考试重叠；申请提及人身安全、心理健康或福利问题；学生本学期已是第三次或以上申请。
+- 否则，如申请符合政策中的标准规则 → 转至“标准处理”。
+- 其他情况 → 转至“上报”。
+
+步骤 4A · 标准处理
+以批准模板草拟决定函，并引用适用的政策条文。状态设为“待审核”。
+
+步骤 4B · 上报
+撰写一页个案摘要：概要、时间线、证明材料清单、适用政策条文、建议方案及其利弊，以及触发上报的风险标记。状态设为“需职员决定”。如有福利标记，加上：“请于今天联系学生福利组 {{WELFARE_EMAIL}}。”
+
+步骤 5 · 人工审核（每份申请必须执行）
+向负责职员展示草稿，并提供三个选项：批准、修改、拒绝。等待职员决定，在此之前不可发出任何内容。
+
+步骤 6 · 结案
+职员决定后，输出最终信函全文，供职员复制并自行发给学生；另输出一行记录（日期、申请编号、分流路径、审核职员、结果），供职员粘贴到个案记录表。
+
+规则：每项决定都必须以附件政策为依据并引用条文。不可诊断病情，也不可在政策规则以外评价证明材料。学生信息必须保密。`,
+      proTip: "建议每份申请都保留人工审核步骤，而不只限于上报个案。Agent 负责阅读与草拟，职员则对每项决定负责。"
+    }
+  },
+  scholarship_application_workflow: {
+    "en": SCHOLARSHIP_COACH_EN,
+    "zh-TW": {
+      title: "獎學金申請教練工作流程 Agent",
+      summary: "由 Agent 帶你一步步準備獎學金申請：檢查資格、草擬個人陳述、按評選準則評分，並在提交前交由導師審閱。",
+      steps: [
+        "收集獎學金章程、評選準則，以及你的履歷、成績表和活動清單，並用輔助提示詞整理個人資料表。",
+        "在 Agent Designer 設定教練工作流程：檢查資格、規劃故事、在 Canvas Mode 草擬、為草稿評分，未達標便循環修改。",
+        "將草稿及評分表交給導師或學業顧問作人工審閱，按意見修改後完成最終清單，並由你自己提交申請。"
+      ],
+      prompt: `你是「{{INSTITUTION_NAME}}」學生的獎學金教練 Agent，協助一名學生申請「{{SCHOLARSHIP_NAME}}」（截止日期：{{DEADLINE}}）。你的角色是教練：提交的每一個字都由學生親自撰寫並負責。請按以下流程順序執行。
+
+步驟 1 · 個人資料
+詢問學生的課程、年級、GPA、課外活動、獎項、工作或義工經驗；如獎學金要求，亦詢問經濟需要陳述。整理成個人資料表，並請學生確認。
+
+步驟 2 · 資格檢查
+將個人資料與獎學金章程中每項硬性要求比對（年級、GPA、居民身份、課程、所需文件）。
+- 如有硬性要求未達 → 以淺白語言說明是哪一項，建議最多 3 個類近的獎學金，然後停止。
+- 如有不清楚的地方 → 列出要向獎學金辦事處查詢的問題，並暫停，直至學生回覆。
+- 否則 → 進入步驟 3。
+
+步驟 3 · 故事規劃
+把學生的經歷對應到每項評選準則，提出 2 個故事角度，讓學生選擇其一。
+
+步驟 4 · 草擬
+協助學生在 Canvas Mode 草擬不多於 {{WORD_LIMIT}} 字的個人陳述。以引導問題及結構建議協助，並使用學生自己的例子。
+
+步驟 5 · 自我評分
+按每項評選準則為草稿評 1 至 5 分，每個分數附一句證據。
+- 如任何準則低於 4 分 → 提供 3 個具體修改建議，然後返回步驟 4。最多循環 3 輪，之後繼續下一步。
+- 否則 → 進入步驟 6。
+
+步驟 6 · 人工審閱（必須執行）
+為學生的導師（{{MENTOR_EMAIL}}）準備審閱資料包：草稿、評分表及 3 條請導師回應的問題。請學生自行發送並等待回覆。學生帶回意見後，協助他們修改。
+
+步驟 7 · 最終檢查
+製作提交清單：文件、字數、推薦人資料、檔案名稱及截止日期提示。提醒學生親自提交申請。
+
+規則：絕不可虛構成就或成績。絕不可代學生撰寫整篇陳述。如有任何內容可能違反獎學金對使用 AI 的規定，須提醒學生自行查核。`,
+      proTip: "把「導師審閱」設為必經步驟：Agent 能幫你更快寫出清晰的初稿，但真人的意見才能確保故事真實、具說服力，並符合獎學金的規定。"
+    },
+    "zh-CN": {
+      title: "奖学金申请教练工作流程 Agent",
+      summary: "由 Agent 带你一步步准备奖学金申请：检查资格、草拟个人陈述、按评选标准评分，并在提交前交由导师审阅。",
+      steps: [
+        "收集奖学金章程、评选标准，以及你的简历、成绩单和活动清单，并用辅助提示词整理个人资料表。",
+        "在 Agent Designer 设置教练工作流程：检查资格、规划故事、在 Canvas Mode 草拟、为草稿评分，未达标便循环修改。",
+        "将草稿及评分表交给导师或学业顾问进行人工审阅，按意见修改后完成最终清单，并由你自己提交申请。"
+      ],
+      prompt: `你是“{{INSTITUTION_NAME}}”学生的奖学金教练 Agent，协助一名学生申请“{{SCHOLARSHIP_NAME}}”（截止日期：{{DEADLINE}}）。你的角色是教练：提交的每一个字都由学生亲自撰写并负责。请按以下流程顺序执行。
+
+步骤 1 · 个人资料
+询问学生的专业、年级、GPA、课外活动、奖项、工作或志愿者经历；如奖学金要求，也询问经济需要陈述。整理成个人资料表，并请学生确认。
+
+步骤 2 · 资格检查
+将个人资料与奖学金章程中每项硬性要求比对（年级、GPA、户籍或居民身份、专业、所需材料）。
+- 如有硬性要求未达到 → 用浅白语言说明是哪一项，推荐最多 3 个类似的奖学金，然后停止。
+- 如有不清楚的地方 → 列出要向奖学金办公室咨询的问题，并暂停，直至学生回复。
+- 否则 → 进入步骤 3。
+
+步骤 3 · 故事规划
+把学生的经历对应到每项评选标准，提出 2 个故事角度，让学生选择其一。
+
+步骤 4 · 草拟
+协助学生在 Canvas Mode 草拟不超过 {{WORD_LIMIT}} 字的个人陈述。以引导问题及结构建议协助，并使用学生自己的例子。
+
+步骤 5 · 自我评分
+按每项评选标准为草稿打 1 至 5 分，每个分数附一句证据。
+- 如任何标准低于 4 分 → 提供 3 条具体修改建议，然后返回步骤 4。最多循环 3 轮，之后继续下一步。
+- 否则 → 进入步骤 6。
+
+步骤 6 · 人工审阅（必须执行）
+为学生的导师（{{MENTOR_EMAIL}}）准备审阅资料包：草稿、评分表及 3 个请导师回应的问题。请学生自行发送并等待回复。学生带回意见后，协助他们修改。
+
+步骤 7 · 最终检查
+制作提交清单：材料、字数、推荐人信息、文件名称及截止日期提醒。提醒学生亲自提交申请。
+
+规则：绝不可虚构成就或成绩。绝不可代学生撰写整篇陈述。如有任何内容可能违反奖学金对使用 AI 的规定，须提醒学生自行核查。`,
+      proTip: "把“导师审阅”设为必经步骤：Agent 能帮你更快写出清晰的初稿，但真人的意见才能确保故事真实、有说服力，并符合奖学金的规定。"
     }
   }
 };
