@@ -513,76 +513,76 @@ const useCaseHelperPrompts = {
   socratic_tutor: {
     en: [
       {
-        type: "general",
+        type: "canvas",
         title: "Prompt to Generate Course Syllabus & Module Outline",
-        prompt: `Act as an expert university professor. Generate a comprehensive course syllabus and 14-week module outline for the course '{{COURSE_NAME}}' (Code: {{COURSE_CODE}}). Include course description, 4 core learning objectives mapped to Bloom's taxonomy, weekly lecture topics, required reading titles, and grading breakdown.`
+        prompt: `Act as an expert university professor. Generate a comprehensive course syllabus and 14-week module outline for the course '{{COURSE_NAME}}' (Code: {{COURSE_CODE}}). Include course description, 4 core learning objectives mapped to Bloom's taxonomy, weekly lecture topics, required reading titles, and grading breakdown. Use Canvas to create this as an editable document.`
       },
       {
-        type: "general",
+        type: "canvas",
         title: "Prompt to Generate Lecture Reading Summary & Key Concepts",
-        prompt: `Synthesize the core foundational concepts and terminology for Lecture Week 1-3 of '{{COURSE_NAME}}'. Provide a 500-word executive summary, 10 must-know technical terms with student-friendly definitions, and 5 common student misconceptions with corrections.`
+        prompt: `Synthesize the core foundational concepts and terminology for Lecture Week 1-3 of '{{COURSE_NAME}}'. Provide a 500-word executive summary, 10 must-know technical terms with student-friendly definitions, and 5 common student misconceptions with corrections. Use Canvas to create this as an editable document.`
       }
     ],
     "zh-TW": [
       {
-        type: "general",
+        type: "canvas",
         title: "生成課程教學大綱與每週單元大綱提示詞",
-        prompt: `請扮演資深大學教授。為課程「{{COURSE_NAME}}」（課程代碼：{{COURSE_CODE}}）撰寫一份完整的教學大綱與 14 週單元規劃。包含課程簡介、對應 Bloom 分類法的 4 項核心學習目標、每週講義主題、必讀文獻清單及評分比重。`
+        prompt: `請扮演資深大學教授。為課程「{{COURSE_NAME}}」（課程代碼：{{COURSE_CODE}}）撰寫一份完整的教學大綱與 14 週單元規劃。包含課程簡介、對應 Bloom 分類法的 4 項核心學習目標、每週講義主題、必讀文獻清單及評分比重。請使用 Canvas 將此內容建立為可編輯文件。`
       },
       {
-        type: "general",
+        type: "canvas",
         title: "生成前三週講義摘要與核心概念提示詞",
-        prompt: `統整「{{COURSE_NAME}}」第 1 至 3 週講義的核心概念與專有名詞。提供 500 字精要摘要、10 個關鍵術語之白話解說，以及 5 個學生常見概念誤區與正確觀念導正。`
+        prompt: `統整「{{COURSE_NAME}}」第 1 至 3 週講義的核心概念與專有名詞。提供 500 字精要摘要、10 個關鍵術語之白話解說，以及 5 個學生常見概念誤區與正確觀念導正。請使用 Canvas 將此內容建立為可編輯文件。`
       }
     ],
     "zh-CN": [
       {
-        type: "general",
+        type: "canvas",
         title: "生成课程教学大纲与每周单元大纲提示词",
-        prompt: `请扮演资深大学教授。为课程“{{COURSE_NAME}}”（课程代码：{{COURSE_CODE}}）撰写一份完整的教学大纲与 14 周单元规划。包含课程简介、对应 Bloom 分类法的 4 项核心学习目标、每周讲义主题、必读文献清单及评分比重。`
+        prompt: `请扮演资深大学教授。为课程“{{COURSE_NAME}}”（课程代码：{{COURSE_CODE}}）撰写一份完整的教学大纲与 14 周单元规划。包含课程简介、对应 Bloom 分类法的 4 项核心学习目标、每周讲义主题、必读文献清单及评分比重。请使用 Canvas 将此内容创建为可编辑文档。`
       },
       {
-        type: "general",
+        type: "canvas",
         title: "生成前三周讲义摘要与核心概念提示词",
-        prompt: `统整“{{COURSE_NAME}}”第 1 至 3 周讲义的核心概念与专有名词。提供 500 字精要摘要、10 个关键术语之白话解说，以及 5 个学生常见概念误区与正确观念导正。`
+        prompt: `统整“{{COURSE_NAME}}”第 1 至 3 周讲义的核心概念与专有名词。提供 500 字精要摘要、10 个关键术语之白话解说，以及 5 个学生常见概念误区与正确观念导正。请使用 Canvas 将此内容创建为可编辑文档。`
       }
     ]
   },
   rubric_grading: {
     en: [
       {
-        type: "general",
+        type: "canvas",
         title: "Prompt to Generate Assignment Instructions & Guidelines",
-        prompt: `Act as an academic instructor. Draft a detailed assignment instruction guide for undergraduate students titled '{{ASSIGNMENT_TITLE}}'. Include the task overview, word count requirements, required citation format, 3 specific guiding questions to address, and submission instructions.`
+        prompt: `Act as an academic instructor. Draft a detailed assignment instruction guide for undergraduate students titled '{{ASSIGNMENT_TITLE}}'. Include the task overview, word count requirements, required citation format, 3 specific guiding questions to address, and submission instructions. Use Canvas to create this as an editable document.`
       },
       {
-        type: "general",
+        type: "canvas",
         title: "Prompt to Generate Detailed Analytical Grading Rubric",
-        prompt: `Create a rigorous, 4-tier analytical grading rubric for the assignment '{{ASSIGNMENT_TITLE}}'. Structure the rubric into 4 criteria: (1) Argument & Critical Analysis (35%), (2) Evidence & Source Grounding (30%), (3) Structure & Coherence (20%), (4) Academic Writing & Mechanics (15%). For each criterion, describe clear observable indicators across 4 performance levels: Exemplary, Proficient, Developing, and Unsatisfactory.`
+        prompt: `Create a rigorous, 4-tier analytical grading rubric for the assignment '{{ASSIGNMENT_TITLE}}'. Structure the rubric into 4 criteria: (1) Argument & Critical Analysis (35%), (2) Evidence & Source Grounding (30%), (3) Structure & Coherence (20%), (4) Academic Writing & Mechanics (15%). For each criterion, describe clear observable indicators across 4 performance levels: Exemplary, Proficient, Developing, and Unsatisfactory. Use Canvas to create this as an editable document.`
       }
     ],
     "zh-TW": [
       {
-        type: "general",
+        type: "canvas",
         title: "生成作業指示與撰寫規範提示詞",
-        prompt: `請扮演大學課程講師。為名為「{{ASSIGNMENT_TITLE}}」的學期作業撰寫詳細指引。包含作業宗旨說明、字數規範、學術引用格式要求、3 個必須深入探討的核心引導問題，以及繳交截止規範。`
+        prompt: `請扮演大學課程講師。為名為「{{ASSIGNMENT_TITLE}}」的學期作業撰寫詳細指引。包含作業宗旨說明、字數規範、學術引用格式要求、3 個必須深入探討的核心引導問題，以及繳交截止規範。請使用 Canvas 將此內容建立為可編輯文件。`
       },
       {
-        type: "general",
+        type: "canvas",
         title: "生成詳細分析型評分規準 (Rubric) 提示詞",
-        prompt: `為作業「{{ASSIGNMENT_TITLE}}」設計一份嚴謹的四級分析型評分規準 (Rubric)。劃分 4 項指標：(1) 論點深度與批判思維 (35%)、(2) 文獻證據與論證嚴謹度 (30%)、(3) 架構組織與邏輯連貫 (20%)、(4) 學術寫作規範與流暢度 (15%)。每項指標均需具體列出：優異 (Exemplary)、熟練 (Proficient)、發展中 (Developing)、待加強 (Unsatisfactory) 的具體表現描述。`
+        prompt: `為作業「{{ASSIGNMENT_TITLE}}」設計一份嚴謹的四級分析型評分規準 (Rubric)。劃分 4 項指標：(1) 論點深度與批判思維 (35%)、(2) 文獻證據與論證嚴謹度 (30%)、(3) 架構組織與邏輯連貫 (20%)、(4) 學術寫作規範與流暢度 (15%)。每項指標均需具體列出：優異 (Exemplary)、熟練 (Proficient)、發展中 (Developing)、待加強 (Unsatisfactory) 的具體表現描述。請使用 Canvas 將此內容建立為可編輯文件。`
       }
     ],
     "zh-CN": [
       {
-        type: "general",
+        type: "canvas",
         title: "生成作业指引与撰写规范提示词",
-        prompt: `请扮演大学课程讲师。为名为“{{ASSIGNMENT_TITLE}}”的学期作业撰写详细指引。包含作业宗旨说明、字数规范、学术引用格式要求、3 个必须深入探讨的核心引导问题，以及提交截止规范。`
+        prompt: `请扮演大学课程讲师。为名为“{{ASSIGNMENT_TITLE}}”的学期作业撰写详细指引。包含作业宗旨说明、字数规范、学术引用格式要求、3 个必须深入探讨的核心引导问题，以及提交截止规范。请使用 Canvas 将此内容创建为可编辑文档。`
       },
       {
-        type: "general",
+        type: "canvas",
         title: "生成详细分析型评分规准 (Rubric) 提示词",
-        prompt: `为作业“{{ASSIGNMENT_TITLE}}”设计一份严谨的四级分析型评分规准 (Rubric)。划分 4 项指标：(1) 论点深度与批判思维 (35%)、(2) 文献证据与论证严谨度 (30%)、(3) 架构组织与逻辑连贯 (20%)、(4) 学术写作规范与流畅度 (15%)。每项指标均需具体列出：优异 (Exemplary)、熟练 (Proficient)、发展中 (Developing)、待加强 (Unsatisfactory) 的具体表现描述。`
+        prompt: `为作业“{{ASSIGNMENT_TITLE}}”设计一份严谨的四级分析型评分规准 (Rubric)。划分 4 项指标：(1) 论点深度与批判思维 (35%)、(2) 文献证据与论证严谨度 (30%)、(3) 架构组织与逻辑连贯 (20%)、(4) 学术写作规范与流畅度 (15%)。每项指标均需具体列出：优异 (Exemplary)、熟练 (Proficient)、发展中 (Developing)、待加强 (Unsatisfactory) 的具体表现描述。请使用 Canvas 将此内容创建为可编辑文档。`
       }
     ]
   },
@@ -594,9 +594,9 @@ const useCaseHelperPrompts = {
         prompt: `Conduct a comprehensive skills benchmark for '{{COURSE_TITLE}}' targeting the {{TARGET_INDUSTRY}} industry. Identify the top 5 technical competencies and 3 soft skills most demanded by employers over the past 12 months, citing key industry tools.`
       },
       {
-        type: "general",
+        type: "canvas",
         title: "Prompt to Generate Bloom's Taxonomy Course Learning Outcomes",
-        prompt: `Design 5 measurable, assessment-aligned Course Learning Outcomes (CLOs) for '{{COURSE_TITLE}}' adhering strictly to Bloom's Revised Taxonomy (spanning Apply, Analyze, Evaluate, and Create levels).`
+        prompt: `Design 5 measurable, assessment-aligned Course Learning Outcomes (CLOs) for '{{COURSE_TITLE}}' adhering strictly to Bloom's Revised Taxonomy (spanning Apply, Analyze, Evaluate, and Create levels). Use Canvas to create this as an editable document.`
       }
     ],
     "zh-TW": [
@@ -606,9 +606,9 @@ const useCaseHelperPrompts = {
         prompt: `針對「{{TARGET_INDUSTRY}}」領域，為新課程「{{COURSE_TITLE}}」進行職場技能基準分析。列出過去一年就業市場需求最高的 5 項核心技術能力與 3 項跨領域軟實力，並註明主流產業工具與認證。`
       },
       {
-        type: "general",
+        type: "canvas",
         title: "生成對應 Bloom 分類法的課程學習成效 (CLOs) 提示詞",
-        prompt: `嚴格遵循 Bloom 修訂版認知歷程分類法（涵蓋應用、分析、評鑑、創造層級），為「{{COURSE_TITLE}}」設計 5 項具體可評量的課程學習成效 (CLOs)。`
+        prompt: `嚴格遵循 Bloom 修訂版認知歷程分類法（涵蓋應用、分析、評鑑、創造層級），為「{{COURSE_TITLE}}」設計 5 項具體可評量的課程學習成效 (CLOs)。請使用 Canvas 將此內容建立為可編輯文件。`
       }
     ],
     "zh-CN": [
@@ -618,170 +618,170 @@ const useCaseHelperPrompts = {
         prompt: `针对“{{TARGET_INDUSTRY}}”领域，为新课程“{{COURSE_TITLE}}”进行职场技能基准分析。列出过去一年就业市场需求最高的 5 项核心技术能力与 3 项跨领域软实力，并注明主流产业工具与认证。`
       },
       {
-        type: "general",
+        type: "canvas",
         title: "生成对应 Bloom 分类法的课程学习成效 (CLOs) 提示词",
-        prompt: `严格遵循 Bloom 修订版认知历程分类法（涵盖应用、分析、评鉴、创造层级），为“{{COURSE_TITLE}}”设计 5 项具体可评估的课程学习成效 (CLOs)。`
+        prompt: `严格遵循 Bloom 修订版认知历程分类法（涵盖应用、分析、评鉴、创造层级），为“{{COURSE_TITLE}}”设计 5 项具体可评估的课程学习成效 (CLOs)。请使用 Canvas 将此内容创建为可编辑文档。`
       }
     ]
   },
   lab_manual_creator: {
     en: [
       {
-        type: "general",
+        type: "canvas",
         title: "Prompt to Generate Laboratory Experiment Concept & Reagents List",
-        prompt: `Act as a STEM laboratory coordinator for '{{COURSE_NAME}}'. Create a complete experiment concept sheet for '{{EXPERIMENT_NAME}}'. Include theoretical background, required chemical reagents, glass equipment list, and preparatory setup steps.`
+        prompt: `Act as a STEM laboratory coordinator for '{{COURSE_NAME}}'. Create a complete experiment concept sheet for '{{EXPERIMENT_NAME}}'. Include theoretical background, required chemical reagents, glass equipment list, and preparatory setup steps. Use Canvas to create this as an editable document.`
       },
       {
-        type: "general",
+        type: "canvas",
         title: "Prompt to Generate Safety Hazards & Protocol Guideline",
-        prompt: `Draft an institutional chemical and physical safety protocol for the experiment '{{EXPERIMENT_NAME}}'. Specify GHS hazard pictograms, mandatory PPE, waste disposal procedures, and emergency spill response steps.`
+        prompt: `Draft an institutional chemical and physical safety protocol for the experiment '{{EXPERIMENT_NAME}}'. Specify GHS hazard pictograms, mandatory PPE, waste disposal procedures, and emergency spill response steps. Use Canvas to create this as an editable document.`
       }
     ],
     "zh-TW": [
       {
-        type: "general",
+        type: "canvas",
         title: "生成實驗原理與試劑設備清單提示詞",
-        prompt: `請扮演「{{COURSE_NAME}}」實驗室負責人。為實驗「{{EXPERIMENT_NAME}}」撰寫實驗原理與準備手冊。列出理論背景、化學試劑清單、玻璃儀器規格及課前準備步驟。`
+        prompt: `請扮演「{{COURSE_NAME}}」實驗室負責人。為實驗「{{EXPERIMENT_NAME}}」撰寫實驗原理與準備手冊。列出理論背景、化學試劑清單、玻璃儀器規格及課前準備步驟。請使用 Canvas 將此內容建立為可編輯文件。`
       },
       {
-        type: "general",
+        type: "canvas",
         title: "生成實驗室安全守則與廢棄物處置規範提示詞",
-        prompt: `為實驗「{{EXPERIMENT_NAME}}」制定實驗室安全規範。明確標註 GHS 危害圖示、必備個人防護裝備 (PPE)、廢液分類處理流程與化學品潑濺應急程序。`
+        prompt: `為實驗「{{EXPERIMENT_NAME}}」制定實驗室安全規範。明確標註 GHS 危害圖示、必備個人防護裝備 (PPE)、廢液分類處理流程與化學品潑濺應急程序。請使用 Canvas 將此內容建立為可編輯文件。`
       }
     ],
     "zh-CN": [
       {
-        type: "general",
+        type: "canvas",
         title: "生成实验原理与试剂设备清单提示词",
-        prompt: `请扮演“{{COURSE_NAME}}”实验室负责人。为实验“{{EXPERIMENT_NAME}}”撰写实验原理与准备手册。列出理论背景、化学试剂清单、玻璃仪器规格及课前准备步骤。`
+        prompt: `请扮演“{{COURSE_NAME}}”实验室负责人。为实验“{{EXPERIMENT_NAME}}”撰写实验原理与准备手册。列出理论背景、化学试剂清单、玻璃仪器规格及课前准备步骤。请使用 Canvas 将此内容创建为可编辑文档。`
       },
       {
-        type: "general",
+        type: "canvas",
         title: "生成实验室安全守则与废弃物处置规范提示词",
-        prompt: `为实验“{{EXPERIMENT_NAME}}”制定实验室安全规范。明确标注 GHS 危害图示、必备个人防护装备 (PPE)、废液分类处理流程与化学品泼溅应急程序。`
+        prompt: `为实验“{{EXPERIMENT_NAME}}”制定实验室安全规范。明确标注 GHS 危害图示、必备个人防护装备 (PPE)、废液分类处理流程与化学品泼溅应急程序。请使用 Canvas 将此内容创建为可编辑文档。`
       }
     ]
   },
   su_advocacy: {
     en: [
       {
-        type: "general",
+        type: "canvas",
         title: "Prompt to Generate Student Town Hall Feedback Survey Form",
-        prompt: `Draft a 10-question anonymous student campus experience survey for {{INSTITUTION_NAME}} covering {{ACADEMIC_TERM}}. Include questions on library hours, dining affordability, mental health support, and classroom facilities with Likert scales and open-ended feedback prompts.`
+        prompt: `Draft a 10-question anonymous student campus experience survey for {{INSTITUTION_NAME}} covering {{ACADEMIC_TERM}}. Include questions on library hours, dining affordability, mental health support, and classroom facilities with Likert scales and open-ended feedback prompts. Use Canvas to create this as an editable document.`
       },
       {
-        type: "general",
+        type: "canvas",
         title: "Prompt to Generate Qualitative Feedback Transcription Template",
-        prompt: `Structure a standardized student feedback transcription template to organize raw town hall notes and survey responses into thematic categories: Academic, Student Welfare, Facilities, and Financial Aid.`
+        prompt: `Structure a standardized student feedback transcription template to organize raw town hall notes and survey responses into thematic categories: Academic, Student Welfare, Facilities, and Financial Aid. Use Canvas to create this as an editable document.`
       }
     ],
     "zh-TW": [
       {
-        type: "general",
+        type: "canvas",
         title: "生成學生諮詢會回饋問卷範本提示詞",
-        prompt: `為 {{INSTITUTION_NAME}} 設計一份「{{ACADEMIC_TERM}} 學生校園生活體驗與權益問卷」（共 10 題）。涵蓋圖書館自修時數、校園餐飲平價化、身心輔導資源及教室設備，結合李克特量表與開放式建議。`
+        prompt: `為 {{INSTITUTION_NAME}} 設計一份「{{ACADEMIC_TERM}} 學生校園生活體驗與權益問卷」（共 10 題）。涵蓋圖書館自修時數、校園餐飲平價化、身心輔導資源及教室設備，結合李克特量表與開放式建議。請使用 Canvas 將此內容建立為可編輯文件。`
       },
       {
-        type: "general",
+        type: "canvas",
         title: "生成質化民意彙整與歸類樣板提示詞",
-        prompt: `設計結構化的學生民意資料整理範本，將諮詢會筆記與匿名回饋分類至四大領域：學術教學、學生福利、校園設施及獎助學金。`
+        prompt: `設計結構化的學生民意資料整理範本，將諮詢會筆記與匿名回饋分類至四大領域：學術教學、學生福利、校園設施及獎助學金。請使用 Canvas 將此內容建立為可編輯文件。`
       }
     ],
     "zh-CN": [
       {
-        type: "general",
+        type: "canvas",
         title: "生成学生咨询会反馈问卷范本提示词",
-        prompt: `为 {{INSTITUTION_NAME}} 设计一份“{{ACADEMIC_TERM}} 学生校园生活体验与权益问卷”（共 10 题）。涵盖图书馆自修时数、校园餐饮平价化、身心辅导资源及教室设备，结合李克特量表与开放式建议。`
+        prompt: `为 {{INSTITUTION_NAME}} 设计一份“{{ACADEMIC_TERM}} 学生校园生活体验与权益问卷”（共 10 题）。涵盖图书馆自修时数、校园餐饮平价化、身心辅导资源及教室设备，结合李克特量表与开放式建议。请使用 Canvas 将此内容创建为可编辑文档。`
       },
       {
-        type: "general",
+        type: "canvas",
         title: "生成质化民意汇整与归类样板提示词",
-        prompt: `设计结构化的学生民意数据整理范本，将咨询会笔记与匿名反馈分类至四大领域：学术教学、学生福利、校园设施及奖助学金。`
+        prompt: `设计结构化的学生民意数据整理范本，将咨询会笔记与匿名反馈分类至四大领域：学术教学、学生福利、校园设施及奖助学金。请使用 Canvas 将此内容创建为可编辑文档。`
       }
     ]
   },
   club_funding: {
     en: [
       {
-        type: "general",
+        type: "canvas",
         title: "Prompt to Generate Student Club Event Proposal Template",
-        prompt: `Act as a Student Union treasurer. Draft a comprehensive event funding proposal for '{{CLUB_NAME}}' covering the academic year {{ACADEMIC_YEAR}}. Include event purpose, target student participation count, timeline, and measurable campus impact.`
+        prompt: `Act as a Student Union treasurer. Draft a comprehensive event funding proposal for '{{CLUB_NAME}}' covering the academic year {{ACADEMIC_YEAR}}. Include event purpose, target student participation count, timeline, and measurable campus impact. Use Canvas to create this as an editable document.`
       },
       {
-        type: "general",
+        type: "canvas",
         title: "Prompt to Generate Union Subsidy Line-Item Budget Sheet",
-        prompt: `Create a compliant line-item budget table for '{{CLUB_NAME}}' detailing speaker honorariums, equipment rental, venue booking, and promotional printing adhering to Student Union grant maximums.`
+        prompt: `Create a compliant line-item budget table for '{{CLUB_NAME}}' detailing speaker honorariums, equipment rental, venue booking, and promotional printing adhering to Student Union grant maximums. Use Canvas to create this as an editable document.`
       }
     ],
     "zh-TW": [
       {
-        type: "general",
+        type: "canvas",
         title: "生成學生社團活動企劃書範本提示詞",
-        prompt: `請扮演學生會財務顧問。為社團「{{CLUB_NAME}}」撰寫 {{ACADEMIC_YEAR}} 學年度活動補助申請企劃。包含活動宗旨、預估參與人數、籌備進度表及對校園凝聚力之實質效益。`
+        prompt: `請扮演學生會財務顧問。為社團「{{CLUB_NAME}}」撰寫 {{ACADEMIC_YEAR}} 學年度活動補助申請企劃。包含活動宗旨、預估參與人數、籌備進度表及對校園凝聚力之實質效益。請使用 Canvas 將此內容建立為可編輯文件。`
       },
       {
-        type: "general",
+        type: "canvas",
         title: "生成社團預算明細與核銷檢核表提示詞",
-        prompt: `為「{{CLUB_NAME}}」編製符合學生會補助規章之逐項預算明細表，詳列講師鐘點費、器材租賃、場地清潔及文宣印製費用，並註記報銷憑證規範。`
+        prompt: `為「{{CLUB_NAME}}」編製符合學生會補助規章之逐項預算明細表，詳列講師鐘點費、器材租賃、場地清潔及文宣印製費用，並註記報銷憑證規範。請使用 Canvas 將此內容建立為可編輯文件。`
       }
     ],
     "zh-CN": [
       {
-        type: "general",
+        type: "canvas",
         title: "生成学生社团活动企划书范本提示词",
-        prompt: `请扮演学生会财务顾问。为社团“{{CLUB_NAME}}”撰写 {{ACADEMIC_YEAR}} 学年度活动补助申请企划。包含活动宗旨、预估参与人数、筹备进度表及对校园凝聚力之实质效益。`
+        prompt: `请扮演学生会财务顾问。为社团“{{CLUB_NAME}}”撰写 {{ACADEMIC_YEAR}} 学年度活动补助申请企划。包含活动宗旨、预估参与人数、筹备进度表及对校园凝聚力之实质效益。请使用 Canvas 将此内容创建为可编辑文档。`
       },
       {
-        type: "general",
+        type: "canvas",
         title: "生成社团预算明细与核销检核表提示词",
-        prompt: `为“{{CLUB_NAME}}”编制符合学生会补助规章之逐项预算明细表，详列讲师钟点费、器材租赁、场地清洁及文宣印制费用，并注记报销凭证规范。`
+        prompt: `为“{{CLUB_NAME}}”编制符合学生会补助规章之逐项预算明细表，详列讲师钟点费、器材租赁、场地清洁及文宣印制费用，并注记报销凭证规范。请使用 Canvas 将此内容创建为可编辑文档。`
       }
     ]
   },
   su_helpdesk: {
     en: [
       {
-        type: "general",
+        type: "canvas",
         title: "Prompt to Generate Student Union Constitution & Venue Policy Summary",
-        prompt: `Synthesize the core student governance handbook for {{STUDENT_UNION_NAME}} at {{INSTITUTION_NAME}}. Produce a structured 5-section reference guide covering room reservations, locker allocation, club registration, and dispute escalation.`
+        prompt: `Synthesize the core student governance handbook for {{STUDENT_UNION_NAME}} at {{INSTITUTION_NAME}}. Produce a structured 5-section reference guide covering room reservations, locker allocation, club registration, and dispute escalation. Use Canvas to create this as an editable document.`
       },
       {
-        type: "general",
+        type: "canvas",
         title: "Prompt to Generate FAQ Knowledge Base for Club Subsidies",
-        prompt: `Create a 12-question frequently asked questions (FAQ) knowledge base for student societies regarding annual budget applications, permissible expense receipts, and claim submission deadlines.`
+        prompt: `Create a 12-question frequently asked questions (FAQ) knowledge base for student societies regarding annual budget applications, permissible expense receipts, and claim submission deadlines. Use Canvas to create this as an editable document.`
       }
     ],
     "zh-TW": [
       {
-        type: "general",
+        type: "canvas",
         title: "生成學生會會章與場地借用規範摘要提示詞",
-        prompt: `為 {{INSTITUTION_NAME}} 的 {{STUDENT_UNION_NAME}} 統整核心學生自治手冊。整理五大章節摘要：學生活動中心場地預約、置物櫃申請、新社團成立認證與爭議申訴程序。`
+        prompt: `為 {{INSTITUTION_NAME}} 的 {{STUDENT_UNION_NAME}} 統整核心學生自治手冊。整理五大章節摘要：學生活動中心場地預約、置物櫃申請、新社團成立認證與爭議申訴程序。請使用 Canvas 將此內容建立為可編輯文件。`
       },
       {
-        type: "general",
+        type: "canvas",
         title: "生成社團補助與福利常見問題集 (FAQ) 提示詞",
-        prompt: `為各學生社團編製一份 12 題常見問答集 (FAQ)，詳細解答年度補助金請領資格、合格單據報銷規定及審核進度查詢。`
+        prompt: `為各學生社團編製一份 12 題常見問答集 (FAQ)，詳細解答年度補助金請領資格、合格單據報銷規定及審核進度查詢。請使用 Canvas 將此內容建立為可編輯文件。`
       }
     ],
     "zh-CN": [
       {
-        type: "general",
+        type: "canvas",
         title: "生成学生会会章与场地借用规范摘要提示词",
-        prompt: `为 {{INSTITUTION_NAME}} 的 {{STUDENT_UNION_NAME}} 统整核心学生自治手册。整理五大章节摘要：学生活动中心场地预约、储物柜申请、新社团成立认证与争议申诉程序。`
+        prompt: `为 {{INSTITUTION_NAME}} 的 {{STUDENT_UNION_NAME}} 统整核心学生自治手册。整理五大章节摘要：学生活动中心场地预约、储物柜申请、新社团成立认证与争议申诉程序。请使用 Canvas 将此内容创建为可编辑文档。`
       },
       {
-        type: "general",
+        type: "canvas",
         title: "生成社团补助与福利常见问题集 (FAQ) 提示词",
-        prompt: `为各学生社团编制一份 12 题常见问答集 (FAQ)，详细解答年度补助金申领资格、合格单据报销规定及审核进度查询。`
+        prompt: `为各学生社团编制一份 12 题常见问答集 (FAQ)，详细解答年度补助金申领资格、合格单据报销规定及审核进度查询。请使用 Canvas 将此内容创建为可编辑文档。`
       }
     ]
   },
   visual_campaign: {
     en: [
       {
-        type: "general",
+        type: "canvas",
         title: "Prompt to Generate Campus Orientation Narrative Arc & Character Brief",
-        prompt: `Act as an interactive narrative designer. Outline a 4-chapter campus orientation story game for {{EVENT_NAME}} at {{INSTITUTION_NAME}} targeting {{TARGET_AUDIENCE}}. Include 3 distinct student guide personas and campus riddle checkpoints.`
+        prompt: `Act as an interactive narrative designer. Outline a 4-chapter campus orientation story game for {{EVENT_NAME}} at {{INSTITUTION_NAME}} targeting {{TARGET_AUDIENCE}}. Include 3 distinct student guide personas and campus riddle checkpoints. Use Canvas to create this as an editable document.`
       },
       {
         type: "general",
@@ -791,9 +791,9 @@ const useCaseHelperPrompts = {
     ],
     "zh-TW": [
       {
-        type: "general",
+        type: "canvas",
         title: "生成迎新探索劇情架構與角色設定提示詞",
-        prompt: `請扮演互動敘事設計師。為 {{INSTITUTION_NAME}} 的「{{EVENT_NAME}}」（目標對象：{{TARGET_AUDIENCE}}）規劃四章節校園解謎冒險故事。包含 3 位特色學長姐導覽角色設定與標誌性建築關卡線索。`
+        prompt: `請扮演互動敘事設計師。為 {{INSTITUTION_NAME}} 的「{{EVENT_NAME}}」（目標對象：{{TARGET_AUDIENCE}}）規劃四章節校園解謎冒險故事。包含 3 位特色學長姐導覽角色設定與標誌性建築關卡線索。請使用 Canvas 將此內容建立為可編輯文件。`
       },
       {
         type: "general",
@@ -803,9 +803,9 @@ const useCaseHelperPrompts = {
     ],
     "zh-CN": [
       {
-        type: "general",
+        type: "canvas",
         title: "生成迎新探索剧情架构与角色设定提示词",
-        prompt: `请扮演互动叙事设计师。为 {{INSTITUTION_NAME}} 的“{{EVENT_NAME}}”（目标对象：{{TARGET_AUDIENCE}}）规划四章节校园解谜冒险故事。包含 3 位特色学长姐导览角色设定与标志性建筑关卡线索。`
+        prompt: `请扮演互动叙事设计师。为 {{INSTITUTION_NAME}} 的“{{EVENT_NAME}}”（目标对象：{{TARGET_AUDIENCE}}）规划四章节校园解谜冒险故事。包含 3 位特色学长姐导览角色设定与标志性建筑关卡线索。请使用 Canvas 将此内容创建为可编辑文档。`
       },
       {
         type: "general",
@@ -817,114 +817,114 @@ const useCaseHelperPrompts = {
   at_risk_cohort: {
     en: [
       {
-        type: "general",
+        type: "canvas",
         title: "Prompt to Generate Learning Analytics Anonymized Cohort Schema",
-        prompt: `Create an anonymized synthetic CSV schema for student learning analytics tracking in {{DEPARTMENT_NAME}} for {{COHORT_SEMESTER}}. Include fields for LMS login frequency, assignment submission lag, quiz averages, and midterm exam scores.`
+        prompt: `Create an anonymized synthetic CSV schema for student learning analytics tracking in {{DEPARTMENT_NAME}} for {{COHORT_SEMESTER}}. Include fields for LMS login frequency, assignment submission lag, quiz averages, and midterm exam scores. Use Canvas to create this as an editable document.`
       },
       {
-        type: "general",
+        type: "canvas",
         title: "Prompt to Generate Academic Advisor Supportive Outreach Email",
-        prompt: `Draft an empathetic, encouraging check-in email template from an academic advisor to a student flagged for declining attendance in {{DEPARTMENT_NAME}}. Maintain a non-punitive, supportive tone inviting them to office hours.`
+        prompt: `Draft an empathetic, encouraging check-in email template from an academic advisor to a student flagged for declining attendance in {{DEPARTMENT_NAME}}. Maintain a non-punitive, supportive tone inviting them to office hours. Use Canvas to create this as an editable document.`
       }
     ],
     "zh-TW": [
       {
-        type: "general",
+        type: "canvas",
         title: "生成學習成效匿名數據欄位樣板提示詞",
-        prompt: `為「{{DEPARTMENT_NAME}}」在「{{COHORT_SEMESTER}}」學期的學習預警建立去識別化資料欄位範本。涵蓋 LMS 登入頻率、作業遲交天數、小考平均值及期中考落後指標。`
+        prompt: `為「{{DEPARTMENT_NAME}}」在「{{COHORT_SEMESTER}}」學期的學習預警建立去識別化資料欄位範本。涵蓋 LMS 登入頻率、作業遲交天數、小考平均值及期中考落後指標。請使用 Canvas 將此內容建立為可編輯文件。`
       },
       {
-        type: "general",
+        type: "canvas",
         title: "生成學業導師關懷與輔導信函範本提示詞",
-        prompt: `以學業導師視角撰寫一封溫暖、不帶評判意味的關懷信函，發送給在「{{DEPARTMENT_NAME}}」出席率下降的學生，邀請其前來諮詢時間討論學習支援資源。`
+        prompt: `以學業導師視角撰寫一封溫暖、不帶評判意味的關懷信函，發送給在「{{DEPARTMENT_NAME}}」出席率下降的學生，邀請其前來諮詢時間討論學習支援資源。請使用 Canvas 將此內容建立為可編輯文件。`
       }
     ],
     "zh-CN": [
       {
-        type: "general",
+        type: "canvas",
         title: "生成学习成效匿名数据字段样板提示词",
-        prompt: `为“{{DEPARTMENT_NAME}}”在“{{COHORT_SEMESTER}}”学期的学习预警建立去标识化数据字段范本。涵盖 LMS 登录频率、作业迟交天数、小测平均值及期中考落后指标。`
+        prompt: `为“{{DEPARTMENT_NAME}}”在“{{COHORT_SEMESTER}}”学期的学习预警建立去标识化数据字段范本。涵盖 LMS 登录频率、作业迟交天数、小测平均值及期中考落后指标。请使用 Canvas 将此内容创建为可编辑文档。`
       },
       {
-        type: "general",
+        type: "canvas",
         title: "生成学业导师关怀与辅导信函范本提示词",
-        prompt: `以学业导师视角撰写一封温暖、不带评判意味的关怀信函，发送给在“{{DEPARTMENT_NAME}}”出席率下降的学生，邀请其前来咨询时间讨论学习支持资源。`
+        prompt: `以学业导师视角撰写一封温暖、不带评判意味的关怀信函，发送给在“{{DEPARTMENT_NAME}}”出席率下降的学生，邀请其前来咨询时间讨论学习支持资源。请使用 Canvas 将此内容创建为可编辑文档。`
       }
     ]
   },
   accreditation_reports: {
     en: [
       {
-        type: "general",
+        type: "canvas",
         title: "Prompt to Generate Departmental Evidence Collection Template",
-        prompt: `Draft a comprehensive departmental self-study evidence collection checklist for {{PROGRAM_NAME}} aligned with {{ACCREDITATION_BODY}} standards. Include curriculum matrices, syllabus archives, and assessment artifacts.`
+        prompt: `Draft a comprehensive departmental self-study evidence collection checklist for {{PROGRAM_NAME}} aligned with {{ACCREDITATION_BODY}} standards. Include curriculum matrices, syllabus archives, and assessment artifacts. Use Canvas to create this as an editable document.`
       },
       {
-        type: "general",
+        type: "canvas",
         title: "Prompt to Generate Faculty Qualifications & Curriculum Matrix",
-        prompt: `Create an accreditation-compliant tabular matrix mapping {{PROGRAM_NAME}} courses to faculty terminal degree qualifications, research publications, and course learning outcomes.`
+        prompt: `Create an accreditation-compliant tabular matrix mapping {{PROGRAM_NAME}} courses to faculty terminal degree qualifications, research publications, and course learning outcomes. Use Canvas to create this as an editable document.`
       }
     ],
     "zh-TW": [
       {
-        type: "general",
+        type: "canvas",
         title: "生成系所自我評鑑佐證清單提示詞",
-        prompt: `依據「{{ACCREDITATION_BODY}}」認證評鑑標準，為「{{PROGRAM_NAME}}」制定自評報告佐證資料收集清單。包含核心課程配比、教學大綱存檔及學習成效審查檔案。`
+        prompt: `依據「{{ACCREDITATION_BODY}}」認證評鑑標準，為「{{PROGRAM_NAME}}」制定自評報告佐證資料收集清單。包含核心課程配比、教學大綱存檔及學習成效審查檔案。請使用 Canvas 將此內容建立為可編輯文件。`
       },
       {
-        type: "general",
+        type: "canvas",
         title: "生成師資專長與課程對照矩陣提示詞",
-        prompt: `編製符合評鑑規範之表格矩陣，將「{{PROGRAM_NAME}}」各必選修課程與任課教師之最高學位、學術研究專長及課程成效指標進行嚴謹對應。`
+        prompt: `編製符合評鑑規範之表格矩陣，將「{{PROGRAM_NAME}}」各必選修課程與任課教師之最高學位、學術研究專長及課程成效指標進行嚴謹對應。請使用 Canvas 將此內容建立為可編輯文件。`
       }
     ],
     "zh-CN": [
       {
-        type: "general",
+        type: "canvas",
         title: "生成系所自我评估佐证清单提示词",
-        prompt: `依据“{{ACCREDITATION_BODY}}”认证评估标准，为“{{PROGRAM_NAME}}”制定自评报告佐证数据收集清单。包含核心课程配比、教学大纲存档及学习成效审查档案。`
+        prompt: `依据“{{ACCREDITATION_BODY}}”认证评估标准，为“{{PROGRAM_NAME}}”制定自评报告佐证数据收集清单。包含核心课程配比、教学大纲存档及学习成效审查档案。请使用 Canvas 将此内容创建为可编辑文档。`
       },
       {
-        type: "general",
+        type: "canvas",
         title: "生成师资专长与课程对照矩阵提示词",
-        prompt: `编制符合评估规范之表格矩阵，将“{{PROGRAM_NAME}}”各必选修课程与任课教师之最高学位、学术研究专长及课程成效指标进行严谨对应。`
+        prompt: `编制符合评估规范之表格矩阵，将“{{PROGRAM_NAME}}”各必选修课程与任课教师之最高学位、学术研究专长及课程成效指标进行严谨对应。请使用 Canvas 将此内容创建为可编辑文档。`
       }
     ]
   },
   workforce_federation: {
     en: [
       {
-        type: "general",
+        type: "canvas",
         title: "Prompt to Generate SAML 2.0 / OIDC IdP Metadata Specification",
-        prompt: `Draft a technical configuration specification for federating campus Identity Provider ({{IDP_PROVIDER}}) with Google Cloud Workforce Identity for domain {{INSTITUTION_DOMAIN}}. Detail attribute mappings for NameID, email, roles, and department codes.`
+        prompt: `Draft a technical configuration specification for federating campus Identity Provider ({{IDP_PROVIDER}}) with Google Cloud Workforce Identity for domain {{INSTITUTION_DOMAIN}}. Detail attribute mappings for NameID, email, roles, and department codes. Use Canvas to create this as an editable document.`
       },
       {
-        type: "general",
+        type: "canvas",
         title: "Prompt to Generate Attribute Condition & RBAC Role Matrix",
-        prompt: `Create a role-based access control (RBAC) assertion condition table mapping institutional student, lecturer, and administrative groups to Gemini Enterprise permission tiers.`
+        prompt: `Create a role-based access control (RBAC) assertion condition table mapping institutional student, lecturer, and administrative groups to Gemini Enterprise permission tiers. Use Canvas to create this as an editable document.`
       }
     ],
     "zh-TW": [
       {
-        type: "general",
+        type: "canvas",
         title: "生成 SAML 2.0 / OIDC 身份聯合技術規格提示詞",
-        prompt: `為校園網域 {{INSTITUTION_DOMAIN}} 撰寫整合身分提供者 ({{IDP_PROVIDER}}) 至 Google Cloud Workforce Identity 的部署規格書。詳列 NameID、主要電子郵件、角色群組與系所代碼映射規則。`
+        prompt: `為校園網域 {{INSTITUTION_DOMAIN}} 撰寫整合身分提供者 ({{IDP_PROVIDER}}) 至 Google Cloud Workforce Identity 的部署規格書。詳列 NameID、主要電子郵件、角色群組與系所代碼映射規則。請使用 Canvas 將此內容建立為可編輯文件。`
       },
       {
-        type: "general",
+        type: "canvas",
         title: "生成屬性條件與 RBAC 角色授權矩陣提示詞",
-        prompt: `設計基於角色存取控制 (RBAC) 的屬性判定表，將全校學生、教師與行政人員 SSO 群組對應至 Gemini Enterprise 的權限層級。`
+        prompt: `設計基於角色存取控制 (RBAC) 的屬性判定表，將全校學生、教師與行政人員 SSO 群組對應至 Gemini Enterprise 的權限層級。請使用 Canvas 將此內容建立為可編輯文件。`
       }
     ],
     "zh-CN": [
       {
-        type: "general",
+        type: "canvas",
         title: "生成 SAML 2.0 / OIDC 身份联合技术规格提示词",
-        prompt: `为校园网域 {{INSTITUTION_DOMAIN}} 撰写整合身份提供者 ({{IDP_PROVIDER}}) 至 Google Cloud Workforce Identity 的部署规格书。详列 NameID、主要电子邮件、角色群组与系所代码映射规则。`
+        prompt: `为校园网域 {{INSTITUTION_DOMAIN}} 撰写整合身份提供者 ({{IDP_PROVIDER}}) 至 Google Cloud Workforce Identity 的部署规格书。详列 NameID、主要电子邮件、角色群组与系所代码映射规则。请使用 Canvas 将此内容创建为可编辑文档。`
       },
       {
-        type: "general",
+        type: "canvas",
         title: "生成属性条件与 RBAC 角色授权矩阵提示词",
-        prompt: `设计基于角色访问控制 (RBAC) 的属性判定表，将全校学生、教师与行政人员 SSO 群组对应至 Gemini Enterprise 的权限层级。`
+        prompt: `设计基于角色访问控制 (RBAC) 的属性判定表，将全校学生、教师与行政人员 SSO 群组对应至 Gemini Enterprise 的权限层级。请使用 Canvas 将此内容创建为可编辑文档。`
       }
     ]
   },
@@ -969,114 +969,114 @@ const useCaseHelperPrompts = {
   finance_compliance: {
     en: [
       {
-        type: "general",
+        type: "canvas",
         title: "Prompt to Generate Society Expense Reimbursement Policy Guide",
-        prompt: `Draft an official student organization finance compliance guideline outlining reimbursable expenses, non-allowable expenditures (e.g. alcohol, tips over 15%), and mandatory invoice attachment criteria.`
+        prompt: `Draft an official student organization finance compliance guideline outlining reimbursable expenses, non-allowable expenditures (e.g. alcohol, tips over 15%), and mandatory invoice attachment criteria. Use Canvas to create this as an editable document.`
       },
       {
-        type: "general",
+        type: "canvas",
         title: "Prompt to Generate Audit Discrepancy Notice & Appeal Letter",
-        prompt: `Draft a formal yet polite financial audit deduction notice addressed to {{SOCIETY_NAME}} regarding event claim '{{EVENT_NAME}}' with itemized disallowed expenses and step-by-step appeal procedures.`
+        prompt: `Draft a formal yet polite financial audit deduction notice addressed to {{SOCIETY_NAME}} regarding event claim '{{EVENT_NAME}}' with itemized disallowed expenses and step-by-step appeal procedures. Use Canvas to create this as an editable document.`
       }
     ],
     "zh-TW": [
       {
-        type: "general",
+        type: "canvas",
         title: "生成社團經費報銷手冊與審核準則提示詞",
-        prompt: `編撰一份學生社團經費核銷指引，明確條列可報銷項目、禁止報銷項目（如酒精飲料、逾 15% 小費）及發票憑證正規化要求。`
+        prompt: `編撰一份學生社團經費核銷指引，明確條列可報銷項目、禁止報銷項目（如酒精飲料、逾 15% 小費）及發票憑證正規化要求。請使用 Canvas 將此內容建立為可編輯文件。`
       },
       {
-        type: "general",
+        type: "canvas",
         title: "生成單據不合規扣除通知與申訴信範本提示詞",
-        prompt: `撰寫一份客氣且規範的財務審核意見書，通知「{{SOCIETY_NAME}}」於「{{EVENT_NAME}}」活動申請中的不合規扣除明細，並附上補件及申訴指引。`
+        prompt: `撰寫一份客氣且規範的財務審核意見書，通知「{{SOCIETY_NAME}}」於「{{EVENT_NAME}}」活動申請中的不合規扣除明細，並附上補件及申訴指引。請使用 Canvas 將此內容建立為可編輯文件。`
       }
     ],
     "zh-CN": [
       {
-        type: "general",
+        type: "canvas",
         title: "生成社团经费报销手册与审核准则提示词",
-        prompt: `编撰一份学生社团经费核销指引，明确条列可报销项目、禁止报销项目（如酒精饮料、逾 15% 小费）及发票凭证正规化要求。`
+        prompt: `编撰一份学生社团经费核销指引，明确条列可报销项目、禁止报销项目（如酒精饮料、逾 15% 小费）及发票凭证正规化要求。请使用 Canvas 将此内容创建为可编辑文档。`
       },
       {
-        type: "general",
+        type: "canvas",
         title: "生成单据不合规扣除通知与申诉信范本提示词",
-        prompt: `撰写一份客气且规范的财务审核意见书，通知“{{SOCIETY_NAME}}”于“{{EVENT_NAME}}”活动申请中的不合规扣除明细，并附上补件及申诉指引。`
+        prompt: `撰写一份客气且规范的财务审核意见书，通知“{{SOCIETY_NAME}}”于“{{EVENT_NAME}}”活动申请中的不合规扣除明细，并附上补件及申诉指引。请使用 Canvas 将此内容创建为可编辑文档。`
       }
     ]
   },
   security_simulator: {
     en: [
       {
-        type: "general",
+        type: "canvas",
         title: "Prompt to Generate Emergency Response SOP & Incident Brief",
-        prompt: `Act as a Director of Campus Safety. Draft a standard operating procedure (SOP) brief for campus security personnel managing {{EMERGENCY_SCENARIO}} at {{FACILITY_LOCATION}}. Include initial containment, perimeter isolation, and communications protocol.`
+        prompt: `Act as a Director of Campus Safety. Draft a standard operating procedure (SOP) brief for campus security personnel managing {{EMERGENCY_SCENARIO}} at {{FACILITY_LOCATION}}. Include initial containment, perimeter isolation, and communications protocol. Use Canvas to create this as an editable document.`
       },
       {
-        type: "general",
+        type: "canvas",
         title: "Prompt to Generate Crisis Decision Tree Scenario Table",
-        prompt: `Create a 3-stage branching crisis drill scenario table for {{EMERGENCY_SCENARIO}} at {{FACILITY_LOCATION}}. At each stage (0 min, 15 min, 30 min), define 3 tactical options, the operational consequence of each, and evaluation rubric criteria.`
+        prompt: `Create a 3-stage branching crisis drill scenario table for {{EMERGENCY_SCENARIO}} at {{FACILITY_LOCATION}}. At each stage (0 min, 15 min, 30 min), define 3 tactical options, the operational consequence of each, and evaluation rubric criteria. Use Canvas to create this as an editable document.`
       }
     ],
     "zh-TW": [
       {
-        type: "general",
+        type: "canvas",
         title: "生成校園緊急應變 SOP 與情境簡報提示詞",
-        prompt: `請扮演校園安保總監。為安保團隊在「{{FACILITY_LOCATION}}」應對「{{EMERGENCY_SCENARIO}}」撰寫應變標準作業程序 (SOP)。包含首要隔離處置、警戒線封鎖與校安通報程序。`
+        prompt: `請扮演校園安保總監。為安保團隊在「{{FACILITY_LOCATION}}」應對「{{EMERGENCY_SCENARIO}}」撰寫應變標準作業程序 (SOP)。包含首要隔離處置、警戒線封鎖與校安通報程序。請使用 Canvas 將此內容建立為可編輯文件。`
       },
       {
-        type: "general",
+        type: "canvas",
         title: "生成三階段危機決策樹演練腳本提示詞",
-        prompt: `為「{{FACILITY_LOCATION}}」發生的「{{EMERGENCY_SCENARIO}}」建立三階段演習腳本（0分、15分、30分），每階段提供 3 項戰術選擇、後續連鎖後果及演練評分準則。`
+        prompt: `為「{{FACILITY_LOCATION}}」發生的「{{EMERGENCY_SCENARIO}}」建立三階段演習腳本（0分、15分、30分），每階段提供 3 項戰術選擇、後續連鎖後果及演練評分準則。請使用 Canvas 將此內容建立為可編輯文件。`
       }
     ],
     "zh-CN": [
       {
-        type: "general",
+        type: "canvas",
         title: "生成校园紧急应变 SOP 与情境简报提示词",
-        prompt: `请扮演校园安保总监。为安保团队在“{{FACILITY_LOCATION}}”应对“{{EMERGENCY_SCENARIO}}”撰写应变标准作业程序 (SOP)。包含首要隔离处置、警戒线封锁与校安通报程序。`
+        prompt: `请扮演校园安保总监。为安保团队在“{{FACILITY_LOCATION}}”应对“{{EMERGENCY_SCENARIO}}”撰写应变标准作业程序 (SOP)。包含首要隔离处置、警戒线封锁与校安通报程序。请使用 Canvas 将此内容创建为可编辑文档。`
       },
       {
-        type: "general",
+        type: "canvas",
         title: "生成三阶段危机决策树演练脚本提示词",
-        prompt: `为“{{FACILITY_LOCATION}}”发生的“{{EMERGENCY_SCENARIO}}”建立三阶段演习脚本（0分、15分、30分），每阶段提供 3 项战术选择、后续连锁后果及演练评分准则。`
+        prompt: `为“{{FACILITY_LOCATION}}”发生的“{{EMERGENCY_SCENARIO}}”建立三阶段演习脚本（0分、15分、30分），每阶段提供 3 项战术选择、后续连锁后果及演练评分准则。请使用 Canvas 将此内容创建为可编辑文档。`
       }
     ]
   },
   special_consideration_workflow: {
     en: [
       {
-        type: "general",
+        type: "canvas",
         title: "Prompt to Draft the Evidence Rules Table",
-        prompt: `Act as a student affairs policy officer at {{INSTITUTION_NAME}}. Draft an evidence rules table for special consideration requests. Rows: extension, deferred exam, leave of absence. For each row, list the accepted reasons (medical, compassionate, personal), the evidence required for each reason, the most days the office can approve without escalation (default: {{AUTO_LIMIT_DAYS}}), and who approves. End with a short list of cases that must always go to a human officer.`
+        prompt: `Act as a student affairs policy officer at {{INSTITUTION_NAME}}. Draft an evidence rules table for special consideration requests. Rows: extension, deferred exam, leave of absence. For each row, list the accepted reasons (medical, compassionate, personal), the evidence required for each reason, the most days the office can approve without escalation (default: {{AUTO_LIMIT_DAYS}}), and who approves. End with a short list of cases that must always go to a human officer. Use Canvas to create this as an editable document.`
       },
       {
-        type: "general",
+        type: "canvas",
         title: "Prompt to Draft Decision Letter Templates",
-        prompt: `Write 4 short, warm email templates for the {{OFFICE_NAME}} to send students about special consideration requests: (1) approved, (2) partly approved with new dates, (3) not approved, with the reason and how to appeal, (4) more evidence needed. Use placeholders for student name, course code, dates and policy clause. Keep each under 150 words, in plain English.`
+        prompt: `Write 4 short, warm email templates for the {{OFFICE_NAME}} to send students about special consideration requests: (1) approved, (2) partly approved with new dates, (3) not approved, with the reason and how to appeal, (4) more evidence needed. Use placeholders for student name, course code, dates and policy clause. Keep each under 150 words, in plain English. Use Canvas to create this as an editable document.`
       }
     ],
     "zh-TW": [
       {
-        type: "general",
+        type: "canvas",
         title: "生成證明文件規則表提示詞",
-        prompt: `請扮演「{{INSTITUTION_NAME}}」學生事務處的政策主任，為特殊考量申請草擬一份證明文件規則表。列：延期交功課、延期考試、休學。每一列列出可接受的原因（醫療、恩恤、個人）、每個原因所需的證明文件、辦事處毋須上報即可批准的最多日數（預設：{{AUTO_LIMIT_DAYS}}），以及審批人。最後列出必須交由真人職員處理的個案類別。`
+        prompt: `請扮演「{{INSTITUTION_NAME}}」學生事務處的政策主任，為特殊考量申請草擬一份證明文件規則表。列：延期交功課、延期考試、休學。每一列列出可接受的原因（醫療、恩恤、個人）、每個原因所需的證明文件、辦事處毋須上報即可批准的最多日數（預設：{{AUTO_LIMIT_DAYS}}），以及審批人。最後列出必須交由真人職員處理的個案類別。請使用 Canvas 將此內容建立為可編輯文件。`
       },
       {
-        type: "general",
+        type: "canvas",
         title: "生成決定信範本提示詞",
-        prompt: `為{{OFFICE_NAME}}撰寫 4 封簡短而親切的電郵範本，通知學生特殊考量申請結果：(1) 批准，(2) 部分批准並附新日期，(3) 不批准，附原因及上訴方法，(4) 需補交證明文件。以佔位符表示學生姓名、科目編號、日期及政策條文。每封不多於 150 字，用語淺白。`
+        prompt: `為{{OFFICE_NAME}}撰寫 4 封簡短而親切的電郵範本，通知學生特殊考量申請結果：(1) 批准，(2) 部分批准並附新日期，(3) 不批准，附原因及上訴方法，(4) 需補交證明文件。以佔位符表示學生姓名、科目編號、日期及政策條文。每封不多於 150 字，用語淺白。請使用 Canvas 將此內容建立為可編輯文件。`
       }
     ],
     "zh-CN": [
       {
-        type: "general",
+        type: "canvas",
         title: "生成证明材料规则表提示词",
-        prompt: `请扮演“{{INSTITUTION_NAME}}”学生事务处的政策主管，为特殊考量申请草拟一份证明材料规则表。行：作业延期、缓考、休学。每一行列出可接受的原因（医疗、恩恤、个人）、每个原因所需的证明材料、办公室无需上报即可批准的最多天数（默认：{{AUTO_LIMIT_DAYS}}），以及审批人。最后列出必须交由真人职员处理的个案类别。`
+        prompt: `请扮演“{{INSTITUTION_NAME}}”学生事务处的政策主管，为特殊考量申请草拟一份证明材料规则表。行：作业延期、缓考、休学。每一行列出可接受的原因（医疗、恩恤、个人）、每个原因所需的证明材料、办公室无需上报即可批准的最多天数（默认：{{AUTO_LIMIT_DAYS}}），以及审批人。最后列出必须交由真人职员处理的个案类别。请使用 Canvas 将此内容创建为可编辑文档。`
       },
       {
-        type: "general",
+        type: "canvas",
         title: "生成决定函模板提示词",
-        prompt: `为{{OFFICE_NAME}}撰写 4 封简短而亲切的邮件模板，通知学生特殊考量申请结果：(1) 批准，(2) 部分批准并附新日期，(3) 不批准，附原因及申诉方法，(4) 需补交证明材料。以占位符表示学生姓名、课程编号、日期及政策条文。每封不超过 150 字，用语浅白。`
+        prompt: `为{{OFFICE_NAME}}撰写 4 封简短而亲切的邮件模板，通知学生特殊考量申请结果：(1) 批准，(2) 部分批准并附新日期，(3) 不批准，附原因及申诉方法，(4) 需补交证明材料。以占位符表示学生姓名、课程编号、日期及政策条文。每封不超过 150 字，用语浅白。请使用 Canvas 将此内容创建为可编辑文档。`
       }
     ]
   },
