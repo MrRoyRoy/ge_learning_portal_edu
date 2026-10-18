@@ -16,6 +16,10 @@ const mailer = require('./lib/mailer');
 const { encrypt } = require('./lib/secrets');
 const infographics = require('./lib/infographics');
 const QuestCore = require('./lib/quest-core');
+const { normalizeDraft } = require('./lib/draft-normalize');
+
+/** Vertex AI model for admin drafting / translation. Override per environment with GEMINI_MODEL. */
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -423,6 +427,8 @@ async function seedDatabase() {
       await upsertSeedUseCase(uc, translations[uc.id]);
     }
     await applySeedPromptTypes();
+    // Idempotent fix-up: the old admin form saved "admin"; the portal filters on "administrative"
+    await query("UPDATE use_cases SET category = 'administrative' WHERE category = 'admin'");
     await applySeedInfographics();
     await applySeedTiming();
     await applySeedQuestHints();
@@ -2475,120 +2481,115 @@ app.post('/api/admin/settings/smtp/test', requireSuper, async (req, res) => {
   }
 });
 
-// Admin-Gemini: Optimize or Draft Playbooks with Gemini 3.5 Flash using Service Account Access
+/**
+ * Conventions every drafted playbook must follow, shared by "create" and "refine".
+ * Mirrors the seeded playbooks in app.js so admin-made playbooks look and behave the same.
+ */
+const DRAFT_CONVENTIONS = `
+PLAYBOOK CONVENTIONS (match the portal's existing playbooks exactly):
+1. VARIABLES: write every fill-in value as {{UPPER_SNAKE_CASE}}, e.g. {{COURSE_NAME}}, {{INSTITUTION_NAME}}, {{TARGET_AUDIENCE}}. Use 2-6 variables. Never use square brackets such as [COURSE_NAME]. Use the SAME English variable keys in en, zh-TW and zh-CN; never translate a key.
+2. STEPS: exactly 3 steps of one or two sentences each, in this order:
+   (1) Set up and ground: what to prepare, which files to add and which feature to open.
+   (2) Run: use the sample prompt in the named feature.
+   (3) Review and deliver: what a person checks before the result is shared.
+3. PROMPT: a ready-to-paste prompt for the main feature. Open with the role ("You are ..." or "Act as ..."), use numbered or labelled sections, and describe the expected output. If the prompt should produce a document, end it with: "Use Canvas to create this as an editable document."
+4. PROMPT TYPE ("promptType"), one of: general | notebooklm | deep_research | agent_designer | canvas | image | video. Match the feature the prompt is pasted into: Agent Designer -> agent_designer, NotebookLM -> notebooklm, Deep Research -> deep_research, Canvas Mode -> canvas, Image Generation -> image, Video Generation -> video, anything else -> general.
+5. AGENT DESIGNER WORKFLOWS (promptType agent_designer with several steps): label each step "STEP n · NAME (node type)"; write branches as "IF ... → go to Step n"; keep the flow forward-only (never loop back to an earlier step); give approval nodes exactly two outcomes, Approve or Reject; start the run from a trigger (for example a new file in a folder) or a form; attach reference files as Knowledge Sources on agent nodes and never ask for file uploads during a run; include a human review step before anything reaches a student or the public.
+6. CONNECTORS: list one only when the playbook really reads live data from that system, otherwise return []. Use these names exactly: "Drive Connector", "Email Connector", "LMS Connector", "Calendar Connector".
+7. WRITING: plain, friendly English with short sentences. zh-TW is Traditional Chinese as written in Hong Kong; zh-CN is Simplified Chinese. Keep product names in English inside Chinese text: Gemini, Gemini Enterprise, NotebookLM, Canvas Mode, Deep Research, Agent Designer, Image Generation, Video Generation and the connector names.
+8. BRAND: never say "Gem" (always "Agent") and never say "Copilot".
+`;
+
+/**
+ * Build the drafting brief. Pure.
+ * @param {object} form        current case-form values (title, category, role, level, features, connectors, promptType)
+ * @param {string} original    JSON of the stored playbook when refining, '' when creating
+ * @param {string} instruction admin's free-text request (may be empty)
+ */
+const buildDraftPrompt = ({ form, original, instruction }) => {
+  const head = `You are the Playbook Architect for "Gemini Enterprise - Edu Portal", a library of ready-to-use Gemini Enterprise playbooks for schools and universities.
+
+CURRENT FORM VALUES
+- Title: ${JSON.stringify(form.title || '')}
+- Category: ${JSON.stringify(form.category || 'academic')}
+- Role: ${JSON.stringify(form.role || 'Lecturer')}
+- School levels: ${JSON.stringify(form.level || [])}
+- GE features: ${JSON.stringify(form.features || [])}
+- Connectors: ${JSON.stringify(form.connectors || [])}
+- Prompt type: ${JSON.stringify(form.promptType || 'general')}
+`;
+
+  const task = original
+    ? `TASK: REFINE AN EXISTING PLAYBOOK
+Stored playbook (all languages):
+${original}
+
+Admin instructions: ${JSON.stringify(instruction || 'Tidy the playbook so it follows the conventions below.')}
+
+Apply only the changes the instructions ask for, plus these always-allowed fixes: convert [VARIABLE] placeholders to {{VARIABLE}}, keep variable keys identical across languages, and fix brand terms. Keep every other title, summary, step, prompt and tip as it is and echo the unchanged text back. Apply each change to en, zh-TW and zh-CN alike.`
+    : `TASK: DRAFT A NEW PLAYBOOK
+${instruction ? `Admin instructions (highest priority): ${JSON.stringify(instruction)}` : 'No extra instructions: draft from the form values.'}
+Suggest a clear, specific title if the form title is empty.`;
+
+  return `${head}
+${task}
+${DRAFT_CONVENTIONS}
+LANGUAGE CONSISTENCY: write the English profile first, then translate it 1-to-1 into zh-TW and zh-CN with the same number of steps, the same sections and the same {{VARIABLE}} keys.
+
+OUTPUT: only a raw JSON object (no markdown fences, no commentary) with exactly these keys:
+{
+  "id": "snake_case_id_based_on_the_title",
+  "category": "one of: academic | student | operational | administrative",
+  "role": "one of: Lecturer | TA | Student | Program Leader | Dean | IT Admin | SAO | Security | Finance",
+  "features": ["only the features used, from: Agent Designer, NotebookLM, Deep Research, Canvas Mode, Image Generation, Video Generation"],
+  "connectors": [],
+  "promptType": "one of: general | notebooklm | deep_research | agent_designer | canvas | image | video",
+  "timing": ["any of: anytime, sem_start, teaching, midterm, finals, winter, summer"],
+  "hints": [
+    { "en": "Drowning in essays to mark?", "zh-TW": "批改論文批改到喘不過氣？", "zh-CN": "批改论文批改到喘不过气？", "audience": ["Lecturer", "TA"] }
+  ],
+  "en":    { "title": "...", "summary": "...", "steps": ["...", "...", "..."], "prompt": "...", "proTip": "..." },
+  "zh-TW": { "title": "...", "summary": "...", "steps": ["...", "...", "..."], "prompt": "...", "proTip": "..." },
+  "zh-CN": { "title": "...", "summary": "...", "steps": ["...", "...", "..."], "prompt": "...", "proTip": "..." }
+}
+Field notes: "hints" holds exactly 2 short pain-point questions (at most 60 characters in English) that the target audience would ask and this playbook answers; "audience" uses the role names above. "summary" is 1-2 sentences on the outcome. "proTip" is one practical sentence.`;
+};
+
+// Admin: draft a new playbook or refine an existing one with Gemini (GEMINI_MODEL, service-account auth).
+// The reply is normalised (lib/draft-normalize.js) so {{VARIABLE}} tokens and enum values always match the portal.
 app.post('/api/admin/generate-gemini', requireAdmin, async (req, res) => {
-  const { id, title, category, features, connectors, role, level, instruction } = req.body;
-  if (!title && (!instruction || instruction.trim().length === 0)) {
+  const { id, title, category, features, connectors, role, level, promptType } = req.body;
+  const instruction = String(req.body.instruction || '').trim();
+  if (!title && !instruction) {
     return res.status(400).json({ success: false, message: 'Please specify either a playbook title or custom instructions so Gemini can draft relevant content.' });
   }
 
   try {
-    let originalCaseText = '';
+    let original = '';
     if (id) {
       const existing = await query('SELECT * FROM use_cases WHERE id = ?', [id]);
       if (existing && existing.length > 0) {
         const uc = existing[0];
-        const originalTranslations = JSON.parse(uc.translations || '{}');
-        originalCaseText = JSON.stringify({
+        original = JSON.stringify({
           id: uc.id,
           category: uc.category,
-          title: uc.title,
-          summary: uc.summary,
-          features: JSON.parse(uc.features || '[]'),
-          connectors: JSON.parse(uc.connectors || '[]'),
           role: uc.role,
           level: JSON.parse(uc.level || '[]'),
-          steps: JSON.parse(uc.steps || '[]'),
-          prompt: uc.prompt,
-          proTip: uc.pro_tip,
-          translations: originalTranslations
+          features: JSON.parse(uc.features || '[]'),
+          connectors: JSON.parse(uc.connectors || '[]'),
+          promptType: uc.prompt_type || 'general',
+          timing: JSON.parse(uc.timing || '["anytime"]'),
+          translations: JSON.parse(uc.translations || '{}')
         }, null, 2);
       }
     }
 
-    let promptText = `
-You are the AI Playbook Architect for "Gemini Enterprise - Edu Portal".
-Generate a high-fidelity educational/operational playbook based on the following input parameters:
-- Playbook Title: "${title || 'Suggest a professional, high-fidelity playbook title based on instructions'}"
-- Category: "${category || 'academic'}"
-- Gemini Features: ${JSON.stringify(features || [])} (You may update or add features based on custom instructions)
-- Connected Data Connectors: ${JSON.stringify(connectors || [])} (You may update or add connectors based on custom instructions)
-- Target User Role: "${role || 'Lecturer'}"
-- Target Institutional Levels: ${JSON.stringify(level || [])}
-`;
-
-    if (originalCaseText) {
-      promptText += `
-- EXISTING PLAYBOOK DETAILS (ORIGINAL DATA to refine):
-${originalCaseText}
-
-CRITICAL DIRECTIVE ON CASE INTEGRITY AND SELECTIVE REFINEMENT:
-The user is editing/refining an existing playbook. You MUST respect and maintain the structural integrity, core flow, steps, and prompts of this original playbook.
-Do NOT rewrite or alter any parts of the original playbook that are unrelated to the user's custom instructions/comments.
-ONLY apply precise modifications, updates, or additions that directly address the custom instructions inside: "${instruction ? instruction.trim() : ''}".
-Retain, preserve, and echo back all other original aspects, text blocks, titles, summaries, steps, and translation values.
-`;
-    } else if (instruction && instruction.trim().length > 0) {
-      promptText += `
-- SPECIAL USER CUSTOM DRAFTING INSTRUCTIONS:
-"${instruction.trim()}"
-Please fully implement, customize, and prioritize these instructions above. Focus your generated titles, summaries, prompts, steps, and tips on satisfying this instruction.
-`;
-    }
-
-    promptText += `
-
-Please output a raw JSON object containing full translation profiles for English ("en"), Traditional Chinese ("zh-TW"), and Simplified Chinese ("zh-CN").
-
-CRITICAL INSTRUCTION ON LANGUAGE CONSISTENCY:
-1. First, focus entirely on drafting the high-fidelity, comprehensive English profile ("en") based on the input parameters and custom instructions.
-2. Once the English profile ("en") is finalized, translate every single field and list item exactly 1-to-1 (preserving the exact meaning, paragraph layout, number of steps, tips, and guidelines) into Traditional Chinese ("zh-TW") and Simplified Chinese ("zh-CN").
-3. All translation profiles ("en", "zh-TW", "zh-CN") MUST be 100% semantically and structurally consistent (e.g. have the exact same step-by-step logic, features used, and pro-tips, just properly localized).
-
-The JSON object MUST EXACTLY follow this schema:
-{
-  "id": "suggested_lowercase_kebab_case_id_matching_the_title",
-  "category": "academic",
-  "role": "Lecturer",
-  "features": ["NotebookLM", "Canvas Mode", "Deep Research", "Agent Designer", "Image Generation", "Video Generation"], // Choose recommended features based on instructions and input
-  "connectors": ["Drive Connector", "Email Connector", "LMS Connector", "Calendar Connector"], // Choose recommended connectors based on instructions and input, use product-agnostic naming exactly!
-  "timing": ["midterm"], // When in the academic year this playbook matters most. Any of: "anytime", "sem_start", "teaching", "midterm", "finals", "winter", "summer"
-  "hints": [ // Exactly 2 short pain-point questions (max 60 chars in English) a user in the target audience would ask themselves, answered by this playbook
-    { "en": "Drowning in essays to mark?", "zh-TW": "批改論文批改到喘不過氣？", "zh-CN": "批改论文批改到喘不过气？", "audience": ["Lecturer", "TA"] }
-  ], // audience: any of "Lecturer", "TA", "Student", "Program Leader", "Dean", "IT Admin", "SAO", "Security", "Finance"
-  "en": {
-    "title": "Suggested High-Fidelity English Title",
-    "summary": "Detailed summary describing how this playbook uses Gemini to solve the target challenge.",
-    "steps": ["Step 1", "Step 2", "Step 3", "Step 4"],
-    "prompt": "Highly detailed model prompt that the user can copy and paste into Gemini. Use dynamic variables in square brackets like [COURSE_NAME], [SUBJECT], [TOPIC], [TARGET_AUDIENCE] so users can fill in variables.",
-    "proTip": "Helpful pro-tip for getting the best outcome from Gemini."
-  },
-  "zh-TW": {
-    "title": "繁體中文版高質量標題",
-    "summary": "繁體中文版詳細描述...",
-    "steps": ["繁體中文步驟 1", "繁體中文步驟 2", "繁體中文步驟 3", "繁體中文步驟 4"],
-    "prompt": "繁體中文詳細提示詞...請包含變數預留位置如 [課程名稱]、[主題] 等...",
-    "proTip": "繁體中文實用技巧..."
-  },
-  "zh-CN": {
-    "title": "简体中文版高质量标题",
-    "summary": "简体中文版详细描述...",
-    "steps": ["简体中文步骤 1", "简体中文步骤 2", "简体中文步骤 3", "简体中文步骤 4"],
-    "prompt": "简体中文详细提示词...请包含变量预留位置如 [课程名称]、[主题] 等...",
-    "proTip": "简体中文实用技巧..."
-  }
-}
-
-Brand Guidelines & Localisation Boundaries:
-1. Keep ALL product and feature names (e.g. "NotebookLM", "Gemini", "Canvas Mode", "Deep Research", "Agent Designer", "Image Generation", "Video Generation", "Drive Connector", "Email Connector", "Calendar Connector", "LMS Connector") strictly in ENGLISH, even inside the Traditional Chinese ("zh-TW") and Simplified Chinese ("zh-CN") translations.
-2. Never use the term "Gem" (always use "Agent"). Never use the term "Copilot".
-3. Avoid generic red/blue/green references. Ensure suggestions are premium and tailored for educational excellence.
-4. DYNAMIC PROMPT VARIABLES: Prompts MUST use bracketed variables like [COURSE_NAME], [SUBJECT], [TOPIC], [TARGET_AUDIENCE] so users can fill them in interactively. Provide clean, simple, action-oriented operational steps.
-5. Output ONLY the raw JSON block. Do NOT surround it with markdown code blocks (such as \`\`\`json ... \`\`\`), HTML tags, or any other introductory or concluding commentary text.
-
-`;
-
-    const parsedResult = await callGeminiJson(promptText);
+    const promptText = buildDraftPrompt({
+      form: { title, category, role, level, features, connectors, promptType },
+      original,
+      instruction
+    });
+    const parsedResult = normalizeDraft(await callGeminiJson(promptText));
     res.json({ success: true, result: parsedResult });
   } catch (error) {
     if (error.status) {
@@ -2601,12 +2602,12 @@ Brand Guidelines & Localisation Boundaries:
 });
 
 /**
- * Sends one prompt to Gemini 3.5 Flash (Vertex AI, service-account auth) and returns the parsed JSON reply.
+ * Sends one prompt to Gemini (GEMINI_MODEL on Vertex AI, service-account auth) and returns the parsed JSON reply.
  * Strips ```json fences if the model adds them despite instructions. Throws an Error carrying `.status`
  * (upstream HTTP status, or 500 for empty / unparsable output) and `.raw` (model text) for callers to map.
  */
 async function callGeminiJson(promptText) {
-  const url = 'https://aiplatform.googleapis.com/v1/projects/your-gcp-project-id/locations/global/publishers/google/models/gemini-3.5-flash:generateContent';
+  const url = `https://aiplatform.googleapis.com/v1/projects/your-gcp-project-id/locations/global/publishers/google/models/${GEMINI_MODEL}:generateContent`;
   const response = await fetch(url, {
     method: 'POST',
     headers: await gcpHeaders({ 'Content-Type': 'application/json' }),

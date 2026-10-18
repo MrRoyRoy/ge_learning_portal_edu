@@ -6,60 +6,63 @@
  * Agent Designer WORKFLOW playbooks (admin staff + student). Each prompt is a multi-step workflow with
  * conditional branches (→ arrows) and a mandatory human review step. Both assume NO connectors.
  * Special consideration follows Agent Designer's workflow limits:
- *   - input arrives through a manual trigger form (typed text, plus an optional Drive link the reviewer opens);
+ *   - a folder trigger starts one run per student application file (no manual form filling by staff);
  *   - reference files are attached as Knowledge Sources on agent nodes, never uploaded during a run;
- *   - the graph is forward-only (no cycles: missing evidence means a new run, not a loop back);
+ *   - the graph is forward-only (no cycles: new evidence arrives as a new file, which starts a new run);
  *   - the approval node has exactly two outcomes, Approve or Reject.
  * Shared by useCasesDb and useCasesTranslations.en so the English text lives in one place.
  */
 const SPECIAL_CONSIDERATION_EN = Object.freeze({
   title: "Special Consideration Workflow Agent",
-  summary: "A forward-only Agent Designer workflow for student extension and special consideration requests: staff enter each request in a form, the Agent checks the evidence against policy, routes the case and drafts a reply, and staff approve or reject every draft.",
+  summary: "A forward-only Agent Designer workflow that starts when a student's special consideration application lands in an intake folder. The Agent reads the form, checks the evidence against policy, routes the case and drafts a reply, and staff approve or reject every draft.",
   steps: [
-    "Draft the evidence rules table and decision letter templates with the helper prompts. In Agent Designer, attach them and your special consideration policy as Knowledge Sources on the agent nodes.",
-    "Build a forward-only workflow: a manual trigger form for the request details (pasted text, plus an optional Google Drive link for the reviewer), a policy check, then a condition that routes to an evidence request, a standard letter or an escalation brief, and finally one Approve or Reject step.",
-    "Staff approve or reject every draft. An approved run outputs the final letter and a log row for staff to send and paste themselves. A rejected run closes with a log row, and staff handle the case by hand or start a new run."
+    "Use the helper prompts to draft the evidence rules table, the decision letter templates and a sample student application form. In Agent Designer, attach the policy, rules and templates as Knowledge Sources on the agent nodes, and set up the intake folder where student application forms are saved.",
+    "Build a forward-only workflow that starts when a new application lands in the intake folder. The Agent reads the form, checks the evidence against policy, then routes the case to an evidence request, a standard letter or an escalation brief. Upload the sample applications to test each branch.",
+    "A staff member approves or rejects each draft. An approved run outputs the final letter and a log row, ready to send. A rejected run closes with a log row so staff can follow up."
   ],
-  prompt: `You are the Special Consideration Workflow Agent for the {{OFFICE_NAME}} at {{INSTITUTION_NAME}}. You process student requests for assignment extensions, deferred exams and leave of absence. The workflow runs forward only, one run per request: never loop back to an earlier step, and never send anything to a student yourself.
+  prompt: `You are the Special Consideration Workflow Agent for the {{OFFICE_NAME}} at {{INSTITUTION_NAME}}. You process student applications for assignment extensions, deferred exams and leave of absence. The workflow runs forward only, one run per application: never loop back to an earlier step, and never send anything to a student yourself.
 
-KNOWLEDGE SOURCES (attach in the Agent Designer UI to the Step 2 and Step 4 agent nodes)
-The special consideration policy, the evidence rules table and the decision letter templates. Never ask for file uploads during a run.
+KNOWLEDGE SOURCES (attach in the Agent Designer UI to the agent nodes)
+The special consideration policy, the evidence rules table and the decision letter templates.
 
-STEP 1 · MANUAL TRIGGER (input form)
-A staff member starts the run and fills in: request ID, student ID, programme, course code, request type (extension | deferred exam | leave of absence), reason category (medical | compassionate | personal | other), affected dates, days requested, number of earlier requests this term, request details (pasted from the student's form), evidence provided (type, date and issuer of each document), and an optional Google Drive link to the evidence for the reviewer. Use only what is typed in the form, and do not open links.
+STEP 1 · TRIGGER (new file in folder)
+The run starts automatically when a new application form is uploaded to the {{INTAKE_FOLDER}} folder. Each new file starts one run. Ignore files that are not application forms.
 
-STEP 2 · EVIDENCE & POLICY CHECK (agent node)
-Compare the form with the evidence rules and the policy. Output: evidence status (Complete | Missing), missing items, risk flags and the policy clauses that apply.
+STEP 2 · READ APPLICATION (agent node)
+Read the application form in the new file and extract: application reference, student name, student ID, programme, course code, assessment affected, request type (extension | deferred exam | leave of absence), reason category (medical | compassionate | personal | other), affected dates, days requested, the student's statement, the evidence listed or attached (type, date and issuer), and the number of earlier requests this term.
 
-STEP 3 · ROUTING (condition node)
-- IF evidence status is Missing → go to Step 4A.
-- ELSE IF any of these is true → go to Step 4C: more than {{AUTO_LIMIT_DAYS}} days requested; dates overlap a final exam; the request mentions safety, mental health or welfare concerns; this is the student's third or later request this term; no standard rule in the policy fits.
-- ELSE → go to Step 4B.
+STEP 3 · EVIDENCE & POLICY CHECK (agent node)
+Compare the application with the evidence rules and the policy. Output: evidence status (Complete | Missing), missing items or blank required fields, risk flags and the policy clauses that apply.
 
-STEP 4A · EVIDENCE REQUEST (agent node)
+STEP 4 · ROUTING (condition node)
+- IF evidence status is Missing → go to Step 5A.
+- ELSE IF any of these is true → go to Step 5C: more than {{AUTO_LIMIT_DAYS}} days requested; dates overlap a final exam; the statement mentions safety, mental health or welfare concerns; this is the student's third or later request this term; no standard rule in the policy fits.
+- ELSE → go to Step 5B.
+
+STEP 5A · EVIDENCE REQUEST (agent node)
 Draft a short, polite email from the "more evidence needed" template that lists exactly what is missing. Status: "Awaiting evidence".
 
-STEP 4B · STANDARD DECISION (agent node)
+STEP 5B · STANDARD DECISION (agent node)
 Draft a decision letter from the matching template and cite the policy clause that applies. Status: "Ready for review".
 
-STEP 4C · ESCALATION BRIEF (agent node)
+STEP 5C · ESCALATION BRIEF (agent node)
 Write a one-page case brief: summary, timeline, evidence list, policy clauses, recommended options with pros and cons, and the flags that triggered escalation. Then draft the letter for the recommended option. Status: "Needs staff decision". If a welfare flag is present, add: "Contact Student Wellbeing today at {{WELFARE_EMAIL}}."
 
-Steps 4A, 4B and 4C each continue forward to Step 5.
+Steps 5A, 5B and 5C each continue forward to Step 6.
 
-STEP 5 · HUMAN REVIEW (approval node: Approve or Reject)
-Show the reviewer the draft, the Step 2 check and the evidence link. Nothing is final until they choose.
-- IF Approve → go to Step 6A.
-- IF Reject → go to Step 6B.
+STEP 6 · HUMAN REVIEW (approval node: Approve or Reject)
+Show the reviewer the draft, the extracted application details, the Step 3 check and the name of the application file. Nothing is final until they choose.
+- IF Approve → go to Step 7A.
+- IF Reject → go to Step 7B.
 
-STEP 6A · FINALIZE (agent node)
-Output the approved letter or email in full, ready for the staff member to copy and send. Then output one log row: date, request ID, route (evidence request | standard | escalated), reviewer, outcome "Approved".
+STEP 7A · FINALIZE (agent node)
+Output the approved letter or email in full, ready for staff to send to the student. Then output one log row: date, application reference, student ID, route (evidence request | standard | escalated), reviewer, outcome "Approved".
 
-STEP 6B · CLOSE AS RETURNED (agent node)
-Do not output a letter. Output one log row with outcome "Rejected, returned to staff" and a one-line note on what the staff member should check. Staff edit the reply by hand or start a new run with corrected details. When new evidence arrives, staff start a new run with the same request ID.
+STEP 7B · CLOSE AS RETURNED (agent node)
+Do not output a letter. Output one log row with outcome "Rejected, returned to staff" and a one-line note on what the staff member should check. If the student later uploads new evidence or a corrected form to the folder, that file starts a new run.
 
 Rules: base every decision on the knowledge sources and cite the clause. Do not diagnose or judge medical evidence beyond the policy rules. Keep all student details confidential.`,
-  proTip: "Run one workflow per request and never loop back. When missing evidence arrives, start a new run with the same request ID, so the log rows show the full history of the case."
+  proTip: "Test every branch before go-live: use the sample application helper to create a complete form, one with missing evidence and one with a welfare flag. Upload each to the intake folder and check where it lands."
 });
 
 const SCHOLARSHIP_COACH_EN = Object.freeze({
@@ -1068,6 +1071,11 @@ const useCaseHelperPrompts = {
         type: "canvas",
         title: "Prompt to Draft Decision Letter Templates",
         prompt: `Write 4 short, warm email templates for the {{OFFICE_NAME}} to send students about special consideration requests: (1) approved, (2) partly approved with new dates, (3) not approved, with the reason and how to appeal, (4) more evidence needed. Use placeholders for student name, course code, dates and policy clause. Keep each under 150 words, in plain English. Use Canvas to create this as an editable document.`
+      },
+      {
+        type: "canvas",
+        title: "Prompt to Generate a Sample Student Application Form",
+        prompt: `Create a realistic sample special consideration application form, as a student at {{INSTITUTION_NAME}} would submit it to the {{OFFICE_NAME}}, so staff can test the workflow. Use fictional details only and mark the header "SAMPLE: fictional data for testing". Include: (A) application reference and date submitted; (B) student details: name, student ID, programme, year and email; (C) request: type (deferred exam), course code, assessment affected, original date and days requested; (D) reason category (medical) and a 120-word student statement; (E) evidence checklist listing a medical certificate with its issuer and dates, plus a one-paragraph mock certificate summary at the end; (F) number of earlier requests this term; (G) declaration and signature line. Then add two short variants to test the other branches: one with the evidence missing, and one whose statement mentions a welfare concern. Use Canvas to create this as an editable document.`
       }
     ],
     "zh-TW": [
@@ -1080,6 +1088,11 @@ const useCaseHelperPrompts = {
         type: "canvas",
         title: "生成決定信範本提示詞",
         prompt: `為{{OFFICE_NAME}}撰寫 4 封簡短而親切的電郵範本，通知學生特殊考量申請結果：(1) 批准，(2) 部分批准並附新日期，(3) 不批准，附原因及上訴方法，(4) 需補交證明文件。以佔位符表示學生姓名、科目編號、日期及政策條文。每封不多於 150 字，用語淺白。請使用 Canvas 將此內容建立為可編輯文件。`
+      },
+      {
+        type: "canvas",
+        title: "生成學生申請表樣本提示詞",
+        prompt: `製作一份逼真的特殊考量申請表樣本，模擬「{{INSTITUTION_NAME}}」學生向{{OFFICE_NAME}}提交的申請，供職員測試工作流程。只可使用虛構資料，並在頁首標明「樣本：測試用虛構資料」。內容包括：(A) 申請編號及提交日期；(B) 學生資料：姓名、學生編號、課程、年級及電郵；(C) 申請內容：類別（延期考試）、科目編號、受影響的評核、原定日期及申請日數；(D) 原因類別（醫療）及約 200 字的學生陳述；(E) 證明文件清單，列出醫生證明書的簽發者及日期，並在文末附一段模擬證明書摘要；(F) 本學期較早前的申請次數；(G) 聲明及簽署欄。另加兩個簡短版本以測試其他分支：一份欠缺證明文件，另一份的陳述提及福利問題。請使用 Canvas 將此內容建立為可編輯文件。`
       }
     ],
     "zh-CN": [
@@ -1092,6 +1105,11 @@ const useCaseHelperPrompts = {
         type: "canvas",
         title: "生成决定函模板提示词",
         prompt: `为{{OFFICE_NAME}}撰写 4 封简短而亲切的邮件模板，通知学生特殊考量申请结果：(1) 批准，(2) 部分批准并附新日期，(3) 不批准，附原因及申诉方法，(4) 需补交证明材料。以占位符表示学生姓名、课程编号、日期及政策条文。每封不超过 150 字，用语浅白。请使用 Canvas 将此内容创建为可编辑文档。`
+      },
+      {
+        type: "canvas",
+        title: "生成学生申请表样本提示词",
+        prompt: `制作一份逼真的特殊考量申请表样本，模拟“{{INSTITUTION_NAME}}”学生向{{OFFICE_NAME}}提交的申请，供职员测试工作流程。只可使用虚构资料，并在页眉标明“样本：测试用虚构资料”。内容包括：(A) 申请编号及提交日期；(B) 学生资料：姓名、学号、专业、年级及电子邮箱；(C) 申请内容：类别（缓考）、课程编号、受影响的考核、原定日期及申请天数；(D) 原因类别（医疗）及约 200 字的学生陈述；(E) 证明材料清单，列出医生证明的出具单位及日期，并在文末附一段模拟证明摘要；(F) 本学期较早前的申请次数；(G) 声明及签名栏。另加两个简短版本以测试其他分支：一份缺少证明材料，另一份的陈述提及福利问题。请使用 Canvas 将此内容创建为可编辑文档。`
       }
     ]
   },
@@ -2275,101 +2293,107 @@ Simulation Structure:
     "en": SPECIAL_CONSIDERATION_EN,
     "zh-TW": {
       title: "特殊考量申請工作流程 Agent",
-      summary: "只向前執行的 Agent Designer 工作流程，處理學生的延期及特殊考量申請：職員以表單輸入申請，Agent 按政策核對證明文件、分流個案並草擬回覆，每份草稿均由職員批准或拒絕。",
+      summary: "只向前執行的 Agent Designer 工作流程：學生的特殊考量申請表存入收件資料夾後即自動啟動。Agent 閱讀申請表、按政策核對證明文件、分流個案並草擬回覆，每份草稿均由職員批准或拒絕。",
       steps: [
-        "以輔助提示詞草擬證明文件規則表及決定信範本，然後連同特殊考量政策，在 Agent Designer 附加為 Agent 節點的知識來源 (Knowledge Sources)。",
-        "建立只向前執行的工作流程：以手動觸發表單輸入申請詳情（貼上文字，另可附供審核職員查閱的 Google Drive 連結），經政策核對後，由條件節點分流至要求補交文件、標準決定信或上報摘要，最後進入一個「批准或拒絕」審批步驟。",
-        "職員批准或拒絕每份草稿。批准後輸出最終信件及記錄行，由職員自行發出並貼到個案記錄表；拒絕則以記錄行結案，由職員人手跟進或重新啟動流程。"
+        "以輔助提示詞草擬證明文件規則表、決定信範本及一份學生申請表樣本。在 Agent Designer 把政策、規則表及範本附加為 Agent 節點的知識來源 (Knowledge Sources)，並設定存放學生申請表的收件資料夾。",
+        "建立只向前執行的工作流程，當收件資料夾有新申請表時自動啟動：Agent 閱讀申請表、按政策核對證明文件，再把個案分流至要求補交文件、標準決定信或上報摘要。上載申請表樣本以測試每條分支。",
+        "職員批准或拒絕每份草稿。批准後輸出最終信件及記錄行，可直接發出；拒絕則以記錄行結案，方便職員跟進。"
       ],
-      prompt: `你是「{{INSTITUTION_NAME}}」{{OFFICE_NAME}}的特殊考量工作流程 Agent，負責處理學生的延期交功課、延期考試及休學申請。流程只會向前執行，每宗申請執行一次：不可返回較早的步驟，亦絕不可自行向學生發出任何內容。
+      prompt: `你是「{{INSTITUTION_NAME}}」{{OFFICE_NAME}}的特殊考量工作流程 Agent，負責處理學生的延期交功課、延期考試及休學申請。流程只會向前執行，每份申請執行一次：不可返回較早的步驟，亦絕不可自行向學生發出任何內容。
 
-知識來源（在 Agent Designer 介面附加至步驟 2 及步驟 4 的 Agent 節點）
-特殊考量政策、證明文件規則表及決定信範本。執行期間不可要求上載檔案。
+知識來源（在 Agent Designer 介面附加至各 Agent 節點）
+特殊考量政策、證明文件規則表及決定信範本。
 
-步驟 1 · 手動觸發（輸入表單）
-由職員啟動流程並填寫：申請編號、學生編號、課程、科目編號、申請類別（延期交功課 | 延期考試 | 休學）、原因類別（醫療 | 恩恤 | 個人 | 其他）、受影響日期、申請日數、本學期較早前的申請次數、申請詳情（從學生申請表貼上）、已提交的證明文件（每份文件的類別、日期及簽發者），以及供審核職員查閱的 Google Drive 證明文件連結（選填）。只使用表單內填寫的內容，不可開啟連結。
+步驟 1 · 觸發（資料夾新增檔案）
+當有新申請表上載至「{{INTAKE_FOLDER}}」資料夾時，流程會自動啟動，每個新檔案啟動一次。如檔案並非申請表，則不予處理。
 
-步驟 2 · 核對證明文件及政策（Agent 節點）
-按證明文件規則及政策核對表單內容。輸出：證明文件狀態（齊全 | 欠缺）、欠缺項目、風險標記及適用的政策條文。
+步驟 2 · 閱讀申請表（Agent 節點）
+閱讀新檔案中的申請表，擷取：申請編號、學生姓名、學生編號、課程、科目編號、受影響的評核、申請類別（延期交功課 | 延期考試 | 休學）、原因類別（醫療 | 恩恤 | 個人 | 其他）、受影響日期、申請日數、學生陳述、列出或附上的證明文件（類別、日期及簽發者），以及本學期較早前的申請次數。
 
-步驟 3 · 分流（條件節點）
-- 如證明文件狀態為「欠缺」 → 轉至步驟 4A。
-- 否則，如符合以下任何一項 → 轉至步驟 4C：申請日數超過 {{AUTO_LIMIT_DAYS}} 日；日期與期末考試重疊；申請提及人身安全、精神健康或福利問題；學生本學期已是第三次或以上申請；政策中沒有適用的標準規則。
-- 其他情況 → 轉至步驟 4B。
+步驟 3 · 核對證明文件及政策（Agent 節點）
+按證明文件規則及政策核對申請表。輸出：證明文件狀態（齊全 | 欠缺）、欠缺項目或未填的必填欄位、風險標記及適用的政策條文。
 
-步驟 4A · 要求補交文件（Agent 節點）
+步驟 4 · 分流（條件節點）
+- 如證明文件狀態為「欠缺」 → 轉至步驟 5A。
+- 否則，如符合以下任何一項 → 轉至步驟 5C：申請日數超過 {{AUTO_LIMIT_DAYS}} 日；日期與期末考試重疊；陳述提及人身安全、精神健康或福利問題；學生本學期已是第三次或以上申請；政策中沒有適用的標準規則。
+- 其他情況 → 轉至步驟 5B。
+
+步驟 5A · 要求補交文件（Agent 節點）
 以「需補交證明文件」範本草擬一封簡短有禮的電郵，列明欠缺的文件。狀態：「等待文件」。
 
-步驟 4B · 標準決定（Agent 節點）
+步驟 5B · 標準決定（Agent 節點）
 以相應範本草擬決定信，並引用適用的政策條文。狀態：「待審核」。
 
-步驟 4C · 上報摘要（Agent 節點）
+步驟 5C · 上報摘要（Agent 節點）
 撰寫一頁個案摘要：概要、時序、證明文件清單、適用政策條文、建議方案及其利弊，以及觸發上報的標記；再按建議方案草擬決定信。狀態：「需職員決定」。如有福利標記，加上：「請於今天聯絡學生福利組 {{WELFARE_EMAIL}}。」
 
-步驟 4A、4B 及 4C 均向前進入步驟 5。
+步驟 5A、5B 及 5C 均向前進入步驟 6。
 
-步驟 5 · 人工審核（審批節點：批准或拒絕）
-向審核職員展示草稿、步驟 2 的核對結果及證明文件連結。職員作出選擇前，一切內容均未定案。
-- 如批准 → 轉至步驟 6A。
-- 如拒絕 → 轉至步驟 6B。
+步驟 6 · 人工審核（審批節點：批准或拒絕）
+向審核職員展示草稿、擷取的申請資料、步驟 3 的核對結果及申請表檔案名稱。職員作出選擇前，一切內容均未定案。
+- 如批准 → 轉至步驟 7A。
+- 如拒絕 → 轉至步驟 7B。
 
-步驟 6A · 定案（Agent 節點）
-輸出已批准的信件或電郵全文，供職員複製並自行發出；另輸出一行記錄：日期、申請編號、分流路徑（要求補交文件 | 標準 | 上報）、審核職員、結果「已批准」。
+步驟 7A · 定案（Agent 節點）
+輸出已批准的信件或電郵全文，供職員直接發給學生；另輸出一行記錄：日期、申請編號、學生編號、分流路徑（要求補交文件 | 標準 | 上報）、審核職員、結果「已批准」。
 
-步驟 6B · 退回結案（Agent 節點）
-不輸出信件。輸出一行記錄，結果為「已拒絕，退回職員」，並附一句說明職員需跟進的事項。職員可自行修改回覆，或以更正後的資料重新啟動流程。收到新文件時，由職員以同一申請編號重新啟動流程。
+步驟 7B · 退回結案（Agent 節點）
+不輸出信件。輸出一行記錄，結果為「已拒絕，退回職員」，並附一句說明職員需跟進的事項。如學生其後把補交文件或更正後的申請表上載至資料夾，該檔案會啟動新一輪流程。
 
 規則：每項決定都必須以知識來源為依據並引用條文。不可診斷病情，亦不可在政策規則以外評價證明文件。學生資料必須保密。`,
-      proTip: "每宗申請執行一次流程，不要返回較早的步驟。收到補交文件後，以同一申請編號重新啟動流程，記錄行便能完整反映個案歷程。"
+      proTip: "正式啟用前請測試每條分支：用申請表樣本輔助提示詞製作一份齊全的申請表、一份欠缺證明文件的申請表及一份帶福利標記的申請表，逐一上載至收件資料夾，確認分流正確。"
     },
     "zh-CN": {
       title: "特殊考量申请工作流程 Agent",
-      summary: "只向前执行的 Agent Designer 工作流程，处理学生的延期及特殊考量申请：职员以表单输入申请，Agent 按政策核对证明材料、分流个案并草拟回复，每份草稿均由职员批准或拒绝。",
+      summary: "只向前执行的 Agent Designer 工作流程：学生的特殊考量申请表存入收件文件夹后即自动启动。Agent 阅读申请表、按政策核对证明材料、分流个案并草拟回复，每份草稿均由职员批准或拒绝。",
       steps: [
-        "以辅助提示词草拟证明材料规则表及决定函模板，然后连同特殊考量政策，在 Agent Designer 附加为 Agent 节点的知识来源 (Knowledge Sources)。",
-        "建立只向前执行的工作流程：以手动触发表单输入申请详情（粘贴文字，另可附供审核职员查阅的 Google Drive 链接），经政策核对后，由条件节点分流至要求补交材料、标准决定函或上报摘要，最后进入一个“批准或拒绝”审批步骤。",
-        "职员批准或拒绝每份草稿。批准后输出最终信函及记录行，由职员自行发出并粘贴到个案记录表；拒绝则以记录行结案，由职员手动跟进或重新启动流程。"
+        "以辅助提示词草拟证明材料规则表、决定函模板及一份学生申请表样本。在 Agent Designer 把政策、规则表及模板附加为 Agent 节点的知识来源 (Knowledge Sources)，并设置存放学生申请表的收件文件夹。",
+        "建立只向前执行的工作流程，当收件文件夹有新申请表时自动启动：Agent 阅读申请表、按政策核对证明材料，再把个案分流至要求补交材料、标准决定函或上报摘要。上传申请表样本以测试每条分支。",
+        "职员批准或拒绝每份草稿。批准后输出最终信函及记录行，可直接发出；拒绝则以记录行结案，方便职员跟进。"
       ],
       prompt: `你是“{{INSTITUTION_NAME}}”{{OFFICE_NAME}}的特殊考量工作流程 Agent，负责处理学生的作业延期、缓考及休学申请。流程只会向前执行，每份申请执行一次：不可返回较早的步骤，也绝不可自行向学生发出任何内容。
 
-知识来源（在 Agent Designer 界面附加至步骤 2 及步骤 4 的 Agent 节点）
-特殊考量政策、证明材料规则表及决定函模板。执行期间不可要求上传文件。
+知识来源（在 Agent Designer 界面附加至各 Agent 节点）
+特殊考量政策、证明材料规则表及决定函模板。
 
-步骤 1 · 手动触发（输入表单）
-由职员启动流程并填写：申请编号、学号、专业、课程编号、申请类别（作业延期 | 缓考 | 休学）、原因类别（医疗 | 恩恤 | 个人 | 其他）、受影响日期、申请天数、本学期较早前的申请次数、申请详情（从学生申请表粘贴）、已提交的证明材料（每份材料的类别、日期及出具单位），以及供审核职员查阅的 Google Drive 证明材料链接（选填）。只使用表单内填写的内容，不可打开链接。
+步骤 1 · 触发（文件夹新增文件）
+当有新申请表上传至“{{INTAKE_FOLDER}}”文件夹时，流程会自动启动，每个新文件启动一次。如文件并非申请表，则不予处理。
 
-步骤 2 · 核对证明材料及政策（Agent 节点）
-按证明材料规则及政策核对表单内容。输出：证明材料状态（齐全 | 缺失）、缺失项目、风险标记及适用的政策条文。
+步骤 2 · 阅读申请表（Agent 节点）
+阅读新文件中的申请表，提取：申请编号、学生姓名、学号、专业、课程编号、受影响的考核、申请类别（作业延期 | 缓考 | 休学）、原因类别（医疗 | 恩恤 | 个人 | 其他）、受影响日期、申请天数、学生陈述、列出或附上的证明材料（类别、日期及出具单位），以及本学期较早前的申请次数。
 
-步骤 3 · 分流（条件节点）
-- 如证明材料状态为“缺失” → 转至步骤 4A。
-- 否则，如符合以下任何一项 → 转至步骤 4C：申请天数超过 {{AUTO_LIMIT_DAYS}} 天；日期与期末考试重叠；申请提及人身安全、心理健康或福利问题；学生本学期已是第三次或以上申请；政策中没有适用的标准规则。
-- 其他情况 → 转至步骤 4B。
+步骤 3 · 核对证明材料及政策（Agent 节点）
+按证明材料规则及政策核对申请表。输出：证明材料状态（齐全 | 缺失）、缺失项目或未填的必填字段、风险标记及适用的政策条文。
 
-步骤 4A · 要求补交材料（Agent 节点）
+步骤 4 · 分流（条件节点）
+- 如证明材料状态为“缺失” → 转至步骤 5A。
+- 否则，如符合以下任何一项 → 转至步骤 5C：申请天数超过 {{AUTO_LIMIT_DAYS}} 天；日期与期末考试重叠；陈述提及人身安全、心理健康或福利问题；学生本学期已是第三次或以上申请；政策中没有适用的标准规则。
+- 其他情况 → 转至步骤 5B。
+
+步骤 5A · 要求补交材料（Agent 节点）
 以“需补交证明材料”模板草拟一封简短有礼的邮件，列明缺少的材料。状态：“等待材料”。
 
-步骤 4B · 标准决定（Agent 节点）
+步骤 5B · 标准决定（Agent 节点）
 以相应模板草拟决定函，并引用适用的政策条文。状态：“待审核”。
 
-步骤 4C · 上报摘要（Agent 节点）
+步骤 5C · 上报摘要（Agent 节点）
 撰写一页个案摘要：概要、时间线、证明材料清单、适用政策条文、建议方案及其利弊，以及触发上报的标记；再按建议方案草拟决定函。状态：“需职员决定”。如有福利标记，加上：“请于今天联系学生福利组 {{WELFARE_EMAIL}}。”
 
-步骤 4A、4B 及 4C 均向前进入步骤 5。
+步骤 5A、5B 及 5C 均向前进入步骤 6。
 
-步骤 5 · 人工审核（审批节点：批准或拒绝）
-向审核职员展示草稿、步骤 2 的核对结果及证明材料链接。职员作出选择前，一切内容均未定案。
-- 如批准 → 转至步骤 6A。
-- 如拒绝 → 转至步骤 6B。
+步骤 6 · 人工审核（审批节点：批准或拒绝）
+向审核职员展示草稿、提取的申请资料、步骤 3 的核对结果及申请表文件名称。职员作出选择前，一切内容均未定案。
+- 如批准 → 转至步骤 7A。
+- 如拒绝 → 转至步骤 7B。
 
-步骤 6A · 定案（Agent 节点）
-输出已批准的信函或邮件全文，供职员复制并自行发出；另输出一行记录：日期、申请编号、分流路径（要求补交材料 | 标准 | 上报）、审核职员、结果“已批准”。
+步骤 7A · 定案（Agent 节点）
+输出已批准的信函或邮件全文，供职员直接发给学生；另输出一行记录：日期、申请编号、学号、分流路径（要求补交材料 | 标准 | 上报）、审核职员、结果“已批准”。
 
-步骤 6B · 退回结案（Agent 节点）
-不输出信函。输出一行记录，结果为“已拒绝，退回职员”，并附一句说明职员需跟进的事项。职员可自行修改回复，或以更正后的资料重新启动流程。收到新材料时，由职员以同一申请编号重新启动流程。
+步骤 7B · 退回结案（Agent 节点）
+不输出信函。输出一行记录，结果为“已拒绝，退回职员”，并附一句说明职员需跟进的事项。如学生其后把补交材料或更正后的申请表上传至文件夹，该文件会启动新一轮流程。
 
 规则：每项决定都必须以知识来源为依据并引用条文。不可诊断病情，也不可在政策规则以外评价证明材料。学生信息必须保密。`,
-      proTip: "每份申请执行一次流程，不要返回较早的步骤。收到补交材料后，以同一申请编号重新启动流程，记录行便能完整反映个案历程。"
+      proTip: "正式启用前请测试每条分支：用申请表样本辅助提示词制作一份齐全的申请表、一份缺少证明材料的申请表及一份带福利标记的申请表，逐一上传至收件文件夹，确认分流正确。"
     }
   },
   scholarship_application_workflow: {
@@ -4045,7 +4069,7 @@ function openAdminEditModal(uc) {
     idInput.value = uc.id;
     idInput.disabled = true; // Immutable
 
-    document.getElementById("formCaseCategory").value = uc.category || "";
+    document.getElementById("formCaseCategory").value = normalizeCaseCategory(uc.category);
     document.getElementById("formCaseTitle").value = uc.title || "";
     const roleVal = uc.role || "Lecturer";
     const selectEl = document.getElementById("formCaseRole");
@@ -4347,6 +4371,7 @@ async function triggerGeminiPlaybookGeneration() {
         connectors,
         role,
         level,
+        promptType: document.getElementById("formCasePromptType")?.value || "general",
         instruction
       })
     });
@@ -4411,7 +4436,11 @@ function applyGeminiSuggestions(aiRes) {
     document.getElementById("formCaseTitle").value = en.title;
   }
   if (aiRes.category) {
-    document.getElementById("formCaseCategory").value = aiRes.category;
+    document.getElementById("formCaseCategory").value = normalizeCaseCategory(aiRes.category);
+  }
+  const promptTypeSelect = document.getElementById("formCasePromptType");
+  if (promptTypeSelect && aiRes.promptType && Array.from(promptTypeSelect.options).some(o => o.value === aiRes.promptType)) {
+    promptTypeSelect.value = aiRes.promptType;
   }
   if (aiRes.role) {
     const rVal = aiRes.role.trim();
@@ -4533,6 +4562,16 @@ function showDiffViewer(aiRes) {
   // Compile Proposed checked states
   const proposedFeatures = Array.isArray(aiRes.features) ? aiRes.features : currentFeatures;
   const proposedConnectors = Array.isArray(aiRes.connectors) ? aiRes.connectors : currentConnectors;
+
+  // 0. Prompt type (shown with the localised type label)
+  const promptTypeSel = document.getElementById("formCasePromptType");
+  const currentType = promptTypeSel ? promptTypeSel.value : "general";
+  const typeLabel = (v) => (t.promptTypes && t.promptTypes[v]) || v;
+  diffItems.push({
+    label: t.formPromptTypeLabel || "Prompt type",
+    current: typeLabel(currentType),
+    proposed: typeLabel(aiRes.promptType || currentType)
+  });
 
   // 1. Required Gemini Features
   diffItems.push({
@@ -5626,7 +5665,7 @@ const uiTranslationsV3 = {
     adminFormLabelGeminiPromptDesc: "Describe what to create or change. Gemini drafts the steps, prompt, tip and translations.",
     caseFormDraftPlaceholder: "e.g. A Canvas Mode rubric for high school chemistry lab reports",
     caseFormDraftBtn: "Draft with Gemini",
-    caseFormDraftBtnTitle: "Draft with Gemini 3.5 Flash",
+    caseFormDraftBtnTitle: "Draft with Gemini 3.8 Flash",
     drafting: "Drafting…",
     adminFormLabelId: "ID (can't change later)",
     adminFormLabelCategory: "Category",
@@ -5672,7 +5711,7 @@ const uiTranslationsV3 = {
     draftingDesc: "Writing steps, prompt and translations.",
     // Gemini diff viewer
     diffTitle: "Review Gemini changes",
-    diffIntro: "Gemini 3.5 Flash suggested the changes below.",
+    diffIntro: "Gemini 3.8 Flash suggested the changes below.",
     diffCurrent: "Current",
     diffProposed: "Suggested",
     diffReject: "Keep current",
@@ -5728,7 +5767,7 @@ const uiTranslationsV3 = {
     adminFormLabelGeminiPromptDesc: "描述要建立或修改的內容，Gemini 會草擬步驟、提示詞、提示與翻譯。",
     caseFormDraftPlaceholder: "例如：以 Canvas Mode 為高中化學實驗報告製作評分量表",
     caseFormDraftBtn: "使用 Gemini 草擬",
-    caseFormDraftBtnTitle: "使用 Gemini 3.5 Flash 草擬",
+    caseFormDraftBtnTitle: "使用 Gemini 3.8 Flash 草擬",
     drafting: "草擬中…",
     adminFormLabelId: "ID（建立後無法更改）",
     adminFormLabelCategory: "類別",
@@ -5773,7 +5812,7 @@ const uiTranslationsV3 = {
     draftingTitle: "Gemini 正在草擬…",
     draftingDesc: "正在撰寫步驟、提示詞與翻譯。",
     diffTitle: "檢視 Gemini 修改",
-    diffIntro: "Gemini 3.5 Flash 建議了以下修改。",
+    diffIntro: "Gemini 3.8 Flash 建議了以下修改。",
     diffCurrent: "目前版本",
     diffProposed: "建議版本",
     diffReject: "保留目前版本",
@@ -5828,7 +5867,7 @@ const uiTranslationsV3 = {
     adminFormLabelGeminiPromptDesc: "描述要创建或修改的内容，Gemini 会草拟步骤、提示词、提示与翻译。",
     caseFormDraftPlaceholder: "例如：用 Canvas Mode 为高中化学实验报告制作评分量表",
     caseFormDraftBtn: "使用 Gemini 草拟",
-    caseFormDraftBtnTitle: "使用 Gemini 3.5 Flash 草拟",
+    caseFormDraftBtnTitle: "使用 Gemini 3.8 Flash 草拟",
     drafting: "草拟中…",
     adminFormLabelId: "ID（创建后无法更改）",
     adminFormLabelCategory: "类别",
@@ -5873,7 +5912,7 @@ const uiTranslationsV3 = {
     draftingTitle: "Gemini 正在草拟…",
     draftingDesc: "正在撰写步骤、提示词与翻译。",
     diffTitle: "查看 Gemini 修改",
-    diffIntro: "Gemini 3.5 Flash 建议了以下修改。",
+    diffIntro: "Gemini 3.8 Flash 建议了以下修改。",
     diffCurrent: "当前版本",
     diffProposed: "建议版本",
     diffReject: "保留当前版本",
@@ -6259,6 +6298,13 @@ function applyI18nAttributes() {
 // Pure helpers: prompt types, Try it URL, variables, filtering and sorting
 // ---------------------------------------------------------------------------
 
+/** Map legacy / loose category values onto the stored ones ("admin" -> "administrative"). Pure. */
+const normalizeCaseCategory = (c) => {
+  const v = String(c || "").toLowerCase().trim();
+  if (v === "admin" || v === "administration") return "administrative";
+  return ["academic", "student", "operational", "administrative"].includes(v) ? v : "academic";
+};
+
 /** Prompt types that Gemini Enterprise can open straight from a ?q= link. */
 const TRYABLE = new Set(["general", "canvas", "image", "video"]);
 
@@ -6361,7 +6407,8 @@ function filterUseCases(list, state, lang) {
   const cat = state.activeFilterCategory === "admin" ? "administrative" : state.activeFilterCategory;
   return list.filter(uc => {
     if (!matchesRoleAndLevel(uc, state)) return false;
-    if (cat && cat !== "all" && uc.category !== cat) return false;
+    // Legacy admin-made rows may still say "admin"; seeds and the form use "administrative"
+    if (cat && cat !== "all" && (uc.category === "admin" ? "administrative" : uc.category) !== cat) return false;
     if (state.activeFilterFeature && state.activeFilterFeature !== "all" &&
         !(uc.features || []).some(f => f.toLowerCase() === state.activeFilterFeature.toLowerCase())) return false;
     if (state.activeFilterStatus === "liked" && !isOn(uc.isLiked)) return false;

@@ -287,7 +287,7 @@ All endpoints return JSON and use the session cookie. "User" means a signed-in s
 | `POST/PUT/DELETE /api/admin/use-cases` · `GET /api/admin/use-cases/export` | Super · Admin | Edit · export playbooks |
 | `POST /api/admin/use-cases/:id/infographic` · `POST /api/admin/infographics/generate-missing` | Super | Generate infographics |
 | `GET/PUT /api/admin/settings/smtp` · `POST /api/admin/settings/smtp/test` | Super | SMTP settings and test send |
-| `POST /api/admin/generate-gemini` | Super | Gemini-assisted playbook drafting (also suggests `timing` and quest questions) |
+| `POST /api/admin/generate-gemini` | Super | Gemini-assisted playbook drafting with `GEMINI_MODEL` (also suggests `promptType`, `timing` and quest questions). Replies are normalised by `lib/draft-normalize.js`: `{{VARIABLE}}` tokens, portal category / feature / connector names. |
 | `GET /game/manifest.json` | Public | Quest Run sprite manifest (only assets that exist on disk) |
 | `GET /api/quest` | Signed in | Academic position, hero class, eligible quest hints and live news for the viewer's role |
 | `POST /api/quest/event` | Signed in | Log `quest_view` / `quest_click` / `news_view` / `news_click` |
@@ -333,6 +333,7 @@ npm start               # SQLite is used automatically when DATABASE_URL is unse
 | `INFOGRAPHIC_BUCKET` | – | Public GCS bucket for infographics |
 | `INFOGRAPHIC_MODEL` | – | Default `gemini-nano-banana-2.1` |
 | `INFOGRAPHIC_LOCATION` | – | Default `global` |
+| `GEMINI_MODEL` | – | Model for admin drafting and translation. Default `gemini-3.8-flash` |
 | `INFOGRAPHIC_PROJECT` | – | Vertex project (defaults to `GCP_PROJECT_ID`) |
 | `INFOGRAPHIC_REF_IMAGE` | – | Mascot reference image (default `imgs/archimedes-ref.jpg`) |
 | `INFOGRAPHIC_CONCURRENCY` | – | Worker pool for "Generate missing" (1–4, default 2) |
