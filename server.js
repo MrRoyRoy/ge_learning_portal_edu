@@ -486,11 +486,11 @@ const SEED_PROMPT_TYPES = Object.freeze({
   su_advocacy: 'notebooklm',               // analyse uploaded town hall transcripts + survey comments
   club_funding: 'canvas',                  // draft a detailed funding proposal document
   su_helpdesk: 'agent_designer',           // 24/7 Policy and Welfare Agent instructions
-  visual_campaign: 'general',              // storyline + text-to-image prompts in one chat answer
+  visual_campaign: 'canvas',               // storyline + text-to-image prompts drafted as an editable Canvas document
   at_risk_cohort: 'deep_research',         // multi-signal learning analytics synthesis
   accreditation_reports: 'notebooklm',     // cross-map provided syllabi / outcomes against standards
   workforce_federation: 'deep_research',   // IdP federation blueprint from vendor documentation research
-  sao_scavenger_hunt: 'general',           // clues + trivia quiz generated in one chat answer
+  sao_scavenger_hunt: 'canvas',            // clues + trivia quiz drafted as an editable Canvas document
   finance_compliance: 'notebooklm',        // audit uploaded receipts against regulations
   security_simulator: 'agent_designer',    // interactive multi-branch drill simulation run as an Agent
   special_consideration_workflow: 'agent_designer',   // Drive folder-triggered triage workflow with routing + staff review
@@ -578,12 +578,23 @@ async function applySeedPromptTypes() {
   }
 
   const marker = await mailer.readSetting(query, 'seed_prompt_types_v1');
-  if (marker) return;
-  for (const [id, type] of entries) {
-    await query("UPDATE use_cases SET prompt_type = ? WHERE id = ? AND prompt_type = 'general'", [type, id]);
+  if (!marker) {
+    for (const [id, type] of entries) {
+      await query("UPDATE use_cases SET prompt_type = ? WHERE id = ? AND prompt_type = 'general'", [type, id]);
+    }
+    await mailer.writeSetting(query, 'seed_prompt_types_v1', { appliedAt: new Date().toISOString() }, 'system');
+    console.log('🔄 Seed migration: Applied default prompt types to seeded use cases.');
   }
-  await mailer.writeSetting(query, 'seed_prompt_types_v1', { appliedAt: new Date().toISOString() }, 'system');
-  console.log('🔄 Seed migration: Applied default prompt types to seeded use cases.');
+
+  // v2: these seeds moved general -> canvas once their prompts started ending with the Canvas sentence.
+  // Only rows still on 'general' change, so an admin's deliberate choice is kept.
+  const V2_CANVAS_IDS = ['sao_scavenger_hunt', 'visual_campaign'];
+  if (await mailer.readSetting(query, 'seed_prompt_types_v2')) return;
+  for (const id of V2_CANVAS_IDS) {
+    await query("UPDATE use_cases SET prompt_type = 'canvas' WHERE id = ? AND prompt_type = 'general'", [id]);
+  }
+  await mailer.writeSetting(query, 'seed_prompt_types_v2', { appliedAt: new Date().toISOString() }, 'system');
+  console.log('🔄 Seed migration: Moved Canvas-based seeded playbooks to the canvas prompt type.');
 }
 
 /*
@@ -2542,13 +2553,15 @@ PLAYBOOK CONVENTIONS (match the portal's existing playbooks exactly):
    (1) Set up and ground: what to prepare, which files to add and which feature to open.
    (2) Run: use the sample prompt in the named feature.
    (3) Review and deliver: what a person checks before the result is shared.
-3. PROMPT: a ready-to-paste prompt for the main feature. Open with the role ("You are ..." or "Act as ..."), use numbered or labelled sections, and describe the expected output. If the prompt should produce a document, end it with: "Use Canvas to create this as an editable document."
+3. PROMPT: a ready-to-paste prompt for the main feature. Open with the role ("You are ..." or "Act as ..."), use numbered or labelled sections, and describe the expected output. If the prompt should produce a document, end it with: "Use Canvas to create this as an editable document." Exception: never add the Canvas sentence or "in Canvas Mode" to Agent Designer instructions (promptType agent_designer); the Agent replies with structured text (headings, tables) and Canvas Mode is only used by Set up prompts run in Gemini.
 4. PROMPT TYPE ("promptType"), one of: general | notebooklm | deep_research | agent_designer | canvas | image | video. Match the feature the prompt is pasted into: Agent Designer -> agent_designer, Gemini Notebook -> notebooklm, Deep Research -> deep_research, Canvas Mode -> canvas, Image Generation -> image, Video Generation -> video, anything else -> general.
 5. AGENT DESIGNER WORKFLOWS (promptType agent_designer with several steps): label each step "STEP n · NAME (node type)"; write branches as "IF ... → go to Step n"; keep the flow forward-only (never loop back to an earlier step); give approval nodes exactly two outcomes, Approve or Reject; start the run from a trigger (for example a new file in a folder) or a form; attach reference files as Knowledge Sources on agent nodes and never ask for file uploads during a run; include a human review step before anything reaches a student or the public.
 6. CONNECTORS: list one only when the playbook really reads live data from that system, otherwise return []. Use these names exactly: "Drive Connector", "Email Connector", "LMS Connector", "Calendar Connector".
 7. WRITING: plain, friendly English with short sentences. zh-TW is Traditional Chinese as written in Hong Kong; zh-CN is Simplified Chinese. Keep product names in English inside Chinese text: Gemini, Gemini Enterprise, Gemini Notebook, Canvas Mode, Deep Research, Agent Designer, Image Generation, Video Generation and the connector names.
 8. BRAND: never say "Gem" (always "Agent") and never say "Copilot".
 9. SET UP PROMPTS ("helperPrompts"): 1-3 short ready-to-paste prompts that prepare what step 1 needs (sample data, a rules table, a template, a source summary). Each has a title starting "Prompt to ..." (zh-TW / zh-CN titles end with 提示詞 / 提示词), a type from the PROMPT TYPE list, and reuses the main prompt's {{VARIABLE}} keys where they fit. If a set up prompt creates a document, set type "canvas" and end it with the Canvas sentence in that language: en "Use Canvas to create this as an editable document.", zh-TW "請使用 Canvas 將此內容建立為可編輯文件。", zh-CN "请使用 Canvas 将此内容创建为可编辑文档。" Keep the same number and order of entries in en, zh-TW and zh-CN.
+10. GROUNDING: Agent Designer cannot read a Gemini Notebook and there is no notebook connector. When a playbook prepares sources in Gemini Notebook and then builds an Agent, step 1 or 2 must tell the user to add the same files under "Agent Designer › Knowledge › Add files" (same file names, so citations match), and use the notebook to check the Agent's answers. A prompt that relies on files must include a "KNOWLEDGE SOURCES" section (what the files are) and "GROUNDING RULES": use only those sources, cite the file and page / slide / section, say clearly when something isn't covered (and who to ask), never invent facts, figures or quotes. Never write "manually upload ... into the system instructions" or "connect Gemini Notebook to the Agent". Gemini Notebook cannot run Deep Research: run Deep Research in Gemini first, then add the report to the notebook as a source.
+11. CONSISTENCY: every listed GE feature and connector must be used in a step or in the prompt; remove any that are not. A connector-based prompt names the connector as its data source and never searches the web for personal data. Prompts that analyse sources or data must require evidence (citations or data points) and say what to do when evidence is missing.
 `;
 
 /**

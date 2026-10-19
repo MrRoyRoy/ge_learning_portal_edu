@@ -136,19 +136,27 @@ const useCasesDb = [
     role: "Lecturer",
     level: ["University & College", "High School", "Generic"],
     steps: [
-      "In Gemini Notebook, create a 'Read-Only Course Hub' and upload syllabus documents, lecture slides, and key readings.",
-      "In Agent Designer, configure the Socratic tutor persona prompt with grounding and test interactive questions.",
-      "Review guidance quality, publish the shareable Agent link, and embed it into your institutional LMS."
+      "In Gemini Notebook, add your syllabus, lecture slides and key readings as sources, then use the Set up prompt to build a verification set: 10 typical student questions with cited answers.",
+      "In Agent Designer, paste the tutor prompt and add the same files under Knowledge › Add files. Keep the same file names so the citations match.",
+      "Ask the Agent the 10 verification questions and compare its hints and citations with the notebook's answers. Fix any gaps, then publish the Agent link in your LMS."
     ],
-    prompt: `You are the '{{COURSE_CODE}} Coach,' a friendly and encouraging Socratic tutor for {{COURSE_NAME}}. Your sole objective is to guide students to find answers themselves.
-Follow these rules strictly:
-1. **Ground all your responses** in the provided course materials only.
-2. When a student asks a question (e.g., 'What is the answer to question 3?'), do NOT give the direct answer. Instead, respond with a probing, contextual question that helps them think critically.
-3. Reference specific files/pages in the course materials (e.g., 'Can you look at slide 4 of Lecture 2 and tell me what the first stage is called?').
-4. If a student demonstrates correct understanding, praise them and provide a complete, rich explanation.
-5. If asked about topics outside this course, politely decline, stating: 'I can only assist you with {{COURSE_NAME}} topics.'
-6. Cite your sources for every answer.`,
-    proTip: "By connecting Gemini Notebook as the grounding layer, you ensure the Agent never hallucinates answers, restricts responses to authorized curriculum text, and provides verified inline citations.",
+    prompt: `You are the '{{COURSE_CODE}} Coach', a friendly and encouraging Socratic tutor for {{COURSE_NAME}}. Your sole objective is to guide students to find answers themselves.
+
+KNOWLEDGE SOURCES (Agent Designer › Knowledge › Add files: the same files as your Gemini Notebook course hub)
+The syllabus, lecture slides and key readings for {{COURSE_NAME}}.
+
+GROUNDING RULES
+1. Use only the Knowledge Sources. Do not use general web knowledge, even if you know the answer.
+2. Before every hint, find the passage that supports it and cite it as (file name, page or slide).
+3. If the answer isn't in the sources, say: "That isn't covered in the {{COURSE_NAME}} materials. Please ask {{INSTRUCTOR_NAME}}." Do not guess.
+4. Never invent quotes, page numbers, formulas or facts.
+5. If two sources disagree, follow the latest syllabus and tell the student about the conflict.
+
+TUTORING RULES
+1. When a student asks for an answer (e.g. 'What is the answer to question 3?'), do NOT give it. Reply with a probing question that points to the right place in the materials (e.g. 'Look at slide 4 of Lecture 2: what is the first stage called?').
+2. When the student shows correct understanding, praise them and give a complete explanation with citations.
+3. If asked about topics outside this course, politely decline: 'I can only help with {{COURSE_NAME}} topics.'`,
+    proTip: "Agent Designer can't read a Gemini Notebook directly, so the Agent answers only from the files you add under Knowledge. Use the notebook as your answer key: if the Agent's citation doesn't match the notebook's, fix the files or the prompt before students use it.",
     connectorGuide: null
   },
   {
@@ -161,18 +169,23 @@ Follow these rules strictly:
     role: "TA",
     level: ["Generic"],
     steps: [
-      "Create a dedicated workspace in Gemini Notebook and upload the assignment instructions and analytical grading rubric.",
-      "Upload the student essay and execute the formative rubric grading prompt in the workbench.",
-      "Review tentative criterion scores, personalize pedagogical remarks, and export feedback to LMS or student portfolio."
+      "Create a notebook for the assignment and add the assignment instructions and the grading rubric as sources.",
+      "Add one student essay as a source and run the feedback prompt in Gemini Notebook. Every score must quote the essay and name the rubric criterion.",
+      "Check each score against the quoted evidence, then paste the feedback into Canvas Mode to personalise it before sending it through your LMS."
     ],
-    prompt: `Acting as an expert academic teaching assistant, analyze the attached student essay for the assignment "{{ASSIGNMENT_TITLE}}" against the uploaded grading rubric for student "{{STUDENT_ID}}". Generate a first draft of constructive, high-quality feedback.
-The feedback MUST adhere to the following structure:
-1. **Rubric Performance Summary**: Provide a tentative level/score for each rubric criterion, directly referencing specific evidence from the student's submission.
-2. **Key Strengths (1-2)**: Identify specific aspects of the paper that were executed exceptionally well, quoting 1-2 examples from the text.
-3. **Areas for Growth (2-3)**: Identify specific logical, grammatical, or structural issues. Explain how they relate to the rubric requirements.
-4. **Actionable Recommendations**: Provide 2-3 specific, progressive steps the student can take in their next draft to improve.
-Maintain a supportive, pedagogical, and highly encouraging tone throughout.`,
-    proTip: "Because Gemini Notebook operates in a secure cloud tenant, student intellectual property and data remain completely confidential and are never used to train public LLM models.",
+    prompt: `Acting as an expert academic teaching assistant, analyse the student essay in this notebook for the assignment "{{ASSIGNMENT_TITLE}}" against the grading rubric, for student "{{STUDENT_ID}}". Write a first draft of constructive, high-quality feedback.
+
+Sources in this notebook: the assignment instructions, the grading rubric and this student's essay.
+
+The feedback MUST follow this structure:
+1. **Rubric Performance Summary**: a tentative level for each rubric criterion, quoting evidence from the essay.
+2. **Key Strengths (1-2)**: what was done exceptionally well, quoting 1-2 examples from the text.
+3. **Areas for Growth (2-3)**: specific logical, grammatical or structural issues, and how they relate to the rubric.
+4. **Actionable Recommendations**: 2-3 specific, progressive steps for the next draft.
+
+Rules: use only the rubric and the essay. If there is no evidence for a criterion, say so and mark it "Not enough evidence" instead of guessing. Never invent rubric levels or quotes.
+Keep a supportive, encouraging teaching tone throughout.`,
+    proTip: "Add one essay at a time and remove it before adding the next, so feedback never mixes students. Gemini Notebook keeps student work inside your institution's Gemini Enterprise environment and doesn't use it to train models.",
     connectorGuide: null
   },
   {
@@ -228,108 +241,110 @@ The document should include:
     title: "Student Feedback Sentiment Dashboard",
     category: "student",
     summary: "Consolidate massive volumes of unstructured student feedback from surveys and town halls to synthesize advocacy data.",
-    features: ["Gemini Notebook", "Deep Research"],
-    connectors: ["Drive Connector"],
+    features: [
+      "Gemini Notebook",
+      "Deep Research"
+    ],
+    connectors: [],
     role: "Student",
     level: ["University & College", "High School", "Generic"],
     steps: [
-      "Collect survey responses and student feedback sheets into a secured institutional Drive folder.",
-      "Run multi-factor qualitative sentiment and thematic analysis via Deep Research and Gemini Notebook.",
-      "Synthesize recurring concerns into priority advocacy items and present to university administration."
+      "Add the anonymised survey comments and town hall transcripts from your Drive folder to a Gemini Notebook as sources. Use the Set up prompt to run Deep Research on peer-school solutions, and add that report too.",
+      "Run the analysis prompt in Gemini Notebook. Every theme count and quote comes from the sources, and peer-school ideas come from the Deep Research report.",
+      "Check the quotes against the original comments, remove anything that could identify a student, then present the priority list to the administration."
     ],
-    prompt: `Acting as the Student Union Advocacy Director for {{INSTITUTION_NAME}}, analyze the uploaded collection of town hall transcripts and anonymous student survey comments for {{ACADEMIC_TERM}}.
-Generate a comprehensive, evidence-based report that includes:
-1. **Thematic Clustering**: Identify and group the top 5 most frequently complained-about campus issues.
-2. **Sentiment Assessment**: For each issue, categorize the emotional tone (highly negative, frustrated, neutral) and extract 3 powerful, representative anonymized student quotes.
-3. **Data-Driven Solutions**: Based on successful practices at benchmark peer schools, suggest 2 realistic, low-cost policy changes for each issue.
-4. **Negotiation Preparation**: Draft a list of 5 anticipated objections from school deans regarding budget constraints, and provide persuasive, data-backed rebuttals.`,
-    proTip: "Linking your student feedback database directly via the Drive Connector keeps the data federated, secure, and up-to-the-minute without copying local files.",
-    connectorGuide: {
-      name: "Drive Connector",
-      steps: [
-        "Go to Google Cloud Console > Gemini Enterprise > Data Connectors.",
-        "Select the Drive Connector source.",
-        "Provide your institution's access authorization credentials.",
-        "Grant the necessary read permissions to your files and directories.",
-        "Enable 'Federated Search' connection mode to respect live user access permissions without data ingestion."
-      ]
-    }
+    prompt: `Acting as the Student Union Advocacy Director for {{INSTITUTION_NAME}}, analyse the town hall transcripts and anonymous student survey comments for {{ACADEMIC_TERM}} in this notebook.
+
+Sources in this notebook: the survey comments, the town hall transcripts and a Deep Research report on how peer institutions handled similar issues.
+
+Produce an evidence-based report:
+1. **Thematic Clustering**: the top 5 campus issues, with the number of comments for each.
+2. **Sentiment Assessment**: for each issue, the tone (highly negative, frustrated, neutral) and 3 representative quotes copied word for word, with their source.
+3. **Peer Solutions**: 2 realistic, low-cost policy changes per issue, taken from the Deep Research report and cited. If the report has nothing on an issue, say so.
+4. **Negotiation Preparation**: 5 objections the deans may raise about budget, each with a rebuttal backed by the counts and quotes above.
+
+Rules: never paraphrase inside quotation marks, never invent numbers, and remove names, student IDs or any detail that could identify a student.`,
+    proTip: "Gemini Notebook adds Google Docs, Slides and PDFs from Drive directly as sources, so you don't need a connector. Sync the sources again after each new survey round.",
+    connectorGuide: null
   },
   {
     id: "club_funding",
     title: "Annual Club Calendar & Budget Justifier",
     category: "student",
     summary: "Brainstorm an annual activities calendar and draft detailed, compliant student government funding proposals.",
-    features: ["Canvas Mode", "Gemini Notebook"],
-    connectors: ["Drive Connector"],
+    features: [
+      "Gemini Notebook",
+      "Canvas Mode"
+    ],
+    connectors: [],
     role: "Student",
     level: ["University & College", "High School", "Generic"],
     steps: [
-      "Gather past semester club event logs, attendance counts, and itemized receipts into Drive.",
-      "Generate annual budget justification proposals and activity timelines in Canvas Mode.",
-      "Verify allocation compliance against union bylaws and submit to the student council funding committee."
+      "Add the Student Union funding guidelines and bylaws to Gemini Notebook, then use the Set up prompt to pull out a funding rules checklist with the clause for each rule.",
+      "In Canvas Mode, run the proposal prompt with the rules checklist and your planned events filled in.",
+      "Check every budget line against the checklist and its clause, attach your receipts or quotes, then submit to the funding committee."
     ],
-    prompt: `Act as a professional grant and proposal writer. Help {{CLUB_NAME}} draft a detailed funding proposal for the academic year {{ACADEMIC_YEAR}}.
+    prompt: `Act as a professional grant and proposal writer. Help {{CLUB_NAME}} draft a funding proposal for the academic year {{ACADEMIC_YEAR}}.
+
 Inputs:
-- Annual activities calendar: List of 4 major workshops, 1 public exhibition, 2 guest lectures, and 1 social event for {{CLUB_NAME}}.
-- Approved funding guidelines: Max $200 per workshop, Max $500 for exhibition, strict food and beverage limits.
+- Planned activities: {{EVENT_PLAN}}
+- Funding rules checklist (from Gemini Notebook, with clause numbers): {{FUNDING_RULES}}
+
 Task:
-1. Create an **Executive Summary** detailing the club's mission and how these events boost student engagement.
-2. Compile a detailed **Line-Item Budget Table**, calculating total costs and verifying compliance with the provided funding rules.
-3. Write a compelling **Impact Statement** justifying why the Student Union should allocate resources to our club, detailing student outcomes.`,
-    proTip: "Upload the Student Union's official constitutional funding guidelines to Gemini Notebook first. This prevents your proposal from getting rejected for violating obscure spend-limit policies.",
-    connectorGuide: {
-      name: "Drive Connector",
-      steps: [
-        "Select the Drive Connector in your enterprise storage console.",
-        "Generate a client access key and add read permissions for secure file queries.",
-        "In Gemini Enterprise settings, link your club’s shared Drive folder where past budget templates are kept.",
-        "Activate the connector to allow live data queries during proposal creation."
-      ]
-    }
+1. **Executive Summary**: the club's mission and how these events boost student engagement.
+2. **Line-Item Budget Table**: columns Item | Event | Cost | Rule applied (clause) | Within limit? Calculate the totals. Use only the limits in the funding rules checklist; never invent a limit.
+3. **Compliance Notes**: list any item that breaks the checklist or isn't covered by it, and suggest a fix.
+4. **Impact Statement**: why the Student Union should fund the club, with the expected student outcomes.
+Use Canvas to create this as an editable document.`,
+    proTip: "Ask Gemini Notebook for the clause number with every rule. When the committee queries a budget line, you can point straight to the bylaw that allows it.",
+    connectorGuide: null
   },
   {
     id: "su_helpdesk",
     title: "24/7 Student Union Policy Agent",
     category: "student",
-    summary: "Build an AI support bot trained on club policy handbooks to answer operational and venue booking questions.",
+    summary: "Build a student-facing policy Agent grounded in your union handbook and constitutions to answer venue booking, locker and funding questions.",
     features: ["Agent Designer", "Gemini Notebook"],
-    connectors: ["Email Connector"],
+    connectors: [],
     role: "Student",
     level: ["University & College", "High School", "Generic"],
     steps: [
-      "Centralize student handbook, welfare guidelines, and club constitutions into Gemini Notebook.",
-      "Deploy a 24/7 policy Q&A Agent using Agent Designer to guide members on regulations and forms.",
-      "Test common edge cases and route complex disputes to human union officers via Email Connector."
+      "Add the student handbook, welfare guidelines and club constitutions to Gemini Notebook as sources, then use the Set up prompt to build a verification set of 10 member questions with cited answers.",
+      "In Agent Designer, paste the policy Agent prompt and add the same files under Knowledge › Add files. Fill in the officer's email for sensitive cases.",
+      "Ask the Agent the 10 verification questions plus 2 sensitive ones. Check that answers and citations match the notebook and that sensitive questions go to the officer, then share the Agent link with members."
     ],
-    prompt: `You are the 24/7 Policy and Welfare Agent for {{STUDENT_UNION_NAME}} at {{INSTITUTION_NAME}}. Your purpose is to provide immediate, highly accurate answers to student questions regarding union bylaws, venue booking, lockers, and society financial subsidies.
-Rules:
-1. Answer using ONLY verified information from the attached student handbook and constitution.
-2. Maintain a friendly, supportive student-peer tone.
-3. Provide step-by-step instructions for all administrative procedures (e.g. How to book a room, how to apply for event funding).
-4. If an inquiry involves confidential welfare disputes, severe mental health concerns, or complex disciplinary proceedings, do NOT answer. Provide immediate instructions to contact the designated human union officer at {{OFFICER_EMAIL}}.`,
-    proTip: "Pairing the Agent with Email Connector ensures seamless, automated escalation when students face nuanced emergencies requiring staff intervention.",
-    connectorGuide: {
-      name: "Email Connector",
-      steps: [
-        "In your institutional cloud portal, select Data Connectors > Email Connector.",
-        "Authenticate using the Student Union official support inbox credentials.",
-        "Enable OAuth2 IMAP/SMTP read and dispatch authorization.",
-        "Configure automated triage triggers that route unresolved tickets to designated committee officers."
-      ]
-    }
+    prompt: `You are the 24/7 Policy and Welfare Agent for {{STUDENT_UNION_NAME}} at {{INSTITUTION_NAME}}. You give quick, accurate answers to student questions about union bylaws, venue booking, lockers and society funding.
+
+KNOWLEDGE SOURCES (Agent Designer › Knowledge › Add files: the same files as your Gemini Notebook policy hub)
+The student handbook, welfare guidelines and club constitutions of {{STUDENT_UNION_NAME}}.
+
+GROUNDING RULES
+1. Answer only from the Knowledge Sources and cite each answer as (document name, section or page).
+2. If the sources don't cover a question, say so and give {{OFFICER_EMAIL}} as the contact. Never guess a rule, fee, deadline or form name.
+3. If two documents disagree, quote both, say which is newer and suggest checking with the union office.
+
+ANSWER RULES
+1. Use a friendly, supportive student-peer tone.
+2. For any procedure (e.g. booking a room, applying for event funding), give numbered steps and name the form or deadline from the sources.
+3. If a question involves a confidential welfare dispute, a mental health concern or a disciplinary case, do NOT answer it. Reply kindly that a union officer will help in confidence and give {{OFFICER_EMAIL}}. If someone may be in danger, also tell them to contact campus security or emergency services now.`,
+    proTip: "Re-upload the Knowledge files whenever the constitution or handbook is amended, then re-run your verification set. The Agent only knows the version you uploaded.",
+    connectorGuide: null
   },
   {
     id: "visual_campaign",
     title: "Interactive Story Game & Visual Campaign",
     category: "student",
     summary: "Create interactive visual storytelling campaigns, orientation games, and high-impact social media assets with AI media models.",
-    features: ["Agent Designer", "Image Generation", "Video Generation"],
+    features: [
+      "Canvas Mode",
+      "Image Generation",
+      "Video Generation"
+    ],
     connectors: [],
     role: "Student",
     level: ["Generic"],
     steps: [
-      "Draft the event narrative arc, key character personas, and campus orientation milestones.",
+      "Draft the event narrative arc, key character personas and campus orientation milestones in Canvas Mode.",
       "Generate high-resolution thematic illustrations with Image Generation and narrative clips with Video Generation.",
       "Curate campaign assets into digital social feeds and interactive onboarding screens for freshers."
     ],
@@ -337,7 +352,8 @@ Rules:
 Requirements:
 1. **Interactive Storyline**: Outline a 4-chapter narrative mystery where freshers explore historical campus buildings, discover student traditions, and solve clues.
 2. **Visual Generation Prompts**: Provide 3 rich, descriptive text-to-image prompts (specifying artistic lighting, vibrant student characters, and cinematic composition) suitable for Gemini Image Generation.
-3. **Motion Scene Prompts**: Draft 2 prompt scripts suitable for Video Generation to create 5-second teaser animations for social media stories.`,
+3. **Motion Scene Prompts**: Draft 2 prompt scripts suitable for Video Generation to create 5-second teaser animations for social media stories.
+Use Canvas to create this as an editable document.`,
     proTip: "Use Image Generation to produce unified character key visual styles before prompting Video Generation to preserve aesthetic continuity across visual campaign channels.",
     connectorGuide: null
   },
@@ -354,10 +370,11 @@ Requirements:
     level: ["University & College", "High School"],
     steps: [
       "Connect LMS gradebook and SIS engagement logs to establish multi-variable risk thresholds.",
-      "Run predictive engagement synthesis using Deep Research to identify students needing intervention.",
+      "Run the prompt in Deep Research with the LMS Connector selected as a source, so the analysis uses your gradebook and activity logs.",
       "Review identified cohorts with academic advisors and dispatch personalized supportive outreach."
     ],
-    prompt: `Analyze student learning analytics data for {{COHORT_SEMESTER}} in the {{DEPARTMENT_NAME}} department to identify learners at risk of falling behind.
+    prompt: `Data source: the {{DEPARTMENT_NAME}} gradebook and activity logs for {{COHORT_SEMESTER}}, read through the LMS Connector. Use only this data for student information and never search the web for students.
+Analyze student learning analytics data for {{COHORT_SEMESTER}} in the {{DEPARTMENT_NAME}} department to identify learners at risk of falling behind.
 Criteria to examine:
 - LMS login inactivity exceeding 10 consecutive days.
 - Missed or late formative assessment submissions (threshold: 2 or more).
@@ -365,8 +382,12 @@ Criteria to examine:
 Output Requirements:
 1. **At-Risk Cohort Segmentation**: Group students into High Risk, Moderate Risk, and Low Risk categories with evidence flags.
 2. **Intervention Recommendations**: For each risk tier, suggest actionable pedagogical interventions (e.g., peer tutoring referral, advisor check-in, supplemental review modules).
-3. **Draft Outreach Email**: Generate an empathetic, non-judgmental advisor check-in email encouraging the student to schedule office hours.`,
-    proTip: "By leveraging multi-modal synthesis, Gemini combines attendance anomalies with assignment grades to catch students who appear present but are falling behind conceptually.",
+3. **Draft Outreach Email**: Generate an empathetic, non-judgmental advisor check-in email encouraging the student to schedule office hours.
+Rules:
+- Identify students by LMS ID only, and list the exact data points behind every flag (e.g. "last login 14 days ago; 2 late submissions; midterm 52%").
+- If a data field is missing for a student, mark it "No data" and don't count it as a risk.
+- This list is a starting point, not a decision: an advisor reviews every flag before any outreach is sent.`,
+    proTip: "Ask for the data behind every flag. Advisors trust a list they can check, and it catches students who log in often but are falling behind on grades.",
     connectorGuide: {
       name: "LMS Connector",
       steps: [
@@ -382,29 +403,30 @@ Output Requirements:
     title: "Accreditation Self-Study Report Synthesizer",
     category: "operational",
     summary: "Map faculty syllabi, student outcomes, and institutional assessments against external accreditation criteria seamlessly.",
-    features: ["Gemini Notebook", "Deep Research"],
-    connectors: ["Drive Connector"],
+    features: [
+      "Gemini Notebook",
+      "Deep Research"
+    ],
+    connectors: [],
     role: "Program Leader",
     level: ["University & College"],
     steps: [
-      "Aggregate departmental self-studies, syllabi, and outcome assessments into an institutional Drive hub.",
-      "Run evidence cross-mapping across accreditation standards and criteria in Gemini Notebook.",
-      "Review drafted narrative syntheses, verify institutional metrics, and export the official self-study report."
+      "Run Deep Research on the accreditation body's current standards and recent changes. Add that report, the official standards document, syllabi, outcome assessments and committee minutes to a Gemini Notebook as sources.",
+      "Run the synthesis prompt in Gemini Notebook to map the evidence to each criterion, list the gaps and draft the narrative with a citation for every claim.",
+      "Click through the citations to check each claim against the original document, fill the evidence gaps, then export the self-study report."
     ],
-    prompt: `Act as a higher education quality assurance director. Synthesize institutional evidence for {{PROGRAM_NAME}} aligned with the accreditation standards of {{ACCREDITATION_BODY}}.
+    prompt: `Act as a higher education quality assurance director. Synthesise the evidence for {{PROGRAM_NAME}} against the accreditation standards of {{ACCREDITATION_BODY}}.
+
+Sources in this notebook: the official {{ACCREDITATION_BODY}} standards, a Deep Research brief on recent changes to them, course syllabi, student learning outcome evaluations, faculty records and committee minutes.
+
 Tasks:
-1. **Cross-Mapping**: Map provided course syllabi, student learning outcome evaluations, and faculty publication records against {{ACCREDITATION_BODY}} standards for Criterion 1 (Curriculum Rigor) and Criterion 2 (Faculty Qualifications).
-2. **Gap Analysis**: Highlight any missing assessment data, outdated course references, or under-documented student learning evidence.
-3. **Executive Synthesis**: Draft a 500-word formal narrative summarizing program continuous improvement initiatives and pedagogical innovations over the past review cycle.`,
-    proTip: "Gemini Notebook's source citation capabilities are ideal for accreditation reviews, allowing evaluators to click any statement to inspect the original course syllabus or committee minutes.",
-    connectorGuide: {
-      name: "Drive Connector",
-      steps: [
-        "Authenticate your cloud storage provider in Gemini Enterprise.",
-        "Authorize read-only access to the central Accreditation Evidence archive.",
-        "Enable automated document indexation for fast cross-document semantic lookup."
-      ]
-    }
+1. **Cross-Mapping**: map the evidence to Criterion 1 (Curriculum Rigor) and Criterion 2 (Faculty Qualifications) as a table: Standard | Evidence | Source (document, page) | Strength (Strong, Partial, None).
+2. **Gap Analysis**: list missing assessment data, outdated course references and under-documented learning evidence. Mark each one "Evidence gap" and name the document that would close it.
+3. **Executive Synthesis**: draft a 500-word formal narrative on continuous improvement over the review cycle.
+
+Rules: cite a source for every factual claim. If the official standards and the Deep Research brief differ, follow the official standards. Never invent figures, dates or meeting outcomes.`,
+    proTip: "Gemini Notebook links every claim to its source, so reviewers can click a statement and see the original syllabus or minutes. Keep the official standards document in the notebook so the mapping never relies on a summary alone.",
+    connectorGuide: null
   },
   {
     id: "workforce_federation",
@@ -412,7 +434,7 @@ Tasks:
     category: "operational",
     summary: "Deploy secure SAML 2.0 / OIDC identity federation linking your campus IdP to Gemini Enterprise without duplicating directories.",
     features: ["Deep Research"],
-    connectors: ["Drive Connector"],
+    connectors: [],
     role: "IT Admin",
     level: ["Generic"],
     steps: [
@@ -426,15 +448,7 @@ Deliverables:
 2. **Conditional Access & Session Policies**: Recommended session timeout rules, multi-factor authentication (MFA) enforcement policies, and device compliance checks.
 3. **Troubleshooting Checklist**: Step-by-step diagnosis procedure for common handshake errors (e.g. SAML response clock skew, missing claims, attribute mismatch).`,
     proTip: "Federated workforce identity ensures immediate automated offboarding—when a student graduates or staff member resigns, their Gemini Enterprise access terminates instantly at the IdP boundary.",
-    connectorGuide: {
-      name: "Drive Connector",
-      steps: [
-        "In Google Cloud IAM & Admin, configure Workforce Identity Federation pools.",
-        "Upload IdP SAML 2.0 metadata XML descriptor.",
-        "Define attribute condition mappings for student and faculty groups.",
-        "Verify SSO redirect flow in an incognito browser window."
-      ]
-    }
+    connectorGuide: null
   },
 
   // HUB 4: ADMINISTRATIVE & STUDENT AFFAIRS (SAO, Finance & Security)
@@ -443,20 +457,24 @@ Deliverables:
     title: "Digital Cultural Fair Red Packet Game",
     category: "administrative",
     summary: "Build an interactive campus cultural scavenger hunt with AI-generated trivia, QR clues, and digital red packet rewards.",
-    features: ["Agent Designer", "Image Generation"],
+    features: [
+      "Canvas Mode",
+      "Image Generation"
+    ],
     connectors: [],
     role: "SAO",
     level: ["Generic"],
     steps: [
       "Plan interactive campus discovery checkpoints, cultural trivia themes, and physical QR stations.",
-      "Generate bilingual riddle clues and digital red packet artwork via Agent Designer and Image Generation.",
+      "Generate bilingual riddle clues and quiz cards in Canvas Mode, and digital red packet artwork with Image Generation.",
       "Pilot test the hunt route for student safety and launch the live interactive orientation activity."
     ],
     prompt: `You are the Student Affairs Orientation Director for {{CAMPUS_NAME}}. Design an engaging, digital-physical Cultural Fair Scavenger Hunt celebrating {{FESTIVAL_NAME}}.
 Include:
 1. **Station Clues**: 5 clever rhyming clues that lead students to iconic campus landmarks (library, student center, amphitheater, botanical garden, sports complex).
 2. **Interactive Red Packet QR Challenges**: For each station, design a quick 2-question cultural trivia mini-quiz that unlocks a digital red packet stamp.
-3. **Reward Tier Structure**: Outline completion badge rewards and clear redemption instructions to manage crowd flow safely.`,
+3. **Reward Tier Structure**: Outline completion badge rewards and clear redemption instructions to manage crowd flow safely.
+Use Canvas to create this as an editable document.`,
     proTip: "Use Image Generation to design digital commemorative red packet graphics and badges that students can collect in their digital portfolios upon station check-in.",
     connectorGuide: null
   },
@@ -465,29 +483,28 @@ Include:
     title: "Student Expense Compliance Auditor",
     category: "administrative",
     summary: "Audit student club reimbursement receipts, invoices, and subsidy claims automatically against university financial regulations.",
-    features: ["Gemini Notebook", "Deep Research"],
-    connectors: ["Drive Connector"],
+    features: [
+      "Gemini Notebook"
+    ],
+    connectors: [],
     role: "Finance",
     level: ["University & College", "High School"],
     steps: [
-      "Upload student society expense receipts, invoices, and bank statements to a dedicated Drive directory.",
-      "Execute automated policy compliance auditing to flag missing documentation or spending limit violations.",
-      "Review flagged discrepancies with student leaders and generate approved reimbursement vouchers."
+      "Create one notebook per claim. Add the university's student organisation financial regulations, then the claim form, receipts and quotations as PDFs.",
+      "Run the audit prompt in Gemini Notebook. It checks each receipt line against the regulations and cites the clause for every deduction.",
+      "Open each cited clause and receipt to confirm the flags, then send the audit ledger to the society and issue the approved voucher."
     ],
-    prompt: `You are the Student Affairs Finance Auditor. Audit the reimbursement claim submitted by {{SOCIETY_NAME}} for the event "{{EVENT_NAME}}" totaling {{CLAIM_AMOUNT}}.
-Audit Requirements:
-1. **Line-Item Verification**: Cross-reference each receipt item against university student organization financial regulations.
-2. **Policy Compliance Check**: Flag any alcohol purchases, unitemized credit card slips, tips exceeding 15%, or missing third-party quotations for items over $300.
-3. **Audit Summary**: Produce an itemized audit ledger showing Allowed Amount, Disallowed Amount, and a courteous explanation of any deductions with instructions for appeal.`,
-    proTip: "Grounding Gemini Notebook in official institutional procurement rules ensures high-precision compliance detection without manual auditing fatigue.",
-    connectorGuide: {
-      name: "Drive Connector",
-      steps: [
-        "Link Finance Department shared claims folder via Drive Connector.",
-        "Authorize optical character recognition (OCR) parsing on submitted receipt scans.",
-        "Verify automated audit summaries before issuing reimbursement payments."
-      ]
-    }
+    prompt: `You are the Student Affairs Finance Auditor. Audit the reimbursement claim from {{SOCIETY_NAME}} for the event "{{EVENT_NAME}}", totalling {{CLAIM_AMOUNT}}.
+
+Sources in this notebook: the student organisation financial regulations, plus the claim form, receipts and quotations for this claim.
+
+Audit requirements:
+1. **Line-Item Verification**: check each receipt line against the regulations. Cite the clause (document, section) for every rule you apply.
+2. **Policy Compliance Check**: flag alcohol, unitemised card slips, tips above the allowed limit, missing quotations above the quotation threshold and any receipt that doesn't match the claim form. Take every limit from the regulations, not from memory.
+3. **Missing Evidence**: if a receipt is unreadable or missing, mark the line "Evidence needed" instead of guessing the amount.
+4. **Audit Ledger**: a table with Item | Receipt | Claimed | Allowed | Disallowed | Reason and clause, then the totals and a courteous note explaining any deductions and how to appeal.`,
+    proTip: "Keep one notebook per claim so receipts from different societies never mix, and use the same regulations file in every notebook so each audit cites the same clauses.",
+    connectorGuide: null
   },
   {
     id: "security_simulator",
@@ -495,29 +512,31 @@ Audit Requirements:
     category: "administrative",
     summary: "Simulate emergency response scenarios and evaluate campus security decision trees during emergency drill operations.",
     features: ["Agent Designer", "Video Generation"],
-    connectors: ["Drive Connector"],
+    connectors: [],
     role: "Security",
     level: ["Generic"],
     steps: [
-      "Establish emergency protocol handbooks, campus floor plans, and evacuation routes.",
-      "Build multi-branch crisis drill scenarios and tactical decision trees using Agent Designer.",
-      "Facilitate simulated emergency exercises for campus security personnel and evaluate response timelines."
+      "In Agent Designer, add the emergency protocol handbook, floor plans and evacuation routes under Knowledge › Add files, then paste the drill prompt.",
+      "Run a drill with the security team. The Agent presents each phase, checks every decision against the protocol and cites the section.",
+      "Use Video Generation for short clips that open each phase, then review the debrief scores and update the handbook where the drill exposed gaps."
     ],
-    prompt: `You are the Director of Campus Safety. Build a dynamic, interactive emergency drill simulation scenario for {{EMERGENCY_SCENARIO}} occurring at {{FACILITY_LOCATION}}.
-Simulation Structure:
-1. **Incident Genesis (Minute 0)**: Initial emergency call received. Present 3 critical first-response decisions to the safety team.
-2. **Escalation Phase (Minute 15)**: Condition evolves (e.g., secondary obstacle, route blockage, crowd panic). Present tactical options with consequences.
-3. **Containment & Evacuation (Minute 30)**: First responder coordination, safe perimeter establishment, and parent/press communication dispatch.
-4. **Debrief Rubric**: 4-part evaluation rubric grading decision speed, communication clarity, protocol adherence, and victim care prioritization.`,
-    proTip: "Use Video Generation to produce realistic tactical scenario prompts illustrating evacuation bottlenecks or weather events to evaluate team decision-making under stress.",
-    connectorGuide: {
-      name: "Drive Connector",
-      steps: [
-        "In Gemini Enterprise console, connect your Campus Security emergency operations document drive.",
-        "Verify read privileges on crisis SOPs and facility floor plans.",
-        "Run simulated scenario walk-throughs during pre-semester safety training."
-      ]
-    }
+    prompt: `You are the Director of Campus Safety. Run an interactive emergency drill for {{EMERGENCY_SCENARIO}} at {{FACILITY_LOCATION}}.
+
+KNOWLEDGE SOURCES (Agent Designer › Knowledge › Add files)
+The campus emergency protocol handbook, floor plans and evacuation routes.
+
+GROUNDING RULES
+1. Base every "correct" action on the protocol handbook and cite it as (section, page). Use the floor plans for routes, exits and assembly points.
+2. If the handbook doesn't cover a situation, say "Not covered by protocol: flag for review" instead of making up a procedure.
+3. This is a training drill. Never present it as a real emergency.
+
+Simulation structure:
+1. **Incident Genesis (Minute 0)**: the first emergency call. Offer 3 first-response decisions and wait for the team's choice.
+2. **Escalation Phase (Minute 15)**: the situation changes (e.g. a blocked route or crowd panic). Offer tactical options and explain the consequence of the team's choice, citing the protocol.
+3. **Containment & Evacuation (Minute 30)**: responder coordination, a safe perimeter and parent/press communication.
+4. **Debrief Rubric**: score decision speed, communication clarity, protocol adherence and care for casualties, and list each decision that departed from the protocol with the section it should have followed.`,
+    proTip: "Open each phase with a 5-second Video Generation clip (e.g. smoke in a stairwell) to raise the pressure, but keep the protocol handbook as the only source for the right action.",
+    connectorGuide: null
   },
 
   // HUB 5: AGENT DESIGNER WORKFLOWS (multi-step, conditional routing, human review; special consideration uses the Drive Connector trigger)
@@ -566,6 +585,11 @@ const useCaseHelperPrompts = {
         type: "canvas",
         title: "Prompt to Generate Lecture Reading Summary & Key Concepts",
         prompt: `Synthesize the core foundational concepts and terminology for Lecture Week 1-3 of '{{COURSE_NAME}}'. Provide a 500-word executive summary, 10 must-know technical terms with student-friendly definitions, and 5 common student misconceptions with corrections. Use Canvas to create this as an editable document.`
+      },
+      {
+        type: "notebooklm",
+        title: "Prompt to Build a Verification Set in Gemini Notebook",
+        prompt: `Using only the sources in this notebook, write 10 questions that students in {{COURSE_NAME}} ({{COURSE_CODE}}) are likely to ask: 4 about key concepts, 3 about assessment and deadlines, 2 that need several sources together, and 1 that the sources don't cover. For each question, give the correct answer in 2–3 sentences and cite the file name and page or slide. For the uncovered question, write "Not in the course materials". Present the result as a table: Question | Expected answer | Source (file, page or slide).`
       }
     ],
     "zh-TW": [
@@ -578,6 +602,11 @@ const useCaseHelperPrompts = {
         type: "canvas",
         title: "生成前三週講義摘要與核心概念提示詞",
         prompt: `統整「{{COURSE_NAME}}」第 1 至 3 週講義的核心概念與專有名詞。提供 500 字精要摘要、10 個關鍵術語之白話解說，以及 5 個學生常見概念誤區與正確觀念導正。請使用 Canvas 將此內容建立為可編輯文件。`
+      },
+      {
+        type: "notebooklm",
+        title: "在 Gemini Notebook 建立驗證題組提示詞",
+        prompt: `只根據此 Notebook 的來源，為 {{COURSE_NAME}}（{{COURSE_CODE}}）寫出 10 條學生最可能問的問題：4 條關於核心概念、3 條關於評核及限期、2 條需要綜合多份來源，以及 1 條來源未有涵蓋的問題。每條問題以 2 至 3 句寫出正確答案，並註明檔案名稱及頁數或投影片編號。來源未有涵蓋的問題，答案寫「教材未有涵蓋」。以表格呈現：問題｜預期答案｜出處（檔案、頁數或投影片）。`
       }
     ],
     "zh-CN": [
@@ -590,6 +619,11 @@ const useCaseHelperPrompts = {
         type: "canvas",
         title: "生成前三周讲义摘要与核心概念提示词",
         prompt: `统整“{{COURSE_NAME}}”第 1 至 3 周讲义的核心概念与专有名词。提供 500 字精要摘要、10 个关键术语之白话解说，以及 5 个学生常见概念误区与正确观念导正。请使用 Canvas 将此内容创建为可编辑文档。`
+      },
+      {
+        type: "notebooklm",
+        title: "在 Gemini Notebook 建立验证题组提示词",
+        prompt: `只根据此 Notebook 的来源，为 {{COURSE_NAME}}（{{COURSE_CODE}}）写出 10 条学生最可能问的问题：4 条关于核心概念、3 条关于考核及截止日期、2 条需要综合多份来源，以及 1 条来源未有涵盖的问题。每条问题以 2 至 3 句写出正确答案，并注明文件名及页数或幻灯片编号。来源未有涵盖的问题，答案写「教材未有涵盖」。以表格呈现：问题｜预期答案｜出处（文件、页数或幻灯片）。`
       }
     ]
   },
@@ -718,6 +752,11 @@ const useCaseHelperPrompts = {
         type: "canvas",
         title: "Prompt to Generate Qualitative Feedback Transcription Template",
         prompt: `Structure a standardized student feedback transcription template to organize raw town hall notes and survey responses into thematic categories: Academic, Student Welfare, Facilities, and Financial Aid. Use Canvas to create this as an editable document.`
+      },
+      {
+        type: "deep_research",
+        title: "Prompt to Research Peer-School Solutions with Deep Research",
+        prompt: `Research how universities and colleges similar to {{INSTITUTION_NAME}} have handled these student concerns in the last 3 years: {{TOP_ISSUES}}. For each concern, find 2–3 low-cost policy changes, and say where they were tried, what they cost and what changed. Cite every source.`
       }
     ],
     "zh-TW": [
@@ -730,6 +769,11 @@ const useCaseHelperPrompts = {
         type: "canvas",
         title: "生成質化民意彙整與歸類樣板提示詞",
         prompt: `設計結構化的學生民意資料整理範本，將諮詢會筆記與匿名回饋分類至四大領域：學術教學、學生福利、校園設施及獎助學金。請使用 Canvas 將此內容建立為可編輯文件。`
+      },
+      {
+        type: "deep_research",
+        title: "以 Deep Research 搜尋同類院校方案提示詞",
+        prompt: `研究與 {{INSTITUTION_NAME}} 相近的大學及大專院校在過去 3 年如何處理以下學生關注事項：{{TOP_ISSUES}}。每項關注事項找出 2 至 3 個低成本的政策改變，說明在哪裏推行、成本多少、帶來甚麼改變，並註明每項出處。`
       }
     ],
     "zh-CN": [
@@ -742,6 +786,11 @@ const useCaseHelperPrompts = {
         type: "canvas",
         title: "生成质化民意汇整与归类样板提示词",
         prompt: `设计结构化的学生民意数据整理范本，将咨询会笔记与匿名反馈分类至四大领域：学术教学、学生福利、校园设施及奖助学金。请使用 Canvas 将此内容创建为可编辑文档。`
+      },
+      {
+        type: "deep_research",
+        title: "以 Deep Research 搜寻同类院校方案提示词",
+        prompt: `研究与 {{INSTITUTION_NAME}} 相近的大学及高校在过去 3 年如何处理以下学生关注事项：{{TOP_ISSUES}}。每项关注事项找出 2 至 3 个低成本的政策改变，说明在哪里推行、成本多少、带来什么改变，并注明每项出处。`
       }
     ]
   },
@@ -756,6 +805,11 @@ const useCaseHelperPrompts = {
         type: "canvas",
         title: "Prompt to Generate Union Subsidy Line-Item Budget Sheet",
         prompt: `Create a compliant line-item budget table for '{{CLUB_NAME}}' detailing speaker honorariums, equipment rental, venue booking, and promotional printing adhering to Student Union grant maximums. Use Canvas to create this as an editable document.`
+      },
+      {
+        type: "notebooklm",
+        title: "Prompt to Pull a Funding Rules Checklist in Gemini Notebook",
+        prompt: `Using only the funding guidelines and bylaws in this notebook, list every rule that affects a club funding proposal for {{CLUB_NAME}} in {{ACADEMIC_YEAR}}: spending limits per event type, items that can't be funded, food and drink limits, quotation rules, deadlines and required documents. Present a table: Rule | Limit or requirement | Clause (document, section). Mark anything the sources leave unclear as "Check with the union office".`
       }
     ],
     "zh-TW": [
@@ -768,6 +822,11 @@ const useCaseHelperPrompts = {
         type: "canvas",
         title: "生成社團預算明細與核銷檢核表提示詞",
         prompt: `為「{{CLUB_NAME}}」編製符合學生會補助規章之逐項預算明細表，詳列講師鐘點費、器材租賃、場地清潔及文宣印製費用，並註記報銷憑證規範。請使用 Canvas 將此內容建立為可編輯文件。`
+      },
+      {
+        type: "notebooklm",
+        title: "在 Gemini Notebook 整理資助規則清單提示詞",
+        prompt: `只根據此 Notebook 中的資助指引及會章，列出所有影響 {{CLUB_NAME}} {{ACADEMIC_YEAR}} 學年資助企劃書的規則：各類活動的開支上限、不獲資助的項目、餐飲限制、報價要求、限期及所需文件。以表格呈現：規則｜上限或要求｜條文（文件、章節）。來源未有清楚說明的，標示為「請向學生會辦事處查詢」。`
       }
     ],
     "zh-CN": [
@@ -780,6 +839,11 @@ const useCaseHelperPrompts = {
         type: "canvas",
         title: "生成社团预算明细与核销检核表提示词",
         prompt: `为“{{CLUB_NAME}}”编制符合学生会补助规章之逐项预算明细表，详列讲师钟点费、器材租赁、场地清洁及文宣印制费用，并注记报销凭证规范。请使用 Canvas 将此内容创建为可编辑文档。`
+      },
+      {
+        type: "notebooklm",
+        title: "在 Gemini Notebook 整理资助规则清单提示词",
+        prompt: `只根据此 Notebook 中的资助指引及章程，列出所有影响 {{CLUB_NAME}} {{ACADEMIC_YEAR}} 学年资助企划书的规则：各类活动的开支上限、不获资助的项目、餐饮限制、报价要求、截止日期及所需文件。以表格呈现：规则｜上限或要求｜条文（文件、章节）。来源未有清楚说明的，标示为「请向学生会办事处查询」。`
       }
     ]
   },
@@ -794,6 +858,11 @@ const useCaseHelperPrompts = {
         type: "canvas",
         title: "Prompt to Generate FAQ Knowledge Base for Club Subsidies",
         prompt: `Create a 12-question frequently asked questions (FAQ) knowledge base for student societies regarding annual budget applications, permissible expense receipts, and claim submission deadlines. Use Canvas to create this as an editable document.`
+      },
+      {
+        type: "notebooklm",
+        title: "Prompt to Build a Verification Set in Gemini Notebook",
+        prompt: `Using only the sources in this notebook, write 10 questions that members of {{STUDENT_UNION_NAME}} often ask: 3 on venue booking, 2 on lockers, 3 on society funding and 2 on membership or elections. For each, give the correct answer in 2–3 sentences, including any form name, fee or deadline, and cite the document and section or page. Then add 2 sensitive questions (a welfare dispute and a disciplinary case) whose expected reply is a referral to the union officer. Present everything as a table: Question | Expected answer | Source.`
       }
     ],
     "zh-TW": [
@@ -806,6 +875,11 @@ const useCaseHelperPrompts = {
         type: "canvas",
         title: "生成社團補助與福利常見問題集 (FAQ) 提示詞",
         prompt: `為各學生社團編製一份 12 題常見問答集 (FAQ)，詳細解答年度補助金請領資格、合格單據報銷規定及審核進度查詢。請使用 Canvas 將此內容建立為可編輯文件。`
+      },
+      {
+        type: "notebooklm",
+        title: "在 Gemini Notebook 建立驗證題組提示詞",
+        prompt: `只根據此 Notebook 的來源，寫出 10 條 {{STUDENT_UNION_NAME}} 會員常問的問題：3 條關於場地預約、2 條關於儲物櫃、3 條關於學會資助、2 條關於會籍或選舉。每條以 2 至 3 句寫出正確答案，包括相關表格名稱、費用或限期，並註明文件及章節或頁數。再加入 2 條敏感問題（一宗福利糾紛及一宗紀律個案），預期答案為轉介學生會幹事。以表格呈現：問題｜預期答案｜出處。`
       }
     ],
     "zh-CN": [
@@ -818,6 +892,11 @@ const useCaseHelperPrompts = {
         type: "canvas",
         title: "生成社团补助与福利常见问题集 (FAQ) 提示词",
         prompt: `为各学生社团编制一份 12 题常见问答集 (FAQ)，详细解答年度补助金申领资格、合格单据报销规定及审核进度查询。请使用 Canvas 将此内容创建为可编辑文档。`
+      },
+      {
+        type: "notebooklm",
+        title: "在 Gemini Notebook 建立验证题组提示词",
+        prompt: `只根据此 Notebook 的来源，写出 10 条 {{STUDENT_UNION_NAME}} 会员常问的问题：3 条关于场地预约、2 条关于储物柜、3 条关于社团资助、2 条关于会籍或选举。每条以 2 至 3 句写出正确答案，包括相关表格名称、费用或截止日期，并注明文件及章节或页数。再加入 2 条敏感问题（一起福利纠纷及一起纪律个案），预期答案为转介学生会干事。以表格呈现：问题｜预期答案｜出处。`
       }
     ]
   },
@@ -1612,55 +1691,79 @@ const useCasesTranslations = {
       title: "Socratic AI Tutor Agent Creation",
       summary: "Ground a custom course Agent in your lecture notes and syllabi to act as a 24/7 Socratic learning companion.",
       steps: [
-        "In Gemini Notebook, create a 'Read-Only Course Hub' and upload syllabus documents, lecture slides, and key readings.",
-        "In Agent Designer, configure the Socratic tutor persona prompt with grounding and test interactive questions.",
-        "Review guidance quality, publish the shareable Agent link, and embed it into your institutional LMS."
+        "In Gemini Notebook, add your syllabus, lecture slides and key readings as sources, then use the Set up prompt to build a verification set: 10 typical student questions with cited answers.",
+        "In Agent Designer, paste the tutor prompt and add the same files under Knowledge › Add files. Keep the same file names so the citations match.",
+        "Ask the Agent the 10 verification questions and compare its hints and citations with the notebook's answers. Fix any gaps, then publish the Agent link in your LMS."
       ],
-      prompt: `You are the '{{COURSE_CODE}} Coach,' a friendly and encouraging Socratic tutor for {{COURSE_NAME}}. Your sole objective is to guide students to find answers themselves.
-Follow these rules strictly:
-1. **Ground all your responses** in the provided course materials only.
-2. When a student asks a question (e.g., 'What is the answer to question 3?'), do NOT give the direct answer. Instead, respond with a probing, contextual question that helps them think critically.
-3. Reference specific files/pages in the course materials (e.g., 'Can you look at slide 4 of Lecture 2 and tell me what the first stage is called?').
-4. If a student demonstrates correct understanding, praise them and provide a complete, rich explanation.
-5. If asked about topics outside this course, politely decline, stating: 'I can only assist you with {{COURSE_NAME}} topics.'
-6. Cite your sources for every answer.`,
-      proTip: "By connecting Gemini Notebook as the grounding layer, you ensure the Agent never hallucinates answers, restricts responses to authorized curriculum text, and provides verified inline citations."
+      prompt: `You are the '{{COURSE_CODE}} Coach', a friendly and encouraging Socratic tutor for {{COURSE_NAME}}. Your sole objective is to guide students to find answers themselves.
+
+KNOWLEDGE SOURCES (Agent Designer › Knowledge › Add files: the same files as your Gemini Notebook course hub)
+The syllabus, lecture slides and key readings for {{COURSE_NAME}}.
+
+GROUNDING RULES
+1. Use only the Knowledge Sources. Do not use general web knowledge, even if you know the answer.
+2. Before every hint, find the passage that supports it and cite it as (file name, page or slide).
+3. If the answer isn't in the sources, say: "That isn't covered in the {{COURSE_NAME}} materials. Please ask {{INSTRUCTOR_NAME}}." Do not guess.
+4. Never invent quotes, page numbers, formulas or facts.
+5. If two sources disagree, follow the latest syllabus and tell the student about the conflict.
+
+TUTORING RULES
+1. When a student asks for an answer (e.g. 'What is the answer to question 3?'), do NOT give it. Reply with a probing question that points to the right place in the materials (e.g. 'Look at slide 4 of Lecture 2: what is the first stage called?').
+2. When the student shows correct understanding, praise them and give a complete explanation with citations.
+3. If asked about topics outside this course, politely decline: 'I can only help with {{COURSE_NAME}} topics.'`,
+      proTip: "Agent Designer can't read a Gemini Notebook directly, so the Agent answers only from the files you add under Knowledge. Use the notebook as your answer key: if the Agent's citation doesn't match the notebook's, fix the files or the prompt before students use it."
     },
     "zh-TW": {
       title: "Socratic AI Tutor Agent 創建",
       summary: "將客製化的課程 Agent 植基於您的授課筆記與教學大綱，打造 24/7 的 Socratic 學習導師。",
       steps: [
-        "在 Gemini Notebook 中建立「唯讀課程中心」，上傳課程大綱、簡報及核心教材。",
-        "進入 Agent Designer 設定 Socratic 角色特徵提示詞並連結課程中心進行互動測試。",
-        "覆核引導品質後生成公開分享連結，並嵌入發布至校園 LMS 系統。"
+        "在 Gemini Notebook 加入課程大綱、講義投影片及核心讀物作為來源，再用輔助提示詞建立驗證題組：10 條學生常問的問題，每條附有出處的答案。",
+        "在 Agent Designer 貼上導師提示詞，並在 Knowledge › Add files 加入同一批檔案。保持相同檔名，讓引用出處一致。",
+        "向 Agent 提出這 10 條驗證問題，將它的提示及出處與 Notebook 的答案逐一比對。補好缺漏後，才在 LMS 發布 Agent 連結。"
       ],
-      prompt: `你是「{{COURSE_CODE}} 導師」，一位親切且循循善誘的 {{COURSE_NAME}} Socratic 學習教練。你的唯一目標是引導學生自主思考並找到答案。
-請嚴格遵守以下準則：
-1. **所有回答均須植基於**提供的課程教材中，絕不可編造。
-2. 當學生問及特定答案時，不要直接告知。請回覆一個具探究性、情境式的反問，幫助他們進行批判性思考。
-3. 具體指出課程材料中的文件或頁數（例如：「你可以參考 Lecture 2 的第 4 張投影片，然後告訴我第一個階段叫什麼名字嗎？」）。
-4. 當學生展現正確的理解時，給予肯定並提供完整、豐富的補充說明。
-5. 若問及本課程以外的主題，請禮貌地拒絕並回答：「我只能協助你解答關於 {{COURSE_NAME}} 的問題。」
-6. 每次回答皆須引用出處。`,
-      proTip: "連結 Gemini Notebook 作為知識地基，可確保 Agent 絕不胡言亂語（Hallucinate），且其所有答覆均受限於核准的教材，並提供真實可信的內文引用。"
+      prompt: `你是「{{COURSE_CODE}} 導師」，一位親切、循循善誘的 {{COURSE_NAME}} Socratic 學習教練。你的唯一目標是引導學生自己找到答案。
+
+知識來源（在 Agent Designer › Knowledge › Add files 加入，與 Gemini Notebook 課程中心相同的檔案）
+{{COURSE_NAME}} 的課程大綱、講義投影片及核心讀物。
+
+引用規則
+1. 只可使用知識來源的內容。即使你知道答案，也不要使用一般網絡知識。
+2. 每次給提示前，先找出支持的段落，並以（檔案名稱，頁數或投影片編號）註明出處。
+3. 如來源沒有答案，請回答：「{{COURSE_NAME}} 的教材未有涵蓋這個問題，請向 {{INSTRUCTOR_NAME}} 查詢。」不要猜測。
+4. 絕不編造引文、頁數、公式或事實。
+5. 如兩份來源內容有衝突，以最新的課程大綱為準，並告訴學生有衝突。
+
+導學規則
+1. 學生直接要答案時（例如：「第 3 題答案是甚麼？」），不要直接回答。請以探究式的反問，指向教材中的相關位置（例如：「看看 Lecture 2 第 4 張投影片，第一個階段叫甚麼？」）。
+2. 學生展現正確理解時，給予肯定，並提供附出處的完整解說。
+3. 如被問及本課程以外的主題，請禮貌地拒絕：「我只能協助解答 {{COURSE_NAME}} 的問題。」`,
+      proTip: "Agent Designer 無法直接讀取 Gemini Notebook，Agent 只會根據你在 Knowledge 加入的檔案作答。把 Notebook 當作答案參考：如 Agent 的出處與 Notebook 不符，先修正檔案或提示詞，才讓學生使用。"
     },
     "zh-CN": {
       title: "Socratic AI Tutor Agent 创建",
       summary: "将定制的课程 Agent 植基于您的授课笔记与教学大纲，打造 24/7 的 Socratic 学习导师。",
       steps: [
-        "在 Gemini Notebook 中建立“只读课程中心”，上传课程大纲、课件及核心教材。",
-        "进入 Agent Designer 设置 Socratic 角色特征提示词并链接课程中心进行互动测试。",
-        "审核引导品质后生成公开分享链接，并嵌入发布至校园 LMS 系统。"
+        "在 Gemini Notebook 加入课程大纲、讲义幻灯片及核心读物作为来源，再用辅助提示词建立验证题组：10 条学生常问的问题，每条附有出处的答案。",
+        "在 Agent Designer 贴上导师提示词，并在 Knowledge › Add files 加入同一批文件。保持相同文件名，让引用出处一致。",
+        "向 Agent 提出这 10 条验证问题，将它的提示及出处与 Notebook 的答案逐一比对。补好缺漏后，才在 LMS 发布 Agent 链接。"
       ],
-      prompt: `你是“{{COURSE_CODE}} 导师”，一位亲切且循循善诱的 {{COURSE_NAME}} Socratic 学习教练。你的唯一目标是引导学生自主思考并找到答案。
-请严格遵守以下准则：
-1. **所有回答均须植基于**提供的课程教材中，绝不可编造。
-2. 当学生问及特定答案时，不要直接告知。请回复一个具探究性、情境式的反问，帮助他们进行批判性思考。
-3. 具体指出课程材料中的文件或页数（例如：“你可以参考 Lecture 2 的第 4 张幻灯片，然后告诉我第一个阶段叫什么名字吗？”）。
-4. 当学生展现正确的理解时，给予肯定并提供完整、丰富的补充说明。
-5. 若问及本课程以外的主题，请礼貌地拒绝并回答：“我只能协助你解答关于 {{COURSE_NAME}} 的问题。”
-6. 每次回答皆须引用出处。`,
-      proTip: "链接 Gemini Notebook 作为知识地基，可确保 Agent 绝不胡言乱语（Hallucinate），且其所有答复均受限于核准的教材，并提供真实可信的内文引用。"
+      prompt: `你是「{{COURSE_CODE}} 导师」，一位亲切、循循善诱的 {{COURSE_NAME}} Socratic 学习教练。你的唯一目标是引导学生自己找到答案。
+
+知识来源（在 Agent Designer › Knowledge › Add files 加入，与 Gemini Notebook 课程中心相同的文件）
+{{COURSE_NAME}} 的课程大纲、讲义幻灯片及核心读物。
+
+引用规则
+1. 只可使用知识来源的内容。即使你知道答案，也不要使用一般网络知识。
+2. 每次给提示前，先找出支持的段落，并以（文件名，页数或幻灯片编号）注明出处。
+3. 如来源没有答案，请回答：「{{COURSE_NAME}} 的教材未有涵盖这个问题，请向 {{INSTRUCTOR_NAME}} 查询。」不要猜测。
+4. 绝不编造引文、页数、公式或事实。
+5. 如两份来源内容有冲突，以最新的课程大纲为准，并告诉学生有冲突。
+
+导学规则
+1. 学生直接要答案时（例如：「第 3 题答案是什么？」），不要直接回答。请以探究式的反问，指向教材中的相关位置（例如：「看看 Lecture 2 第 4 张幻灯片，第一个阶段叫什么？」）。
+2. 学生展现正确理解时，给予肯定，并提供附出处的完整解说。
+3. 如被问及本课程以外的主题，请礼貌地拒绝：「我只能协助解答 {{COURSE_NAME}} 的问题。」`,
+      proTip: "Agent Designer 无法直接读取 Gemini Notebook，Agent 只会根据你在 Knowledge 加入的文件作答。把 Notebook 当作答案参考：如 Agent 的出处与 Notebook 不符，先修正文件或提示词，才让学生使用。"
     }
   },
   rubric_grading: {
@@ -1668,52 +1771,67 @@ Follow these rules strictly:
       title: "Rubric-Aligned Essay Feedback Assistant",
       summary: "Analyze student essays against a complex grading rubric in Gemini Notebook and generate formative constructive feedback.",
       steps: [
-        "Create a dedicated workspace in Gemini Notebook and upload the assignment instructions and analytical grading rubric.",
-        "Upload the student essay and execute the formative rubric grading prompt in the workbench.",
-        "Review tentative criterion scores, personalize pedagogical remarks, and export feedback to LMS or student portfolio."
+        "Create a notebook for the assignment and add the assignment instructions and the grading rubric as sources.",
+        "Add one student essay as a source and run the feedback prompt in Gemini Notebook. Every score must quote the essay and name the rubric criterion.",
+        "Check each score against the quoted evidence, then paste the feedback into Canvas Mode to personalise it before sending it through your LMS."
       ],
-      prompt: `Acting as an expert academic teaching assistant, analyze the attached student essay for the assignment "{{ASSIGNMENT_TITLE}}" against the uploaded grading rubric for student "{{STUDENT_ID}}". Generate a first draft of constructive, high-quality feedback.
-The feedback MUST adhere to the following structure:
-1. **Rubric Performance Summary**: Provide a tentative level/score for each rubric criterion, directly referencing specific evidence from the student's submission.
-2. **Key Strengths (1-2)**: Identify specific aspects of the paper that were executed exceptionally well, quoting 1-2 examples from the text.
-3. **Areas for Growth (2-3)**: Identify specific logical, grammatical, or structural issues. Explain how they relate to the rubric requirements.
-4. **Actionable Recommendations**: Provide 2-3 specific, progressive steps the student can take in their next draft to improve.
-Maintain a supportive, pedagogical, and highly encouraging tone throughout.`,
-      proTip: "Because Gemini Notebook operates in a secure cloud tenant, student intellectual property and data remain completely confidential and are never used to train public LLM models."
+      prompt: `Acting as an expert academic teaching assistant, analyse the student essay in this notebook for the assignment "{{ASSIGNMENT_TITLE}}" against the grading rubric, for student "{{STUDENT_ID}}". Write a first draft of constructive, high-quality feedback.
+
+Sources in this notebook: the assignment instructions, the grading rubric and this student's essay.
+
+The feedback MUST follow this structure:
+1. **Rubric Performance Summary**: a tentative level for each rubric criterion, quoting evidence from the essay.
+2. **Key Strengths (1-2)**: what was done exceptionally well, quoting 1-2 examples from the text.
+3. **Areas for Growth (2-3)**: specific logical, grammatical or structural issues, and how they relate to the rubric.
+4. **Actionable Recommendations**: 2-3 specific, progressive steps for the next draft.
+
+Rules: use only the rubric and the essay. If there is no evidence for a criterion, say so and mark it "Not enough evidence" instead of guessing. Never invent rubric levels or quotes.
+Keep a supportive, encouraging teaching tone throughout.`,
+      proTip: "Add one essay at a time and remove it before adding the next, so feedback never mixes students. Gemini Notebook keeps student work inside your institution's Gemini Enterprise environment and doesn't use it to train models."
     },
     "zh-TW": {
       title: "Rubric 評分規準作業回饋助理",
       summary: "在 Gemini Notebook 中依據多元評分規準分析學生論文，生成形成性、具建設性的回饋建議。",
       steps: [
-        "在 Gemini Notebook 建立專屬工作區，上傳作業指引及分析型評分規準 (Rubric)。",
-        "匯入學生作業並在提示詞工作台執行評分規準診斷提示詞。",
-        "審核各項指標初評，增修個人化評語，並匯出發送至 LMS 或學生學習歷程。"
+        "為作業建立一個 Notebook，加入作業指引及評分規準作為來源。",
+        "加入一份學生作業作為來源，在 Gemini Notebook 執行回饋提示詞。每個評分都必須引用作業原文並註明評分指標。",
+        "對照引用的證據核實每個評分，再把回饋貼到 Canvas Mode 作個人化修改，然後經 LMS 發送。"
       ],
-      prompt: `請扮演大學教學助理，依據上傳的評分規準分析學生「{{STUDENT_ID}}」繳交的「{{ASSIGNMENT_TITLE}}」作業，產生具建設性的形成性回饋草稿。
+      prompt: `請扮演大學教學助理，依據此 Notebook 內的評分規準，分析學生「{{STUDENT_ID}}」繳交的「{{ASSIGNMENT_TITLE}}」作業，撰寫具建設性的形成性回饋初稿。
+
+此 Notebook 的來源：作業指引、評分規準及這位學生的作業。
+
 回饋內容必須包含以下結構：
-1. **評分規準成效摘要**：為每個評分指標給予建議評等，並引用作業具體文句佐證。
-2. **主要亮點 (1-2 項)**：指出表現出色的論點或論證段落，直接引用原文肯定。
-3. **待加強面向 (2-3 項)**：具體標註邏輯跳躍、論據不足或結構鬆散之處，並說明如何對齊評分規範。
-4. **具體精進建議**：提供 2-3 個明確的下階段修改指引。
-全文請保持溫和、富教學熱忱且積極正向的口吻。`,
-      proTip: "Gemini Notebook 運作於受保護的企業雲端環境中，學生智財與隱私資料受到嚴格隔離，絕不用於公開模型訓練。"
+1. **評分規準表現摘要**：為每個評分指標給予建議等級，並引用作業原文作證據。
+2. **主要亮點（1-2 項）**：指出表現出色之處，直接引用 1-2 段原文。
+3. **待改進之處（2-3 項）**：具體指出邏輯、文法或結構問題，並說明與評分規準的關係。
+4. **具體改進建議**：提供 2-3 個循序漸進、可於下一稿實行的步驟。
+
+規則：只使用評分規準及作業內容。如某項指標找不到證據，請直接說明並標示為「證據不足」，不要猜測。絕不編造評分等級或引文。
+全文保持支持、富教學意義及鼓勵的語氣。`,
+      proTip: "每次只加入一份作業，處理完畢後先移除，再加入下一份，避免回饋混淆不同學生。Gemini Notebook 會把學生作業保留在學校的 Gemini Enterprise 環境內，不會用作訓練模型。"
     },
     "zh-CN": {
       title: "Rubric 评分规准作业反馈助理",
       summary: "在 Gemini Notebook 中依据多元评分规准分析学生论文，生成形成性、具建设性的反馈建议。",
       steps: [
-        "在 Gemini Notebook 建立专属工作区，上传作业指引及分析型评分规准 (Rubric)。",
-        "导入学生作业并在提示词工作台执行评分规准诊断提示词。",
-        "审核各项指标初评，增修个性化评语，并导出发送至 LMS 或学生学习档案。"
+        "为作业建立一个 Notebook，加入作业指引及评分规准作为来源。",
+        "加入一份学生作业作为来源，在 Gemini Notebook 执行反馈提示词。每个评分都必须引用作业原文并注明评分指标。",
+        "对照引用的证据核实每个评分，再把反馈贴到 Canvas Mode 作个人化修改，然后经 LMS 发送。"
       ],
-      prompt: `请扮演大学教学助理，依据上传的评分规准分析学生“{{STUDENT_ID}}”提交的“{{ASSIGNMENT_TITLE}}”作业，产生具建设性的形成性反馈草稿。
+      prompt: `请扮演大学教学助理，依据此 Notebook 内的评分规准，分析学生「{{STUDENT_ID}}」缴交的「{{ASSIGNMENT_TITLE}}」作业，撰写具建设性的形成性反馈初稿。
+
+此 Notebook 的来源：作业指引、评分规准及这位学生的作业。
+
 反馈内容必须包含以下结构：
-1. **评分规准成效摘要**：为每个评分指标给予建议评等，并引用作业具体文句佐证。
-2. **主要亮点 (1-2 项)**：指出表现出色的论点或论证段落，直接引用原文肯定。
-3. **待加强面向 (2-3 项)**：具体标注逻辑跳跃、论据不足或结构松散之处，并说明如何对齐评分规范。
-4. **具体改进建议**：提供 2-3 个明确的下阶段修改指引。
-全文请保持温和、富教学热情且积极正向的口吻。`,
-      proTip: "Gemini Notebook 运作于受保护的企业云端环境中，学生智财与隐私数据受到严格隔离，绝不用于公开模型训练。"
+1. **评分规准表现摘要**：为每个评分指标给予建议等级，并引用作业原文作证据。
+2. **主要亮点（1-2 项）**：指出表现出色之处，直接引用 1-2 段原文。
+3. **待改进之处（2-3 项）**：具体指出逻辑、文法或结构问题，并说明与评分规准的关系。
+4. **具体改进建议**：提供 2-3 个循序渐进、可于下一稿实行的步骤。
+
+规则：只使用评分规准及作业内容。如某项指标找不到证据，请直接说明并标示为「证据不足」，不要猜测。绝不编造评分等级或引文。
+全文保持支持、富教学意义及鼓励的语气。`,
+      proTip: "每次只加入一份作业，处理完毕后先移除，再加入下一份，避免反馈混淆不同学生。Gemini Notebook 会把学生作业保留在学校的 Gemini Enterprise 环境内，不会用作训练模型。"
     }
   },
   curriculum_design: {
@@ -1821,49 +1939,64 @@ The document should include:
       title: "Student Feedback Sentiment Dashboard",
       summary: "Consolidate massive volumes of unstructured student feedback from surveys and town halls to synthesize advocacy data.",
       steps: [
-        "Collect survey responses and student feedback sheets into a secured institutional Drive folder.",
-        "Run multi-factor qualitative sentiment and thematic analysis via Deep Research and Gemini Notebook.",
-        "Synthesize recurring concerns into priority advocacy items and present to university administration."
+        "Add the anonymised survey comments and town hall transcripts from your Drive folder to a Gemini Notebook as sources. Use the Set up prompt to run Deep Research on peer-school solutions, and add that report too.",
+        "Run the analysis prompt in Gemini Notebook. Every theme count and quote comes from the sources, and peer-school ideas come from the Deep Research report.",
+        "Check the quotes against the original comments, remove anything that could identify a student, then present the priority list to the administration."
       ],
-      prompt: `Acting as the Student Union Advocacy Director for {{INSTITUTION_NAME}}, analyze the uploaded collection of town hall transcripts and anonymous student survey comments for {{ACADEMIC_TERM}}.
-Generate a comprehensive, evidence-based report that includes:
-1. **Thematic Clustering**: Identify and group the top 5 most frequently complained-about campus issues.
-2. **Sentiment Assessment**: For each issue, categorize the emotional tone (highly negative, frustrated, neutral) and extract 3 powerful, representative anonymized student quotes.
-3. **Data-Driven Solutions**: Based on successful practices at benchmark peer schools, suggest 2 realistic, low-cost policy changes for each issue.
-4. **Negotiation Preparation**: Draft a list of 5 anticipated objections from school deans regarding budget constraints, and provide persuasive, data-backed rebuttals.`,
-      proTip: "Linking your student feedback database directly via the Drive Connector keeps the data federated, secure, and up-to-the-minute without copying local files."
+      prompt: `Acting as the Student Union Advocacy Director for {{INSTITUTION_NAME}}, analyse the town hall transcripts and anonymous student survey comments for {{ACADEMIC_TERM}} in this notebook.
+
+Sources in this notebook: the survey comments, the town hall transcripts and a Deep Research report on how peer institutions handled similar issues.
+
+Produce an evidence-based report:
+1. **Thematic Clustering**: the top 5 campus issues, with the number of comments for each.
+2. **Sentiment Assessment**: for each issue, the tone (highly negative, frustrated, neutral) and 3 representative quotes copied word for word, with their source.
+3. **Peer Solutions**: 2 realistic, low-cost policy changes per issue, taken from the Deep Research report and cited. If the report has nothing on an issue, say so.
+4. **Negotiation Preparation**: 5 objections the deans may raise about budget, each with a rebuttal backed by the counts and quotes above.
+
+Rules: never paraphrase inside quotation marks, never invent numbers, and remove names, student IDs or any detail that could identify a student.`,
+      proTip: "Gemini Notebook adds Google Docs, Slides and PDFs from Drive directly as sources, so you don't need a connector. Sync the sources again after each new survey round."
     },
     "zh-TW": {
       title: "學生意見情緒分析與權益倡議儀表板",
       summary: "整合校園論壇、諮詢會與問卷海量非結構化意見，產出高說服力之學生權益數據報告。",
       steps: [
-        "將諮詢會筆記與匿名問卷彙整至安全的雲端硬碟 (Drive) 目錄中。",
-        "透過 Deep Research 與 Gemini Notebook 進行主題聚類與多維度情緒分析。",
-        "將高頻問題轉化為學生權益倡議白皮書，向學校管理層進行正式提案。"
+        "從 Drive 資料夾把已匿名的問卷意見及諮詢大會記錄加入 Gemini Notebook 作為來源。用輔助提示詞以 Deep Research 搜尋同類院校的解決方案，並把報告一併加入。",
+        "在 Gemini Notebook 執行分析提示詞。所有主題數目及引述都來自來源，同類院校的做法則來自 Deep Research 報告。",
+        "對照原始意見核實引述，刪除任何可識別學生身分的內容，然後向校方提交優先事項清單。"
       ],
-      prompt: `請扮演「{{INSTITUTION_NAME}}」學生會權益部長，分析「{{ACADEMIC_TERM}}」學期收集到的校園諮詢會記錄及匿名意見問卷。
-生成一份具說服力且客觀的學生權益報告：
-1. **議題聚類分析**：歸納學生最關注的 5 大校園議題。
-2. **情緒強度評估**：標註各議題的負面情緒比重，並摘錄 3 則最具代表性的學生去識別化發言。
-3. **數據導向方案**：參考其他大學標竿做法，針對每個議題提出 2 項具可行性且低成本的政策建議。
-4. **協商對策準備**：預判 5 項校方可能提出的預算或行政反對理由，並提供有數據佐證的應對答辯。`,
-      proTip: "透過 Drive Connector 建立即時連線，能確保民意數據維持在雲端權限保護下，無需在本機複製檔案即可獲得最新分析。"
+      prompt: `請扮演 {{INSTITUTION_NAME}} 學生會倡議總監，分析此 Notebook 內 {{ACADEMIC_TERM}} 的諮詢大會記錄及匿名學生問卷意見。
+
+此 Notebook 的來源：問卷意見、諮詢大會記錄，以及一份關於同類院校如何處理相近問題的 Deep Research 報告。
+
+請撰寫一份以證據為本的報告：
+1. **主題歸類**：列出五大校園問題及每項的意見數目。
+2. **情緒評估**：每項問題的語氣（非常負面、不滿、中性），並逐字引述 3 則具代表性的意見及其出處。
+3. **同類院校方案**：每項問題提出 2 個切實可行、低成本的政策建議，取自 Deep Research 報告並註明出處。如報告未有相關內容，請直接說明。
+4. **談判準備**：列出院長可能就預算提出的 5 項反對意見，並以上述數字及引述作出反駁。
+
+規則：引號內不可改寫原文，絕不編造數字，並刪除姓名、學生編號或任何可識別學生身分的細節。`,
+      proTip: "Gemini Notebook 可直接從 Drive 加入 Google Docs、Slides 及 PDF 作為來源，毋須連接器。每輪新問卷完成後，請再同步來源。"
     },
     "zh-CN": {
       title: "学生意见情绪分析与权益倡议仪表板",
       summary: "整合校园论坛、咨询会与问卷海量非结构化意见，产出高说服力之学生权益数据报告。",
       steps: [
-        "将咨询会笔记与匿名问卷汇整至安全的云端硬盘 (Drive) 目录中。",
-        "透过 Deep Research 与 Gemini Notebook 进行主题聚类与多维度情绪分析。",
-        "将高频问题转化为学生权益倡议白皮书，向学校管理层进行正式提案。"
+        "从 Drive 文件夹把已匿名的问卷意见及咨询大会记录加入 Gemini Notebook 作为来源。用辅助提示词以 Deep Research 搜寻同类院校的解决方案，并把报告一并加入。",
+        "在 Gemini Notebook 执行分析提示词。所有主题数目及引述都来自来源，同类院校的做法则来自 Deep Research 报告。",
+        "对照原始意见核实引述，删除任何可识别学生身份的内容，然后向校方提交优先事项清单。"
       ],
-      prompt: `请扮演“{{INSTITUTION_NAME}}”学生会权益部长，分析“{{ACADEMIC_TERM}}”学期收集到的校园咨询会记录及匿名意见问卷。
-生成一份具说服力且客观的学生权益报告：
-1. **议题聚类分析**：归纳学生最关注的 5 大校园议题。
-2. **情绪强度评估**：标注各议题的负面情绪比重，并摘录 3 则最具代表性的学生去标识化发言。
-3. **数据导向方案**：参考其他大学标杆做法，针对每个议题提出 2 项具可行性且低成本的政策建议。
-4. **协商对策准备**：预判 5 项校方可能提出的预算或行政反对理由，并提供有数据佐证的应对答辩。`,
-      proTip: "透过 Drive Connector 建立即时连线，能确保民意数据维持在云端权限保护下，无需在本机复制文件即可获得最新分析。"
+      prompt: `请扮演 {{INSTITUTION_NAME}} 学生会倡议总监，分析此 Notebook 内 {{ACADEMIC_TERM}} 的咨询大会记录及匿名学生问卷意见。
+
+此 Notebook 的来源：问卷意见、咨询大会记录，以及一份关于同类院校如何处理相近问题的 Deep Research 报告。
+
+请撰写一份以证据为本的报告：
+1. **主题归类**：列出五大校园问题及每项的意见数目。
+2. **情绪评估**：每项问题的语气（非常负面、不满、中性），并逐字引述 3 则具代表性的意见及其出处。
+3. **同类院校方案**：每项问题提出 2 个切实可行、低成本的政策建议，取自 Deep Research 报告并注明出处。如报告未有相关内容，请直接说明。
+4. **谈判准备**：列出院长可能就预算提出的 5 项反对意见，并以上述数字及引述作出反驳。
+
+规则：引号内不可改写原文，绝不编造数字，并删除姓名、学生编号或任何可识别学生身份的细节。`,
+      proTip: "Gemini Notebook 可直接从 Drive 加入 Google Docs、Slides 及 PDF 作为来源，无须连接器。每轮新问卷完成后，请再同步来源。"
     }
   },
   club_funding: {
@@ -1871,105 +2004,141 @@ Generate a comprehensive, evidence-based report that includes:
       title: "Annual Club Calendar & Budget Justifier",
       summary: "Brainstorm an annual activities calendar and draft detailed, compliant student government funding proposals.",
       steps: [
-        "Gather past semester club event logs, attendance counts, and itemized receipts into Drive.",
-        "Generate annual budget justification proposals and activity timelines in Canvas Mode.",
-        "Verify allocation compliance against union bylaws and submit to the student council funding committee."
+        "Add the Student Union funding guidelines and bylaws to Gemini Notebook, then use the Set up prompt to pull out a funding rules checklist with the clause for each rule.",
+        "In Canvas Mode, run the proposal prompt with the rules checklist and your planned events filled in.",
+        "Check every budget line against the checklist and its clause, attach your receipts or quotes, then submit to the funding committee."
       ],
-      prompt: `Act as a professional grant and proposal writer. Help {{CLUB_NAME}} draft a detailed funding proposal for the academic year {{ACADEMIC_YEAR}}.
+      prompt: `Act as a professional grant and proposal writer. Help {{CLUB_NAME}} draft a funding proposal for the academic year {{ACADEMIC_YEAR}}.
+
 Inputs:
-- Annual activities calendar: List of 4 major workshops, 1 public exhibition, 2 guest lectures, and 1 social event for {{CLUB_NAME}}.
-- Approved funding guidelines: Max $200 per workshop, Max $500 for exhibition, strict food and beverage limits.
+- Planned activities: {{EVENT_PLAN}}
+- Funding rules checklist (from Gemini Notebook, with clause numbers): {{FUNDING_RULES}}
+
 Task:
-1. Create an **Executive Summary** detailing the club's mission and how these events boost student engagement.
-2. Compile a detailed **Line-Item Budget Table**, calculating total costs and verifying compliance with the provided funding rules.
-3. Write a compelling **Impact Statement** justifying why the Student Union should allocate resources to our club, detailing student outcomes.`,
-      proTip: "Upload the Student Union's official constitutional funding guidelines to Gemini Notebook first. This prevents your proposal from getting rejected for violating obscure spend-limit policies."
+1. **Executive Summary**: the club's mission and how these events boost student engagement.
+2. **Line-Item Budget Table**: columns Item | Event | Cost | Rule applied (clause) | Within limit? Calculate the totals. Use only the limits in the funding rules checklist; never invent a limit.
+3. **Compliance Notes**: list any item that breaks the checklist or isn't covered by it, and suggest a fix.
+4. **Impact Statement**: why the Student Union should fund the club, with the expected student outcomes.
+Use Canvas to create this as an editable document.`,
+      proTip: "Ask Gemini Notebook for the clause number with every rule. When the committee queries a budget line, you can point straight to the bylaw that allows it."
     },
     "zh-TW": {
       title: "社團年度行事曆與經費預算企劃書",
       summary: "規劃社團年度活動時間軸，自動編排符合學生會補助章程的逐項預算企劃書。",
       steps: [
-        "將過往學期社團活動紀錄、參與人次及單據明細彙整至雲端硬碟。",
-        "在 Canvas Mode 中產生年度預算論證企劃與活動期程表。",
-        "對齊學生自治組織法規檢驗預算合規性，最後呈交學生會評議委員會。"
+        "把學生會資助指引及會章加入 Gemini Notebook，再用輔助提示詞整理一份資助規則清單，每條規則註明條文。",
+        "在 Canvas Mode 執行企劃書提示詞，填入規則清單及計劃舉辦的活動。",
+        "逐項核對每條預算與清單及其條文，附上收據或報價，然後提交資助委員會。"
       ],
-      prompt: `請扮演專業提案企劃專家。協助社團「{{CLUB_NAME}}」撰寫「{{ACADEMIC_YEAR}}」學年度經費補助企劃書。
-背景資料：
-- 年度規劃活動：包含 4 場實務工作坊、1 場成果展覽、2 場大師講座及 1 場迎新聚會。
-- 學生會補助上限標準：每場工作坊上限 $200、展覽上限 $500，餐敘飲品嚴格受限。
-撰寫任務：
-1. **執行摘要**：闡述社團創立宗旨在於豐富校園社群生活。
-2. **逐項預算明細表**：計算活動總開銷，並嚴格落實法規上限自檢。
-3. **社群影響力陳述**：論證此系列活動如何強化校園多元性與學生技能成長。`,
-      proTip: "先將學生會最新的組織法與補助章程上傳至 Gemini Notebook，可確保產出的企劃書 100% 規避預算超標陷阱。"
+      prompt: `請扮演專業的資助及企劃書撰寫人，協助 {{CLUB_NAME}} 草擬 {{ACADEMIC_YEAR}} 學年的資助企劃書。
+
+輸入資料：
+- 計劃舉辦的活動：{{EVENT_PLAN}}
+- 資助規則清單（來自 Gemini Notebook，附條文編號）：{{FUNDING_RULES}}
+
+任務：
+1. **行政摘要**：學會的宗旨，以及這些活動如何提升學生參與。
+2. **逐項預算表**：欄位為 項目｜活動｜費用｜適用規則（條文）｜是否在上限內。計算總額。只可使用規則清單中的上限，絕不自行編造。
+3. **合規備註**：列出任何違反清單或未被清單涵蓋的項目，並建議修正方法。
+4. **成效陳述**：說明學生會應資助本會的理由及預期的學生成果。
+請使用 Canvas 將此內容建立為可編輯文件。`,
+      proTip: "請 Gemini Notebook 為每條規則附上條文編號。委員會質疑某項預算時，你可直接指出容許該項開支的會章條文。"
     },
     "zh-CN": {
       title: "社团年度行事历与经费预算企划书",
       summary: "规划社团年度活动时间轴，自动编排符合学生会补助章程的逐项预算企划书。",
       steps: [
-        "将过往学期社团活动记录、参与人次及单据明细汇整至云端硬盘。",
-        "在 Canvas Mode 中产生年度预算论证企划与活动期程表。",
-        "对齐学生自治组织法规检验预算合规性，最后呈交学生会评议委员会。"
+        "把学生会资助指引及章程加入 Gemini Notebook，再用辅助提示词整理一份资助规则清单，每条规则注明条文。",
+        "在 Canvas Mode 执行企划书提示词，填入规则清单及计划举办的活动。",
+        "逐项核对每条预算与清单及其条文，附上收据或报价，然后提交资助委员会。"
       ],
-      prompt: `请扮演专业提案企划专家。协助社团“{{CLUB_NAME}}”撰写“{{ACADEMIC_YEAR}}”学年度经费补助企划书。
-背景数据：
-- 年度规划活动：包含 4 场实务工作坊、1 场成果展览、2 场大师讲座及 1 场迎新聚会。
-- 学生会补助上限标准：每场工作坊上限 $200、展览上限 $500，餐叙饮品严格受限。
-撰写任务：
-1. **执行摘要**：阐述社团创立宗旨在丰富校园社群生活。
-2. **逐项预算明细表**：计算活动总开销，并严格落实法规上限自检。
-3. **社群影响力陈述**：论证此系列活动如何强化校园多元性与学生技能成长。`,
-      proTip: "先将学生会最新的组织法与补助章程上传至 Gemini Notebook，可确保产出的企划书 100% 规避预算超标陷阱。"
+      prompt: `请扮演专业的资助及企划书撰写人，协助 {{CLUB_NAME}} 草拟 {{ACADEMIC_YEAR}} 学年的资助企划书。
+
+输入资料：
+- 计划举办的活动：{{EVENT_PLAN}}
+- 资助规则清单（来自 Gemini Notebook，附条文编号）：{{FUNDING_RULES}}
+
+任务：
+1. **行政摘要**：社团的宗旨，以及这些活动如何提升学生参与。
+2. **逐项预算表**：字段为 项目｜活动｜费用｜适用规则（条文）｜是否在上限内。计算总额。只可使用规则清单中的上限，绝不自行编造。
+3. **合规备注**：列出任何违反清单或未被清单涵盖的项目，并建议修正方法。
+4. **成效陈述**：说明学生会应资助本会的理由及预期的学生成果。
+请使用 Canvas 将此内容创建为可编辑文档。`,
+      proTip: "请 Gemini Notebook 为每条规则附上条文编号。委员会质疑某项预算时，你可直接指出容许该项开支的章程条文。"
     }
   },
   su_helpdesk: {
     "en": {
       title: "24/7 Student Union Policy Agent",
-      summary: "Build an AI support bot trained on club policy handbooks to answer operational and venue booking questions.",
+      summary: "Build a student-facing policy Agent grounded in your union handbook and constitutions to answer venue booking, locker and funding questions.",
       steps: [
-        "Centralize student handbook, welfare guidelines, and club constitutions into Gemini Notebook.",
-        "Deploy a 24/7 policy Q&A Agent using Agent Designer to guide members on regulations and forms.",
-        "Test common edge cases and route complex disputes to human union officers via Email Connector."
+        "Add the student handbook, welfare guidelines and club constitutions to Gemini Notebook as sources, then use the Set up prompt to build a verification set of 10 member questions with cited answers.",
+        "In Agent Designer, paste the policy Agent prompt and add the same files under Knowledge › Add files. Fill in the officer's email for sensitive cases.",
+        "Ask the Agent the 10 verification questions plus 2 sensitive ones. Check that answers and citations match the notebook and that sensitive questions go to the officer, then share the Agent link with members."
       ],
-      prompt: `You are the 24/7 Policy and Welfare Agent for {{STUDENT_UNION_NAME}} at {{INSTITUTION_NAME}}. Your purpose is to provide immediate, highly accurate answers to student questions regarding union bylaws, venue booking, lockers, and society financial subsidies.
-Rules:
-1. Answer using ONLY verified information from the attached student handbook and constitution.
-2. Maintain a friendly, supportive student-peer tone.
-3. Provide step-by-step instructions for all administrative procedures (e.g. How to book a room, how to apply for event funding).
-4. If an inquiry involves confidential welfare disputes, severe mental health concerns, or complex disciplinary proceedings, do NOT answer. Provide immediate instructions to contact the designated human union officer at {{OFFICER_EMAIL}}.`,
-      proTip: "Pairing the Agent with Email Connector ensures seamless, automated escalation when students face nuanced emergencies requiring staff intervention."
+      prompt: `You are the 24/7 Policy and Welfare Agent for {{STUDENT_UNION_NAME}} at {{INSTITUTION_NAME}}. You give quick, accurate answers to student questions about union bylaws, venue booking, lockers and society funding.
+
+KNOWLEDGE SOURCES (Agent Designer › Knowledge › Add files: the same files as your Gemini Notebook policy hub)
+The student handbook, welfare guidelines and club constitutions of {{STUDENT_UNION_NAME}}.
+
+GROUNDING RULES
+1. Answer only from the Knowledge Sources and cite each answer as (document name, section or page).
+2. If the sources don't cover a question, say so and give {{OFFICER_EMAIL}} as the contact. Never guess a rule, fee, deadline or form name.
+3. If two documents disagree, quote both, say which is newer and suggest checking with the union office.
+
+ANSWER RULES
+1. Use a friendly, supportive student-peer tone.
+2. For any procedure (e.g. booking a room, applying for event funding), give numbered steps and name the form or deadline from the sources.
+3. If a question involves a confidential welfare dispute, a mental health concern or a disciplinary case, do NOT answer it. Reply kindly that a union officer will help in confidence and give {{OFFICER_EMAIL}}. If someone may be in danger, also tell them to contact campus security or emergency services now.`,
+      proTip: "Re-upload the Knowledge files whenever the constitution or handbook is amended, then re-run your verification set. The Agent only knows the version you uploaded."
     },
     "zh-TW": {
       title: "24/7 學生會法規與會務諮詢 Agent",
-      summary: "將社團評鑑、場地借用與會務規章交由專屬 Agent，提供全天候即時規章諮詢與行政表單指引。",
+      summary: "以學生會手冊及會章為依據，建立一個面向學生的政策 Agent，解答場地預約、儲物櫃及資助問題。",
       steps: [
-        "將學生手冊、福利規章與社團章程整合至 Gemini Notebook 知識庫。",
-        "在 Agent Designer 中建立 24/7 規章諮詢 Agent，指導學生填寫申請表單。",
-        "驗證極端諮詢情境，並透過 Email Connector 自動將複雜爭議轉派常務幹事處理。"
+        "把學生手冊、福利指引及各學會會章加入 Gemini Notebook 作為來源，再用輔助提示詞建立驗證題組：10 條會員常問的問題，每條附有出處的答案。",
+        "在 Agent Designer 貼上政策 Agent 提示詞，並在 Knowledge › Add files 加入同一批檔案。填上處理敏感個案的幹事電郵。",
+        "向 Agent 提出 10 條驗證問題及 2 條敏感問題，確認答案及出處與 Notebook 一致，而敏感問題會轉介幹事，然後才向會員分享 Agent 連結。"
       ],
-      prompt: `你是「{{INSTITUTION_NAME}}」之「{{STUDENT_UNION_NAME}}」全天候行政諮詢 Agent。你的任務是快速且精確地解答學生關於會章、活動場地借用、置物櫃申請及社團經費請領的疑問。
-規範：
-1. 僅能依據附加之法規手冊與章程進行回覆，絕不推測。
-2. 保持熱情、親切且具同理心的同儕對話語氣。
-3. 針對每項流程提供步驟化清晰指引。
-4. 若涉及學生重大權益糾紛、心理輔導或懲戒評議，請停止回答並引導其寄信至專責幹事信箱：{{OFFICER_EMAIL}}。`,
-      proTip: "整合 Email Connector 具備關鍵字升級機制，當學生遭遇重大急難或特殊爭議時，系統能即刻發送郵件通知真人幹事介入輔導。"
+      prompt: `你是 {{INSTITUTION_NAME}} {{STUDENT_UNION_NAME}} 的 24/7 政策及福利 Agent，為學生快速而準確地解答有關會章、場地預約、儲物櫃及學會資助的問題。
+
+知識來源（在 Agent Designer › Knowledge › Add files 加入，與 Gemini Notebook 政策中心相同的檔案）
+{{STUDENT_UNION_NAME}} 的學生手冊、福利指引及各學會會章。
+
+引用規則
+1. 只根據知識來源作答，每個答案註明出處（文件名稱，章節或頁數）。
+2. 如來源未有涵蓋，請直接說明，並提供 {{OFFICER_EMAIL}} 作聯絡。絕不猜測任何規則、費用、限期或表格名稱。
+3. 如兩份文件內容不一致，請同時引述，指出哪份較新，並建議向學生會辦事處查詢。
+
+回答規則
+1. 以友善、支持的同輩語氣回答。
+2. 任何程序（例如預約房間、申請活動資助）都要列出編號步驟，並註明來源中的表格名稱或限期。
+3. 如問題涉及保密的福利糾紛、精神健康問題或紀律個案，不要作答。請親切地回覆會有學生會幹事保密跟進，並提供 {{OFFICER_EMAIL}}。如有人可能身處危險，亦請他們立即聯絡校園保安或緊急服務。`,
+      proTip: "每次修訂會章或手冊後，請重新上載 Knowledge 檔案，再跑一次驗證題組。Agent 只會知道你上載的版本。"
     },
     "zh-CN": {
       title: "24/7 学生会法规与会务咨询 Agent",
-      summary: "将社团评估、场地借用与会务规章交由专属 Agent，提供全天候即时规章咨询与行政表单指引。",
+      summary: "以学生会手册及章程为依据，建立一个面向学生的政策 Agent，解答场地预约、储物柜及资助问题。",
       steps: [
-        "将学生手册、福利规章与社团章程整合至 Gemini Notebook 知识库。",
-        "在 Agent Designer 中建立 24/7 规章咨询 Agent，指导学生填写申请表单。",
-        "验证极端咨询情境，并透过 Email Connector 自动将复杂争议转派常务干事处理。"
+        "把学生手册、福利指引及各社团章程加入 Gemini Notebook 作为来源，再用辅助提示词建立验证题组：10 条会员常问的问题，每条附有出处的答案。",
+        "在 Agent Designer 贴上政策 Agent 提示词，并在 Knowledge › Add files 加入同一批文件。填上处理敏感个案的干事电子邮件。",
+        "向 Agent 提出 10 条验证问题及 2 条敏感问题，确认答案及出处与 Notebook 一致，而敏感问题会转介干事，然后才向会员分享 Agent 链接。"
       ],
-      prompt: `你是“{{INSTITUTION_NAME}}”之“{{STUDENT_UNION_NAME}}”全天候行政咨询 Agent。你的任务是快速且精确地解答学生关于会章、活动场地借用、储物柜申请及社团经费申领的疑问。
-规范：
-1. 仅能依据附加之法规手册与章程进行回复，绝不推测。
-2. 保持热情、亲切且具同理心的同侪对话语气。
-3. 针对每项流程提供步骤化清晰指引。
-4. 若涉及学生重大权益纠纷、心理辅导或惩戒评议，请停止回答并引导其寄信至专责干事邮箱：{{OFFICER_EMAIL}}。`,
-      proTip: "整合 Email Connector 具备关键字升级机制，当学生遭遇重大急难或特殊争议时，系统能即刻发送邮件通知真人干事介入辅导。"
+      prompt: `你是 {{INSTITUTION_NAME}} {{STUDENT_UNION_NAME}} 的 24/7 政策及福利 Agent，为学生快速而准确地解答有关章程、场地预约、储物柜及社团资助的问题。
+
+知识来源（在 Agent Designer › Knowledge › Add files 加入，与 Gemini Notebook 政策中心相同的文件）
+{{STUDENT_UNION_NAME}} 的学生手册、福利指引及各社团章程。
+
+引用规则
+1. 只根据知识来源作答，每个答案注明出处（文件名称，章节或页数）。
+2. 如来源未有涵盖，请直接说明，并提供 {{OFFICER_EMAIL}} 作联系。绝不猜测任何规则、费用、截止日期或表格名称。
+3. 如两份文件内容不一致，请同时引述，指出哪份较新，并建议向学生会办事处查询。
+
+回答规则
+1. 以友善、支持的同伴语气回答。
+2. 任何程序（例如预约房间、申请活动资助）都要列出编号步骤，并注明来源中的表格名称或截止日期。
+3. 如问题涉及保密的福利纠纷、精神健康问题或纪律个案，不要作答。请亲切地回复会有学生会干事保密跟进，并提供 {{OFFICER_EMAIL}}。如有人可能身处危险，亦请他们立即联系校园安保或紧急服务。`,
+      proTip: "每次修订章程或手册后，请重新上传 Knowledge 文件，再跑一次验证题组。Agent 只会知道你上传的版本。"
     }
   },
   visual_campaign: {
@@ -1977,7 +2146,7 @@ Rules:
       title: "Interactive Story Game & Visual Campaign",
       summary: "Create interactive visual storytelling campaigns, orientation games, and high-impact social media assets with AI media models.",
       steps: [
-        "Draft the event narrative arc, key character personas, and campus orientation milestones.",
+        "Draft the event narrative arc, key character personas and campus orientation milestones in Canvas Mode.",
         "Generate high-resolution thematic illustrations with Image Generation and narrative clips with Video Generation.",
         "Curate campaign assets into digital social feeds and interactive onboarding screens for freshers."
       ],
@@ -1985,14 +2154,15 @@ Rules:
 Requirements:
 1. **Interactive Storyline**: Outline a 4-chapter narrative mystery where freshers explore historical campus buildings, discover student traditions, and solve clues.
 2. **Visual Generation Prompts**: Provide 3 rich, descriptive text-to-image prompts (specifying artistic lighting, vibrant student characters, and cinematic composition) suitable for Gemini Image Generation.
-3. **Motion Scene Prompts**: Draft 2 prompt scripts suitable for Video Generation to create 5-second teaser animations for social media stories.`,
+3. **Motion Scene Prompts**: Draft 2 prompt scripts suitable for Video Generation to create 5-second teaser animations for social media stories.
+Use Canvas to create this as an editable document.`,
       proTip: "Use Image Generation to produce unified character key visual styles before prompting Video Generation to preserve aesthetic continuity across visual campaign channels."
     },
     "zh-TW": {
       title: "互動迎新故事冒險與多媒體視覺宣傳",
       summary: "運用生成式多模態模型，編排互動式校園探索解謎遊戲，並快速生成宣傳主視覺與短影音動畫。",
       steps: [
-        "擬定迎新活動世界觀架構、核心導覽角色及校園探索關卡。",
+        "在 Canvas Mode 擬定迎新活動故事架構、主要角色及校園探索關卡。",
         "透過 Image Generation 產出主視覺插畫，並使用 Video Generation 製作動態短片。",
         "將素材發布至社群平台限時動態與迎新互動網頁，引導新生參與。"
       ],
@@ -2000,14 +2170,15 @@ Requirements:
 企劃規範：
 1. **互動敘事**：規劃 4 個章節的校園解謎歷程，引領新生在尋找線索中了解校園傳統與特色建築。
 2. **生圖提示詞 (Image Generation)**：提供 3 組具體生動的提示詞（註明光影風格、當代大學生角色及高解析度比例），生成海報主視覺。
-3. **動態場景提示詞 (Video Generation)**：設計 2 組 5 秒動態前導片腳本提示詞，供社群限時動態發布。`,
+3. **動態場景提示詞 (Video Generation)**：設計 2 組 5 秒動態前導片腳本提示詞，供社群限時動態發布。
+請使用 Canvas 將此內容建立為可編輯文件。`,
       proTip: "先利用 Image Generation 確定角色的色調與服裝風格，再以此為基準導入 Video Generation，能維繫跨社群平台宣傳風格的高度一致性。"
     },
     "zh-CN": {
       title: "互动迎新故事冒险与多媒体视觉宣传",
       summary: "运用生成式多模态模型，编排互动式校园探索解谜游戏，并快速生成宣传主视觉与短视频动画。",
       steps: [
-        "拟定迎新活动世界观架构、核心导览角色及校园探索关卡。",
+        "在 Canvas Mode 拟定迎新活动故事架构、主要角色及校园探索关卡。",
         "透过 Image Generation 产出主视觉插画，并使用 Video Generation 制作动态短片。",
         "将素材发布至社交平台限时动态与迎新互动网页，引导新生参与。"
       ],
@@ -2015,7 +2186,8 @@ Requirements:
 企划规范：
 1. **互动叙事**：规划 4 个章节的校园解谜历程，引领新生在寻找线索中了解校园传统与特色建筑。
 2. **生图提示词 (Image Generation)**：提供 3 组具体生动的提示词（注明光影风格、当代大学生角色及高分辨率比例），生成海报主视觉。
-3. **动态场景提示词 (Video Generation)**：设计 2 组 5 秒动态前导片脚本提示词，供社交限时动态发布。`,
+3. **动态场景提示词 (Video Generation)**：设计 2 组 5 秒动态前导片脚本提示词，供社交限时动态发布。
+请使用 Canvas 将此内容创建为可编辑文档。`,
       proTip: "先利用 Image Generation 确定角色的色调与服装风格，再以此为基准导入 Video Generation，能维系跨社交平台宣传风格的高度一致性。"
     }
   },
@@ -2025,10 +2197,11 @@ Requirements:
       summary: "Identify students experiencing academic difficulties across disparate LMS and SIS logs to enable proactive intervention.",
       steps: [
         "Connect LMS gradebook and SIS engagement logs to establish multi-variable risk thresholds.",
-        "Run predictive engagement synthesis using Deep Research to identify students needing intervention.",
+        "Run the prompt in Deep Research with the LMS Connector selected as a source, so the analysis uses your gradebook and activity logs.",
         "Review identified cohorts with academic advisors and dispatch personalized supportive outreach."
       ],
-      prompt: `Analyze student learning analytics data for {{COHORT_SEMESTER}} in the {{DEPARTMENT_NAME}} department to identify learners at risk of falling behind.
+      prompt: `Data source: the {{DEPARTMENT_NAME}} gradebook and activity logs for {{COHORT_SEMESTER}}, read through the LMS Connector. Use only this data for student information and never search the web for students.
+Analyze student learning analytics data for {{COHORT_SEMESTER}} in the {{DEPARTMENT_NAME}} department to identify learners at risk of falling behind.
 Criteria to examine:
 - LMS login inactivity exceeding 10 consecutive days.
 - Missed or late formative assessment submissions (threshold: 2 or more).
@@ -2036,18 +2209,23 @@ Criteria to examine:
 Output Requirements:
 1. **At-Risk Cohort Segmentation**: Group students into High Risk, Moderate Risk, and Low Risk categories with evidence flags.
 2. **Intervention Recommendations**: For each risk tier, suggest actionable pedagogical interventions (e.g., peer tutoring referral, advisor check-in, supplemental review modules).
-3. **Draft Outreach Email**: Generate an empathetic, non-judgmental advisor check-in email encouraging the student to schedule office hours.`,
-      proTip: "By leveraging multi-modal synthesis, Gemini combines attendance anomalies with assignment grades to catch students who appear present but are falling behind conceptually."
+3. **Draft Outreach Email**: Generate an empathetic, non-judgmental advisor check-in email encouraging the student to schedule office hours.
+Rules:
+- Identify students by LMS ID only, and list the exact data points behind every flag (e.g. "last login 14 days ago; 2 late submissions; midterm 52%").
+- If a data field is missing for a student, mark it "No data" and don't count it as a risk.
+- This list is a starting point, not a decision: an advisor reviews every flag before any outreach is sent.`,
+      proTip: "Ask for the data behind every flag. Advisors trust a list they can check, and it catches students who log in often but are falling behind on grades."
     },
     "zh-TW": {
       title: "學業預警與學習困難即時介入系統",
       summary: "整合教學平台 LMS 與學籍系統紀錄，早期識別潛在學習困難學生並提供個人化輔導策略。",
       steps: [
         "連線 LMS 成績冊與學生出席紀錄，建立跨維度的學習困難預警閥值。",
-        "運用 Deep Research 進行學習歷程分析，篩選出亟需學術支援的學生名單。",
+        "在 Deep Research 執行提示詞，並選取 LMS Connector 作為來源，讓分析使用你的成績冊及活動紀錄。",
         "與學業導師共同覆核名單，發送具關懷性質的個別化輔導與諮詢邀請。"
       ],
-      prompt: `請分析「{{DEPARTMENT_NAME}}」學系在「{{COHORT_SEMESTER}}」學期的學習分析數據，找出處於學業預警邊緣的學生族群。
+      prompt: `資料來源：經 LMS Connector 讀取的「{{DEPARTMENT_NAME}}」「{{COHORT_SEMESTER}}」成績冊及活動紀錄。學生資料只可取自這些數據，絕不在網上搜尋學生資料。
+請分析「{{DEPARTMENT_NAME}}」學系在「{{COHORT_SEMESTER}}」學期的學習分析數據，找出處於學業預警邊緣的學生族群。
 審核指標：
 - LMS 登入中斷超過 10 天以上。
 - 形成性平時作業缺繳或遲交達 2 次以上。
@@ -2055,18 +2233,23 @@ Output Requirements:
 輸出格式：
 1. **預警分級分類**：將學生區分為高、中、低風險群組，並註記具體異常指標。
 2. **輔導處方建議**：針對不同風險層級提供具體支持方案（如同儕課業輔導、導師面談、線上補救單元）。
-3. **關懷信函草稿**：擬定一封具溫度、不具斥責意味的導師問候信，邀請學生前來諮詢。`,
-      proTip: "藉由多模態分析能力，Gemini 能交叉比對出席率與作業邏輯完整度，提前發現看似準時出席但實質理解遇到瓶頸的學生。"
+3. **關懷信函草稿**：擬定一封具溫度、不具斥責意味的導師問候信，邀請學生前來諮詢。
+規則：
+- 只以 LMS 學生編號識別學生，並列出每個預警標記背後的具體數據（例如「最後登入 14 日前；遲交 2 次；期中 52%」）。
+- 如某學生欠缺某項數據，標示為「沒有數據」，不要當作風險計算。
+- 此名單只是起點而非決定：發出任何關懷訊息前，須由學業導師覆核每個標記。`,
+      proTip: "要求列出每個標記背後的數據。導師更信任可以核對的名單，亦能找出經常登入但成績落後的學生。"
     },
     "zh-CN": {
       title: "学业预警与学习困难即时介入系统",
       summary: "整合教学平台 LMS 与学籍系统记录，早期识别潜在学习困难学生并提供个性化辅导策略。",
       steps: [
         "连线 LMS 成绩册与学生出席记录，建立跨维度的学习困难预警阈值。",
-        "运用 Deep Research 进行学习历程分析，筛选出亟需学术支持的学生名单。",
+        "在 Deep Research 执行提示词，并选取 LMS Connector 作为来源，让分析使用你的成绩册及活动记录。",
         "与学业导师共同审核名单，发送具关怀性质的个性化辅导与咨询邀请。"
       ],
-      prompt: `请分析“{{DEPARTMENT_NAME}}”学系在“{{COHORT_SEMESTER}}”学期的学习分析数据，找出处于学业预警边缘的学生族群。
+      prompt: `数据来源：经 LMS Connector 读取的「{{DEPARTMENT_NAME}}」「{{COHORT_SEMESTER}}」成绩册及活动记录。学生信息只可取自这些数据，绝不在网上搜寻学生信息。
+请分析“{{DEPARTMENT_NAME}}”学系在“{{COHORT_SEMESTER}}”学期的学习分析数据，找出处于学业预警边缘的学生族群。
 审核指标：
 - LMS 登录中断超过 10 天以上。
 - 形成性平时作业缺交或迟交达 2 次以上。
@@ -2074,8 +2257,12 @@ Output Requirements:
 输出格式：
 1. **预警分级分类**：将学生区分为高、中、低风险群组，并注记具体异常指标。
 2. **辅导处方建议**：针对不同风险层级提供具体支持方案（如同侪课业辅导、导师面谈、线上补救单元）。
-3. **关怀信函草稿**：拟定一封具温度、不具斥责意味的导师问候信，邀请学生前来咨询。`,
-      proTip: "借由多模态分析能力，Gemini 能交叉比对出席率与作业逻辑完整度，提前发现看似准时出席但实质理解遇到瓶颈的学生。"
+3. **关怀信函草稿**：拟定一封具温度、不具斥责意味的导师问候信，邀请学生前来咨询。
+规则：
+- 只以 LMS 学生编号识别学生，并列出每个预警标记背后的具体数据（例如「最后登录 14 日前；迟交 2 次；期中 52%」）。
+- 如某学生欠缺某项数据，标示为「没有数据」，不要当作风险计算。
+- 此名单只是起点而非决定：发出任何关怀信息前，须由学业导师覆核每个标记。`,
+      proTip: "要求列出每个标记背后的数据。导师更信任可以核对的名单，亦能找出经常登录但成绩落后的学生。"
     }
   },
   accreditation_reports: {
@@ -2083,46 +2270,61 @@ Output Requirements:
       title: "Accreditation Self-Study Report Synthesizer",
       summary: "Map faculty syllabi, student outcomes, and institutional assessments against external accreditation criteria seamlessly.",
       steps: [
-        "Aggregate departmental self-studies, syllabi, and outcome assessments into an institutional Drive hub.",
-        "Run evidence cross-mapping across accreditation standards and criteria in Gemini Notebook.",
-        "Review drafted narrative syntheses, verify institutional metrics, and export the official self-study report."
+        "Run Deep Research on the accreditation body's current standards and recent changes. Add that report, the official standards document, syllabi, outcome assessments and committee minutes to a Gemini Notebook as sources.",
+        "Run the synthesis prompt in Gemini Notebook to map the evidence to each criterion, list the gaps and draft the narrative with a citation for every claim.",
+        "Click through the citations to check each claim against the original document, fill the evidence gaps, then export the self-study report."
       ],
-      prompt: `Act as a higher education quality assurance director. Synthesize institutional evidence for {{PROGRAM_NAME}} aligned with the accreditation standards of {{ACCREDITATION_BODY}}.
+      prompt: `Act as a higher education quality assurance director. Synthesise the evidence for {{PROGRAM_NAME}} against the accreditation standards of {{ACCREDITATION_BODY}}.
+
+Sources in this notebook: the official {{ACCREDITATION_BODY}} standards, a Deep Research brief on recent changes to them, course syllabi, student learning outcome evaluations, faculty records and committee minutes.
+
 Tasks:
-1. **Cross-Mapping**: Map provided course syllabi, student learning outcome evaluations, and faculty publication records against {{ACCREDITATION_BODY}} standards for Criterion 1 (Curriculum Rigor) and Criterion 2 (Faculty Qualifications).
-2. **Gap Analysis**: Highlight any missing assessment data, outdated course references, or under-documented student learning evidence.
-3. **Executive Synthesis**: Draft a 500-word formal narrative summarizing program continuous improvement initiatives and pedagogical innovations over the past review cycle.`,
-      proTip: "Gemini Notebook's source citation capabilities are ideal for accreditation reviews, allowing evaluators to click any statement to inspect the original course syllabus or committee minutes."
+1. **Cross-Mapping**: map the evidence to Criterion 1 (Curriculum Rigor) and Criterion 2 (Faculty Qualifications) as a table: Standard | Evidence | Source (document, page) | Strength (Strong, Partial, None).
+2. **Gap Analysis**: list missing assessment data, outdated course references and under-documented learning evidence. Mark each one "Evidence gap" and name the document that would close it.
+3. **Executive Synthesis**: draft a 500-word formal narrative on continuous improvement over the review cycle.
+
+Rules: cite a source for every factual claim. If the official standards and the Deep Research brief differ, follow the official standards. Never invent figures, dates or meeting outcomes.`,
+      proTip: "Gemini Notebook links every claim to its source, so reviewers can click a statement and see the original syllabus or minutes. Keep the official standards document in the notebook so the mapping never relies on a summary alone."
     },
     "zh-TW": {
       title: "評鑑自我評量報告整合與佐證矩陣",
       summary: "將系所教學大綱、學生學習成效與院務會議紀錄對齊外部認證評鑑指標，一鍵完成自評報告編撰。",
       steps: [
-        "將系所自評、歷年教學大綱及學習成效檔案集中於雲端硬碟 (Drive)。",
-        "在 Gemini Notebook 中建立各門課程與評鑑規準的交叉對應與佐證追溯。",
-        "審核自動生成的論述章節，核算指標達成率後匯出正式自評報告書。"
+        "以 Deep Research 整理評審機構的現行標準及近期修訂，再把報告連同官方標準文件、課程大綱、學習成果評估及委員會會議記錄加入 Gemini Notebook 作為來源。",
+        "在 Gemini Notebook 執行綜合提示詞，把證據對應至每項準則、列出缺漏，並撰寫每項陳述均附出處的報告敘述。",
+        "逐一點擊出處，對照原始文件核實每項陳述，補齊證據缺漏，然後匯出自評報告。"
       ],
-      prompt: `請扮演高等教育品質保證專案執行長。為「{{PROGRAM_NAME}}」彙整符合「{{ACCREDITATION_BODY}}」認證評鑑標準的自我評量報告佐證。
-核心任務：
-1. **標準交叉映射**：將系所課程大綱、學習成效評量結果及師資學術產出，對齊「指標一（課程嚴謹度）」與「指標二（師資結構）」。
-2. **缺口分析**：明確標註尚未齊全的佐證檔案、過期文獻或缺少評鑑問卷回饋的課程。
-3. **自評論述撰寫**：撰寫 500 字正式陳述，綜述系所在此評鑑週期中推動的持續品質改善機制 (Continuous Improvement)。`,
-      proTip: "Gemini Notebook 的內文精確出處引用功能特別適合評鑑委員審查，點擊報告中任何數據即可溯源查看原始會議記錄或大綱文件。"
+      prompt: `請扮演高等教育質素保證總監，按 {{ACCREDITATION_BODY}} 的評審標準，綜合 {{PROGRAM_NAME}} 的證據。
+
+此 Notebook 的來源：{{ACCREDITATION_BODY}} 官方標準、一份關於標準近期修訂的 Deep Research 簡報、課程大綱、學生學習成果評估、教員資料及委員會會議記錄。
+
+任務：
+1. **交叉對應**：把證據對應至準則一（課程嚴謹度）及準則二（教員資歷），以表格呈現：標準｜證據｜出處（文件、頁數）｜強度（充分、部分、欠缺）。
+2. **缺漏分析**：列出欠缺的評估數據、過時的課程參考資料及記錄不足的學習證據。每項標示為「證據缺漏」，並註明可補足缺漏的文件。
+3. **總結敘述**：撰寫 500 字正式敘述，總結評審週期內的持續改善措施。
+
+規則：每項事實陳述均須註明出處。如官方標準與 Deep Research 簡報不一致，以官方標準為準。絕不編造數字、日期或會議結果。`,
+      proTip: "Gemini Notebook 會把每項陳述連結至出處，評審員點擊即可查看原始課程大綱或會議記錄。請把官方標準文件放在 Notebook 內，避免對應工作只依賴摘要。"
     },
     "zh-CN": {
       title: "评估自我评估报告整合与佐证矩阵",
       summary: "将系所教学大纲、学生学习成效与院务会议记录对齐外部认证评估指标，一键完成自评报告编撰。",
       steps: [
-        "将系所自评、历年教学大纲及学习成效档案集中于云端硬盘 (Drive)。",
-        "在 Gemini Notebook 中建立各门课程与评估规准的交叉对应与佐证追溯。",
-        "审核自动生成的论述章节，核算指标达成率后导出正式自评报告书。"
+        "以 Deep Research 整理评审机构的现行标准及近期修订，再把报告连同官方标准文件、课程大纲、学习成果评估及委员会会议记录加入 Gemini Notebook 作为来源。",
+        "在 Gemini Notebook 执行综合提示词，把证据对应至每项准则、列出缺漏，并撰写每项陈述均附出处的报告叙述。",
+        "逐一点击出处，对照原始文件核实每项陈述，补齐证据缺漏，然后导出自评报告。"
       ],
-      prompt: `请扮演高等教育质量保证项目执行长。为“{{PROGRAM_NAME}}”汇整符合“{{ACCREDITATION_BODY}}”认证评估标准的自我评估报告佐证。
-核心任务：
-1. **标准交叉映射**：将系所课程大纲、学习成效评估结果及师资学术产出，对齐“指标一（课程严谨度）”与“指标二（师资结构）”。
-2. **缺口分析**：明确标注尚未齐全的佐证档案、过期文献或缺少评估问卷反馈的课程。
-3. **自评论述撰写**：撰写 500 字正式陈述，综述系所在此评估周期中推动的持续质量改善机制 (Continuous Improvement)。`,
-      proTip: "Gemini Notebook 的内文精确出处引用功能特别适合评估委员审查，点击报告中任何数据即可溯源查看原始会议记录或大纲文件。"
+      prompt: `请扮演高等教育质量保证总监，按 {{ACCREDITATION_BODY}} 的评审标准，综合 {{PROGRAM_NAME}} 的证据。
+
+此 Notebook 的来源：{{ACCREDITATION_BODY}} 官方标准、一份关于标准近期修订的 Deep Research 简报、课程大纲、学生学习成果评估、教师资料及委员会会议记录。
+
+任务：
+1. **交叉对应**：把证据对应至准则一（课程严谨度）及准则二（教师资历），以表格呈现：标准｜证据｜出处（文件、页数）｜强度（充分、部分、欠缺）。
+2. **缺漏分析**：列出欠缺的评估数据、过时的课程参考资料及记录不足的学习证据。每项标示为「证据缺漏」，并注明可补足缺漏的文件。
+3. **总结叙述**：撰写 500 字正式叙述，总结评审周期内的持续改善措施。
+
+规则：每项事实陈述均须注明出处。如官方标准与 Deep Research 简报不一致，以官方标准为准。绝不编造数字、日期或会议结果。`,
+      proTip: "Gemini Notebook 会把每项陈述链接至出处，评审员点击即可查看原始课程大纲或会议记录。请把官方标准文件放在 Notebook 内，避免对应工作只依赖摘要。"
     }
   },
   workforce_federation: {
@@ -2178,14 +2380,15 @@ Deliverables:
       summary: "Build an interactive campus cultural scavenger hunt with AI-generated trivia, QR clues, and digital red packet rewards.",
       steps: [
         "Plan interactive campus discovery checkpoints, cultural trivia themes, and physical QR stations.",
-        "Generate bilingual riddle clues and digital red packet artwork via Agent Designer and Image Generation.",
+        "Generate bilingual riddle clues and quiz cards in Canvas Mode, and digital red packet artwork with Image Generation.",
         "Pilot test the hunt route for student safety and launch the live interactive orientation activity."
       ],
       prompt: `You are the Student Affairs Orientation Director for {{CAMPUS_NAME}}. Design an engaging, digital-physical Cultural Fair Scavenger Hunt celebrating {{FESTIVAL_NAME}}.
 Include:
 1. **Station Clues**: 5 clever rhyming clues that lead students to iconic campus landmarks (library, student center, amphitheater, botanical garden, sports complex).
 2. **Interactive Red Packet QR Challenges**: For each station, design a quick 2-question cultural trivia mini-quiz that unlocks a digital red packet stamp.
-3. **Reward Tier Structure**: Outline completion badge rewards and clear redemption instructions to manage crowd flow safely.`,
+3. **Reward Tier Structure**: Outline completion badge rewards and clear redemption instructions to manage crowd flow safely.
+Use Canvas to create this as an editable document.`,
       proTip: "Use Image Generation to design digital commemorative red packet graphics and badges that students can collect in their digital portfolios upon station check-in."
     },
     "zh-TW": {
@@ -2193,14 +2396,15 @@ Include:
       summary: "結合在地文化節慶，設計融合校園歷史地標的互動式實體與線上打卡闖關解謎遊戲。",
       steps: [
         "規劃校園文化地標打卡動線、節慶文化典故及實體 QR 關卡佈設。",
-        "運用 Agent Designer 與 Image Generation 產出尋寶謎語與紀念數位紅包圖樣。",
+        "在 Canvas Mode 產出雙語謎語線索及問答卡，並以 Image Generation 製作數位紅包圖樣。",
         "進行實地動線安全測試後，正式上線迎新文化週互動闖關活動。"
       ],
       prompt: `請扮演「{{CAMPUS_NAME}}」學務處迎新活動組長。為慶祝「{{FESTIVAL_NAME}}」策劃一場兼具文化底蘊與校園探索趣味的實體與數位互動尋寶遊戲。
 企劃內容：
 1. **關卡謎題**：設計 5 則具巧思的押韻線索，引導學生依序探索圖書館、學生活動中心、戶外劇場、生態花園及體育館。
 2. **QR 數位紅包挑戰**：每個關卡搭配 2 題節慶文化趣味快問快答，通關即可獲取數位紅包圖章。
-3. **獎勵級距與動線規劃**：制定集點兌獎規則及排隊分流安全機制。`,
+3. **獎勵級距與動線規劃**：制定集點兌獎規則及排隊分流安全機制。
+請使用 Canvas 將此內容建立為可編輯文件。`,
       proTip: "運用 Image Generation 繪製具校園特色的數位紅包圖騰與紀念徽章，可供學生通關後下載典藏於個人學習歷程中。"
     },
     "zh-CN": {
@@ -2208,14 +2412,15 @@ Include:
       summary: "结合在地文化节庆，设计融合校园历史地标的互动式实体与线上打卡闯关解谜游戏。",
       steps: [
         "规划校园文化地标打卡动线、节庆文化典故及实体 QR 关卡布设。",
-        "运用 Agent Designer 与 Image Generation 产出寻宝谜语与纪念数字红包图样。",
+        "在 Canvas Mode 产出双语谜语线索及问答卡，并以 Image Generation 制作数字红包图样。",
         "进行实地动线安全测试后，正式上线迎新文化周互动闯关活动。"
       ],
       prompt: `请扮演“{{CAMPUS_NAME}}”学务处迎新活动组长。为庆祝“{{FESTIVAL_NAME}}”策划一场兼具文化底蕴与校园探索趣味的实体与数字互动寻宝游戏。
 企划内容：
 1. **关卡谜题**：设计 5 则具巧思的押韵线索，引导学生依序探索图书馆、学生活动中心、户外剧场、生态花园及体育馆。
 2. **QR 数字红包挑战**：每个关卡搭配 2 题节庆文化趣味快问快答，通关即可获取数字红包图章。
-3. **奖励级距与动线规划**：制定集点兑奖规则及排队分流安全机制。`,
+3. **奖励级距与动线规划**：制定集点兑奖规则及排队分流安全机制。
+请使用 Canvas 将此内容创建为可编辑文档。`,
       proTip: "运用 Image Generation 绘制具校园特色的数字红包图腾与纪念徽章，可供学生通关后下载典藏于个人学习历程中。"
     }
   },
@@ -2224,46 +2429,58 @@ Include:
       title: "Student Expense Compliance Auditor",
       summary: "Audit student club reimbursement receipts, invoices, and subsidy claims automatically against university financial regulations.",
       steps: [
-        "Upload student society expense receipts, invoices, and bank statements to a dedicated Drive directory.",
-        "Execute automated policy compliance auditing to flag missing documentation or spending limit violations.",
-        "Review flagged discrepancies with student leaders and generate approved reimbursement vouchers."
+        "Create one notebook per claim. Add the university's student organisation financial regulations, then the claim form, receipts and quotations as PDFs.",
+        "Run the audit prompt in Gemini Notebook. It checks each receipt line against the regulations and cites the clause for every deduction.",
+        "Open each cited clause and receipt to confirm the flags, then send the audit ledger to the society and issue the approved voucher."
       ],
-      prompt: `You are the Student Affairs Finance Auditor. Audit the reimbursement claim submitted by {{SOCIETY_NAME}} for the event "{{EVENT_NAME}}" totaling {{CLAIM_AMOUNT}}.
-Audit Requirements:
-1. **Line-Item Verification**: Cross-reference each receipt item against university student organization financial regulations.
-2. **Policy Compliance Check**: Flag any alcohol purchases, unitemized credit card slips, tips exceeding 15%, or missing third-party quotations for items over $300.
-3. **Audit Summary**: Produce an itemized audit ledger showing Allowed Amount, Disallowed Amount, and a courteous explanation of any deductions with instructions for appeal.`,
-      proTip: "Grounding Gemini Notebook in official institutional procurement rules ensures high-precision compliance detection without manual auditing fatigue."
+      prompt: `You are the Student Affairs Finance Auditor. Audit the reimbursement claim from {{SOCIETY_NAME}} for the event "{{EVENT_NAME}}", totalling {{CLAIM_AMOUNT}}.
+
+Sources in this notebook: the student organisation financial regulations, plus the claim form, receipts and quotations for this claim.
+
+Audit requirements:
+1. **Line-Item Verification**: check each receipt line against the regulations. Cite the clause (document, section) for every rule you apply.
+2. **Policy Compliance Check**: flag alcohol, unitemised card slips, tips above the allowed limit, missing quotations above the quotation threshold and any receipt that doesn't match the claim form. Take every limit from the regulations, not from memory.
+3. **Missing Evidence**: if a receipt is unreadable or missing, mark the line "Evidence needed" instead of guessing the amount.
+4. **Audit Ledger**: a table with Item | Receipt | Claimed | Allowed | Disallowed | Reason and clause, then the totals and a courteous note explaining any deductions and how to appeal.`,
+      proTip: "Keep one notebook per claim so receipts from different societies never mix, and use the same regulations file in every notebook so each audit cites the same clauses."
     },
     "zh-TW": {
       title: "社團活動經費報銷合規審核助理",
       summary: "依據校內主計與社團經費管理辦法，自動比對發票單據、明細清單與預算核准額度。",
       steps: [
-        "將社團活動之發票掃描檔、收據清冊及預算核准表匯入至專屬 Drive 目錄。",
-        "執行合規審計提示詞，自動揪出單據不齊、品名模糊或超額報銷項目。",
-        "與社團幹部核對異常項目並產出合格報銷核定單，加速撥款作業。"
+        "每宗申請建立一個 Notebook，先加入大學的學生組織財務規例，再以 PDF 加入申請表、收據及報價單。",
+        "在 Gemini Notebook 執行審核提示詞，逐項核對收據與規例，每項扣減均註明條文。",
+        "打開每項引用的條文及收據核實標記，然後把審核明細發給學會，並簽發已批核的報銷憑單。"
       ],
-      prompt: `請扮演學務處財務審核專員。審查社團「{{SOCIETY_NAME}}」於活動「{{EVENT_NAME}}」提出之經費補助申請（申報總額：{{CLAIM_AMOUNT}}）。
+      prompt: `你是學生事務處財務審核員。請審核 {{SOCIETY_NAME}} 就活動「{{EVENT_NAME}}」提交、總額 {{CLAIM_AMOUNT}} 的報銷申請。
+
+此 Notebook 的來源：學生組織財務規例，以及本宗申請的申請表、收據及報價單。
+
 審核要求：
-1. **單據核對**：逐筆比對收據憑證是否符合校內學生團體經費請領規範。
-2. **合規性篩檢**：明確標註含有含酒精飲料、未附品名明細之簽單、小費超過 15% 或逾 $300 缺乏比價單之違規項目。
-3. **審核結果彙整**：編列核准金額、核減金額及委婉且條理分明的扣除理由與申復指引。`,
-      proTip: "將學校最新主計法規作為 Gemini Notebook 的底層知識，能以極高精準度過濾違規憑證，免去人工逐張查驗的疲勞與疏漏。"
+1. **逐項核對**：按規例核對每張收據的每個項目。每條應用的規則均須註明條文（文件、章節）。
+2. **合規檢查**：標示酒精飲品、無明細的信用卡簽賬單、超出容許上限的小費、超過報價門檻卻欠缺報價的項目，以及與申請表不符的收據。所有上限必須取自規例，不可憑記憶。
+3. **欠缺證明**：如收據無法閱讀或欠缺，將該項標示為「需補交證明」，不要猜測金額。
+4. **審核明細**：以表格列出 項目｜收據｜申報金額｜核准金額｜不獲批金額｜原因及條文，再列出總額，並附上禮貌說明，解釋扣減原因及上訴方法。`,
+      proTip: "每宗申請使用獨立的 Notebook，不同學會的收據就不會混在一起；每個 Notebook 都使用同一份規例檔案，每次審核便會引用相同條文。"
     },
     "zh-CN": {
       title: "社团活动经费报销合规审核助理",
       summary: "依据校内主计与社团经费管理办法，自动比对发票单据、明细清单与预算核准额度。",
       steps: [
-        "将社团活动之发票扫描件、收据清册及预算核准表导入至专属 Drive 目录。",
-        "执行合规审计提示词，自动揪出单据不齐、品名模糊或超额报销项目。",
-        "与社团干部核对异常项目并产出合格报销核定单，加速拨款作业。"
+        "每笔申请建立一个 Notebook，先加入大学的学生组织财务规例，再以 PDF 加入申请表、收据及报价单。",
+        "在 Gemini Notebook 执行审核提示词，逐项核对收据与规例，每项扣减均注明条文。",
+        "打开每项引用的条文及收据核实标记，然后把审核明细发给社团，并签发已批核的报销单。"
       ],
-      prompt: `请扮演学务处财务审核专员。审查社团“{{SOCIETY_NAME}}”于活动“{{EVENT_NAME}}”提出之经费补助申请（申报总额：{{CLAIM_AMOUNT}}）。
+      prompt: `你是学生事务处财务审核员。请审核 {{SOCIETY_NAME}} 就活动「{{EVENT_NAME}}」提交、总额 {{CLAIM_AMOUNT}} 的报销申请。
+
+此 Notebook 的来源：学生组织财务规例，以及本笔申请的申请表、收据及报价单。
+
 审核要求：
-1. **单据核对**：逐笔比对收据凭证是否符合校内学生团体经费申领规范。
-2. **合规性筛检**：明确标注含有含酒精饮料、未附品名明细之签单、小费超过 15% 或逾 $300 缺乏比价单之违规项目。
-3. **审核结果汇总**：编列核准金额、核减金额及委婉且条理分明的扣除理由与申复指引。`,
-      proTip: "将学校最新主计法规作为 Gemini Notebook 的底层知识，能以极高精准度过滤违规凭证，免去人工逐张查验的疲劳与疏漏。"
+1. **逐项核对**：按规例核对每张收据的每个项目。每条应用的规则均须注明条文（文件、章节）。
+2. **合规检查**：标示酒精饮品、无明细的信用卡签购单、超出容许上限的小费、超过报价门槛却欠缺报价的项目，以及与申请表不符的收据。所有上限必须取自规例，不可凭记忆。
+3. **欠缺证明**：如收据无法阅读或欠缺，将该项标示为「需补交证明」，不要猜测金额。
+4. **审核明细**：以表格列出 项目｜收据｜申报金额｜核准金额｜不获批金额｜原因及条文，再列出总额，并附上礼貌说明，解释扣减原因及上诉方法。`,
+      proTip: "每笔申请使用独立的 Notebook，不同社团的收据就不会混在一起；每个 Notebook 都使用同一份规例文件，每次审核便会引用相同条文。"
     }
   },
   security_simulator: {
@@ -2271,49 +2488,76 @@ Audit Requirements:
       title: "Campus Safety Drill Simulator",
       summary: "Simulate emergency response scenarios and evaluate campus security decision trees during emergency drill operations.",
       steps: [
-        "Establish emergency protocol handbooks, campus floor plans, and evacuation routes.",
-        "Build multi-branch crisis drill scenarios and tactical decision trees using Agent Designer.",
-        "Facilitate simulated emergency exercises for campus security personnel and evaluate response timelines."
+        "In Agent Designer, add the emergency protocol handbook, floor plans and evacuation routes under Knowledge › Add files, then paste the drill prompt.",
+        "Run a drill with the security team. The Agent presents each phase, checks every decision against the protocol and cites the section.",
+        "Use Video Generation for short clips that open each phase, then review the debrief scores and update the handbook where the drill exposed gaps."
       ],
-      prompt: `You are the Director of Campus Safety. Build a dynamic, interactive emergency drill simulation scenario for {{EMERGENCY_SCENARIO}} occurring at {{FACILITY_LOCATION}}.
-Simulation Structure:
-1. **Incident Genesis (Minute 0)**: Initial emergency call received. Present 3 critical first-response decisions to the safety team.
-2. **Escalation Phase (Minute 15)**: Condition evolves (e.g., secondary obstacle, route blockage, crowd panic). Present tactical options with consequences.
-3. **Containment & Evacuation (Minute 30)**: First responder coordination, safe perimeter establishment, and parent/press communication dispatch.
-4. **Debrief Rubric**: 4-part evaluation rubric grading decision speed, communication clarity, protocol adherence, and victim care prioritization.`,
-      proTip: "Use Video Generation to produce realistic tactical scenario prompts illustrating evacuation bottlenecks or weather events to evaluate team decision-making under stress."
+      prompt: `You are the Director of Campus Safety. Run an interactive emergency drill for {{EMERGENCY_SCENARIO}} at {{FACILITY_LOCATION}}.
+
+KNOWLEDGE SOURCES (Agent Designer › Knowledge › Add files)
+The campus emergency protocol handbook, floor plans and evacuation routes.
+
+GROUNDING RULES
+1. Base every "correct" action on the protocol handbook and cite it as (section, page). Use the floor plans for routes, exits and assembly points.
+2. If the handbook doesn't cover a situation, say "Not covered by protocol: flag for review" instead of making up a procedure.
+3. This is a training drill. Never present it as a real emergency.
+
+Simulation structure:
+1. **Incident Genesis (Minute 0)**: the first emergency call. Offer 3 first-response decisions and wait for the team's choice.
+2. **Escalation Phase (Minute 15)**: the situation changes (e.g. a blocked route or crowd panic). Offer tactical options and explain the consequence of the team's choice, citing the protocol.
+3. **Containment & Evacuation (Minute 30)**: responder coordination, a safe perimeter and parent/press communication.
+4. **Debrief Rubric**: score decision speed, communication clarity, protocol adherence and care for casualties, and list each decision that departed from the protocol with the section it should have followed.`,
+      proTip: "Open each phase with a 5-second Video Generation clip (e.g. smoke in a stairwell) to raise the pressure, but keep the protocol handbook as the only source for the right action."
     },
     "zh-TW": {
       title: "校園防救災與重大危安演練模擬",
       summary: "透過動態危機決策樹模擬突發狀況，提升校園安保團隊在各類演練中的即時指揮處置效能。",
       steps: [
-        "建置緊急應變手冊、校園平面圖及疏散避難動線資料庫。",
-        "利用 Agent Designer 構建多分支危機情境演習腳本與即時處置決策樹。",
-        "開展校安與駐衛保全無預警模擬操演，檢討處置反應時效並優化流程。"
+        "在 Agent Designer 的 Knowledge › Add files 加入緊急應變手冊、樓層平面圖及疏散路線，然後貼上演習提示詞。",
+        "與保安團隊進行演習。Agent 逐一展示每個階段，按應變程序核對每個決定並註明章節。",
+        "用 Video Generation 製作每個階段開場的短片段，然後檢視檢討評分，並按演習暴露的不足更新手冊。"
       ],
-      prompt: `你是校園安全防護中心總指揮官。請為發生於「{{FACILITY_LOCATION}}」的「{{EMERGENCY_SCENARIO}}」建立動態緊急應變模擬演練腳本。
-演練結構：
-1. **初始通報 (0 分鐘)**：接獲首通通報。向應變小組提供 3 項第一時間處置決策選擇。
-2. **災情升級 (15 分鐘)**：情勢惡化（如周邊要道阻塞、群眾恐慌或次生災害）。提出各應對戰術及其衍生後果。
-3. **封鎖與撤離 (30 分鐘)**：消防警消協調、警戒線擴大劃設及校級對外公關新聞通報。
-4. **覆盤評分表**：制定 4 項指標之演練評核表（決策速度、通訊精確度、SOP 落實度與傷者救護優先級）。`,
-      proTip: "可利用 Video Generation 產出逼真的事故模擬短片，在演習期間作為突發情境插入題，考驗團隊在高度壓力下的應變能力。"
+      prompt: `你是校園安全總監。請為 {{FACILITY_LOCATION}} 發生的 {{EMERGENCY_SCENARIO}} 主持一場互動緊急演習。
+
+知識來源（在 Agent Designer › Knowledge › Add files 加入）
+校園緊急應變手冊、樓層平面圖及疏散路線。
+
+引用規則
+1. 每個「正確」行動都必須以應變手冊為依據，並註明出處（章節，頁數）。路線、出口及集合點以樓層平面圖為準。
+2. 如手冊未有涵蓋某個情況，請說明「應變程序未有涵蓋：需標記檢討」，不要自行編造程序。
+3. 這是訓練演習，絕不可當作真實緊急事故。
+
+演習結構：
+1. **事故發生（第 0 分鐘）**：接獲第一個緊急來電。提供 3 個首要應變決定，並等待團隊選擇。
+2. **情況升級（第 15 分鐘）**：情況變化（例如路線受阻或人群恐慌）。提供戰術選項，並引用應變程序解釋團隊選擇的後果。
+3. **控制及疏散（第 30 分鐘）**：協調救援人員、設立安全範圍，以及與家長及傳媒溝通。
+4. **檢討評分準則**：就決策速度、溝通清晰度、遵從程序及照顧傷者評分，並列出每個偏離程序的決定及應遵從的章節。`,
+      proTip: "每個階段開始時播放一段 5 秒的 Video Generation 短片（例如樓梯間冒煙）以增加壓力，但正確行動只以應變手冊為準。"
     },
     "zh-CN": {
       title: "校园防救灾与重大危安演练模拟",
       summary: "透过动态危机决策树模拟突发状况，提升校园安保团队在各类演练中的即时指挥处置效能。",
       steps: [
-        "建置紧急应变手册、校园平面图及疏散避难动线数据库。",
-        "利用 Agent Designer 构建多分支危机情境演习脚本与即时处置决策树。",
-        "开展校安与驻卫保全无预警模拟操演，检讨处置反应时效并优化流程。"
+        "在 Agent Designer 的 Knowledge › Add files 加入紧急应变手册、楼层平面图及疏散路线，然后贴上演习提示词。",
+        "与安保团队进行演习。Agent 逐一展示每个阶段，按应变程序核对每个决定并注明章节。",
+        "用 Video Generation 制作每个阶段开场的短视频片段，然后检视检讨评分，并按演习暴露的不足更新手册。"
       ],
-      prompt: `你是校园安全防护中心总指挥官。请为发生于“{{FACILITY_LOCATION}}”的“{{EMERGENCY_SCENARIO}}”建立动态紧急应变模拟演练脚本。
-演练结构：
-1. **初始通报 (0 分钟)**：接获首通通报。向应变小组提供 3 项第一时间处置决策选择。
-2. **灾情升级 (15 分钟)**：情势恶化（如周边要道阻塞、群众恐慌或次生灾害）。提出各应对战术及其衍生后果。
-3. **封锁与撤离 (30 分钟)**：消防警消协调、警戒线扩大划设及校级对外公关新闻通报。
-4. **复盘评分表**：制定 4 项指标之演练评估表（决策速度、通讯精确度、SOP 落实度与伤者救护优先级）。`,
-      proTip: "可利用 Video Generation 产出逼真的事故模拟短片，在演习期间作为突发情境插入题，考验团队在高度压力下的应变能力。"
+      prompt: `你是校园安全总监。请为 {{FACILITY_LOCATION}} 发生的 {{EMERGENCY_SCENARIO}} 主持一场互动紧急演习。
+
+知识来源（在 Agent Designer › Knowledge › Add files 加入）
+校园紧急应变手册、楼层平面图及疏散路线。
+
+引用规则
+1. 每个「正确」行动都必须以应变手册为依据，并注明出处（章节，页数）。路线、出口及集合点以楼层平面图为准。
+2. 如手册未有涵盖某个情况，请说明「应变程序未有涵盖：需标记检讨」，不要自行编造程序。
+3. 这是训练演习，绝不可当作真实紧急事故。
+
+演习结构：
+1. **事故发生（第 0 分钟）**：接获第一个紧急来电。提供 3 个首要应变决定，并等待团队选择。
+2. **情况升级（第 15 分钟）**：情况变化（例如路线受阻或人群恐慌）。提供战术选项，并引用应变程序解释团队选择的后果。
+3. **控制及疏散（第 30 分钟）**：协调救援人员、设立安全范围，以及与家长及媒体沟通。
+4. **检讨评分准则**：就决策速度、沟通清晰度、遵从程序及照顾伤者评分，并列出每个偏离程序的决定及应遵从的章节。`,
+      proTip: "每个阶段开始时播放一段 5 秒的 Video Generation 短视频（例如楼梯间冒烟）以增加压力，但正确行动只以应变手册为准。"
     }
   },
   special_consideration_workflow: {
