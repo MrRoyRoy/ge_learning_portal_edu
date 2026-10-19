@@ -68,7 +68,9 @@ A pixel-art banner above the library (canvas renderer in `app.js`; sprites from 
 * **Use cases:** create, edit, delete, import and export (JSON). Includes Gemini-assisted drafting with a diff viewer, plus infographic **Generate / Regenerate / Generate missing**.
   * The form also sets **Quest timing**: any of the 6 term/phase chips, or "Anytime".
   * It also holds up to 3 **Quest questions** per playbook (en / zh-TW / zh-CN).
-  * Gemini drafting suggests both.
+  * **Set up prompts:** up to 5 ready-to-copy helper prompts per playbook (type, title and prompt in en / zh-TW / zh-CN), shown in step 1 of the use-case modal. Stored in `use_cases.helper_prompts` and validated by `lib/helper-prompts.js`. Blank Chinese fields fall back to the English text; removing every row stores `{}` (no helpers).
+  * Gemini drafting suggests all three (Set up prompts: echoes the stored ones or drafts 1–3; document-creating ones use type `canvas`).
+  * Seeded playbooks (and their Set up prompts) are re-synced from `app.js` on every boot, so admin edits to seeded ids reset on the next deploy. Admin-created playbooks keep their edits.
 * **News** (all admins): create, edit and delete announcements.
   * Each announcement has a trilingual title and body, an optional link or linked playbook, an audience (roles), a start/end date, and a pin option.
   * The form shows character counters, a live scroll preview and per-field validation.
@@ -125,12 +127,12 @@ flowchart LR
 
 ## 📊 Database schema
 
-These tables are created by `initializeSchemas()` in `server.js` (and `sessions` by `lib/session-store.js`). Columns added later (`is_verified`, `updated_at`, `ge_app_link`, `infographic_url`, `prompt_type`, `timing`) are added on boot with idempotent `ALTER TABLE` migrations. Types are shown for PostgreSQL; SQLite uses `TEXT` / `INTEGER` / `DATETIME` equivalents.
+These tables are created by `initializeSchemas()` in `server.js` (and `sessions` by `lib/session-store.js`). Columns added later (`is_verified`, `updated_at`, `ge_app_link`, `infographic_url`, `prompt_type`, `timing`, `helper_prompts`) are added on boot with idempotent `ALTER TABLE` migrations. Types are shown for PostgreSQL; SQLite uses `TEXT` / `INTEGER` / `DATETIME` equivalents.
 
 | Table | Columns |
 | :--- | :--- |
 | `users` | `email` PK, `password_hash` NOT NULL, `is_temp_password` BOOLEAN default TRUE (forces a reset on first login), `role`, `institution_level`, `created_at`, `ge_app_link` VARCHAR(1024) (Gemini Enterprise app URL for Try it) |
-| `use_cases` | `id` PK, `category`, `title`, `summary`, `features` (JSON), `connectors` (JSON), `role`, `level` (JSON), `steps` (JSON), `prompt`, `pro_tip`, `connector_guide`, `translations` (JSON), `is_verified` BOOLEAN (deprecated, unused), `created_at`, `updated_at`, `infographic_url` VARCHAR(1024), `prompt_type` VARCHAR(50) default `'general'`, `timing` (JSON array of phases `sem_start`, `teaching`, `midterm`, `finals`, `winter`, `summer`, or `["anytime"]`; NULL = anytime) |
+| `use_cases` | `id` PK, `category`, `title`, `summary`, `features` (JSON), `connectors` (JSON), `role`, `level` (JSON), `steps` (JSON), `prompt`, `pro_tip`, `connector_guide`, `translations` (JSON), `is_verified` BOOLEAN (deprecated, unused), `created_at`, `updated_at`, `infographic_url` VARCHAR(1024), `prompt_type` VARCHAR(50) default `'general'`, `timing` (JSON array of phases `sem_start`, `teaching`, `midterm`, `finals`, `winter`, `summer`, or `["anytime"]`; NULL = anytime), `helper_prompts` TEXT (JSON `{ "en": [{type,title,prompt}], "zh-TW": [...], "zh-CN": [...] }`; NULL = use the static list in `app.js`, `{}` = none) |
 | `user_preferences` | (`user_email` FK→users, `use_case_id` FK→use_cases) composite PK, `is_liked` BOOLEAN, `is_deployed` BOOLEAN (legacy, unused). Both FKs `ON DELETE CASCADE`. |
 | `analytics` | `id` SERIAL PK, `timestamp`, `action` (`view` \| `like` \| `try` \| `quest_view` \| `quest_click` \| `news_view` \| `news_click`; old rows may hold `deploy`), `use_case_id` (for quest/news events: `hint:<id>` / `news:<id>`), `user_email` |
 | `feedbacks` | `id` SERIAL PK, `user_email` NOT NULL, `feedback_text` NOT NULL, `created_at` |
@@ -287,7 +289,7 @@ All endpoints return JSON and use the session cookie. "User" means a signed-in s
 | `POST/PUT/DELETE /api/admin/use-cases` · `GET /api/admin/use-cases/export` | Super · Admin | Edit · export playbooks |
 | `POST /api/admin/use-cases/:id/infographic` · `POST /api/admin/infographics/generate-missing` | Super | Generate infographics |
 | `GET/PUT /api/admin/settings/smtp` · `POST /api/admin/settings/smtp/test` | Super | SMTP settings and test send |
-| `POST /api/admin/generate-gemini` | Super | Gemini-assisted playbook drafting with `GEMINI_MODEL` (also suggests `promptType`, `timing` and quest questions). Replies are normalised by `lib/draft-normalize.js`: `{{VARIABLE}}` tokens, portal category / feature / connector names. |
+| `POST /api/admin/generate-gemini` | Super | Gemini-assisted playbook drafting with `GEMINI_MODEL` (also suggests `promptType`, `timing`, quest questions and Set up prompts `helperPrompts`). Replies are normalised by `lib/draft-normalize.js`: `{{VARIABLE}}` tokens, portal category / feature / connector names. |
 | `GET /game/manifest.json` | Public | Quest Run sprite manifest (only assets that exist on disk) |
 | `GET /api/quest` | Signed in | Academic position, hero class, eligible quest hints and live news for the viewer's role |
 | `POST /api/quest/event` | Signed in | Log `quest_view` / `quest_click` / `news_view` / `news_click` |

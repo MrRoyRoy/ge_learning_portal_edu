@@ -4538,6 +4538,12 @@ html[data-theme="light"] .quest-scene { background: #bfe3ff; }
 .hint-field { display: grid; grid-template-columns: 36px minmax(0, 1fr); align-items: center; gap: 8px; }
 .hint-lang { font-size: 12px; font-weight: 700; color: var(--text-muted); }
 .hint-aud summary { cursor: pointer; font-size: 13px; color: var(--text-secondary); }
+/* Set up prompt rows reuse .hint-item; each language gets a title input over a prompt textarea */
+.helper-item .helper-type { max-width: 220px; }
+.helper-lang-block { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 6px 8px; align-items: start; }
+.helper-lang-block .hint-lang { padding-top: 8px; }
+.helper-lang-fields { display: flex; flex-direction: column; gap: 6px; }
+.helper-lang-fields textarea { min-height: 72px; resize: vertical; font-family: monospace; font-size: 13px; padding: 8px 12px; }
 
 @media (max-width: 900px) {
   .news-form-grid { grid-template-columns: minmax(0, 1fr); }

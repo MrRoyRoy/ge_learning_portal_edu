@@ -1045,6 +1045,17 @@
             <input type="text" class="select-control" id="formCaseProTip" required placeholder="Grounding the agent reduces hallucinations…" data-i18n-placeholder="caseFormProTipPh">
           </div>
 
+          <!-- Set up helper prompts (stored in use_cases.helper_prompts; shown in step 1 of the playbook) -->
+          <fieldset class="form-group case-quest-fields">
+            <legend class="form-label" data-i18n="caseFormHelpersLabel">Set up prompts</legend>
+            <p class="field-hint" data-i18n="caseFormHelpersHint">Ready-to-copy prompts shown in step 1 to prepare files or sample data. Up to 5. Blank Chinese fields use the English text.</p>
+            <div class="hint-list" id="formCaseHelpers"></div>
+            <button type="button" class="nav-button nav-button-small" id="btnCaseAddHelper">
+              <span class="material-symbols-outlined" aria-hidden="true">add</span>
+              <span data-i18n="caseFormHelperAdd">Add set up prompt</span>
+            </button>
+          </fieldset>
+
           <!-- Quest Run: when this playbook matters most + the hero's pain-point questions -->
           <fieldset class="form-group case-quest-fields">
             <legend class="form-label" data-i18n="caseFormTimingLabel">When it matters</legend>

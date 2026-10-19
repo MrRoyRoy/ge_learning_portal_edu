@@ -17,6 +17,7 @@ const { encrypt } = require('./lib/secrets');
 const infographics = require('./lib/infographics');
 const QuestCore = require('./lib/quest-core');
 const { normalizeDraft } = require('./lib/draft-normalize');
+const { validateHelperPrompts, parseHelperPrompts } = require('./lib/helper-prompts');
 
 /** Vertex AI model for admin drafting / translation. Override per environment with GEMINI_MODEL. */
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
@@ -228,7 +229,9 @@ async function initializeSchemas() {
     // 'general' | 'notebooklm' | 'deep_research' | 'agent_designer' | 'canvas' | 'image' | 'video'
     { table: 'use_cases', column: 'prompt_type', pg: "VARCHAR(50) DEFAULT 'general'", sqlite: "TEXT DEFAULT 'general'" },
     // Quest Run: JSON array of academic phases when this playbook is most relevant (see lib/quest-core.js TIMINGS)
-    { table: 'use_cases', column: 'timing', pg: `TEXT DEFAULT '["anytime"]'`, sqlite: `TEXT DEFAULT '["anytime"]'` }
+    { table: 'use_cases', column: 'timing', pg: `TEXT DEFAULT '["anytime"]'`, sqlite: `TEXT DEFAULT '["anytime"]'` },
+    // Set up helper prompts: JSON { en: [{type,title,prompt}], 'zh-TW': [...], 'zh-CN': [...] }; NULL = never set
+    { table: 'use_cases', column: 'helper_prompts', pg: 'TEXT', sqlite: 'TEXT' }
   ];
   for (const m of columnMigrations) {
     try {
@@ -410,12 +413,14 @@ async function seedDatabase() {
       ;
       globalThis.seed_useCasesDb = useCasesDb;
       globalThis.seed_useCasesTranslations = useCasesTranslations;
+      globalThis.seed_useCaseHelperPrompts = useCaseHelperPrompts;
     `;
 
     vm.runInNewContext(seedExtractScript, sandbox);
 
     const useCases = sandbox.seed_useCasesDb;
     const translations = sandbox.seed_useCasesTranslations;
+    const helperPrompts = sandbox.seed_useCaseHelperPrompts || {};
 
     if (!useCases || !translations) {
       throw new Error('Failed to extract useCasesDb or useCasesTranslations from sandbox context.');
@@ -424,7 +429,7 @@ async function seedDatabase() {
     console.log(`🌱 Synchronizing all ${useCases.length} simplified use cases from app.js...`);
     for (const uc of useCases) {
       // Upsert (not DELETE + INSERT) so infographic_url, prompt_type and created_at survive every boot
-      await upsertSeedUseCase(uc, translations[uc.id]);
+      await upsertSeedUseCase(uc, translations[uc.id], helperPrompts[uc.id]);
     }
     await applySeedPromptTypes();
     // Idempotent fix-up: the old admin form saved "admin"; the portal filters on "administrative"
@@ -487,25 +492,28 @@ const SEED_PROMPT_TYPES = Object.freeze({
   sao_scavenger_hunt: 'general',           // clues + trivia quiz generated in one chat answer
   finance_compliance: 'notebooklm',        // audit uploaded receipts against regulations
   security_simulator: 'agent_designer',    // interactive multi-branch drill simulation run as an Agent
-  special_consideration_workflow: 'agent_designer',   // multi-step triage workflow with routing + staff review
-  scholarship_application_workflow: 'agent_designer'  // multi-step coach workflow with revise loop + mentor review
+  special_consideration_workflow: 'agent_designer',   // Drive folder-triggered triage workflow with routing + staff review
+  scholarship_application_workflow: 'agent_designer'  // form-triggered, forward-only coach workflow + mentor review
 });
 
 const PROMPT_TYPES = Object.freeze(['general', 'notebooklm', 'deep_research', 'agent_designer', 'canvas', 'image', 'video']);
 const TEST_USER_GE_APP_LINK = 'https://your-gemini-enterprise-app-link';
 
-async function upsertSeedUseCase(uc, ucTranslations) {
+async function upsertSeedUseCase(uc, ucTranslations, ucHelpers) {
   const translationsObj = ucTranslations || { en: uc, 'zh-TW': {}, 'zh-CN': {} };
-  // Content columns are refreshed from app.js; prompt_type and timing are only written on first insert
-  // (timing here because the one-time seed_timing_v1 pass has already run on existing databases).
+  // Seeded helper prompts go through the same validator as admin input; a seed without helpers stores '{}'
+  const helperCheck = validateHelperPrompts(ucHelpers || {});
+  // Content columns (helper prompts included) are refreshed from app.js; prompt_type and timing are only
+  // written on first insert (timing here because the one-time seed_timing_v1 pass has already run on existing databases).
   const upsertSql = `
-    INSERT INTO use_cases (id, category, title, summary, features, connectors, role, level, steps, prompt, pro_tip, connector_guide, translations, prompt_type, timing)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO use_cases (id, category, title, summary, features, connectors, role, level, steps, prompt, pro_tip, connector_guide, translations, prompt_type, timing, helper_prompts)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT (id) DO UPDATE SET
       category = excluded.category, title = excluded.title, summary = excluded.summary,
       features = excluded.features, connectors = excluded.connectors, role = excluded.role,
       level = excluded.level, steps = excluded.steps, prompt = excluded.prompt,
-      pro_tip = excluded.pro_tip, connector_guide = excluded.connector_guide, translations = excluded.translations
+      pro_tip = excluded.pro_tip, connector_guide = excluded.connector_guide, translations = excluded.translations,
+      helper_prompts = excluded.helper_prompts
   `;
 
   const params = [
@@ -523,7 +531,8 @@ async function upsertSeedUseCase(uc, ucTranslations) {
     uc.connectorGuide ? JSON.stringify(uc.connectorGuide) : null,
     JSON.stringify(translationsObj),
     SEED_PROMPT_TYPES[uc.id] || 'general',
-    JSON.stringify((SEED_QUEST[uc.id] && SEED_QUEST[uc.id].timing) || ['anytime'])
+    JSON.stringify((SEED_QUEST[uc.id] && SEED_QUEST[uc.id].timing) || ['anytime']),
+    JSON.stringify(helperCheck.ok ? helperCheck.value : {})
   ];
 
   await query(upsertSql, params);
@@ -1118,6 +1127,7 @@ app.get('/api/use-cases', async (req, res) => {
         infographicUrl: uc.infographic_url || null,
         promptType: PROMPT_TYPES.includes(uc.prompt_type) ? uc.prompt_type : 'general',
         timing: parseTiming(uc.timing),
+        helperPrompts: parseHelperPrompts(uc.helper_prompts),
         isLiked: false,
         likeCount: likesMap[uc.id] || 0,
         totalLikes: likesMap[uc.id] || 0, // legacy alias of likeCount
@@ -1739,14 +1749,16 @@ app.post('/api/admin/use-cases', requireAdmin, async (req, res) => {
   if (!timingCheck.ok) return res.status(400).json({ success: false, message: timingCheck.message });
   const hintsCheck = validateHintsInput(uc.hints);
   if (!hintsCheck.ok) return res.status(400).json({ success: false, message: hintsCheck.message });
+  const helperCheck = validateHelperPrompts(uc.helperPrompts);
+  if (!helperCheck.ok) return res.status(400).json({ success: false, message: helperCheck.message });
 
   try {
     // Imports from the export file may carry an existing infographic; only accept https URLs
     const importedInfographic = parseGeAppLink(uc.infographicUrl);
 
     const insertSql = `
-      INSERT INTO use_cases (id, category, title, summary, features, connectors, role, level, steps, prompt, pro_tip, connector_guide, translations, prompt_type, infographic_url, timing)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO use_cases (id, category, title, summary, features, connectors, role, level, steps, prompt, pro_tip, connector_guide, translations, prompt_type, infographic_url, timing, helper_prompts)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const params = [
@@ -1765,7 +1777,8 @@ app.post('/api/admin/use-cases', requireAdmin, async (req, res) => {
       JSON.stringify(uc.translations || { en: uc, 'zh-TW': {}, 'zh-CN': {} }),
       uc.promptType || 'general',
       importedInfographic.ok ? importedInfographic.value : null,
-      JSON.stringify(timingCheck.value || ['anytime'])
+      JSON.stringify(timingCheck.value || ['anytime']),
+      helperCheck.value ? JSON.stringify(helperCheck.value) : null
     ];
 
     await query(insertSql, params);
@@ -1793,12 +1806,15 @@ app.put('/api/admin/use-cases', requireAdmin, async (req, res) => {
   if (!timingCheck.ok) return res.status(400).json({ success: false, message: timingCheck.message });
   const hintsCheck = validateHintsInput(uc.hints);
   if (!hintsCheck.ok) return res.status(400).json({ success: false, message: hintsCheck.message });
+  const helperCheck = validateHelperPrompts(uc.helperPrompts);
+  if (!helperCheck.ok) return res.status(400).json({ success: false, message: helperCheck.message });
 
   try {
-    // prompt_type / timing = COALESCE(?, column): omitting the field keeps the stored value
+    // prompt_type / timing / helper_prompts = COALESCE(?, column): omitting the field keeps the stored value
+    // ({} clears helper prompts, because it is a non-NULL value)
     const updateSql = `
       UPDATE use_cases
-      SET category = ?, title = ?, summary = ?, features = ?, connectors = ?, role = ?, level = ?, steps = ?, prompt = ?, pro_tip = ?, connector_guide = ?, translations = ?, prompt_type = COALESCE(?, prompt_type), timing = COALESCE(?, timing), updated_at = CURRENT_TIMESTAMP
+      SET category = ?, title = ?, summary = ?, features = ?, connectors = ?, role = ?, level = ?, steps = ?, prompt = ?, pro_tip = ?, connector_guide = ?, translations = ?, prompt_type = COALESCE(?, prompt_type), timing = COALESCE(?, timing), helper_prompts = COALESCE(?, helper_prompts), updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `;
 
@@ -1817,6 +1833,7 @@ app.put('/api/admin/use-cases', requireAdmin, async (req, res) => {
       JSON.stringify(uc.translations || {}),
       uc.promptType || null,
       timingCheck.value ? JSON.stringify(timingCheck.value) : null,
+      helperCheck.value ? JSON.stringify(helperCheck.value) : null,
       uc.id
     ];
 
@@ -1870,6 +1887,7 @@ app.get('/api/admin/use-cases/export', requireAdmin, async (req, res) => {
       infographicUrl: uc.infographic_url || null,
       promptType: PROMPT_TYPES.includes(uc.prompt_type) ? uc.prompt_type : 'general',
       timing: parseTiming(uc.timing),
+      helperPrompts: parseHelperPrompts(uc.helper_prompts),
       hints: hintRows.filter(h => h.use_case_id === uc.id).map(formatHintRow)
         .map(({ question, audience, timing }) => ({ question, audience, timing }))
     }));
@@ -2498,6 +2516,7 @@ PLAYBOOK CONVENTIONS (match the portal's existing playbooks exactly):
 6. CONNECTORS: list one only when the playbook really reads live data from that system, otherwise return []. Use these names exactly: "Drive Connector", "Email Connector", "LMS Connector", "Calendar Connector".
 7. WRITING: plain, friendly English with short sentences. zh-TW is Traditional Chinese as written in Hong Kong; zh-CN is Simplified Chinese. Keep product names in English inside Chinese text: Gemini, Gemini Enterprise, NotebookLM, Canvas Mode, Deep Research, Agent Designer, Image Generation, Video Generation and the connector names.
 8. BRAND: never say "Gem" (always "Agent") and never say "Copilot".
+9. SET UP PROMPTS ("helperPrompts"): 1-3 short ready-to-paste prompts that prepare what step 1 needs (sample data, a rules table, a template, a source summary). Each has a title starting "Prompt to ..." (zh-TW / zh-CN titles end with 提示詞 / 提示词), a type from the PROMPT TYPE list, and reuses the main prompt's {{VARIABLE}} keys where they fit. If a set up prompt creates a document, set type "canvas" and end it with the Canvas sentence in that language: en "Use Canvas to create this as an editable document.", zh-TW "請使用 Canvas 將此內容建立為可編輯文件。", zh-CN "请使用 Canvas 将此内容创建为可编辑文档。" Keep the same number and order of entries in en, zh-TW and zh-CN.
 `;
 
 /**
@@ -2526,7 +2545,7 @@ ${original}
 
 Admin instructions: ${JSON.stringify(instruction || 'Tidy the playbook so it follows the conventions below.')}
 
-Apply only the changes the instructions ask for, plus these always-allowed fixes: convert [VARIABLE] placeholders to {{VARIABLE}}, keep variable keys identical across languages, and fix brand terms. Keep every other title, summary, step, prompt and tip as it is and echo the unchanged text back. Apply each change to en, zh-TW and zh-CN alike.`
+Apply only the changes the instructions ask for (helperPrompts included: echo the stored ones unchanged unless asked, or draft 1-3 if there are none), plus these always-allowed fixes: convert [VARIABLE] placeholders to {{VARIABLE}}, keep variable keys identical across languages, and fix brand terms. Keep every other title, summary, step, prompt and tip as it is and echo the unchanged text back. Apply each change to en, zh-TW and zh-CN alike.`
     : `TASK: DRAFT A NEW PLAYBOOK
 ${instruction ? `Admin instructions (highest priority): ${JSON.stringify(instruction)}` : 'No extra instructions: draft from the form values.'}
 Suggest a clear, specific title if the form title is empty.`;
@@ -2548,6 +2567,11 @@ OUTPUT: only a raw JSON object (no markdown fences, no commentary) with exactly 
   "hints": [
     { "en": "Drowning in essays to mark?", "zh-TW": "批改論文批改到喘不過氣？", "zh-CN": "批改论文批改到喘不过气？", "audience": ["Lecturer", "TA"] }
   ],
+  "helperPrompts": {
+    "en":    [{ "type": "canvas", "title": "Prompt to ...", "prompt": "..." }],
+    "zh-TW": [{ "type": "canvas", "title": "...提示詞", "prompt": "..." }],
+    "zh-CN": [{ "type": "canvas", "title": "...提示词", "prompt": "..." }]
+  },
   "en":    { "title": "...", "summary": "...", "steps": ["...", "...", "..."], "prompt": "...", "proTip": "..." },
   "zh-TW": { "title": "...", "summary": "...", "steps": ["...", "...", "..."], "prompt": "...", "proTip": "..." },
   "zh-CN": { "title": "...", "summary": "...", "steps": ["...", "...", "..."], "prompt": "...", "proTip": "..." }
@@ -2579,7 +2603,8 @@ app.post('/api/admin/generate-gemini', requireAdmin, async (req, res) => {
           connectors: JSON.parse(uc.connectors || '[]'),
           promptType: uc.prompt_type || 'general',
           timing: JSON.parse(uc.timing || '["anytime"]'),
-          translations: JSON.parse(uc.translations || '{}')
+          translations: JSON.parse(uc.translations || '{}'),
+          helperPrompts: parseHelperPrompts(uc.helper_prompts) || {}
         }, null, 2);
       }
     }

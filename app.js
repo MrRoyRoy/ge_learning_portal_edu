@@ -4,19 +4,20 @@
 
 /*
  * Agent Designer WORKFLOW playbooks (admin staff + student). Each prompt is a multi-step workflow with
- * conditional branches (→ arrows) and a mandatory human review step. Both assume NO connectors.
- * Special consideration follows Agent Designer's workflow limits:
- *   - a folder trigger starts one run per student application file (no manual form filling by staff);
+ * conditional branches (→ arrows) and a mandatory human review step. Both follow Agent Designer's limits:
+ *   - the graph is forward-only (no cycles: new evidence or a new draft starts a new run);
+ *   - the approval node has exactly two outcomes, Approve or Reject;
  *   - reference files are attached as Knowledge Sources on agent nodes, never uploaded during a run;
- *   - the graph is forward-only (no cycles: new evidence arrives as a new file, which starts a new run);
- *   - the approval node has exactly two outcomes, Approve or Reject.
+ *   - no step pauses mid-run to wait for a reply (only the approval node waits for a person).
+ * Special consideration starts from a Drive Connector folder trigger (one run per student application file).
+ * Scholarship coach starts from a manual trigger form the student fills in (typed / pasted text; no connectors).
  * Shared by useCasesDb and useCasesTranslations.en so the English text lives in one place.
  */
 const SPECIAL_CONSIDERATION_EN = Object.freeze({
   title: "Special Consideration Workflow Agent",
   summary: "A forward-only Agent Designer workflow that starts when a student's special consideration application lands in an intake folder. The Agent reads the form, checks the evidence against policy, routes the case and drafts a reply, and staff approve or reject every draft.",
   steps: [
-    "Use the helper prompts to draft the evidence rules table, the decision letter templates and a sample student application form. In Agent Designer, attach the policy, rules and templates as Knowledge Sources on the agent nodes, and set up the intake folder where student application forms are saved.",
+    "Use the helper prompts to draft the evidence rules table, the decision letter templates and a sample student application form. In Agent Designer, attach the policy, rules and templates as Knowledge Sources on the agent nodes, and set up the Google Drive intake folder where student application forms are saved, connected through the Drive Connector.",
     "Build a forward-only workflow that starts when a new application lands in the intake folder. The Agent reads the form, checks the evidence against policy, then routes the case to an evidence request, a standard letter or an escalation brief. Upload the sample applications to test each branch.",
     "A staff member approves or rejects each draft. An approved run outputs the final letter and a log row, ready to send. A rejected run closes with a log row so staff can follow up."
   ],
@@ -25,8 +26,8 @@ const SPECIAL_CONSIDERATION_EN = Object.freeze({
 KNOWLEDGE SOURCES (attach in the Agent Designer UI to the agent nodes)
 The special consideration policy, the evidence rules table and the decision letter templates.
 
-STEP 1 · TRIGGER (new file in folder)
-The run starts automatically when a new application form is uploaded to the {{INTAKE_FOLDER}} folder. Each new file starts one run. Ignore files that are not application forms.
+STEP 1 · TRIGGER (Drive Connector: new file in folder)
+The run starts automatically when a new application form is uploaded to the {{INTAKE_FOLDER}} Google Drive folder, watched through the Drive Connector. Each new file starts one run. Ignore files that are not application forms.
 
 STEP 2 · READ APPLICATION (agent node)
 Read the application form in the new file and extract: application reference, student name, student ID, programme, course code, assessment affected, request type (extension | deferred exam | leave of absence), reason category (medical | compassionate | personal | other), affected dates, days requested, the student's statement, the evidence listed or attached (type, date and issuer), and the number of earlier requests this term.
@@ -67,42 +68,60 @@ Rules: base every decision on the knowledge sources and cite the clause. Do not 
 
 const SCHOLARSHIP_COACH_EN = Object.freeze({
   title: "Scholarship Application Coach Workflow Agent",
-  summary: "An Agent that walks you through a scholarship application: checks eligibility, helps you draft your personal statement, scores it against the criteria and sends it to a mentor before you submit.",
+  summary: "A forward-only Agent Designer workflow for one scholarship application. You fill in a start form, the Agent checks your eligibility and either plans your story or scores your draft, and your mentor approves or rejects the result before you act on it.",
   steps: [
-    "Collect the scholarship call, selection criteria, your CV, transcript and activity list, and use the helper prompts to build your profile sheet.",
-    "Set up the coach workflow in Agent Designer: check eligibility, plan your story, draft in Canvas Mode, score the draft and loop back to revise until it meets the bar.",
-    "Send the draft and scorecard to a mentor or advisor for human review, revise with their feedback, finish the final checklist and submit the application yourself."
+    "Use the helper prompts to summarise the scholarship call and build your experience bank. In Agent Designer, attach the scholarship call and selection criteria as Knowledge Sources on the agent nodes, and add a start form with text fields for your profile, experience bank and draft statement.",
+    "Build a forward-only workflow: the Agent checks eligibility, then routes you to a not-eligible note, questions for the scholarship office, a story plan (no draft yet) or a scorecard for your draft. Write the statement yourself in Canvas Mode and paste it into the form.",
+    "Your mentor approves or rejects each plan or scorecard. An approved run gives you next steps or the final submission checklist; a rejected run returns the mentor's notes. Each new draft starts a new run, and you submit the application yourself."
   ],
-  prompt: `You are the Scholarship Coach Agent for students at {{INSTITUTION_NAME}}, helping one student apply for {{SCHOLARSHIP_NAME}} (deadline: {{DEADLINE}}). You are a coach: the student writes and owns every word they submit. Run the workflow below in order.
+  prompt: `You are the Scholarship Coach Agent for students at {{INSTITUTION_NAME}}, helping one student apply for {{SCHOLARSHIP_NAME}} (deadline: {{DEADLINE}}). You are a coach: the student writes and owns every word they submit. The workflow runs forward only, one run per form: never loop back to an earlier step and never pause to wait for a reply. Each new draft starts a new run.
 
-STEP 1 · PROFILE
-Ask the student for their programme, year, GPA, activities, awards, work or volunteering, and a financial need statement if the scholarship asks for one. Summarise this as a profile sheet and ask the student to confirm it.
+KNOWLEDGE SOURCES (attach in the Agent Designer UI to the agent nodes)
+The scholarship call, the selection criteria and any official writing guidance for {{SCHOLARSHIP_NAME}}.
 
-STEP 2 · ELIGIBILITY CHECK
-Compare the profile with every hard requirement in the scholarship call the student uploads (year, GPA, residency, programme, required documents).
-- IF a hard requirement is not met → explain which one in plain words, suggest up to 3 similar scholarships, and STOP.
-- ELSE IF anything is unclear → list the questions to ask the scholarship office and PAUSE until the student replies.
-- ELSE → go to Step 3.
+STEP 1 · TRIGGER (manual trigger: start form)
+The student starts a run by filling in a form with typed or pasted text only: name, programme, year of study, GPA, residency status, activities and awards (or their experience bank), financial need statement (if the scholarship asks for one), draft personal statement (leave blank for the first run) and the mentor's name.
 
-STEP 3 · STORY PLAN
-Map the student's experiences to each selection criterion. Propose 2 story angles and let the student pick one.
+STEP 2 · PROFILE SHEET (agent node)
+Turn the form into a one-page profile sheet. List any required field that is blank.
 
-STEP 4 · DRAFT
-Help the student draft a personal statement of at most {{WORD_LIMIT}} words in Canvas Mode. Coach with guiding questions and structure suggestions, using the student's own examples.
+STEP 3 · ELIGIBILITY CHECK (agent node)
+Compare the profile with every hard requirement in the scholarship call (year, GPA, residency, programme, required documents). Output: eligibility (Eligible | Not eligible | Unclear), each requirement with Met, Not met or Unclear, and the clause it comes from.
 
-STEP 5 · SELF-SCORE
-Score the draft 1–5 on each selection criterion, with one line of evidence per score.
-- IF any criterion scores below 4 → give 3 specific revision tips and go back to Step 4. Loop at most 3 times, then continue.
-- ELSE → go to Step 6.
+STEP 4 · ROUTING (condition node)
+- IF eligibility is Not eligible → go to Step 5A.
+- ELSE IF eligibility is Unclear → go to Step 5B.
+- ELSE IF the draft personal statement field is blank → go to Step 5C.
+- ELSE → go to Step 5D.
 
-STEP 6 · HUMAN REVIEW (required)
-Prepare a review pack for the student's mentor ({{MENTOR_EMAIL}}): the draft, the scorecard and 3 questions for the mentor to answer. Ask the student to send it themselves and wait for the reply. When the student brings back the feedback, help them revise.
+STEP 5A · NOT ELIGIBLE NOTE (agent node)
+Explain in plain words which requirement is not met and suggest up to 3 kinds of similar scholarships to look for. The run ends here.
 
-STEP 7 · FINAL CHECK
-Produce a submission checklist: documents, word count, referee details, file names and a deadline reminder. Remind the student to submit the application themselves.
+STEP 5B · QUESTIONS FOR THE SCHOLARSHIP OFFICE (agent node)
+List the exact questions the student should ask the scholarship office, and say which requirement each one settles. The run ends here. When the office replies, the student starts a new run with the answers added to the form.
 
-Rules: never invent achievements or grades. Never write the whole statement for the student. Flag anything that may break the scholarship's rules on AI use so the student can check.`,
-  proTip: "Make mentor review a required step. The Agent helps you reach a clear draft faster, but a person's feedback keeps the story true, convincing and within the scholarship's rules."
+STEP 5C · STORY PLAN (agent node)
+Map the student's experiences to each selection criterion. Propose 2 story angles, each with a 5-part outline and 3 guiding questions, for a statement of at most {{WORD_LIMIT}} words. Do not write the statement.
+
+STEP 5D · DRAFT SCORECARD (agent node)
+Score the pasted draft 1–5 on each selection criterion, with one line of evidence per score. For every criterion below 4, give up to 3 specific revision tips. Check the word count against {{WORD_LIMIT}} and flag anything that may break the scholarship's rules on AI use. Do not rewrite the statement.
+
+Steps 5C and 5D each continue forward to Step 6.
+
+STEP 6 · MENTOR REVIEW (approval node: Approve or Reject)
+Reviewer: the student's mentor or advisor ({{MENTOR_EMAIL}}). Show the profile sheet, the Step 3 eligibility check and the Step 5C story plan or Step 5D scorecard. Nothing goes back to the student as final until the mentor chooses.
+- IF Approve → go to Step 7A.
+- IF Reject → go to Step 7B.
+
+STEP 7A · NEXT STEPS (agent node)
+- IF the run came from Step 5D and every criterion scored 4 or more → output a submission checklist: documents, word count, referee details, file names and a reminder of the {{DEADLINE}} deadline. Remind the student to submit the application themselves.
+- ELSE → output the approved story plan or revision tips as a short to-do list, ending with: "When your next draft is ready, start a new run with it pasted into the form."
+
+STEP 7B · RETURNED BY MENTOR (agent node)
+Do not output a checklist. Output a short note that the mentor asked for changes, with the mentor's comments if given, and remind the student to revise and start a new run.
+
+Rules: never invent achievements or grades. Never write the whole statement for the student. Base eligibility only on the knowledge sources and cite the clause.`,
+  proTip: "Run the workflow once before you write anything to get a story plan, then again with each new draft. Keep your mentor as the approver so every plan and scorecard gets a human check before you act on it."
 });
 
 const useCasesDb = [
@@ -501,17 +520,25 @@ Simulation Structure:
     }
   },
 
-  // HUB 5: AGENT DESIGNER WORKFLOWS (multi-step, conditional routing, human review; no connectors)
+  // HUB 5: AGENT DESIGNER WORKFLOWS (multi-step, conditional routing, human review; special consideration uses the Drive Connector trigger)
   {
     id: "special_consideration_workflow",
     ...SPECIAL_CONSIDERATION_EN,
     steps: [...SPECIAL_CONSIDERATION_EN.steps],
     category: "administrative",
     features: ["Agent Designer"],
-    connectors: [],
+    connectors: ["Drive Connector"],
     role: "SAO",
     level: ["University & College", "High School", "Generic"],
-    connectorGuide: null
+    connectorGuide: {
+      name: "Drive Connector",
+      steps: [
+        "Ask your Gemini Enterprise admin to turn on the Drive Connector for your institution's Google Drive.",
+        "Create a shared intake folder in Google Drive for student application forms, and share it only with the staff who run this workflow.",
+        "In Agent Designer, set the workflow trigger to 'new file in folder' and pick the intake folder through the Drive Connector.",
+        "Upload the sample application forms to the folder and check that each one starts a run and lands on the right branch."
+      ]
+    }
   },
   {
     id: "scholarship_application_workflow",
@@ -2295,7 +2322,7 @@ Simulation Structure:
       title: "特殊考量申請工作流程 Agent",
       summary: "只向前執行的 Agent Designer 工作流程：學生的特殊考量申請表存入收件資料夾後即自動啟動。Agent 閱讀申請表、按政策核對證明文件、分流個案並草擬回覆，每份草稿均由職員批准或拒絕。",
       steps: [
-        "以輔助提示詞草擬證明文件規則表、決定信範本及一份學生申請表樣本。在 Agent Designer 把政策、規則表及範本附加為 Agent 節點的知識來源 (Knowledge Sources)，並設定存放學生申請表的收件資料夾。",
+        "以輔助提示詞草擬證明文件規則表、決定信範本及一份學生申請表樣本。在 Agent Designer 把政策、規則表及範本附加為 Agent 節點的知識來源 (Knowledge Sources)，並設定存放學生申請表的 Google Drive 收件資料夾，以 Drive Connector 連接。",
         "建立只向前執行的工作流程，當收件資料夾有新申請表時自動啟動：Agent 閱讀申請表、按政策核對證明文件，再把個案分流至要求補交文件、標準決定信或上報摘要。上載申請表樣本以測試每條分支。",
         "職員批准或拒絕每份草稿。批准後輸出最終信件及記錄行，可直接發出；拒絕則以記錄行結案，方便職員跟進。"
       ],
@@ -2304,8 +2331,8 @@ Simulation Structure:
 知識來源（在 Agent Designer 介面附加至各 Agent 節點）
 特殊考量政策、證明文件規則表及決定信範本。
 
-步驟 1 · 觸發（資料夾新增檔案）
-當有新申請表上載至「{{INTAKE_FOLDER}}」資料夾時，流程會自動啟動，每個新檔案啟動一次。如檔案並非申請表，則不予處理。
+步驟 1 · 觸發（Drive Connector：資料夾新增檔案）
+當有新申請表上載至「{{INTAKE_FOLDER}}」Google Drive 資料夾（由 Drive Connector 監察）時，流程會自動啟動，每個新檔案啟動一次。如檔案並非申請表，則不予處理。
 
 步驟 2 · 閱讀申請表（Agent 節點）
 閱讀新檔案中的申請表，擷取：申請編號、學生姓名、學生編號、課程、科目編號、受影響的評核、申請類別（延期交功課 | 延期考試 | 休學）、原因類別（醫療 | 恩恤 | 個人 | 其他）、受影響日期、申請日數、學生陳述、列出或附上的證明文件（類別、日期及簽發者），以及本學期較早前的申請次數。
@@ -2341,13 +2368,22 @@ Simulation Structure:
 不輸出信件。輸出一行記錄，結果為「已拒絕，退回職員」，並附一句說明職員需跟進的事項。如學生其後把補交文件或更正後的申請表上載至資料夾，該檔案會啟動新一輪流程。
 
 規則：每項決定都必須以知識來源為依據並引用條文。不可診斷病情，亦不可在政策規則以外評價證明文件。學生資料必須保密。`,
-      proTip: "正式啟用前請測試每條分支：用申請表樣本輔助提示詞製作一份齊全的申請表、一份欠缺證明文件的申請表及一份帶福利標記的申請表，逐一上載至收件資料夾，確認分流正確。"
+      proTip: "正式啟用前請測試每條分支：用申請表樣本輔助提示詞製作一份齊全的申請表、一份欠缺證明文件的申請表及一份帶福利標記的申請表，逐一上載至收件資料夾，確認分流正確。",
+      connectorGuide: {
+        name: "Drive Connector",
+        steps: [
+          "請 Gemini Enterprise 管理員為院校的 Google Drive 啟用 Drive Connector。",
+          "在 Google Drive 建立共用收件資料夾存放學生申請表，只與負責此工作流程的職員共用。",
+          "在 Agent Designer 把工作流程觸發設定為「資料夾新增檔案」，並透過 Drive Connector 選擇收件資料夾。",
+          "把申請表樣本上載至資料夾，確認每份都會啟動流程並進入正確分支。"
+        ]
+      }
     },
     "zh-CN": {
       title: "特殊考量申请工作流程 Agent",
       summary: "只向前执行的 Agent Designer 工作流程：学生的特殊考量申请表存入收件文件夹后即自动启动。Agent 阅读申请表、按政策核对证明材料、分流个案并草拟回复，每份草稿均由职员批准或拒绝。",
       steps: [
-        "以辅助提示词草拟证明材料规则表、决定函模板及一份学生申请表样本。在 Agent Designer 把政策、规则表及模板附加为 Agent 节点的知识来源 (Knowledge Sources)，并设置存放学生申请表的收件文件夹。",
+        "以辅助提示词草拟证明材料规则表、决定函模板及一份学生申请表样本。在 Agent Designer 把政策、规则表及模板附加为 Agent 节点的知识来源 (Knowledge Sources)，并设置存放学生申请表的 Google Drive 收件文件夹，以 Drive Connector 连接。",
         "建立只向前执行的工作流程，当收件文件夹有新申请表时自动启动：Agent 阅读申请表、按政策核对证明材料，再把个案分流至要求补交材料、标准决定函或上报摘要。上传申请表样本以测试每条分支。",
         "职员批准或拒绝每份草稿。批准后输出最终信函及记录行，可直接发出；拒绝则以记录行结案，方便职员跟进。"
       ],
@@ -2356,8 +2392,8 @@ Simulation Structure:
 知识来源（在 Agent Designer 界面附加至各 Agent 节点）
 特殊考量政策、证明材料规则表及决定函模板。
 
-步骤 1 · 触发（文件夹新增文件）
-当有新申请表上传至“{{INTAKE_FOLDER}}”文件夹时，流程会自动启动，每个新文件启动一次。如文件并非申请表，则不予处理。
+步骤 1 · 触发（Drive Connector：文件夹新增文件）
+当有新申请表上传至“{{INTAKE_FOLDER}}”Google Drive 文件夹（由 Drive Connector 监控）时，流程会自动启动，每个新文件启动一次。如文件并非申请表，则不予处理。
 
 步骤 2 · 阅读申请表（Agent 节点）
 阅读新文件中的申请表，提取：申请编号、学生姓名、学号、专业、课程编号、受影响的考核、申请类别（作业延期 | 缓考 | 休学）、原因类别（医疗 | 恩恤 | 个人 | 其他）、受影响日期、申请天数、学生陈述、列出或附上的证明材料（类别、日期及出具单位），以及本学期较早前的申请次数。
@@ -2393,88 +2429,133 @@ Simulation Structure:
 不输出信函。输出一行记录，结果为“已拒绝，退回职员”，并附一句说明职员需跟进的事项。如学生其后把补交材料或更正后的申请表上传至文件夹，该文件会启动新一轮流程。
 
 规则：每项决定都必须以知识来源为依据并引用条文。不可诊断病情，也不可在政策规则以外评价证明材料。学生信息必须保密。`,
-      proTip: "正式启用前请测试每条分支：用申请表样本辅助提示词制作一份齐全的申请表、一份缺少证明材料的申请表及一份带福利标记的申请表，逐一上传至收件文件夹，确认分流正确。"
+      proTip: "正式启用前请测试每条分支：用申请表样本辅助提示词制作一份齐全的申请表、一份缺少证明材料的申请表及一份带福利标记的申请表，逐一上传至收件文件夹，确认分流正确。",
+      connectorGuide: {
+        name: "Drive Connector",
+        steps: [
+          "请 Gemini Enterprise 管理员为院校的 Google Drive 启用 Drive Connector。",
+          "在 Google Drive 创建共享收件文件夹存放学生申请表，只与负责此工作流程的职员共享。",
+          "在 Agent Designer 把工作流程触发设置为“文件夹新增文件”，并通过 Drive Connector 选择收件文件夹。",
+          "把申请表样本上传至文件夹，确认每份都会启动流程并进入正确分支。"
+        ]
+      }
     }
   },
   scholarship_application_workflow: {
     "en": SCHOLARSHIP_COACH_EN,
     "zh-TW": {
       title: "獎學金申請教練工作流程 Agent",
-      summary: "由 Agent 帶你一步步準備獎學金申請：檢查資格、草擬個人陳述、按評選準則評分，並在提交前交由導師審閱。",
+      summary: "為一份獎學金申請而設、只向前執行的 Agent Designer 工作流程。你填寫啟動表格後，Agent 會檢查你的資格，再為你規劃故事或為草稿評分；結果經導師批准或拒絕後，你才按此行動。",
       steps: [
-        "收集獎學金章程、評選準則，以及你的履歷、成績表和活動清單，並用輔助提示詞整理個人資料表。",
-        "在 Agent Designer 設定教練工作流程：檢查資格、規劃故事、在 Canvas Mode 草擬、為草稿評分，未達標便循環修改。",
-        "將草稿及評分表交給導師或學業顧問作人工審閱，按意見修改後完成最終清單，並由你自己提交申請。"
+        "以輔助提示詞整理獎學金章程摘要及個人經歷庫。在 Agent Designer 把獎學金章程及評選準則附加為 Agent 節點的知識來源 (Knowledge Sources)，並加入一份啟動表格，設有個人資料、經歷庫及陳述草稿的文字欄位。",
+        "建立只向前執行的工作流程：Agent 檢查資格後，把你分流至不符資格說明、向獎學金辦事處查詢的問題、故事規劃（尚未有草稿）或草稿評分表。個人陳述由你自己在 Canvas Mode 撰寫，再貼上表格。",
+        "導師批准或拒絕每份故事規劃或評分表。批准後你會得到下一步清單或最終提交清單；拒絕則退回導師意見。每份新草稿都會啟動新一輪流程，申請由你自己提交。"
       ],
-      prompt: `你是「{{INSTITUTION_NAME}}」學生的獎學金教練 Agent，協助一名學生申請「{{SCHOLARSHIP_NAME}}」（截止日期：{{DEADLINE}}）。你的角色是教練：提交的每一個字都由學生親自撰寫並負責。請按以下流程順序執行。
+      prompt: `你是「{{INSTITUTION_NAME}}」學生的獎學金教練 Agent，協助一名學生申請「{{SCHOLARSHIP_NAME}}」（截止日期：{{DEADLINE}}）。你的角色是教練：提交的每一個字都由學生親自撰寫並負責。流程只會向前執行，每份表格執行一次：不可返回較早的步驟，亦不可暫停等待回覆。每份新草稿都會啟動新一輪流程。
 
-步驟 1 · 個人資料
-詢問學生的課程、年級、GPA、課外活動、獎項、工作或義工經驗；如獎學金要求，亦詢問經濟需要陳述。整理成個人資料表，並請學生確認。
+知識來源（在 Agent Designer 介面附加至各 Agent 節點）
+「{{SCHOLARSHIP_NAME}}」的獎學金章程、評選準則及任何官方寫作指引。
 
-步驟 2 · 資格檢查
-將個人資料與獎學金章程中每項硬性要求比對（年級、GPA、居民身份、課程、所需文件）。
-- 如有硬性要求未達 → 以淺白語言說明是哪一項，建議最多 3 個類近的獎學金，然後停止。
-- 如有不清楚的地方 → 列出要向獎學金辦事處查詢的問題，並暫停，直至學生回覆。
-- 否則 → 進入步驟 3。
+步驟 1 · 觸發（手動觸發：啟動表格）
+學生填寫表格以啟動流程，只可輸入或貼上文字：姓名、課程、年級、GPA、居民身份、課外活動及獎項（或個人經歷庫）、經濟需要陳述（如獎學金要求）、個人陳述草稿（第一次執行可留空）及導師姓名。
 
-步驟 3 · 故事規劃
-把學生的經歷對應到每項評選準則，提出 2 個故事角度，讓學生選擇其一。
+步驟 2 · 個人資料表（Agent 節點）
+把表格內容整理成一頁個人資料表，並列出任何留空的必填欄位。
 
-步驟 4 · 草擬
-協助學生在 Canvas Mode 草擬不多於 {{WORD_LIMIT}} 字的個人陳述。以引導問題及結構建議協助，並使用學生自己的例子。
+步驟 3 · 資格檢查（Agent 節點）
+將個人資料與獎學金章程中每項硬性要求比對（年級、GPA、居民身份、課程、所需文件）。輸出：資格（符合 | 不符合 | 不清楚）、每項要求的結果（達到、未達到或不清楚）及出處條文。
 
-步驟 5 · 自我評分
-按每項評選準則為草稿評 1 至 5 分，每個分數附一句證據。
-- 如任何準則低於 4 分 → 提供 3 個具體修改建議，然後返回步驟 4。最多循環 3 輪，之後繼續下一步。
-- 否則 → 進入步驟 6。
+步驟 4 · 分流（條件節點）
+- 如資格為「不符合」 → 轉至步驟 5A。
+- 否則，如資格為「不清楚」 → 轉至步驟 5B。
+- 否則，如個人陳述草稿欄位留空 → 轉至步驟 5C。
+- 其他情況 → 轉至步驟 5D。
 
-步驟 6 · 人工審閱（必須執行）
-為學生的導師（{{MENTOR_EMAIL}}）準備審閱資料包：草稿、評分表及 3 條請導師回應的問題。請學生自行發送並等待回覆。學生帶回意見後，協助他們修改。
+步驟 5A · 不符資格說明（Agent 節點）
+以淺白語言說明未達到哪一項要求，並建議最多 3 類可留意的類近獎學金。流程於此結束。
 
-步驟 7 · 最終檢查
-製作提交清單：文件、字數、推薦人資料、檔案名稱及截止日期提示。提醒學生親自提交申請。
+步驟 5B · 向獎學金辦事處查詢的問題（Agent 節點）
+列出學生應向獎學金辦事處查詢的具體問題，並註明每條問題釐清哪一項要求。流程於此結束。辦事處回覆後，學生把答案加進表格，再啟動新一輪流程。
 
-規則：絕不可虛構成就或成績。絕不可代學生撰寫整篇陳述。如有任何內容可能違反獎學金對使用 AI 的規定，須提醒學生自行查核。`,
-      proTip: "把「導師審閱」設為必經步驟：Agent 能幫你更快寫出清晰的初稿，但真人的意見才能確保故事真實、具說服力，並符合獎學金的規定。"
+步驟 5C · 故事規劃（Agent 節點）
+把學生的經歷對應到每項評選準則，提出 2 個故事角度，每個附 5 部分大綱及 3 條引導問題，供撰寫不多於 {{WORD_LIMIT}} 字的陳述之用。不可代寫陳述。
+
+步驟 5D · 草稿評分表（Agent 節點）
+按每項評選準則為貼上的草稿評 1 至 5 分，每個分數附一句證據。凡低於 4 分的準則，提供最多 3 個具體修改建議。核對字數是否符合 {{WORD_LIMIT}} 字的上限，並標示任何可能違反獎學金對使用 AI 規定的內容。不可改寫陳述。
+
+步驟 5C 及 5D 均向前進入步驟 6。
+
+步驟 6 · 導師審閱（審批節點：批准或拒絕）
+審閱人：學生的導師或學業顧問（{{MENTOR_EMAIL}}）。展示個人資料表、步驟 3 的資格檢查，以及步驟 5C 的故事規劃或步驟 5D 的評分表。導師作出選擇前，任何內容都不會作為定案交給學生。
+- 如批准 → 轉至步驟 7A。
+- 如拒絕 → 轉至步驟 7B。
+
+步驟 7A · 下一步（Agent 節點）
+- 如流程來自步驟 5D，而且每項準則均達 4 分或以上 → 輸出提交清單：文件、字數、推薦人資料、檔案名稱及 {{DEADLINE}} 截止日期提示，並提醒學生親自提交申請。
+- 其他情況 → 把已批准的故事規劃或修改建議整理成簡短待辦清單，最後加上：「下一份草稿完成後，請把它貼上表格，啟動新一輪流程。」
+
+步驟 7B · 導師退回（Agent 節點）
+不輸出提交清單。輸出一段簡短說明，表示導師要求修改，並附上導師意見（如有），提醒學生修改後啟動新一輪流程。
+
+規則：絕不可虛構成就或成績。絕不可代學生撰寫整篇陳述。資格判斷只可以知識來源為依據並引用條文。`,
+      proTip: "動筆前先執行一次流程取得故事規劃，之後每份新草稿再執行一次。讓導師擔任審批人，確保每份規劃及評分表在你行動前都經過真人把關。"
     },
     "zh-CN": {
       title: "奖学金申请教练工作流程 Agent",
-      summary: "由 Agent 带你一步步准备奖学金申请：检查资格、草拟个人陈述、按评选标准评分，并在提交前交由导师审阅。",
+      summary: "为一份奖学金申请而设、只向前执行的 Agent Designer 工作流程。你填写启动表单后，Agent 会检查你的资格，再为你规划故事或为草稿评分；结果经导师批准或拒绝后，你才按此行动。",
       steps: [
-        "收集奖学金章程、评选标准，以及你的简历、成绩单和活动清单，并用辅助提示词整理个人资料表。",
-        "在 Agent Designer 设置教练工作流程：检查资格、规划故事、在 Canvas Mode 草拟、为草稿评分，未达标便循环修改。",
-        "将草稿及评分表交给导师或学业顾问进行人工审阅，按意见修改后完成最终清单，并由你自己提交申请。"
+        "以辅助提示词整理奖学金章程摘要及个人经历库。在 Agent Designer 把奖学金章程及评选标准附加为 Agent 节点的知识来源 (Knowledge Sources)，并加入一份启动表单，设有个人资料、经历库及陈述草稿的文本字段。",
+        "建立只向前执行的工作流程：Agent 检查资格后，把你分流至不符资格说明、向奖学金办公室咨询的问题、故事规划（尚未有草稿）或草稿评分表。个人陈述由你自己在 Canvas Mode 撰写，再粘贴到表单。",
+        "导师批准或拒绝每份故事规划或评分表。批准后你会得到下一步清单或最终提交清单；拒绝则退回导师意见。每份新草稿都会启动新一轮流程，申请由你自己提交。"
       ],
-      prompt: `你是“{{INSTITUTION_NAME}}”学生的奖学金教练 Agent，协助一名学生申请“{{SCHOLARSHIP_NAME}}”（截止日期：{{DEADLINE}}）。你的角色是教练：提交的每一个字都由学生亲自撰写并负责。请按以下流程顺序执行。
+      prompt: `你是“{{INSTITUTION_NAME}}”学生的奖学金教练 Agent，协助一名学生申请“{{SCHOLARSHIP_NAME}}”（截止日期：{{DEADLINE}}）。你的角色是教练：提交的每一个字都由学生亲自撰写并负责。流程只会向前执行，每份表单执行一次：不可返回较早的步骤，也不可暂停等待回复。每份新草稿都会启动新一轮流程。
 
-步骤 1 · 个人资料
-询问学生的专业、年级、GPA、课外活动、奖项、工作或志愿者经历；如奖学金要求，也询问经济需要陈述。整理成个人资料表，并请学生确认。
+知识来源（在 Agent Designer 界面附加至各 Agent 节点）
+“{{SCHOLARSHIP_NAME}}”的奖学金章程、评选标准及任何官方写作指引。
 
-步骤 2 · 资格检查
-将个人资料与奖学金章程中每项硬性要求比对（年级、GPA、户籍或居民身份、专业、所需材料）。
-- 如有硬性要求未达到 → 用浅白语言说明是哪一项，推荐最多 3 个类似的奖学金，然后停止。
-- 如有不清楚的地方 → 列出要向奖学金办公室咨询的问题，并暂停，直至学生回复。
-- 否则 → 进入步骤 3。
+步骤 1 · 触发（手动触发：启动表单）
+学生填写表单以启动流程，只可输入或粘贴文本：姓名、专业、年级、GPA、户籍或居民身份、课外活动及奖项（或个人经历库）、经济需要陈述（如奖学金要求）、个人陈述草稿（第一次执行可留空）及导师姓名。
 
-步骤 3 · 故事规划
-把学生的经历对应到每项评选标准，提出 2 个故事角度，让学生选择其一。
+步骤 2 · 个人资料表（Agent 节点）
+把表单内容整理成一页个人资料表，并列出任何留空的必填字段。
 
-步骤 4 · 草拟
-协助学生在 Canvas Mode 草拟不超过 {{WORD_LIMIT}} 字的个人陈述。以引导问题及结构建议协助，并使用学生自己的例子。
+步骤 3 · 资格检查（Agent 节点）
+将个人资料与奖学金章程中每项硬性要求比对（年级、GPA、户籍或居民身份、专业、所需材料）。输出：资格（符合 | 不符合 | 不清楚）、每项要求的结果（达到、未达到或不清楚）及出处条文。
 
-步骤 5 · 自我评分
-按每项评选标准为草稿打 1 至 5 分，每个分数附一句证据。
-- 如任何标准低于 4 分 → 提供 3 条具体修改建议，然后返回步骤 4。最多循环 3 轮，之后继续下一步。
-- 否则 → 进入步骤 6。
+步骤 4 · 分流（条件节点）
+- 如资格为“不符合” → 转至步骤 5A。
+- 否则，如资格为“不清楚” → 转至步骤 5B。
+- 否则，如个人陈述草稿字段留空 → 转至步骤 5C。
+- 其他情况 → 转至步骤 5D。
 
-步骤 6 · 人工审阅（必须执行）
-为学生的导师（{{MENTOR_EMAIL}}）准备审阅资料包：草稿、评分表及 3 个请导师回应的问题。请学生自行发送并等待回复。学生带回意见后，协助他们修改。
+步骤 5A · 不符资格说明（Agent 节点）
+用浅白语言说明未达到哪一项要求，并推荐最多 3 类可留意的类似奖学金。流程于此结束。
 
-步骤 7 · 最终检查
-制作提交清单：材料、字数、推荐人信息、文件名称及截止日期提醒。提醒学生亲自提交申请。
+步骤 5B · 向奖学金办公室咨询的问题（Agent 节点）
+列出学生应向奖学金办公室咨询的具体问题，并注明每个问题澄清哪一项要求。流程于此结束。办公室回复后，学生把答案加进表单，再启动新一轮流程。
 
-规则：绝不可虚构成就或成绩。绝不可代学生撰写整篇陈述。如有任何内容可能违反奖学金对使用 AI 的规定，须提醒学生自行核查。`,
-      proTip: "把“导师审阅”设为必经步骤：Agent 能帮你更快写出清晰的初稿，但真人的意见才能确保故事真实、有说服力，并符合奖学金的规定。"
+步骤 5C · 故事规划（Agent 节点）
+把学生的经历对应到每项评选标准，提出 2 个故事角度，每个附 5 部分大纲及 3 个引导问题，供撰写不超过 {{WORD_LIMIT}} 字的陈述之用。不可代写陈述。
+
+步骤 5D · 草稿评分表（Agent 节点）
+按每项评选标准为粘贴的草稿打 1 至 5 分，每个分数附一句证据。凡低于 4 分的标准，提供最多 3 条具体修改建议。核对字数是否符合 {{WORD_LIMIT}} 字的上限，并标出任何可能违反奖学金对使用 AI 规定的内容。不可改写陈述。
+
+步骤 5C 及 5D 均向前进入步骤 6。
+
+步骤 6 · 导师审阅（审批节点：批准或拒绝）
+审阅人：学生的导师或学业顾问（{{MENTOR_EMAIL}}）。展示个人资料表、步骤 3 的资格检查，以及步骤 5C 的故事规划或步骤 5D 的评分表。导师作出选择前，任何内容都不会作为定稿交给学生。
+- 如批准 → 转至步骤 7A。
+- 如拒绝 → 转至步骤 7B。
+
+步骤 7A · 下一步（Agent 节点）
+- 如流程来自步骤 5D，而且每项标准均达 4 分或以上 → 输出提交清单：材料、字数、推荐人信息、文件名称及 {{DEADLINE}} 截止日期提醒，并提醒学生亲自提交申请。
+- 其他情况 → 把已批准的故事规划或修改建议整理成简短待办清单，最后加上：“下一份草稿完成后，请把它粘贴到表单，启动新一轮流程。”
+
+步骤 7B · 导师退回（Agent 节点）
+不输出提交清单。输出一段简短说明，表示导师要求修改，并附上导师意见（如有），提醒学生修改后启动新一轮流程。
+
+规则：绝不可虚构成就或成绩。绝不可代学生撰写整篇陈述。资格判断只可以知识来源为依据并引用条文。`,
+      proTip: "动笔前先执行一次流程获取故事规划，之后每份新草稿再执行一次。让导师担任审批人，确保每份规划及评分表在你行动前都经过真人把关。"
     }
   }
 };
@@ -3041,6 +3122,10 @@ async function loadUseCasesFromServer() {
       data.forEach(uc => {
         if (uc.translations) {
           useCasesTranslations[uc.id] = uc.translations;
+        }
+        // Set up prompts live in the DB (admin-editable); {} means "none", null means "never set"
+        if (uc.helperPrompts && typeof uc.helperPrompts === "object") {
+          useCaseHelperPrompts[uc.id] = uc.helperPrompts;
         }
       });
       console.log(`🌐 Synced ${data.length} editable playbooks from server database.`);
@@ -4180,6 +4265,10 @@ function openAdminEditModal(uc) {
   // V6: Quest Run timing + questions (read-only for assistant admins)
   renderCaseQuestFields({ timing: uc?.timing || ["anytime"], hints: uc?.hints || [] }, isAssist);
 
+  // V7: Set up helper prompts (DB value, else the static seed list for this id)
+  const storedHelpers = uc ? (uc.helperPrompts || useCaseHelperPrompts[uc.id] || {}) : {};
+  renderCaseHelperFields(helpersToRows(storedHelpers), isAssist);
+
   modal.classList.add("active");
 }
 
@@ -4255,7 +4344,8 @@ async function saveAdminUseCase() {
   const payload = {
     id, category, title, role, summary, features, connectors, level, steps, prompt, proTip, translations, promptType,
     timing: questFields.timing.length ? questFields.timing : ["anytime"],
-    hints: questFields.hints.filter(h => h.question.en)
+    hints: questFields.hints.filter(h => h.question.en),
+    helperPrompts: rowsToHelpers(readCaseHelperRows())
   };
 
   try {
@@ -4429,6 +4519,10 @@ async function triggerGeminiPlaybookGeneration() {
 function applyGeminiSuggestions(aiRes) {
   // V6: Quest Run timing + questions
   if (aiRes && (Array.isArray(aiRes.timing) || Array.isArray(aiRes.hints))) applyQuestSuggestions(aiRes);
+  // V7: Set up helper prompts
+  if (aiRes && aiRes.helperPrompts && typeof aiRes.helperPrompts === "object") {
+    renderCaseHelperFields(helpersToRows(aiRes.helperPrompts), false);
+  }
 
   // English (en)
   const en = aiRes.en || {};
@@ -4665,6 +4759,17 @@ function showDiffViewer(aiRes) {
     label: L(t.adminFormLabelProTip, t.langNameZhCn),
     current: document.getElementById("formTransZhcnProTip").value,
     proposed: aiRes["zh-CN"]?.proTip || ""
+  });
+
+  // Set up helper prompts, one comparison row per language
+  const currentHelpers = rowsToHelpers(readCaseHelperRows());
+  const proposedHelpers = (aiRes.helperPrompts && typeof aiRes.helperPrompts === "object") ? aiRes.helperPrompts : currentHelpers;
+  [["en", t.langNameEn], ["zh-TW", t.langNameZhTw], ["zh-CN", t.langNameZhCn]].forEach(([lang, langName]) => {
+    diffItems.push({
+      label: L(t.caseFormHelpersLabel, langName),
+      current: helpersAsText(currentHelpers[lang], typeLabel),
+      proposed: helpersAsText(proposedHelpers[lang], typeLabel)
+    });
   });
 
   // Render comparative items
@@ -6079,6 +6184,14 @@ const uiTranslationsV6 = {
     caseFormHintAdd: "Add question",
     caseFormHintN: "Question {n}",
     caseFormHintRemove: "Remove question",
+    caseFormHelpersLabel: "Set up prompts",
+    caseFormHelpersHint: "Ready-to-copy prompts shown in step 1 to prepare files or sample data. Up to 5. Blank Chinese fields use the English text.",
+    caseFormHelperAdd: "Add set up prompt",
+    caseFormHelperN: "Set up prompt {n}",
+    caseFormHelperRemove: "Remove set up prompt",
+    caseFormHelperType: "Type",
+    caseFormHelperTitlePh: "Title, e.g. Prompt to Generate a Sample Application Form",
+    caseFormHelperPromptPh: "Prompt text. Use {{VARIABLE}} for values people fill in.",
     caseFormHintAudience: "Only for these roles (optional)"
   },
   "zh-TW": {
@@ -6167,6 +6280,14 @@ const uiTranslationsV6 = {
     caseFormHintAdd: "新增問題",
     caseFormHintN: "問題 {n}",
     caseFormHintRemove: "移除問題",
+    caseFormHelpersLabel: "準備資料提示詞",
+    caseFormHelpersHint: "在步驟 1 顯示、可直接複製的提示詞，用來準備檔案或樣本資料。最多 5 個。中文欄位留空時會使用英文內容。",
+    caseFormHelperAdd: "新增準備資料提示詞",
+    caseFormHelperN: "準備資料提示詞 {n}",
+    caseFormHelperRemove: "移除準備資料提示詞",
+    caseFormHelperType: "類型",
+    caseFormHelperTitlePh: "標題，例如：生成申請表樣本提示詞",
+    caseFormHelperPromptPh: "提示詞內容。以 {{VARIABLE}} 表示需要填寫的值。",
     caseFormHintAudience: "只向這些角色顯示（選填）"
   },
   "zh-CN": {
@@ -6255,6 +6376,14 @@ const uiTranslationsV6 = {
     caseFormHintAdd: "添加问题",
     caseFormHintN: "问题 {n}",
     caseFormHintRemove: "移除问题",
+    caseFormHelpersLabel: "准备资料提示词",
+    caseFormHelpersHint: "在步骤 1 显示、可直接复制的提示词，用来准备文件或样本数据。最多 5 个。中文字段留空时会使用英文内容。",
+    caseFormHelperAdd: "添加准备资料提示词",
+    caseFormHelperN: "准备资料提示词 {n}",
+    caseFormHelperRemove: "移除准备资料提示词",
+    caseFormHelperType: "类型",
+    caseFormHelperTitlePh: "标题，例如：生成申请表样本提示词",
+    caseFormHelperPromptPh: "提示词内容。以 {{VARIABLE}} 表示需要填写的值。",
     caseFormHintAudience: "只向这些角色显示（选填）"
   }
 };
@@ -8960,6 +9089,116 @@ function renderCaseQuestFields(state, disabled) {
       renderCaseQuestFields(s, false);
       const inputs = hintBox.querySelectorAll("[data-hint-field='en']");
       if (inputs.length) inputs[inputs.length - 1].focus();
+    });
+  }
+}
+
+// ===========================================================================
+// v7 Admin: case form — Set up helper prompts (stored in use_cases.helper_prompts)
+// ===========================================================================
+const MAX_CASE_HELPERS = 5;
+const HELPER_FORM_LANGS = [["en", "EN"], ["zh-TW", "繁"], ["zh-CN", "简"]];
+const HELPER_TYPE_VALUES = ["general", "notebooklm", "deep_research", "agent_designer", "canvas", "image", "video"];
+
+/**
+ * Stored shape { en: [{type,title,prompt}], "zh-TW": [...], "zh-CN": [...] } -> editor rows
+ * [{ type, en: {title,prompt}, "zh-TW": {...}, "zh-CN": {...} }]. Entries line up by index; the
+ * row's type comes from the first language that has the entry. Pure.
+ */
+const helpersToRows = (hp) => {
+  const lists = HELPER_FORM_LANGS.map(([l]) => (hp && Array.isArray(hp[l]) ? hp[l] : []));
+  const n = Math.min(MAX_CASE_HELPERS, Math.max(0, ...lists.map(x => x.length)));
+  return Array.from({ length: n }, (_, i) => {
+    const first = lists.map(x => x[i]).find(Boolean) || {};
+    const row = { type: HELPER_TYPE_VALUES.includes(first.type) ? first.type : "general" };
+    HELPER_FORM_LANGS.forEach(([l], k) => { row[l] = { title: lists[k][i]?.title || "", prompt: lists[k][i]?.prompt || "" }; });
+    return row;
+  });
+};
+
+/**
+ * Editor rows -> stored shape. Blank Chinese fields fall back to the English text (same rule as the
+ * other translation fields); rows without any prompt text are dropped. Pure.
+ */
+const rowsToHelpers = (rows) => {
+  const kept = rows.filter(r => HELPER_FORM_LANGS.some(([l]) => (r[l]?.prompt || "").trim()));
+  return Object.fromEntries(HELPER_FORM_LANGS.map(([l]) => [l, kept.map(r => ({
+    type: r.type || "general",
+    title: (r[l]?.title || "").trim() || (r.en?.title || "").trim(),
+    prompt: (r[l]?.prompt || "").trim() || (r.en?.prompt || "").trim()
+  })).filter(h => h.prompt)]));
+};
+
+/** Plain-text view of one language's helper list for the diff viewer. Pure. */
+const helpersAsText = (list, typeLabel) => (Array.isArray(list) ? list : [])
+  .map((h, i) => `${i + 1}. ${h.title || ""} [${typeLabel(h.type || "general")}]\n${h.prompt || ""}`).join("\n\n");
+
+/** Reads the helper repeater back into editor rows. */
+function readCaseHelperRows() {
+  return [...document.querySelectorAll("#formCaseHelpers .helper-item")].map(item => {
+    const row = { type: item.querySelector("[data-helper-type]")?.value || "general" };
+    HELPER_FORM_LANGS.forEach(([l]) => {
+      row[l] = {
+        title: item.querySelector(`[data-helper-title="${l}"]`)?.value || "",
+        prompt: item.querySelector(`[data-helper-prompt="${l}"]`)?.value || ""
+      };
+    });
+    return row;
+  });
+}
+
+const helperRowHtml = (row, i, t, disabled) => {
+  const dis = disabled ? " disabled" : "";
+  const typeOptions = HELPER_TYPE_VALUES.map(v =>
+    `<option value="${v}"${row.type === v ? " selected" : ""}>${escapeHtml(t.promptTypes?.[v] || v)}</option>`).join("");
+  const langBlock = ([l, label]) => `
+    <div class="helper-lang-block">
+      <span class="hint-lang">${label}</span>
+      <div class="helper-lang-fields">
+        <input type="text" class="select-control" maxlength="200" data-helper-title="${l}" value="${escapeHtml(row[l]?.title || "")}" placeholder="${escapeHtml(t.caseFormHelperTitlePh)}" aria-label="${escapeHtml(t.caseFormHelperTitlePh)} (${label})"${dis}>
+        <textarea class="select-control" maxlength="8000" data-helper-prompt="${l}" placeholder="${escapeHtml(t.caseFormHelperPromptPh)}" aria-label="${escapeHtml(t.caseFormHelperPromptPh)} (${label})"${dis}>${escapeHtml(row[l]?.prompt || "")}</textarea>
+      </div>
+    </div>`;
+  return `<div class="hint-item helper-item" data-index="${i}">
+    <div class="hint-item-head">
+      <span class="hint-num">${escapeHtml(fmt(t.caseFormHelperN, { n: i + 1 }))}</span>
+      ${disabled ? "" : `<button type="button" class="icon-btn btn-sm" data-helper-remove="${i}" title="${escapeHtml(t.caseFormHelperRemove)}" aria-label="${escapeHtml(t.caseFormHelperRemove)}"><span class="material-symbols-outlined">delete</span></button>`}
+    </div>
+    <label class="hint-field"><span class="hint-lang">${escapeHtml(t.caseFormHelperType)}</span>
+      <select class="select-control helper-type" data-helper-type${dis}>${typeOptions}</select></label>
+    ${HELPER_FORM_LANGS.map(langBlock).join("")}
+  </div>`;
+};
+
+/** Renders the helper repeater (max 5); add / remove handlers are bound once. */
+function renderCaseHelperFields(rows, disabled) {
+  const t = tr();
+  const box = document.getElementById("formCaseHelpers");
+  const addBtn = document.getElementById("btnCaseAddHelper");
+  if (!box) return;
+  const list = (rows || []).slice(0, MAX_CASE_HELPERS);
+  box.innerHTML = list.map((r, i) => helperRowHtml(r, i, t, disabled)).join("");
+  if (addBtn) {
+    addBtn.hidden = disabled;
+    addBtn.disabled = list.length >= MAX_CASE_HELPERS;
+  }
+  if (!box.dataset.bound) {
+    box.dataset.bound = "1";
+    box.addEventListener("click", (e) => {
+      const rm = e.target.closest("[data-helper-remove]");
+      if (!rm) return;
+      const current = readCaseHelperRows();
+      current.splice(Number(rm.dataset.helperRemove), 1);
+      renderCaseHelperFields(current, false);
+    });
+    if (addBtn) addBtn.addEventListener("click", () => {
+      const current = readCaseHelperRows();
+      if (current.length >= MAX_CASE_HELPERS) return;
+      const blank = { type: "canvas" };
+      HELPER_FORM_LANGS.forEach(([l]) => { blank[l] = { title: "", prompt: "" }; });
+      renderCaseHelperFields([...current, blank], false);
+      const titles = box.querySelectorAll("[data-helper-title='en']");
+      if (titles.length) titles[titles.length - 1].focus();
     });
   }
 }
