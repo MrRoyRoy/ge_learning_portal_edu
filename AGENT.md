@@ -128,7 +128,15 @@ graph TD
 
 ############# 7. App State & Progress
  
-##### Accomplished Tasks (Latest Session Milestone — 2026-10-19, Canvas Set up prompts for 2 prod-only playbooks; data-only change on prod, no deploy; Playwright 9/9 on prod in en / zh-TW / zh-CN)
+##### Accomplished Tasks (Latest Session Milestone — 2026-10-19, NotebookLM renamed to Gemini Notebook, commit `2c4eee1` on `main`; dev rev `your-dev-service-00015-rgx`, prod rev `your-service-00039-nps`; Playwright `test_notebook_rename.js` 15/15, `test_workflows.js` 34/34, `test_canvas_helpers.js` 15/15, `test_admin_helpers.js` 11/11 on local, dev and prod, plus `test_two_cases_helpers.js` 9/9 on prod)
+* Every user-facing "NotebookLM" is now "Gemini Notebook". That covers the seeds in `app.js` (en / zh-TW / zh-CN), the feature filter and admin checkbox, prompt-type labels, form placeholders, Gemini drafting / translate instructions and the README. The internal prompt-type id `notebooklm` is unchanged, as are the icon / tone rules, which match on "notebook".
+* New boot migration `applyProductRename()` in `server.js`. It runs `REPLACE()` on existing rows: use_cases text/JSON columns (admin-created playbooks and helper prompts), quest_hints questions and announcements. It is idempotent and case-sensitive, so `notebooklm` ids are safe, and it skips rows where VARCHAR limits would overflow. Prod (23 cases) and dev (16) API responses contain no "NotebookLM".
+* `lib/draft-normalize.js`: `LEGACY_NAMES` + `renameLegacyProducts`. Gemini replies that still say NotebookLM (features, text, Set up prompts) are mapped to Gemini Notebook.
+* Client: a saved feature filter `NotebookLM` from an older session maps to `Gemini Notebook`.
+* AGENT.md brand rules updated: never write "NotebookLM" in user-facing text.
+* **Open:** existing infographic images may still show the old name inside the picture. Regenerate the affected ones (rubric_grading, socratic_tutor, accreditation_reports, finance_compliance, su_advocacy and others with the Gemini Notebook feature) if needed.
+
+##### Previous Milestone (2026-10-19, Canvas Set up prompts for 2 prod-only playbooks; data-only change on prod, no deploy; Playwright 9/9 on prod in en / zh-TW / zh-CN)
 * Added Canvas Mode Set up prompts (type `canvas`, localised Canvas sentence, `{{UPPER_SNAKE}}` variables) through `PUT /api/admin/use-cases`. The full stored record was sent back unchanged, so only `helper_prompts` changed (verified).
   * `academic-ops-assistant-agent-designer` (Administration Workflow and Request Routing), 3 prompts: department SOP + SLA reference, standard request form templates, 8 sample staff inquiries for testing. Variables INSTITUTION_NAME, DEPARTMENT_NAME.
   * `career_corporate_partnership_builder` (Corporate Partnership Career Matching Engine), 2 prompts: sample graduating cohort skill profile (aggregated, fictional), target corporate partner profile. Variables INSTITUTION_NAME, PROGRAMME_NAME, INDUSTRY_SECTOR.
