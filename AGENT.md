@@ -35,14 +35,14 @@ Strict guidelines govern how features, products, and connectors are named. These
 
 ### Approved Terminology
 * **Enterprise Title:** `Gemini Enterprise - Edu Portal` (Avoid *"Antigravity"* or general references).
-* **Main Models & Features:** `NotebookLM` (Never refer to it as *"NotebookLM Enterprise"*), `Gemini`, `Canvas Mode`, `Deep Research`, `Agent Designer`, `Image Generation` (Never use *"Nano Image Gen"*), `Video Generation`.
+* **Main Models & Features:** `Gemini Notebook` (renamed from NotebookLM on 2026-10-19: never write *"NotebookLM"* or *"NotebookLM Enterprise"* in user-facing text; the internal prompt-type id stays `notebooklm`), `Gemini`, `Canvas Mode`, `Deep Research`, `Agent Designer`, `Image Generation` (Never use *"Nano Image Gen"*), `Video Generation`.
 
 ### Forbidden Terminology
 * **Never** use the term **"Gem"** (always use **"Agent"**).
 * **Never** use the term **"Copilot"**.
 
 ### Localization Boundary
-* Keep product and system names (*NotebookLM*, *Gemini*, *Canvas Mode*, *Deep Research*, *Agent Designer*, *Image Generation*, *Video Generation*) strictly in **English** within both Traditional Chinese (`zh-TW`) and Simplified Chinese (`zh-CN`) translations.
+* Keep product and system names (*Gemini Notebook*, *Gemini*, *Canvas Mode*, *Deep Research*, *Agent Designer*, *Image Generation*, *Video Generation*) strictly in **English** within both Traditional Chinese (`zh-TW`) and Simplified Chinese (`zh-CN`) translations.
 
 ---
 
@@ -194,7 +194,7 @@ graph TD
 * **Verified:** `node --check` passes, and a Playwright modal check passed 30/30 (en + zh-TW: agent_designer copy-only, no connector chips / tips / guide, branches + human review in the prompt, 3 steps, 2 helpers, variables, infographic, no page errors).
 
 ##### Previous Milestone — 2026-10-13, v6 Quest Run + colour tones + News (branch `dev/quest-run`, since merged and deployed)
-* **Colour tones (100%):** `toneClass(feature)` adds `tone-*` to card feature chips, modal chips and `typeChipHtml`; `#filterFeature[data-tone]` takes the selected feature's tone. NotebookLM / Deep Research green, Canvas / Video blue, Agent Designer yellow, Image purple. Dark and light variants live in the V6 layer at the end of `style.css`. Connectors stay red.
+* **Colour tones (100%):** `toneClass(feature)` adds `tone-*` to card feature chips, modal chips and `typeChipHtml`; `#filterFeature[data-tone]` takes the selected feature's tone. Gemini Notebook / Deep Research green, Canvas / Video blue, Agent Designer yellow, Image purple. Dark and light variants live in the V6 layer at the end of `style.css`. Connectors stay red.
 * **Quest Run strip (100%):** `lib/quest-core.js` is a UMD module shared by the server and `window.QuestCore`:
   * calendar defaults and validation, `getAcademicPosition` (term / week / phase)
   * `HERO_CLASS_BY_ROLE` (Wizard / Warrior / Priest), `pickWeightedHint`, `newsStatus`
@@ -247,7 +247,7 @@ graph TD
 * **Infographics (100%):** 14 Nano Banana infographics generated, public in `gs://your-infographic-bucket`, shown as the hero of the enlarged card; admin Generate / Regenerate / Generate missing.
 * **Admin Auth & Email (100%):** Admin invites (super/assist) with email verification, forgot/reset password, SMTP settings UI with presets (Gmail, Outlook.com, Microsoft 365, Custom), encrypted password, test send, demo-mode fallback.
 * **Users (100%):** `ge_app_link` column (demo-user@example.com set), Edit user modal (email rename cascades prefs/analytics/feedback, GE app link, reset access).
-* **Prompt Types & Try it (100%):** per-prompt type chip; Try it deep-links to `ge_app_link?q=`; copy-only for NotebookLM/Deep Research/Agent Designer; `try` analytics event + Tries stat.
+* **Prompt Types & Try it (100%):** per-prompt type chip; Try it deep-links to `ge_app_link?q=`; copy-only for Gemini Notebook/Deep Research/Agent Designer; `try` analytics event + Tries stat.
 * **Unified Responsive UI (100%):** shared 72px topbar for user + admin, admin tab row (Users · Analytics · Use cases · Feedback · Settings), sidebar removed, dropdown filter bar (Category / GE feature / Collection / Sort), headline "{n} playbooks for {role}", unclipped auto-height cards (3/2/1 cols), 13px type floor, fewer words, humanized variable labels (no `{{ }}`), workbench details side-by-side & collapsed, full-screen modal sheet on mobile.
 * **Particle Field (100%):** `initParticleField()` canvas of colored dashes reacting to mouse/touch (replaces `initMouseGlow`), reduced-motion aware.
 * **Verified locally:** curl API suite, local SMTP catcher delivery, Playwright 57/57 (desktop + mobile, light + dark).

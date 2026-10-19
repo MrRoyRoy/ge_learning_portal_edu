@@ -434,6 +434,7 @@ async function seedDatabase() {
     await applySeedPromptTypes();
     // Idempotent fix-up: the old admin form saved "admin"; the portal filters on "administrative"
     await query("UPDATE use_cases SET category = 'administrative' WHERE category = 'admin'");
+    await applyProductRename();
     await applySeedInfographics();
     await applySeedTiming();
     await applySeedQuestHints();
@@ -473,7 +474,7 @@ async function seedDatabase() {
  *   - deep_research  : the prompt asks for web-scale research / multi-source synthesis
  *   - canvas         : the prompt drafts a long, editable document (lab guide, funding proposal)
  *   - general        : a self-contained query that works in the standard Gemini Enterprise chat
- * The UI shows "Try it" only for general | canvas | image | video (NotebookLM / Deep Research / Agent Designer → Copy only).
+ * The UI shows "Try it" only for general | canvas | image | video (Gemini Notebook / Deep Research / Agent Designer → Copy only).
  * Applied on insert, whenever prompt_type is NULL, and once (marker `seed_prompt_types_v1`) to rows still on the
  * column default 'general'. After that, admin edits always win.
  */
@@ -495,6 +496,37 @@ const SEED_PROMPT_TYPES = Object.freeze({
   special_consideration_workflow: 'agent_designer',   // Drive folder-triggered triage workflow with routing + staff review
   scholarship_application_workflow: 'agent_designer'  // form-triggered, forward-only coach workflow + mentor review
 });
+
+/**
+ * Product rename "NotebookLM" -> "Gemini Notebook" for rows already in the DB (admin-created playbooks,
+ * quest questions, announcements). Seeded playbooks are rewritten from app.js anyway.
+ * Idempotent: only rows still containing the old name are touched. REPLACE / LENGTH work in both SQLite
+ * and PostgreSQL. Columns with a VARCHAR limit are skipped for a row if the longer name would not fit.
+ * The prompt-type id 'notebooklm' is lowercase and unaffected (REPLACE is case-sensitive).
+ */
+const PRODUCT_RENAMES = Object.freeze([['NotebookLM', 'Gemini Notebook']]);
+const RENAME_COLUMNS = Object.freeze([
+  ['use_cases', ['title'], 255],
+  ['use_cases', ['summary', 'features', 'steps', 'prompt', 'pro_tip', 'connector_guide', 'translations', 'helper_prompts'], null],
+  ['quest_hints', ['question_en', 'question_zh_tw', 'question_zh_cn'], 255],
+  ['announcements', ['title_en', 'title_zh_tw', 'title_zh_cn'], 120],
+  ['announcements', ['body_en', 'body_zh_tw', 'body_zh_cn'], 300]
+]);
+async function applyProductRename() {
+  for (const [from, to] of PRODUCT_RENAMES) {
+    for (const [table, cols, maxLen] of RENAME_COLUMNS) {
+      for (const col of cols) {
+        const fits = maxLen ? ` AND LENGTH(REPLACE(${col}, ?, ?)) <= ${maxLen}` : '';
+        const params = maxLen ? [from, to, `%${from}%`, from, to] : [from, to, `%${from}%`];
+        try {
+          await query(`UPDATE ${table} SET ${col} = REPLACE(${col}, ?, ?) WHERE ${col} LIKE ?${fits}`, params);
+        } catch (err) {
+          console.warn(`⚠️ Product rename skipped for ${table}.${col}: ${err.message}`);
+        }
+      }
+    }
+  }
+}
 
 const PROMPT_TYPES = Object.freeze(['general', 'notebooklm', 'deep_research', 'agent_designer', 'canvas', 'image', 'video']);
 const TEST_USER_GE_APP_LINK = 'https://your-gemini-enterprise-app-link';
@@ -2511,10 +2543,10 @@ PLAYBOOK CONVENTIONS (match the portal's existing playbooks exactly):
    (2) Run: use the sample prompt in the named feature.
    (3) Review and deliver: what a person checks before the result is shared.
 3. PROMPT: a ready-to-paste prompt for the main feature. Open with the role ("You are ..." or "Act as ..."), use numbered or labelled sections, and describe the expected output. If the prompt should produce a document, end it with: "Use Canvas to create this as an editable document."
-4. PROMPT TYPE ("promptType"), one of: general | notebooklm | deep_research | agent_designer | canvas | image | video. Match the feature the prompt is pasted into: Agent Designer -> agent_designer, NotebookLM -> notebooklm, Deep Research -> deep_research, Canvas Mode -> canvas, Image Generation -> image, Video Generation -> video, anything else -> general.
+4. PROMPT TYPE ("promptType"), one of: general | notebooklm | deep_research | agent_designer | canvas | image | video. Match the feature the prompt is pasted into: Agent Designer -> agent_designer, Gemini Notebook -> notebooklm, Deep Research -> deep_research, Canvas Mode -> canvas, Image Generation -> image, Video Generation -> video, anything else -> general.
 5. AGENT DESIGNER WORKFLOWS (promptType agent_designer with several steps): label each step "STEP n · NAME (node type)"; write branches as "IF ... → go to Step n"; keep the flow forward-only (never loop back to an earlier step); give approval nodes exactly two outcomes, Approve or Reject; start the run from a trigger (for example a new file in a folder) or a form; attach reference files as Knowledge Sources on agent nodes and never ask for file uploads during a run; include a human review step before anything reaches a student or the public.
 6. CONNECTORS: list one only when the playbook really reads live data from that system, otherwise return []. Use these names exactly: "Drive Connector", "Email Connector", "LMS Connector", "Calendar Connector".
-7. WRITING: plain, friendly English with short sentences. zh-TW is Traditional Chinese as written in Hong Kong; zh-CN is Simplified Chinese. Keep product names in English inside Chinese text: Gemini, Gemini Enterprise, NotebookLM, Canvas Mode, Deep Research, Agent Designer, Image Generation, Video Generation and the connector names.
+7. WRITING: plain, friendly English with short sentences. zh-TW is Traditional Chinese as written in Hong Kong; zh-CN is Simplified Chinese. Keep product names in English inside Chinese text: Gemini, Gemini Enterprise, Gemini Notebook, Canvas Mode, Deep Research, Agent Designer, Image Generation, Video Generation and the connector names.
 8. BRAND: never say "Gem" (always "Agent") and never say "Copilot".
 9. SET UP PROMPTS ("helperPrompts"): 1-3 short ready-to-paste prompts that prepare what step 1 needs (sample data, a rules table, a template, a source summary). Each has a title starting "Prompt to ..." (zh-TW / zh-CN titles end with 提示詞 / 提示词), a type from the PROMPT TYPE list, and reuses the main prompt's {{VARIABLE}} keys where they fit. If a set up prompt creates a document, set type "canvas" and end it with the Canvas sentence in that language: en "Use Canvas to create this as an editable document.", zh-TW "請使用 Canvas 將此內容建立為可編輯文件。", zh-CN "请使用 Canvas 将此内容创建为可编辑文档。" Keep the same number and order of entries in en, zh-TW and zh-CN.
 `;
@@ -2560,7 +2592,7 @@ OUTPUT: only a raw JSON object (no markdown fences, no commentary) with exactly 
   "id": "snake_case_id_based_on_the_title",
   "category": "one of: academic | student | operational | administrative",
   "role": "one of: Lecturer | TA | Student | Program Leader | Dean | IT Admin | SAO | Security | Finance",
-  "features": ["only the features used, from: Agent Designer, NotebookLM, Deep Research, Canvas Mode, Image Generation, Video Generation"],
+  "features": ["only the features used, from: Agent Designer, Gemini Notebook, Deep Research, Canvas Mode, Image Generation, Video Generation"],
   "connectors": [],
   "promptType": "one of: general | notebooklm | deep_research | agent_designer | canvas | image | video",
   "timing": ["any of: anytime, sem_start, teaching, midterm, finals, winter, summer"],
@@ -2683,7 +2715,7 @@ app.post('/api/admin/translate', requireAdmin, async (req, res) => {
   const promptText = `
 Translate this short in-app announcement for a university portal from English into Traditional Chinese (Hong Kong usage, "zh-TW") and Simplified Chinese ("zh-CN").
 Rules:
-1. Keep ALL product and feature names (e.g. "Gemini Enterprise", "Gemini", "NotebookLM", "Canvas Mode", "Deep Research", "Agent Designer", "Image Generation", "Video Generation") in ENGLISH.
+1. Keep ALL product and feature names (e.g. "Gemini Enterprise", "Gemini", "Gemini Notebook", "Canvas Mode", "Deep Research", "Agent Designer", "Image Generation", "Video Generation") in ENGLISH.
 2. Never use the term "Gem" (use "Agent"). Never use the term "Copilot".
 3. Keep it concise: titles at most 30 Chinese characters, messages at most 80 Chinese characters.
 4. Output ONLY raw JSON, no markdown fences, exactly: {"zh-TW":{"title":"...","body":"..."},"zh-CN":{"title":"...","body":"..."}}

@@ -322,7 +322,7 @@
             <select class="pill-select" id="filterFeature" aria-label="GE feature" data-i18n-aria="filterFeatureLabel">
               <option value="all" data-i18n="featAll">All GE features</option>
               <option value="Agent Designer" class="tone-agent">Agent Designer</option>
-              <option value="NotebookLM" class="tone-research">NotebookLM</option>
+              <option value="Gemini Notebook" class="tone-research">Gemini Notebook</option>
               <option value="Deep Research" class="tone-research">Deep Research</option>
               <option value="Canvas Mode" class="tone-create">Canvas Mode</option>
               <option value="Image Generation" class="tone-create">Image Generation</option>
@@ -989,7 +989,7 @@
               <label id="adminFormLabelFeatures" class="form-label" data-i18n="adminFormLabelFeatures">GE features</label>
               <div class="glass-panel" style="padding: 10px; display: grid; grid-template-columns: 1fr; gap: 4px; font-size: 13px;">
                 <label style="display: flex; align-items: center; gap: 6px;"><input type="checkbox" name="formFeatures" value="Agent Designer"> Agent Designer</label>
-                <label style="display: flex; align-items: center; gap: 6px;"><input type="checkbox" name="formFeatures" value="NotebookLM"> NotebookLM</label>
+                <label style="display: flex; align-items: center; gap: 6px;"><input type="checkbox" name="formFeatures" value="Gemini Notebook"> Gemini Notebook</label>
                 <label style="display: flex; align-items: center; gap: 6px;"><input type="checkbox" name="formFeatures" value="Deep Research"> Deep Research</label>
                 <label style="display: flex; align-items: center; gap: 6px;"><input type="checkbox" name="formFeatures" value="Canvas Mode"> Canvas Mode</label>
                 <label style="display: flex; align-items: center; gap: 6px;"><input type="checkbox" name="formFeatures" value="Image Generation"> Image Generation</label>
@@ -1019,7 +1019,7 @@
 
           <div class="form-group">
             <label id="adminFormLabelSteps" class="form-label" for="formCaseSteps" data-i18n="adminFormLabelSteps">Steps (one per line)</label>
-            <textarea class="select-control" id="formCaseSteps" required style="height: 100px; padding: 8px 12px; resize: vertical; font-family: monospace; font-size: 13px;" placeholder="Upload materials to NotebookLM…" data-i18n-placeholder="caseFormStepsPh"></textarea>
+            <textarea class="select-control" id="formCaseSteps" required style="height: 100px; padding: 8px 12px; resize: vertical; font-family: monospace; font-size: 13px;" placeholder="Upload materials to Gemini Notebook…" data-i18n-placeholder="caseFormStepsPh"></textarea>
           </div>
 
           <div class="form-group">
@@ -1031,7 +1031,7 @@
             <label class="form-label" for="formCasePromptType" data-i18n="formPromptTypeLabel">Prompt type</label>
             <select class="select-control" id="formCasePromptType">
               <option value="general">General query</option>
-              <option value="notebooklm">NotebookLM</option>
+              <option value="notebooklm">Gemini Notebook</option>
               <option value="deep_research">Deep Research</option>
               <option value="agent_designer">Agent Designer</option>
               <option value="canvas">Canvas Mode</option>
@@ -1082,11 +1082,11 @@
               </div>
               <div class="form-group">
                 <label id="adminFormLabelZhtwSummary" class="form-label" style="font-size: 13px;">Translated Summary</label>
-                <input type="text" class="select-control" id="formTransZhtwSummary" placeholder="在 NotebookLM 中分析與審查社團預算案...">
+                <input type="text" class="select-control" id="formTransZhtwSummary" placeholder="在 Gemini Notebook 中分析與審查社團預算案...">
               </div>
               <div class="form-group">
                 <label id="adminFormLabelZhtwSteps" class="form-label" style="font-size: 13px;">Translated Steps (One per line)</label>
-                <textarea class="select-control" id="formTransZhtwSteps" style="height: 80px; padding: 8px 12px; font-family: monospace; font-size: 13px;" placeholder="將社團章程上傳到 NotebookLM..."></textarea>
+                <textarea class="select-control" id="formTransZhtwSteps" style="height: 80px; padding: 8px 12px; font-family: monospace; font-size: 13px;" placeholder="將社團章程上傳到 Gemini Notebook..."></textarea>
               </div>
               <div class="form-group">
                 <label id="adminFormLabelZhtwPrompt" class="form-label" style="font-size: 13px;">Translated Prompt</label>
@@ -1094,7 +1094,7 @@
               </div>
               <div class="form-group">
                 <label id="adminFormLabelZhtwProTip" class="form-label" style="font-size: 13px;">Translated Pro Tip</label>
-                <input type="text" class="select-control" id="formTransZhtwProTip" placeholder="透過 NotebookLM 連接試算表...">
+                <input type="text" class="select-control" id="formTransZhtwProTip" placeholder="透過 Gemini Notebook 連接試算表...">
               </div>
             </div>
           </div>
@@ -1109,11 +1109,11 @@
               </div>
               <div class="form-group">
                 <label id="adminFormLabelZhcnSummary" class="form-label" style="font-size: 13px;">Translated Summary</label>
-                <input type="text" class="select-control" id="formTransZhcnSummary" placeholder="在 NotebookLM 中分析与审查社团预算案...">
+                <input type="text" class="select-control" id="formTransZhcnSummary" placeholder="在 Gemini Notebook 中分析与审查社团预算案...">
               </div>
               <div class="form-group">
                 <label id="adminFormLabelZhcnSteps" class="form-label" style="font-size: 13px;">Translated Steps (One per line)</label>
-                <textarea class="select-control" id="formTransZhcnSteps" style="height: 80px; padding: 8px 12px; font-family: monospace; font-size: 13px;" placeholder="将社团章程上传到 NotebookLM..."></textarea>
+                <textarea class="select-control" id="formTransZhcnSteps" style="height: 80px; padding: 8px 12px; font-family: monospace; font-size: 13px;" placeholder="将社团章程上传到 Gemini Notebook..."></textarea>
               </div>
               <div class="form-group">
                 <label id="adminFormLabelZhcnPrompt" class="form-label" style="font-size: 13px;">Translated Prompt</label>
@@ -1121,7 +1121,7 @@
               </div>
               <div class="form-group">
                 <label id="adminFormLabelZhcnProTip" class="form-label" style="font-size: 13px;">Translated Pro Tip</label>
-                <input type="text" class="select-control" id="formTransZhcnProTip" placeholder="通过 NotebookLM 连接电子表格...">
+                <input type="text" class="select-control" id="formTransZhcnProTip" placeholder="通过 Gemini Notebook 连接电子表格...">
               </div>
             </div>
           </div>

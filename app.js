@@ -131,12 +131,12 @@ const useCasesDb = [
     title: "Socratic AI Tutor Agent Creation",
     category: "academic",
     summary: "Ground a custom course Agent in your lecture notes and syllabi to act as a 24/7 Socratic learning companion.",
-    features: ["Agent Designer", "NotebookLM"],
+    features: ["Agent Designer", "Gemini Notebook"],
     connectors: [],
     role: "Lecturer",
     level: ["University & College", "High School", "Generic"],
     steps: [
-      "In NotebookLM, create a 'Read-Only Course Hub' and upload syllabus documents, lecture slides, and key readings.",
+      "In Gemini Notebook, create a 'Read-Only Course Hub' and upload syllabus documents, lecture slides, and key readings.",
       "In Agent Designer, configure the Socratic tutor persona prompt with grounding and test interactive questions.",
       "Review guidance quality, publish the shareable Agent link, and embed it into your institutional LMS."
     ],
@@ -148,20 +148,20 @@ Follow these rules strictly:
 4. If a student demonstrates correct understanding, praise them and provide a complete, rich explanation.
 5. If asked about topics outside this course, politely decline, stating: 'I can only assist you with {{COURSE_NAME}} topics.'
 6. Cite your sources for every answer.`,
-    proTip: "By connecting NotebookLM as the grounding layer, you ensure the Agent never hallucinates answers, restricts responses to authorized curriculum text, and provides verified inline citations.",
+    proTip: "By connecting Gemini Notebook as the grounding layer, you ensure the Agent never hallucinates answers, restricts responses to authorized curriculum text, and provides verified inline citations.",
     connectorGuide: null
   },
   {
     id: "rubric_grading",
     title: "Rubric-Aligned Essay Feedback Assistant",
     category: "academic",
-    summary: "Analyze student essays against a complex grading rubric in NotebookLM and generate formative constructive feedback.",
-    features: ["NotebookLM", "Canvas Mode"],
+    summary: "Analyze student essays against a complex grading rubric in Gemini Notebook and generate formative constructive feedback.",
+    features: ["Gemini Notebook", "Canvas Mode"],
     connectors: [],
     role: "TA",
     level: ["Generic"],
     steps: [
-      "Create a dedicated workspace in NotebookLM and upload the assignment instructions and analytical grading rubric.",
+      "Create a dedicated workspace in Gemini Notebook and upload the assignment instructions and analytical grading rubric.",
       "Upload the student essay and execute the formative rubric grading prompt in the workbench.",
       "Review tentative criterion scores, personalize pedagogical remarks, and export feedback to LMS or student portfolio."
     ],
@@ -172,7 +172,7 @@ The feedback MUST adhere to the following structure:
 3. **Areas for Growth (2-3)**: Identify specific logical, grammatical, or structural issues. Explain how they relate to the rubric requirements.
 4. **Actionable Recommendations**: Provide 2-3 specific, progressive steps the student can take in their next draft to improve.
 Maintain a supportive, pedagogical, and highly encouraging tone throughout.`,
-    proTip: "Because NotebookLM operates in a secure cloud tenant, student intellectual property and data remain completely confidential and are never used to train public LLM models.",
+    proTip: "Because Gemini Notebook operates in a secure cloud tenant, student intellectual property and data remain completely confidential and are never used to train public LLM models.",
     connectorGuide: null
   },
   {
@@ -228,13 +228,13 @@ The document should include:
     title: "Student Feedback Sentiment Dashboard",
     category: "student",
     summary: "Consolidate massive volumes of unstructured student feedback from surveys and town halls to synthesize advocacy data.",
-    features: ["NotebookLM", "Deep Research"],
+    features: ["Gemini Notebook", "Deep Research"],
     connectors: ["Drive Connector"],
     role: "Student",
     level: ["University & College", "High School", "Generic"],
     steps: [
       "Collect survey responses and student feedback sheets into a secured institutional Drive folder.",
-      "Run multi-factor qualitative sentiment and thematic analysis via Deep Research and NotebookLM.",
+      "Run multi-factor qualitative sentiment and thematic analysis via Deep Research and Gemini Notebook.",
       "Synthesize recurring concerns into priority advocacy items and present to university administration."
     ],
     prompt: `Acting as the Student Union Advocacy Director for {{INSTITUTION_NAME}}, analyze the uploaded collection of town hall transcripts and anonymous student survey comments for {{ACADEMIC_TERM}}.
@@ -260,7 +260,7 @@ Generate a comprehensive, evidence-based report that includes:
     title: "Annual Club Calendar & Budget Justifier",
     category: "student",
     summary: "Brainstorm an annual activities calendar and draft detailed, compliant student government funding proposals.",
-    features: ["Canvas Mode", "NotebookLM"],
+    features: ["Canvas Mode", "Gemini Notebook"],
     connectors: ["Drive Connector"],
     role: "Student",
     level: ["University & College", "High School", "Generic"],
@@ -277,7 +277,7 @@ Task:
 1. Create an **Executive Summary** detailing the club's mission and how these events boost student engagement.
 2. Compile a detailed **Line-Item Budget Table**, calculating total costs and verifying compliance with the provided funding rules.
 3. Write a compelling **Impact Statement** justifying why the Student Union should allocate resources to our club, detailing student outcomes.`,
-    proTip: "Upload the Student Union's official constitutional funding guidelines to NotebookLM first. This prevents your proposal from getting rejected for violating obscure spend-limit policies.",
+    proTip: "Upload the Student Union's official constitutional funding guidelines to Gemini Notebook first. This prevents your proposal from getting rejected for violating obscure spend-limit policies.",
     connectorGuide: {
       name: "Drive Connector",
       steps: [
@@ -293,12 +293,12 @@ Task:
     title: "24/7 Student Union Policy Agent",
     category: "student",
     summary: "Build an AI support bot trained on club policy handbooks to answer operational and venue booking questions.",
-    features: ["Agent Designer", "NotebookLM"],
+    features: ["Agent Designer", "Gemini Notebook"],
     connectors: ["Email Connector"],
     role: "Student",
     level: ["University & College", "High School", "Generic"],
     steps: [
-      "Centralize student handbook, welfare guidelines, and club constitutions into NotebookLM.",
+      "Centralize student handbook, welfare guidelines, and club constitutions into Gemini Notebook.",
       "Deploy a 24/7 policy Q&A Agent using Agent Designer to guide members on regulations and forms.",
       "Test common edge cases and route complex disputes to human union officers via Email Connector."
     ],
@@ -382,13 +382,13 @@ Output Requirements:
     title: "Accreditation Self-Study Report Synthesizer",
     category: "operational",
     summary: "Map faculty syllabi, student outcomes, and institutional assessments against external accreditation criteria seamlessly.",
-    features: ["NotebookLM", "Deep Research"],
+    features: ["Gemini Notebook", "Deep Research"],
     connectors: ["Drive Connector"],
     role: "Program Leader",
     level: ["University & College"],
     steps: [
       "Aggregate departmental self-studies, syllabi, and outcome assessments into an institutional Drive hub.",
-      "Run evidence cross-mapping across accreditation standards and criteria in NotebookLM.",
+      "Run evidence cross-mapping across accreditation standards and criteria in Gemini Notebook.",
       "Review drafted narrative syntheses, verify institutional metrics, and export the official self-study report."
     ],
     prompt: `Act as a higher education quality assurance director. Synthesize institutional evidence for {{PROGRAM_NAME}} aligned with the accreditation standards of {{ACCREDITATION_BODY}}.
@@ -396,7 +396,7 @@ Tasks:
 1. **Cross-Mapping**: Map provided course syllabi, student learning outcome evaluations, and faculty publication records against {{ACCREDITATION_BODY}} standards for Criterion 1 (Curriculum Rigor) and Criterion 2 (Faculty Qualifications).
 2. **Gap Analysis**: Highlight any missing assessment data, outdated course references, or under-documented student learning evidence.
 3. **Executive Synthesis**: Draft a 500-word formal narrative summarizing program continuous improvement initiatives and pedagogical innovations over the past review cycle.`,
-    proTip: "NotebookLM's source citation capabilities are ideal for accreditation reviews, allowing evaluators to click any statement to inspect the original course syllabus or committee minutes.",
+    proTip: "Gemini Notebook's source citation capabilities are ideal for accreditation reviews, allowing evaluators to click any statement to inspect the original course syllabus or committee minutes.",
     connectorGuide: {
       name: "Drive Connector",
       steps: [
@@ -465,7 +465,7 @@ Include:
     title: "Student Expense Compliance Auditor",
     category: "administrative",
     summary: "Audit student club reimbursement receipts, invoices, and subsidy claims automatically against university financial regulations.",
-    features: ["NotebookLM", "Deep Research"],
+    features: ["Gemini Notebook", "Deep Research"],
     connectors: ["Drive Connector"],
     role: "Finance",
     level: ["University & College", "High School"],
@@ -479,7 +479,7 @@ Audit Requirements:
 1. **Line-Item Verification**: Cross-reference each receipt item against university student organization financial regulations.
 2. **Policy Compliance Check**: Flag any alcohol purchases, unitemized credit card slips, tips exceeding 15%, or missing third-party quotations for items over $300.
 3. **Audit Summary**: Produce an itemized audit ledger showing Allowed Amount, Disallowed Amount, and a courteous explanation of any deductions with instructions for appeal.`,
-    proTip: "Grounding NotebookLM in official institutional procurement rules ensures high-precision compliance detection without manual auditing fatigue.",
+    proTip: "Grounding Gemini Notebook in official institutional procurement rules ensures high-precision compliance detection without manual auditing fatigue.",
     connectorGuide: {
       name: "Drive Connector",
       steps: [
@@ -1612,7 +1612,7 @@ const useCasesTranslations = {
       title: "Socratic AI Tutor Agent Creation",
       summary: "Ground a custom course Agent in your lecture notes and syllabi to act as a 24/7 Socratic learning companion.",
       steps: [
-        "In NotebookLM, create a 'Read-Only Course Hub' and upload syllabus documents, lecture slides, and key readings.",
+        "In Gemini Notebook, create a 'Read-Only Course Hub' and upload syllabus documents, lecture slides, and key readings.",
         "In Agent Designer, configure the Socratic tutor persona prompt with grounding and test interactive questions.",
         "Review guidance quality, publish the shareable Agent link, and embed it into your institutional LMS."
       ],
@@ -1624,13 +1624,13 @@ Follow these rules strictly:
 4. If a student demonstrates correct understanding, praise them and provide a complete, rich explanation.
 5. If asked about topics outside this course, politely decline, stating: 'I can only assist you with {{COURSE_NAME}} topics.'
 6. Cite your sources for every answer.`,
-      proTip: "By connecting NotebookLM as the grounding layer, you ensure the Agent never hallucinates answers, restricts responses to authorized curriculum text, and provides verified inline citations."
+      proTip: "By connecting Gemini Notebook as the grounding layer, you ensure the Agent never hallucinates answers, restricts responses to authorized curriculum text, and provides verified inline citations."
     },
     "zh-TW": {
       title: "Socratic AI Tutor Agent 創建",
       summary: "將客製化的課程 Agent 植基於您的授課筆記與教學大綱，打造 24/7 的 Socratic 學習導師。",
       steps: [
-        "在 NotebookLM 中建立「唯讀課程中心」，上傳課程大綱、簡報及核心教材。",
+        "在 Gemini Notebook 中建立「唯讀課程中心」，上傳課程大綱、簡報及核心教材。",
         "進入 Agent Designer 設定 Socratic 角色特徵提示詞並連結課程中心進行互動測試。",
         "覆核引導品質後生成公開分享連結，並嵌入發布至校園 LMS 系統。"
       ],
@@ -1642,13 +1642,13 @@ Follow these rules strictly:
 4. 當學生展現正確的理解時，給予肯定並提供完整、豐富的補充說明。
 5. 若問及本課程以外的主題，請禮貌地拒絕並回答：「我只能協助你解答關於 {{COURSE_NAME}} 的問題。」
 6. 每次回答皆須引用出處。`,
-      proTip: "連結 NotebookLM 作為知識地基，可確保 Agent 絕不胡言亂語（Hallucinate），且其所有答覆均受限於核准的教材，並提供真實可信的內文引用。"
+      proTip: "連結 Gemini Notebook 作為知識地基，可確保 Agent 絕不胡言亂語（Hallucinate），且其所有答覆均受限於核准的教材，並提供真實可信的內文引用。"
     },
     "zh-CN": {
       title: "Socratic AI Tutor Agent 创建",
       summary: "将定制的课程 Agent 植基于您的授课笔记与教学大纲，打造 24/7 的 Socratic 学习导师。",
       steps: [
-        "在 NotebookLM 中建立“只读课程中心”，上传课程大纲、课件及核心教材。",
+        "在 Gemini Notebook 中建立“只读课程中心”，上传课程大纲、课件及核心教材。",
         "进入 Agent Designer 设置 Socratic 角色特征提示词并链接课程中心进行互动测试。",
         "审核引导品质后生成公开分享链接，并嵌入发布至校园 LMS 系统。"
       ],
@@ -1660,15 +1660,15 @@ Follow these rules strictly:
 4. 当学生展现正确的理解时，给予肯定并提供完整、丰富的补充说明。
 5. 若问及本课程以外的主题，请礼貌地拒绝并回答：“我只能协助你解答关于 {{COURSE_NAME}} 的问题。”
 6. 每次回答皆须引用出处。`,
-      proTip: "链接 NotebookLM 作为知识地基，可确保 Agent 绝不胡言乱语（Hallucinate），且其所有答复均受限于核准的教材，并提供真实可信的内文引用。"
+      proTip: "链接 Gemini Notebook 作为知识地基，可确保 Agent 绝不胡言乱语（Hallucinate），且其所有答复均受限于核准的教材，并提供真实可信的内文引用。"
     }
   },
   rubric_grading: {
     "en": {
       title: "Rubric-Aligned Essay Feedback Assistant",
-      summary: "Analyze student essays against a complex grading rubric in NotebookLM and generate formative constructive feedback.",
+      summary: "Analyze student essays against a complex grading rubric in Gemini Notebook and generate formative constructive feedback.",
       steps: [
-        "Create a dedicated workspace in NotebookLM and upload the assignment instructions and analytical grading rubric.",
+        "Create a dedicated workspace in Gemini Notebook and upload the assignment instructions and analytical grading rubric.",
         "Upload the student essay and execute the formative rubric grading prompt in the workbench.",
         "Review tentative criterion scores, personalize pedagogical remarks, and export feedback to LMS or student portfolio."
       ],
@@ -1679,13 +1679,13 @@ The feedback MUST adhere to the following structure:
 3. **Areas for Growth (2-3)**: Identify specific logical, grammatical, or structural issues. Explain how they relate to the rubric requirements.
 4. **Actionable Recommendations**: Provide 2-3 specific, progressive steps the student can take in their next draft to improve.
 Maintain a supportive, pedagogical, and highly encouraging tone throughout.`,
-      proTip: "Because NotebookLM operates in a secure cloud tenant, student intellectual property and data remain completely confidential and are never used to train public LLM models."
+      proTip: "Because Gemini Notebook operates in a secure cloud tenant, student intellectual property and data remain completely confidential and are never used to train public LLM models."
     },
     "zh-TW": {
       title: "Rubric 評分規準作業回饋助理",
-      summary: "在 NotebookLM 中依據多元評分規準分析學生論文，生成形成性、具建設性的回饋建議。",
+      summary: "在 Gemini Notebook 中依據多元評分規準分析學生論文，生成形成性、具建設性的回饋建議。",
       steps: [
-        "在 NotebookLM 建立專屬工作區，上傳作業指引及分析型評分規準 (Rubric)。",
+        "在 Gemini Notebook 建立專屬工作區，上傳作業指引及分析型評分規準 (Rubric)。",
         "匯入學生作業並在提示詞工作台執行評分規準診斷提示詞。",
         "審核各項指標初評，增修個人化評語，並匯出發送至 LMS 或學生學習歷程。"
       ],
@@ -1696,13 +1696,13 @@ Maintain a supportive, pedagogical, and highly encouraging tone throughout.`,
 3. **待加強面向 (2-3 項)**：具體標註邏輯跳躍、論據不足或結構鬆散之處，並說明如何對齊評分規範。
 4. **具體精進建議**：提供 2-3 個明確的下階段修改指引。
 全文請保持溫和、富教學熱忱且積極正向的口吻。`,
-      proTip: "NotebookLM 運作於受保護的企業雲端環境中，學生智財與隱私資料受到嚴格隔離，絕不用於公開模型訓練。"
+      proTip: "Gemini Notebook 運作於受保護的企業雲端環境中，學生智財與隱私資料受到嚴格隔離，絕不用於公開模型訓練。"
     },
     "zh-CN": {
       title: "Rubric 评分规准作业反馈助理",
-      summary: "在 NotebookLM 中依据多元评分规准分析学生论文，生成形成性、具建设性的反馈建议。",
+      summary: "在 Gemini Notebook 中依据多元评分规准分析学生论文，生成形成性、具建设性的反馈建议。",
       steps: [
-        "在 NotebookLM 建立专属工作区，上传作业指引及分析型评分规准 (Rubric)。",
+        "在 Gemini Notebook 建立专属工作区，上传作业指引及分析型评分规准 (Rubric)。",
         "导入学生作业并在提示词工作台执行评分规准诊断提示词。",
         "审核各项指标初评，增修个性化评语，并导出发送至 LMS 或学生学习档案。"
       ],
@@ -1713,7 +1713,7 @@ Maintain a supportive, pedagogical, and highly encouraging tone throughout.`,
 3. **待加强面向 (2-3 项)**：具体标注逻辑跳跃、论据不足或结构松散之处，并说明如何对齐评分规范。
 4. **具体改进建议**：提供 2-3 个明确的下阶段修改指引。
 全文请保持温和、富教学热情且积极正向的口吻。`,
-      proTip: "NotebookLM 运作于受保护的企业云端环境中，学生智财与隐私数据受到严格隔离，绝不用于公开模型训练。"
+      proTip: "Gemini Notebook 运作于受保护的企业云端环境中，学生智财与隐私数据受到严格隔离，绝不用于公开模型训练。"
     }
   },
   curriculum_design: {
@@ -1822,7 +1822,7 @@ The document should include:
       summary: "Consolidate massive volumes of unstructured student feedback from surveys and town halls to synthesize advocacy data.",
       steps: [
         "Collect survey responses and student feedback sheets into a secured institutional Drive folder.",
-        "Run multi-factor qualitative sentiment and thematic analysis via Deep Research and NotebookLM.",
+        "Run multi-factor qualitative sentiment and thematic analysis via Deep Research and Gemini Notebook.",
         "Synthesize recurring concerns into priority advocacy items and present to university administration."
       ],
       prompt: `Acting as the Student Union Advocacy Director for {{INSTITUTION_NAME}}, analyze the uploaded collection of town hall transcripts and anonymous student survey comments for {{ACADEMIC_TERM}}.
@@ -1838,7 +1838,7 @@ Generate a comprehensive, evidence-based report that includes:
       summary: "整合校園論壇、諮詢會與問卷海量非結構化意見，產出高說服力之學生權益數據報告。",
       steps: [
         "將諮詢會筆記與匿名問卷彙整至安全的雲端硬碟 (Drive) 目錄中。",
-        "透過 Deep Research 與 NotebookLM 進行主題聚類與多維度情緒分析。",
+        "透過 Deep Research 與 Gemini Notebook 進行主題聚類與多維度情緒分析。",
         "將高頻問題轉化為學生權益倡議白皮書，向學校管理層進行正式提案。"
       ],
       prompt: `請扮演「{{INSTITUTION_NAME}}」學生會權益部長，分析「{{ACADEMIC_TERM}}」學期收集到的校園諮詢會記錄及匿名意見問卷。
@@ -1854,7 +1854,7 @@ Generate a comprehensive, evidence-based report that includes:
       summary: "整合校园论坛、咨询会与问卷海量非结构化意见，产出高说服力之学生权益数据报告。",
       steps: [
         "将咨询会笔记与匿名问卷汇整至安全的云端硬盘 (Drive) 目录中。",
-        "透过 Deep Research 与 NotebookLM 进行主题聚类与多维度情绪分析。",
+        "透过 Deep Research 与 Gemini Notebook 进行主题聚类与多维度情绪分析。",
         "将高频问题转化为学生权益倡议白皮书，向学校管理层进行正式提案。"
       ],
       prompt: `请扮演“{{INSTITUTION_NAME}}”学生会权益部长，分析“{{ACADEMIC_TERM}}”学期收集到的校园咨询会记录及匿名意见问卷。
@@ -1883,7 +1883,7 @@ Task:
 1. Create an **Executive Summary** detailing the club's mission and how these events boost student engagement.
 2. Compile a detailed **Line-Item Budget Table**, calculating total costs and verifying compliance with the provided funding rules.
 3. Write a compelling **Impact Statement** justifying why the Student Union should allocate resources to our club, detailing student outcomes.`,
-      proTip: "Upload the Student Union's official constitutional funding guidelines to NotebookLM first. This prevents your proposal from getting rejected for violating obscure spend-limit policies."
+      proTip: "Upload the Student Union's official constitutional funding guidelines to Gemini Notebook first. This prevents your proposal from getting rejected for violating obscure spend-limit policies."
     },
     "zh-TW": {
       title: "社團年度行事曆與經費預算企劃書",
@@ -1901,7 +1901,7 @@ Task:
 1. **執行摘要**：闡述社團創立宗旨在於豐富校園社群生活。
 2. **逐項預算明細表**：計算活動總開銷，並嚴格落實法規上限自檢。
 3. **社群影響力陳述**：論證此系列活動如何強化校園多元性與學生技能成長。`,
-      proTip: "先將學生會最新的組織法與補助章程上傳至 NotebookLM，可確保產出的企劃書 100% 規避預算超標陷阱。"
+      proTip: "先將學生會最新的組織法與補助章程上傳至 Gemini Notebook，可確保產出的企劃書 100% 規避預算超標陷阱。"
     },
     "zh-CN": {
       title: "社团年度行事历与经费预算企划书",
@@ -1919,7 +1919,7 @@ Task:
 1. **执行摘要**：阐述社团创立宗旨在丰富校园社群生活。
 2. **逐项预算明细表**：计算活动总开销，并严格落实法规上限自检。
 3. **社群影响力陈述**：论证此系列活动如何强化校园多元性与学生技能成长。`,
-      proTip: "先将学生会最新的组织法与补助章程上传至 NotebookLM，可确保产出的企划书 100% 规避预算超标陷阱。"
+      proTip: "先将学生会最新的组织法与补助章程上传至 Gemini Notebook，可确保产出的企划书 100% 规避预算超标陷阱。"
     }
   },
   su_helpdesk: {
@@ -1927,7 +1927,7 @@ Task:
       title: "24/7 Student Union Policy Agent",
       summary: "Build an AI support bot trained on club policy handbooks to answer operational and venue booking questions.",
       steps: [
-        "Centralize student handbook, welfare guidelines, and club constitutions into NotebookLM.",
+        "Centralize student handbook, welfare guidelines, and club constitutions into Gemini Notebook.",
         "Deploy a 24/7 policy Q&A Agent using Agent Designer to guide members on regulations and forms.",
         "Test common edge cases and route complex disputes to human union officers via Email Connector."
       ],
@@ -1943,7 +1943,7 @@ Rules:
       title: "24/7 學生會法規與會務諮詢 Agent",
       summary: "將社團評鑑、場地借用與會務規章交由專屬 Agent，提供全天候即時規章諮詢與行政表單指引。",
       steps: [
-        "將學生手冊、福利規章與社團章程整合至 NotebookLM 知識庫。",
+        "將學生手冊、福利規章與社團章程整合至 Gemini Notebook 知識庫。",
         "在 Agent Designer 中建立 24/7 規章諮詢 Agent，指導學生填寫申請表單。",
         "驗證極端諮詢情境，並透過 Email Connector 自動將複雜爭議轉派常務幹事處理。"
       ],
@@ -1959,7 +1959,7 @@ Rules:
       title: "24/7 学生会法规与会务咨询 Agent",
       summary: "将社团评估、场地借用与会务规章交由专属 Agent，提供全天候即时规章咨询与行政表单指引。",
       steps: [
-        "将学生手册、福利规章与社团章程整合至 NotebookLM 知识库。",
+        "将学生手册、福利规章与社团章程整合至 Gemini Notebook 知识库。",
         "在 Agent Designer 中建立 24/7 规章咨询 Agent，指导学生填写申请表单。",
         "验证极端咨询情境，并透过 Email Connector 自动将复杂争议转派常务干事处理。"
       ],
@@ -2084,7 +2084,7 @@ Output Requirements:
       summary: "Map faculty syllabi, student outcomes, and institutional assessments against external accreditation criteria seamlessly.",
       steps: [
         "Aggregate departmental self-studies, syllabi, and outcome assessments into an institutional Drive hub.",
-        "Run evidence cross-mapping across accreditation standards and criteria in NotebookLM.",
+        "Run evidence cross-mapping across accreditation standards and criteria in Gemini Notebook.",
         "Review drafted narrative syntheses, verify institutional metrics, and export the official self-study report."
       ],
       prompt: `Act as a higher education quality assurance director. Synthesize institutional evidence for {{PROGRAM_NAME}} aligned with the accreditation standards of {{ACCREDITATION_BODY}}.
@@ -2092,14 +2092,14 @@ Tasks:
 1. **Cross-Mapping**: Map provided course syllabi, student learning outcome evaluations, and faculty publication records against {{ACCREDITATION_BODY}} standards for Criterion 1 (Curriculum Rigor) and Criterion 2 (Faculty Qualifications).
 2. **Gap Analysis**: Highlight any missing assessment data, outdated course references, or under-documented student learning evidence.
 3. **Executive Synthesis**: Draft a 500-word formal narrative summarizing program continuous improvement initiatives and pedagogical innovations over the past review cycle.`,
-      proTip: "NotebookLM's source citation capabilities are ideal for accreditation reviews, allowing evaluators to click any statement to inspect the original course syllabus or committee minutes."
+      proTip: "Gemini Notebook's source citation capabilities are ideal for accreditation reviews, allowing evaluators to click any statement to inspect the original course syllabus or committee minutes."
     },
     "zh-TW": {
       title: "評鑑自我評量報告整合與佐證矩陣",
       summary: "將系所教學大綱、學生學習成效與院務會議紀錄對齊外部認證評鑑指標，一鍵完成自評報告編撰。",
       steps: [
         "將系所自評、歷年教學大綱及學習成效檔案集中於雲端硬碟 (Drive)。",
-        "在 NotebookLM 中建立各門課程與評鑑規準的交叉對應與佐證追溯。",
+        "在 Gemini Notebook 中建立各門課程與評鑑規準的交叉對應與佐證追溯。",
         "審核自動生成的論述章節，核算指標達成率後匯出正式自評報告書。"
       ],
       prompt: `請扮演高等教育品質保證專案執行長。為「{{PROGRAM_NAME}}」彙整符合「{{ACCREDITATION_BODY}}」認證評鑑標準的自我評量報告佐證。
@@ -2107,14 +2107,14 @@ Tasks:
 1. **標準交叉映射**：將系所課程大綱、學習成效評量結果及師資學術產出，對齊「指標一（課程嚴謹度）」與「指標二（師資結構）」。
 2. **缺口分析**：明確標註尚未齊全的佐證檔案、過期文獻或缺少評鑑問卷回饋的課程。
 3. **自評論述撰寫**：撰寫 500 字正式陳述，綜述系所在此評鑑週期中推動的持續品質改善機制 (Continuous Improvement)。`,
-      proTip: "NotebookLM 的內文精確出處引用功能特別適合評鑑委員審查，點擊報告中任何數據即可溯源查看原始會議記錄或大綱文件。"
+      proTip: "Gemini Notebook 的內文精確出處引用功能特別適合評鑑委員審查，點擊報告中任何數據即可溯源查看原始會議記錄或大綱文件。"
     },
     "zh-CN": {
       title: "评估自我评估报告整合与佐证矩阵",
       summary: "将系所教学大纲、学生学习成效与院务会议记录对齐外部认证评估指标，一键完成自评报告编撰。",
       steps: [
         "将系所自评、历年教学大纲及学习成效档案集中于云端硬盘 (Drive)。",
-        "在 NotebookLM 中建立各门课程与评估规准的交叉对应与佐证追溯。",
+        "在 Gemini Notebook 中建立各门课程与评估规准的交叉对应与佐证追溯。",
         "审核自动生成的论述章节，核算指标达成率后导出正式自评报告书。"
       ],
       prompt: `请扮演高等教育质量保证项目执行长。为“{{PROGRAM_NAME}}”汇整符合“{{ACCREDITATION_BODY}}”认证评估标准的自我评估报告佐证。
@@ -2122,7 +2122,7 @@ Tasks:
 1. **标准交叉映射**：将系所课程大纲、学习成效评估结果及师资学术产出，对齐“指标一（课程严谨度）”与“指标二（师资结构）”。
 2. **缺口分析**：明确标注尚未齐全的佐证档案、过期文献或缺少评估问卷反馈的课程。
 3. **自评论述撰写**：撰写 500 字正式陈述，综述系所在此评估周期中推动的持续质量改善机制 (Continuous Improvement)。`,
-      proTip: "NotebookLM 的内文精确出处引用功能特别适合评估委员审查，点击报告中任何数据即可溯源查看原始会议记录或大纲文件。"
+      proTip: "Gemini Notebook 的内文精确出处引用功能特别适合评估委员审查，点击报告中任何数据即可溯源查看原始会议记录或大纲文件。"
     }
   },
   workforce_federation: {
@@ -2233,7 +2233,7 @@ Audit Requirements:
 1. **Line-Item Verification**: Cross-reference each receipt item against university student organization financial regulations.
 2. **Policy Compliance Check**: Flag any alcohol purchases, unitemized credit card slips, tips exceeding 15%, or missing third-party quotations for items over $300.
 3. **Audit Summary**: Produce an itemized audit ledger showing Allowed Amount, Disallowed Amount, and a courteous explanation of any deductions with instructions for appeal.`,
-      proTip: "Grounding NotebookLM in official institutional procurement rules ensures high-precision compliance detection without manual auditing fatigue."
+      proTip: "Grounding Gemini Notebook in official institutional procurement rules ensures high-precision compliance detection without manual auditing fatigue."
     },
     "zh-TW": {
       title: "社團活動經費報銷合規審核助理",
@@ -2248,7 +2248,7 @@ Audit Requirements:
 1. **單據核對**：逐筆比對收據憑證是否符合校內學生團體經費請領規範。
 2. **合規性篩檢**：明確標註含有含酒精飲料、未附品名明細之簽單、小費超過 15% 或逾 $300 缺乏比價單之違規項目。
 3. **審核結果彙整**：編列核准金額、核減金額及委婉且條理分明的扣除理由與申復指引。`,
-      proTip: "將學校最新主計法規作為 NotebookLM 的底層知識，能以極高精準度過濾違規憑證，免去人工逐張查驗的疲勞與疏漏。"
+      proTip: "將學校最新主計法規作為 Gemini Notebook 的底層知識，能以極高精準度過濾違規憑證，免去人工逐張查驗的疲勞與疏漏。"
     },
     "zh-CN": {
       title: "社团活动经费报销合规审核助理",
@@ -2263,7 +2263,7 @@ Audit Requirements:
 1. **单据核对**：逐笔比对收据凭证是否符合校内学生团体经费申领规范。
 2. **合规性筛检**：明确标注含有含酒精饮料、未附品名明细之签单、小费超过 15% 或逾 $300 缺乏比价单之违规项目。
 3. **审核结果汇总**：编列核准金额、核减金额及委婉且条理分明的扣除理由与申复指引。`,
-      proTip: "将学校最新主计法规作为 NotebookLM 的底层知识，能以极高精准度过滤违规凭证，免去人工逐张查验的疲劳与疏漏。"
+      proTip: "将学校最新主计法规作为 Gemini Notebook 的底层知识，能以极高精准度过滤违规凭证，免去人工逐张查验的疲劳与疏漏。"
     }
   },
   security_simulator: {
@@ -2924,7 +2924,7 @@ function getTagIcon(type, name) {
 
 /**
  * Colour family for a GE feature or prompt type (v6 colourful tags):
- *   research → NotebookLM, Deep Research (green)
+ *   research → Gemini Notebook, Deep Research (green)
  *   create   → Canvas Mode, Image / Video Generation (blue)
  *   agent    → Agent Designer (yellow)
  *   connector→ any "... Connector" (red, matches .tag-connector)
@@ -3201,7 +3201,9 @@ async function initApp() {
 
   // Restore filter + sort values from sessionStorage before the first render
   appState.activeFilterCategory = sessionStorage.getItem("ge_active_category") || "all";
-  appState.activeFilterFeature = sessionStorage.getItem("ge_active_feature") || "all";
+  // "NotebookLM" was renamed "Gemini Notebook"; map a filter value saved by an older session
+  const savedFeature = sessionStorage.getItem("ge_active_feature");
+  appState.activeFilterFeature = savedFeature === "NotebookLM" ? "Gemini Notebook" : (savedFeature || "all");
   const savedStatus = sessionStorage.getItem("ge_active_status");
   // Only "all" and "liked" remain; legacy saved values ("deployed", "verified") fall back to "all"
   appState.activeFilterStatus = savedStatus === "liked" ? "liked" : "all";
@@ -5131,7 +5133,7 @@ const uiTranslationsV2 = {
     manualTipText: "Attach your files, rubrics or notes in the Gemini chat to get the same result.",
     setupGuideSuffix: "setup",
     promptTypes: {
-      general: "General query", notebooklm: "NotebookLM", deep_research: "Deep Research",
+      general: "General query", notebooklm: "Gemini Notebook", deep_research: "Deep Research",
       agent_designer: "Agent Designer", canvas: "Canvas Mode", image: "Image Generation", video: "Video Generation"
     },
     forgotPassword: "Forgot password?",
@@ -5350,7 +5352,7 @@ const uiTranslationsV2 = {
     manualTipText: "在 Gemini 對話中附上檔案、評分準則或筆記，即可得到相同結果。",
     setupGuideSuffix: "設定",
     promptTypes: {
-      general: "一般查詢", notebooklm: "NotebookLM", deep_research: "Deep Research",
+      general: "一般查詢", notebooklm: "Gemini Notebook", deep_research: "Deep Research",
       agent_designer: "Agent Designer", canvas: "Canvas Mode", image: "Image Generation", video: "Video Generation"
     },
     forgotPassword: "忘記密碼？",
@@ -5569,7 +5571,7 @@ const uiTranslationsV2 = {
     manualTipText: "在 Gemini 对话中附上文件、评分标准或笔记，即可得到相同结果。",
     setupGuideSuffix: "设置",
     promptTypes: {
-      general: "一般查询", notebooklm: "NotebookLM", deep_research: "Deep Research",
+      general: "一般查询", notebooklm: "Gemini Notebook", deep_research: "Deep Research",
       agent_designer: "Agent Designer", canvas: "Canvas Mode", image: "Image Generation", video: "Video Generation"
     },
     forgotPassword: "忘记密码？",
@@ -5798,7 +5800,7 @@ const uiTranslationsV3 = {
     levelGeneric: "Any level",
     caseFormTitlePh: "e.g. Chemistry lab safety agent",
     caseFormSummaryPh: "1–2 sentences on the outcome",
-    caseFormStepsPh: "Upload materials to NotebookLM…",
+    caseFormStepsPh: "Upload materials to Gemini Notebook…",
     caseFormPromptPh: "You are the class AI assistant…",
     caseFormProTipPh: "Grounding the agent reduces hallucinations…",
     caseFormRequired: "ID, title, category and role are required.",
@@ -5900,7 +5902,7 @@ const uiTranslationsV3 = {
     levelGeneric: "不限級別",
     caseFormTitlePh: "例如：化學實驗室安全 Agent",
     caseFormSummaryPh: "用 1–2 句說明成果",
-    caseFormStepsPh: "將教材上傳到 NotebookLM…",
+    caseFormStepsPh: "將教材上傳到 Gemini Notebook…",
     caseFormPromptPh: "你是班級的 AI 助理…",
     caseFormProTipPh: "為 Agent 提供依據資料可減少幻覺…",
     caseFormRequired: "ID、標題、類別及角色為必填。",
@@ -6000,7 +6002,7 @@ const uiTranslationsV3 = {
     levelGeneric: "不限级别",
     caseFormTitlePh: "例如：化学实验室安全 Agent",
     caseFormSummaryPh: "用 1–2 句说明成果",
-    caseFormStepsPh: "将教材上传到 NotebookLM…",
+    caseFormStepsPh: "将教材上传到 Gemini Notebook…",
     caseFormPromptPh: "你是班级的 AI 助理…",
     caseFormProTipPh: "为 Agent 提供依据资料可减少幻觉…",
     caseFormRequired: "ID、标题、类别及角色为必填。",
