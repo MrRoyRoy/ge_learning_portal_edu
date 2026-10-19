@@ -16,7 +16,7 @@ const mailer = require('./lib/mailer');
 const { encrypt } = require('./lib/secrets');
 const infographics = require('./lib/infographics');
 const QuestCore = require('./lib/quest-core');
-const { normalizeDraft } = require('./lib/draft-normalize');
+const { normalizeDraft, plainStepsForCase } = require('./lib/draft-normalize');
 const { validateHelperPrompts, parseHelperPrompts } = require('./lib/helper-prompts');
 
 /** Vertex AI model for admin drafting / translation. Override per environment with GEMINI_MODEL. */
@@ -1804,6 +1804,12 @@ app.post('/api/admin/use-cases', requireAdmin, async (req, res) => {
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
+    // Steps never keep {{VARIABLES}} (they are shown as-is, only prompts are substituted)
+    const fixed = plainStepsForCase({
+      steps: uc.steps || [],
+      translations: uc.translations || { en: uc, 'zh-TW': {}, 'zh-CN': {} }
+    });
+
     const params = [
       uc.id,
       uc.category,
@@ -1813,11 +1819,11 @@ app.post('/api/admin/use-cases', requireAdmin, async (req, res) => {
       JSON.stringify(uc.connectors || []),
       uc.role,
       JSON.stringify(uc.level || []),
-      JSON.stringify(uc.steps || []),
+      JSON.stringify(fixed.steps),
       uc.prompt,
       uc.proTip || '',
       uc.connectorGuide ? JSON.stringify(uc.connectorGuide) : null,
-      JSON.stringify(uc.translations || { en: uc, 'zh-TW': {}, 'zh-CN': {} }),
+      JSON.stringify(fixed.translations),
       uc.promptType || 'general',
       importedInfographic.ok ? importedInfographic.value : null,
       JSON.stringify(timingCheck.value || ['anytime']),
@@ -1861,6 +1867,9 @@ app.put('/api/admin/use-cases', requireAdmin, async (req, res) => {
       WHERE id = ?
     `;
 
+    // Steps never keep {{VARIABLES}} (they are shown as-is, only prompts are substituted)
+    const fixed = plainStepsForCase({ steps: uc.steps || [], translations: uc.translations || {} });
+
     const params = [
       uc.category,
       uc.title,
@@ -1869,11 +1878,11 @@ app.put('/api/admin/use-cases', requireAdmin, async (req, res) => {
       JSON.stringify(uc.connectors || []),
       uc.role,
       JSON.stringify(uc.level || []),
-      JSON.stringify(uc.steps || []),
+      JSON.stringify(fixed.steps),
       uc.prompt,
       uc.proTip || '',
       uc.connectorGuide ? JSON.stringify(uc.connectorGuide) : null,
-      JSON.stringify(uc.translations || {}),
+      JSON.stringify(fixed.translations),
       uc.promptType || null,
       timingCheck.value ? JSON.stringify(timingCheck.value) : null,
       helperCheck.value ? JSON.stringify(helperCheck.value) : null,
@@ -2548,8 +2557,8 @@ app.post('/api/admin/settings/smtp/test', requireSuper, async (req, res) => {
  */
 const DRAFT_CONVENTIONS = `
 PLAYBOOK CONVENTIONS (match the portal's existing playbooks exactly):
-1. VARIABLES: write every fill-in value as {{UPPER_SNAKE_CASE}}, e.g. {{COURSE_NAME}}, {{INSTITUTION_NAME}}, {{TARGET_AUDIENCE}}. Use 2-6 variables. Never use square brackets such as [COURSE_NAME]. Use the SAME English variable keys in en, zh-TW and zh-CN; never translate a key.
-2. STEPS: exactly 3 steps of one or two sentences each, in this order:
+1. VARIABLES: write every fill-in value as {{UPPER_SNAKE_CASE}}, e.g. {{COURSE_NAME}}, {{INSTITUTION_NAME}}, {{TARGET_AUDIENCE}}. Use 2-6 variables. Never use square brackets such as [COURSE_NAME]. Use the SAME English variable keys in en, zh-TW and zh-CN; never translate a key. Variables belong ONLY in the prompt and Set up prompts (the portal substitutes them there); NEVER put a {{VARIABLE}} in "steps", because steps are shown as-is. In steps write plain words instead, e.g. "your department", "your course" (zh-TW 你的科系 / 你的課程, zh-CN 你的院系 / 你的课程).
+2. STEPS: exactly 3 steps of one or two sentences each, with no {{VARIABLES}}, in this order:
    (1) Set up and ground: what to prepare, which files to add and which feature to open.
    (2) Run: use the sample prompt in the named feature.
    (3) Review and deliver: what a person checks before the result is shared.
