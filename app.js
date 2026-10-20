@@ -2806,8 +2806,8 @@ Simulation structure:
 
 // Application State
 const appState = {
-  userRole: null, // set during onboarding or header switch
-  institutionLevel: null, // set during onboarding or header switch
+  userRole: null, // legacy: only used for the admin Quest Run preview (?role=)
+  userCategories: [], // audience categories assigned by an admin (lib/categories.js ids); [] = sees no playbooks
   activeConnectors: {
     outlook: false,
     onedrive: false,
@@ -2878,10 +2878,8 @@ function initLanguage() {
     
     // Sync all language dropdowns
     const navL = document.getElementById("navLang");
-    const wizL = document.getElementById("wizardLang");
     const admL = document.getElementById("adminLang");
     if (navL) navL.value = newLang;
-    if (wizL) wizL.value = newLang;
     if (admL) admL.value = newLang;
 
     // Save language to active profile and global language key
@@ -2905,10 +2903,8 @@ function initLanguage() {
   };
 
   const navL = document.getElementById("navLang");
-  const wizL = document.getElementById("wizardLang");
   const admL = document.getElementById("adminLang");
   if (navL) navL.addEventListener("change", handleLanguageChange);
-  if (wizL) wizL.addEventListener("change", handleLanguageChange);
   if (admL) admL.addEventListener("change", handleLanguageChange);
 }
 
@@ -2927,52 +2923,15 @@ function updateUILanguage() {
   };
 
   // Static strings
-  safeSetText("wizardTitle", t.wizardTitle);
   safeSetText("wizardSubtitle", t.wizardSubtitle);
-  safeSetText("wizardDesc", t.wizardDesc);
-  safeSetText("labelRole", t.labelRole);
-  safeSetText("labelLevel", t.labelLevel);
-  safeSetText("labelLang", t.labelLang);
-  safeSetHTML("btnStart", `<span class="material-symbols-outlined">rocket_launch</span> ${t.btnStart}`);
-  
-  safeSetText("btnChangeContextText", t.btnChangeContextText);
 
-  // Onboarding Dropdown roles
-  const roleSelect = document.getElementById("wizardRole");
-  if (roleSelect) {
-    Array.from(roleSelect.options).forEach(opt => {
-      if (t.roles[opt.value]) {
-        opt.textContent = t.roles[opt.value];
-      }
-    });
-  }
+  // Results headline ("{n} playbooks for you") is computed in renderUseCases()
 
-  // Admin Form Role Dropdown
-  const adminRoleSelect = document.getElementById("formCaseRole");
-  if (adminRoleSelect) {
-    Array.from(adminRoleSelect.options).forEach(opt => {
-      if (t.roles[opt.value]) {
-        opt.textContent = t.roles[opt.value];
-      }
-    });
-  }
+  // Category filter options + category checklists carry localised labels
+  renderCategoryFilterOptions();
+  refreshCategoryChecklistLabels();
 
-  // Onboarding Dropdown levels
-  const levelSelect = document.getElementById("wizardLevel");
-  if (levelSelect) {
-    Array.from(levelSelect.options).forEach(opt => {
-      if (t.levels[opt.value]) {
-        opt.textContent = t.levels[opt.value];
-      }
-    });
-  }
-
-  // Results headline ("{n} playbooks for {role}") is computed in renderUseCases()
-
-  // Help support roles explanation in wizard
-  handleWizardRoleChange();
-
-  // Update sidebar profile card and navbar welcome text immediately
+  // Update the avatar-menu context line and document title immediately
   updateSidebarContextUI();
 
   // Translate Admin Portal elements if they exist
@@ -3028,21 +2987,18 @@ function updateUILanguage() {
 
     safeSetText("adminCrudThId", t.adminCrudThId);
     safeSetText("adminCrudThTitle", t.adminCrudThTitle);
-    safeSetText("adminCrudThCategory", t.adminCrudThCategory);
-    safeSetText("adminCrudThRole", t.adminCrudThRole);
+    safeSetText("adminCrudThCategory", t.adminCrudThCategories);
+    safeSetText("adminCrudThRole", t.adminCrudThCreator);
     safeSetText("adminCrudThActions", t.adminCrudThActions);
 
     // Form labels inside modal
     safeSetText("adminFormLabelId", t.adminFormLabelId);
-    safeSetText("adminFormLabelCategory", t.adminFormLabelCategory);
     safeSetText("adminFormLabelTitle", t.adminFormLabelTitle);
-    safeSetText("adminFormLabelRole", t.adminFormLabelRole);
     safeSetText("adminFormLabelSummary", t.adminFormLabelSummary);
     safeSetText("adminFormLabelDualModeCheckbox", t.adminFormLabelDualModeCheckbox);
     safeSetText("adminFormDescDualModeCheckbox", t.adminFormDescDualModeCheckbox);
     safeSetText("adminFormLabelFeatures", t.adminFormLabelFeatures);
     safeSetText("adminFormLabelConnectors", t.adminFormLabelConnectors);
-    safeSetText("adminFormLabelLevel", t.adminFormLabelLevel);
     safeSetText("adminFormLabelSteps", t.adminFormLabelSteps);
     safeSetText("adminFormLabelPrompt", t.adminFormLabelPrompt);
     safeSetText("adminFormLabelProTip", t.adminFormLabelProTip);
@@ -3088,51 +3044,22 @@ function updateUILanguage() {
   if (typeof questOnLanguageChange === "function") questOnLanguageChange();
 }
 
-// Handle Wizard Role Selector Change (Disable institution level if administrative support role)
-function handleWizardRoleChange() {
-  const selectedRole = document.getElementById("wizardRole").value;
-  const levelSelect = document.getElementById("wizardLevel");
-  const lang = appState.activeLanguage || "en";
-  const t = uiTranslations[lang];
-  
-  // Administrative support roles do not apply to school levels (Primary, High School, Higher Edu)
-  const isSupportRole = ["Security", "Finance", "IT Admin", "SAO"].includes(selectedRole);
-  
-  if (isSupportRole) {
-    levelSelect.value = "Generic";
-    levelSelect.disabled = true;
-    // Add subtle helper description
-    document.getElementById("levelFormGroup").style.opacity = "0.5";
-    document.getElementById("levelHelperText").textContent = t.levelHelperText;
-  } else {
-    levelSelect.disabled = false;
-    document.getElementById("levelFormGroup").style.opacity = "1";
-    document.getElementById("levelHelperText").textContent = "";
-  }
-}
-
-// Update the profile line inside the avatar menu (role · level)
+// Avatar-menu context line: the user's category labels (admins previewing see "Admin preview").
 function updateSidebarContextUI() {
-  const lang = appState.activeLanguage || "en";
-  const t = uiTranslations[lang];
-  const roleEl = document.getElementById("profileRoleName");
-  const levelEl = document.getElementById("profileInstitutionName");
+  const t = tr();
+  const el = document.getElementById("profileCategoryNames");
 
   if (appState.isAdmin === true) {
     document.title = "Admin View";
-    if (roleEl) roleEl.textContent = t.adminPreviewContext;
-    if (levelEl) levelEl.textContent = t.allRoles;
+    if (el) el.textContent = t.adminPreviewContext;
     return;
   }
 
   document.title = "Gemini Enterprise - Edu Portal";
-  if (roleEl) roleEl.textContent = t.roles[appState.userRole] || appState.userRole || "";
-
-  const isSupportRole = ["Security", "Finance", "IT Admin", "SAO"].includes(appState.userRole);
-  if (levelEl) {
-    levelEl.textContent = isSupportRole
-      ? (lang === "en" ? "All levels" : (lang === "zh-TW" ? "所有級別" : "所有级别"))
-      : (t.levels[appState.institutionLevel] || appState.institutionLevel || "");
+  if (el) {
+    el.textContent = appState.userCategories.length
+      ? appState.userCategories.map(id => categoryLabel(id)).join(" · ")
+      : t.noCategoriesShort;
   }
 }
 
@@ -3296,7 +3223,15 @@ function renderUseCases() {
   const headline = document.getElementById("welcomeMsg");
   if (headline) headline.textContent = formatResultsHeadline(t, list.length, appState);
 
-  container.innerHTML = list.length
+  // No categories assigned yet: nothing to filter, so explain who can fix it instead of offering "Reset filters"
+  const noCategories = appState.isAdmin !== true && !(appState.userCategories || []).length;
+  container.innerHTML = noCategories
+    ? `<div class="empty-state" id="noCategoriesState">
+         <span class="material-symbols-outlined" aria-hidden="true">lock_person</span>
+         <h3>${escapeHtml(t.noCategoriesTitle)}</h3>
+         <p>${escapeHtml(t.noCategoriesDesc)}</p>
+       </div>`
+    : list.length
     ? list.map(uc => cardHtml(uc, lang, t)).join("")
     : `<div class="empty-state">
          <span class="material-symbols-outlined" aria-hidden="true">search_off</span>
@@ -3354,7 +3289,8 @@ async function loadUseCasesFromServer() {
   try {
     const res = await fetch('/api/use-cases');
     const data = await res.json();
-    if (Array.isArray(data) && data.length > 0) {
+    // An empty list is a real answer (a user with no matching categories), so it replaces the local seeds too
+    if (Array.isArray(data)) {
       // Overwrite the local in-memory arrays so existing templates run smoothly
       useCasesDb.length = 0;
       useCasesDb.push(...data);
@@ -3435,10 +3371,9 @@ async function initApp() {
   const overlay = document.getElementById("wizardOverlay");
   const loginCard = document.getElementById("loginCard");
   const resetCard = document.getElementById("resetCard");
-  const profileCard = document.getElementById("profileCard");
 
   // Reset display status
-  ["loginCard", "resetCard", "profileCard", "forgotCard", "setPasswordCard"].forEach(id => {
+  ["loginCard", "resetCard", "forgotCard", "setPasswordCard"].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = "none";
   });
@@ -3476,10 +3411,12 @@ async function initApp() {
         // Per-user GE app link drives "Try it"; admins always use the generic Gemini Enterprise URL
         appState.geAppLink = auth.user.isAdmin ? null : (auth.user.geAppLink || null);
         appState.activeLanguage = localStorage.getItem("ge_adoption_lang") || appState.activeLanguage || "en";
-        ["navLang", "wizardLang", "adminLang"].forEach(id => {
+        ["navLang", "adminLang"].forEach(id => {
           const el = document.getElementById(id);
           if (el) el.value = appState.activeLanguage;
         });
+        // Standard users see playbooks for their admin-assigned categories; admin previews see every category
+        appState.userCategories = auth.user.isAdmin ? CategoryCore.CATEGORY_IDS.slice() : normalizeUserCategories(auth.user.categories);
         updateAccountMenus();
 
         if (appState.isAdmin) {
@@ -3493,7 +3430,6 @@ async function initApp() {
             injectAdminBackButton();
 
             appState.userRole = "Lecturer";
-            appState.institutionLevel = "University & College";
             updateSidebarContextUI();
             updateUILanguage();
             await loadUseCasesFromServer();
@@ -3510,22 +3446,9 @@ async function initApp() {
           resetCard.style.display = "block";
           updateUILanguage();
           setupPasswordResetHandlers();
-        } else if (auth.user.role && auth.user.institutionLevel) {
-          // Profile exists in DB
-          appState.userRole = auth.user.role;
-          appState.institutionLevel = auth.user.institutionLevel;
-          overlay.style.display = "none";
-          updateUILanguage();
-          updateSidebarContextUI();
-          await loadUseCasesFromServer();
-          renderUseCases();
-          mountQuestRun();
         } else {
-          // New user requires profile configuration
-          overlay.style.display = "flex";
-          profileCard.style.display = "block";
-          updateUILanguage();
-          setupProfileOnboardingHandlers();
+          // No profile step any more: categories come from the admin, so go straight to the portal
+          await enterUserPortal();
         }
       } else {
         // Prompt Sign-in
@@ -3542,16 +3465,6 @@ async function initApp() {
       setupLoginHandlers();
     }
   }
-
-  // Profile Context switch trigger
-  document.getElementById("btnChangeContext").addEventListener("click", () => {
-    showAuthCard("profileCard");
-    if (appState.userRole) document.getElementById("wizardRole").value = appState.userRole;
-    if (appState.institutionLevel) document.getElementById("wizardLevel").value = appState.institutionLevel;
-    document.getElementById("wizardLang").value = appState.activeLanguage;
-    handleWizardRoleChange();
-    setupProfileOnboardingHandlers();
-  });
 
   // Global Logout binding
   document.getElementById("btnLogout").addEventListener("click", triggerUserLogout);
@@ -3656,8 +3569,7 @@ function setupPasswordResetHandlers() {
       return;
     }
 
-    // Since we are forcing password reset, we can also collect their initial onboarding details on this screen or proceed to profile wizard!
-    // We will let them set their password, then automatically transition them to Card 3 (Profile Card) so they can complete their onboarding context profile!
+    // After the forced reset the user goes straight into the portal (no profile step: admins assign categories)
     try {
       const res = await fetch('/api/auth/reset-password', {
         method: 'POST',
@@ -3669,8 +3581,7 @@ function setupPasswordResetHandlers() {
       if (data.success) {
         showToast(tr().pwUpdated);
         document.getElementById("resetCard").style.display = "none";
-        document.getElementById("profileCard").style.display = "block";
-        setupProfileOnboardingHandlers();
+        await enterUserPortal();
       } else {
         errorMsg.textContent = data.message || tr().pwUpdateFailed;
         errorMsg.style.display = "block";
@@ -3682,51 +3593,24 @@ function setupPasswordResetHandlers() {
   };
 }
 
-function setupProfileOnboardingHandlers() {
-  const btnStart = document.getElementById("btnStart");
-  const selectRole = document.getElementById("wizardRole");
-  const selectLevel = document.getElementById("wizardLevel");
-  const selectLang = document.getElementById("wizardLang");
+/** Pure: session categories -> valid, ordered ids (CategoryCore.normalizeCategories). */
+const normalizeUserCategories = (cats) => CategoryCore.normalizeCategories(cats || []);
 
-  selectRole.addEventListener("change", handleWizardRoleChange);
-  handleWizardRoleChange(); // Initial alignment of helpers
-
-  btnStart.onclick = async () => {
-    const role = selectRole.value;
-    const level = selectLevel.value;
-    const lang = selectLang.value;
-
-    try {
-      // Save profile context configuration to database
-      const res = await fetch('/api/auth/reset-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ newPassword: "", role, institutionLevel: level }) // Empty pass skips hashing, updates metadata!
-      });
-      const data = await res.json();
-
-      if (data.success) {
-        appState.userRole = role;
-        appState.institutionLevel = level;
-        appState.activeLanguage = lang;
-        localStorage.setItem("ge_adoption_lang", lang);
-
-        document.getElementById("navLang").value = lang;
-        document.getElementById("wizardOverlay").style.display = "none";
-
-        updateUILanguage();
-        updateSidebarContextUI();
-
-        // Fetch use cases and render
-        await loadUseCasesFromServer();
-        renderUseCases();
-        mountQuestRun();
-        showToast(tr().workspaceReady);
-      }
-    } catch (err) {
-      console.error("Onboarding saving failed:", err);
-    }
-  };
+/**
+ * Shows the learning portal for a signed-in standard user. Re-reads the session so categories assigned by an
+ * admin (or changed since sign-in) apply, then loads only the playbooks visible to those categories.
+ */
+async function enterUserPortal() {
+  try {
+    const auth = await (await fetch("/api/auth/session")).json();
+    if (auth.loggedIn && !auth.user.isAdmin) appState.userCategories = normalizeUserCategories(auth.user.categories);
+  } catch (_) { /* keep whatever the caller already set */ }
+  document.getElementById("wizardOverlay").style.display = "none";
+  updateUILanguage();
+  updateSidebarContextUI();
+  await loadUseCasesFromServer();
+  renderUseCases();
+  mountQuestRun();
 }
 
 async function triggerUserLogout() {
@@ -3780,15 +3664,17 @@ function initAdminPortal() {
   // User tab form hook. Server returns either { multiple, summary:{success,duplicates,errors}, defaultPassword }
   // or { email, tempPassword } for a single address.
   const formAddUser = document.getElementById("formAddUser");
+  mountCategoryChecklist("addUserCategories", "addUserCat", []);
   formAddUser.onsubmit = async (e) => {
     e.preventDefault();
     const t = tr();
     const email = document.getElementById("inputNewUserEmail").value.trim();
+    const categories = readCategoryChecklist("addUserCat");
     const feedback = document.getElementById("userActionFeedback");
     if (!email) return;
     const btn = document.getElementById("adminBtnProvision");
     if (btn) btn.disabled = true;
-    const { ok, data } = await apiJson('/api/admin/users', { method: 'POST', body: { email } });
+    const { ok, data } = await apiJson('/api/admin/users', { method: 'POST', body: { email, categories } });
     if (btn) btn.disabled = false;
     if (!ok) { showInline(feedback, escapeHtml(errText(data)), "error"); return; }
 
@@ -3826,7 +3712,8 @@ function initAdminPortal() {
     const exportData = allCases.filter(uc => selectedIds.includes(uc.id)).map(uc => {
       return {
         id: uc.id,
-        category: uc.category,
+        categories: uc.categories || [],
+        creator: uc.creator || null,
         title: uc.title,
         summary: uc.summary || "",
         features: typeof uc.features === 'string' ? JSON.parse(uc.features) : (uc.features || []),
@@ -3880,7 +3767,10 @@ function initAdminPortal() {
         let skippedCount = 0;
 
         for (const uc of importedArray) {
-          if (!uc.id || !uc.title || !uc.category) {
+          // Older exports carry a legacy `category` / `role` instead of `categories`; both normalise.
+          const importCats = CategoryCore.normalizeCategories(
+            (uc.categories && uc.categories.length) ? uc.categories : [uc.category, uc.role].filter(Boolean));
+          if (!uc.id || !uc.title || !importCats.length) {
             console.warn("Skipping imported use case with missing parameters:", uc);
             skippedCount++;
             continue;
@@ -3900,12 +3790,12 @@ function initAdminPortal() {
             // Ensure expected fields are structured
             const payload = {
               id: uc.id,
-              category: uc.category,
+              categories: importCats,
+              creator: uc.creator || null,
               title: uc.title,
               summary: uc.summary || "",
               features: uc.features || [],
               connectors: uc.connectors || [],
-              role: uc.role || "Lecturer",
               level: uc.level || ["Generic"],
               steps: uc.steps || [],
               prompt: uc.prompt || "",
@@ -3974,12 +3864,12 @@ function initAdminPortal() {
 }
 
 
-// Admin Tab 1: Load users table (5 columns: email, GE app link, status, created, actions)
+// Admin Tab 1: Load users table (6 columns: email, GE app link, categories, status, created, actions)
 async function loadAdminUsers() {
   const tbody = document.getElementById("adminUsersTableBody");
   if (!tbody) return;
   const t = tr();
-  const emptyRow = (text, cls = "") => `<tr><td colspan="5" class="table-empty ${cls}">${escapeHtml(text)}</td></tr>`;
+  const emptyRow = (text, cls = "") => `<tr><td colspan="6" class="table-empty ${cls}">${escapeHtml(text)}</td></tr>`;
   tbody.innerHTML = emptyRow(t.loading);
 
   const { ok, data } = await apiJson('/api/admin/users');
@@ -3993,6 +3883,7 @@ async function loadAdminUsers() {
     row.innerHTML = `
       <td class="cell-strong">${escapeHtml(u.email)}</td>
       <td>${geLinkCellHtml(u.geAppLink, t)}</td>
+      <td><div class="cat-chips">${(u.categories || []).length ? categoryChipsHtml(u.categories) : `<span class="muted">${escapeHtml(t.noCategoriesShort)}</span>`}</div></td>
       <td><span class="status-dot ${u.isTemp ? "is-pending" : "is-ok"}">${escapeHtml(u.isTemp ? t.statusTemp : t.statusActive)}</span></td>
       <td class="muted">${escapeHtml(formatDate(u.createdAt))}</td>
       <td class="col-actions"><div class="row-actions">
@@ -4024,60 +3915,75 @@ async function loadAdminStats() {
 
     renderAdminStatsChart(data.history);
 
-    // Render Most Liked Playbooks Leaderboard
+    // Most liked playbooks: rank, title, category chips, idea provider, like count
+    const t = tr();
     const leaderboardContainer = document.getElementById("adminMostLikedList");
     if (leaderboardContainer && data.mostLiked) {
-      leaderboardContainer.innerHTML = "";
-      if (data.mostLiked.length === 0) {
-        leaderboardContainer.innerHTML = `<p style="font-size: 13px; color: var(--text-muted); text-align: center; padding: 24px;">No user likes recorded yet.</p>`;
-      } else {
-        data.mostLiked.forEach((item, index) => {
-          const rank = index + 1;
-          let rankBadgeBg = "var(--border-glass)";
-          let rankBadgeColor = "var(--text-secondary)";
-          if (rank === 1) {
-            rankBadgeBg = "rgba(255, 215, 0, 0.15)";
-            rankBadgeColor = "#FFD700";
-          } else if (rank === 2) {
-            rankBadgeBg = "rgba(192, 192, 192, 0.15)";
-            rankBadgeColor = "#C0C0C0";
-          } else if (rank === 3) {
-            rankBadgeBg = "rgba(205, 127, 50, 0.15)";
-            rankBadgeColor = "#CD7F32";
-          }
-          
-          const categoryName = item.category === 'academic' ? 'Academic' : (item.category === 'operational' ? 'Operational' : 'Strategic Support');
-          const cardHtml = `
-            <div class="glass-panel" style="display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; transition: transform 0.2s, box-shadow 0.2s; cursor: default;">
-              <div style="display: flex; align-items: center; gap: 16px;">
-                <!-- Rank Badge -->
-                <div style="width: 32px; height: 32px; border-radius: 50%; background: ${rankBadgeBg}; color: ${rankBadgeColor}; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; font-family: var(--font-heading);">
-                  ${rank}
-                </div>
-                <!-- Playbook Info -->
-                <div>
-                  <div style="font-size: 14px; font-weight: 700; color: var(--text-primary);">${item.title}</div>
-                  <div style="display: flex; gap: 8px; margin-top: 4px; align-items: center;">
-                    <span style="font-size: 13px; background: rgba(255,255,255,0.05); color: var(--text-secondary); padding: 2px 8px; border-radius: 12px; font-weight: 500; text-transform: capitalize; border: 1px solid var(--border-hairline);">${categoryName}</span>
-                    <span style="font-size: 13px; background: rgba(255,255,255,0.05); color: var(--text-muted); padding: 2px 8px; border-radius: 12px; font-weight: 500; border: 1px solid var(--border-hairline);">${item.role}</span>
-                  </div>
-                </div>
-              </div>
-              
-              <!-- Likes Count -->
-              <div style="display: flex; align-items: center; gap: 6px; background: rgba(235, 87, 87, 0.1); border: 1px solid rgba(235, 87, 87, 0.2); padding: 6px 12px; border-radius: 16px; color: var(--color-danger); font-weight: 700; font-size: 13px;">
-                <span class="material-symbols-outlined" style="font-size: 16px; font-variation-settings: 'FILL' 1;">favorite</span>
-                <span>${item.likes_count}</span>
+      leaderboardContainer.innerHTML = data.mostLiked.length
+        ? data.mostLiked.map((item, index) => `
+          <div class="liked-row">
+            <span class="lb-rank" data-rank="${index + 1}">${index + 1}</span>
+            <div class="liked-info">
+              <div class="liked-title">${escapeHtml(item.title)}</div>
+              <div class="liked-meta">
+                ${categoryChipsHtml(item.categories)}
+                <span class="card-creator${item.creator ? "" : " is-default"}">${escapeHtml(creatorLabel(item, t))}</span>
               </div>
             </div>
-          `;
-          leaderboardContainer.insertAdjacentHTML('beforeend', cardHtml);
-        });
-      }
+            <span class="liked-count"><span class="material-symbols-outlined" aria-hidden="true">favorite</span>${Number(item.likes_count) || 0}</span>
+          </div>`).join("")
+        : `<p class="lb-empty">${escapeHtml(t.noLikesYet)}</p>`;
     }
+
+    // Idea provider dashboard (has its own timeframe select)
+    const rangeEl = document.getElementById("creatorRange");
+    if (rangeEl && !rangeEl.dataset.bound) {
+      rangeEl.dataset.bound = "1";
+      rangeEl.onchange = () => loadCreatorStats(rangeEl.value);
+    }
+    loadCreatorStats(rangeEl ? rangeEl.value : "all");
   } catch (error) {
     console.error("Failed to load statistics:", error);
   }
+}
+
+/** Ordered leaderboard items -> <li> markup. `unit` formats the count (e.g. "{n} views"). Pure. */
+const leaderboardHtml = (items, unit, emptyText) => (items && items.length)
+  ? items.map((it, i) => `
+      <li class="lb-item">
+        <span class="lb-rank" data-rank="${i + 1}">${i + 1}</span>
+        <span class="lb-name" title="${escapeHtml(it.creator)}">${escapeHtml(it.creator)}</span>
+        <span class="lb-count">${escapeHtml(fmt(unit, { n: Number(it.count) || 0 }))}</span>
+      </li>`).join("")
+  : `<li class="lb-empty">${escapeHtml(emptyText)}</li>`;
+
+/**
+ * Idea provider dashboard. `range` is all | 1m | 3m | 6m; the server windows playbook creation
+ * dates (providers) and view / like events (views, likes). Default playbooks (no creator) are excluded.
+ */
+async function loadCreatorStats(range = "all") {
+  const t = tr();
+  const { ok, data } = await apiJson(`/api/admin/stats/creators?range=${encodeURIComponent(range)}`);
+  const setNum = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = Number(v) || 0; };
+  const setHtml = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
+  if (!ok) { setHtml("lbProviders", `<li class="lb-empty is-error">${escapeHtml(errText(data))}</li>`); return; }
+  const sum = data.summary || {};
+  setNum("creatorSumCommunity", sum.communityPlaybooks);
+  setNum("creatorSumCreators", sum.creators);
+  setNum("creatorSumConverted", sum.convertedFeedbacks);
+  setNum("creatorSumDefault", sum.defaultPlaybooks);
+  setHtml("lbProviders", leaderboardHtml(data.providers, t.lbUnitPlaybooks, t.lbEmpty));
+  setHtml("lbViews", leaderboardHtml(data.views, t.lbUnitViews, t.lbEmpty));
+  setHtml("lbLikes", leaderboardHtml(data.likes, t.lbUnitLikes, t.lbEmpty));
+  const top = data.topCases || [];
+  setHtml("lbTopCases", top.length
+    ? top.map(c => `<tr>
+        <td class="cell-strong">${escapeHtml(c.title)}</td>
+        <td>${escapeHtml(c.creator || "")}</td>
+        <td>${Number(c.views) || 0}</td>
+        <td>${Number(c.likes) || 0}</td>
+      </tr>`).join("")
+    : `<tr><td colspan="4" class="table-empty">${escapeHtml(t.lbEmpty)}</td></tr>`);
 }
 
 // Render dynamic minimalist high-contrast SVG trend graph
@@ -4299,7 +4205,7 @@ function renderAdminStatsChart(history) {
   container.appendChild(svg);
 }
 
-// Admin Tab 3: Load Use Cases CRUD (7 columns: check, infographic, ID, title, category, role, actions)
+// Admin Tab 3: Load Use Cases CRUD (7 columns: check, infographic, ID, title, categories, idea provider, actions)
 async function loadAdminUseCases() {
   const tbody = document.getElementById("adminCasesTableBody");
   if (!tbody) return;
@@ -4324,8 +4230,6 @@ async function loadAdminUseCases() {
   const activeLang = appState.activeLanguage || "en";
   const isAssist = appState.isAssist === true;
   const isSuper = appState.isSuper === true;
-  const categoryLabel = { academic: t.catAcademic, student: t.catStudent, operational: t.catOperational, administrative: t.catAdmin };
-
   tbody.innerHTML = "";
   cases.forEach(uc => {
     const row = document.createElement("tr");
@@ -4341,8 +4245,8 @@ async function loadAdminUseCases() {
       <td class="col-thumb">${thumb}</td>
       <td class="cell-mono">${escapeHtml(uc.id)}</td>
       <td class="cell-strong"><span>${escapeHtml(titleText)}</span>${badgeHtml ? ` ${badgeHtml}` : ""}</td>
-      <td>${escapeHtml(categoryLabel[uc.category] || uc.category || "")}</td>
-      <td class="muted">${escapeHtml((t.roles && t.roles[uc.role]) || uc.role || "")}</td>
+      <td><div class="cat-chips">${categoryChipsHtml(uc.categories)}</div></td>
+      <td class="${uc.creator ? "" : "muted"}">${escapeHtml(uc.creator || t.defaultPlaybook)}</td>
       <td class="col-actions"><div class="row-actions">
         ${isSuper ? `<button type="button" class="nav-button btn-sm btn-gen-infographic">${escapeHtml(uc.infographicUrl ? t.regenerate : t.generate)}</button>` : ""}
         <button type="button" class="nav-button btn-sm btn-edit-case">${escapeHtml(isAssist ? t.view : t.edit)}</button>
@@ -4369,7 +4273,14 @@ async function loadAdminUseCases() {
 // CRUD Modal Manager
 let editingUseCaseId = null;
 
-function openAdminEditModal(uc) {
+/**
+ * Opens the playbook form. `opts` is used by the feedback conversion flow:
+ *   sourceFeedback {id, text, userEmail} - links the saved playbook back to that feedback
+ *   instruction    - prefilled Gemini instruction
+ *   creator        - initial idea provider (create mode)
+ *   autoDraft      - run the Gemini draft immediately after opening
+ */
+function openAdminEditModal(uc, opts = {}) {
   const modal = document.getElementById("adminCaseEditModal");
   const title = document.getElementById("adminCaseModalTitle");
   const feedback = document.getElementById("adminFormFeedback");
@@ -4383,6 +4294,16 @@ function openAdminEditModal(uc) {
   const isAssist = appState.isAssist === true;
   document.getElementById("btnAdminFormSave").style.display = isAssist ? "none" : "block";
   document.getElementById("btnAdminFormGemini").style.display = isAssist ? "none" : "flex";
+
+  // Categories checklist + idea provider (mounted before the disable pass below)
+  mountCategoryChecklist("formCaseCategories", "formCaseCat", uc ? (uc.categories || []) : []);
+  const creatorInput = document.getElementById("formCaseCreator");
+  creatorInput.value = uc ? (uc.creator || "") : (opts.creator || "");
+  const source = opts.sourceFeedback || null;
+  appState.caseFormSourceFeedback = source;
+  const authorBtn = document.getElementById("btnUseFeedbackAuthor");
+  authorBtn.hidden = !(source && source.userEmail) || isAssist;
+  authorBtn.onclick = () => { creatorInput.value = source.userEmail; };
 
   const inputs = form.querySelectorAll("input, select, textarea");
   inputs.forEach(input => {
@@ -4400,20 +4321,7 @@ function openAdminEditModal(uc) {
     idInput.value = uc.id;
     idInput.disabled = true; // Immutable
 
-    document.getElementById("formCaseCategory").value = normalizeCaseCategory(uc.category);
     document.getElementById("formCaseTitle").value = uc.title || "";
-    const roleVal = uc.role || "Lecturer";
-    const selectEl = document.getElementById("formCaseRole");
-    let optionExists = false;
-    if (selectEl) {
-      for (let i = 0; i < selectEl.options.length; i++) {
-        if (selectEl.options[i].value === roleVal) {
-          optionExists = true;
-          break;
-        }
-      }
-      selectEl.value = optionExists ? roleVal : "Lecturer";
-    }
     document.getElementById("formCaseSummary").value = uc.summary || "";
     
     const stepsArray = Array.isArray(uc.steps) ? uc.steps : [];
@@ -4444,13 +4352,6 @@ function openAdminEditModal(uc) {
       });
     });
 
-    // Checkbox mapping levels safely
-    const levelArray = Array.isArray(uc.level) ? uc.level : [];
-    const levelBoxes = document.querySelectorAll("input[name='formLevel']");
-    levelBoxes.forEach(box => {
-      box.checked = levelArray.includes(box.value);
-    });
-
     // Translation values pre-population safely
     const trans = uc.translations || {};
     
@@ -4478,12 +4379,9 @@ function openAdminEditModal(uc) {
     // Default checked boxes
     document.querySelectorAll("input[name='formFeatures']").forEach(b => b.checked = false);
     document.querySelectorAll("input[name='formConnectors']").forEach(b => b.checked = false);
-    document.querySelectorAll("input[name='formLevel']").forEach(b => b.checked = false);
 
     // Clear all form text inputs
-    document.getElementById("formCaseCategory").value = "academic";
-    document.getElementById("formCaseTitle").value = "";
-    document.getElementById("formCaseRole").value = "Lecturer";
+    document.getElementById("formCaseTitle").value = opts.suggestedTitle || "";
     document.getElementById("formCaseSummary").value = "";
     document.getElementById("formCaseSteps").value = "";
     document.getElementById("formCasePrompt").value = "";
@@ -4515,7 +4413,11 @@ function openAdminEditModal(uc) {
   const storedHelpers = uc ? (uc.helperPrompts || useCaseHelperPrompts[uc.id] || {}) : {};
   renderCaseHelperFields(helpersToRows(storedHelpers), isAssist);
 
+  const instructionEl = document.getElementById("formCaseGeminiInstruction");
+  if (instructionEl) instructionEl.value = opts.instruction || "";
+
   modal.classList.add("active");
+  if (opts.autoDraft && !isAssist) triggerGeminiPlaybookGeneration();
 }
 
 async function saveAdminUseCase() {
@@ -4527,17 +4429,23 @@ async function saveAdminUseCase() {
   feedback.style.display = "none";
 
   const id = document.getElementById("formCaseId").value.trim();
-  const category = document.getElementById("formCaseCategory").value;
+  const categories = readCategoryChecklist("formCaseCat");
   const title = document.getElementById("formCaseTitle").value.trim();
-  const role = document.getElementById("formCaseRole").value.trim();
+  const creator = document.getElementById("formCaseCreator").value.trim();
   const summary = document.getElementById("formCaseSummary").value.trim();
   const stepsRaw = document.getElementById("formCaseSteps").value;
   const prompt = document.getElementById("formCasePrompt").value.trim();
   const proTip = document.getElementById("formCaseProTip").value.trim();
 
-  if (!id || !title || !category || !role) {
+  if (!id || !title) {
     feedback.textContent = tr().caseFormRequired;
     feedback.style.display = "block";
+    return;
+  }
+  if (!categories.length) {
+    feedback.textContent = tr().caseFormNeedCategory;
+    feedback.style.display = "block";
+    feedback.scrollIntoView({ behavior: "smooth", block: "center" });
     return;
   }
 
@@ -4550,10 +4458,6 @@ async function saveAdminUseCase() {
   // Compile Connectors
   const connectors = [];
   document.querySelectorAll("input[name='formConnectors']:checked").forEach(b => connectors.push(b.value));
-
-  // Compile Levels
-  const level = [];
-  document.querySelectorAll("input[name='formLevel']:checked").forEach(b => level.push(b.value));
 
   // Compile Translations
   const transZhtwSteps = document.getElementById("formTransZhtwSteps").value.split("\n").map(s => s.trim()).filter(s => s.length > 0);
@@ -4587,8 +4491,10 @@ async function saveAdminUseCase() {
   const promptType = promptTypeEl ? promptTypeEl.value : "general";
 
   const questFields = readCaseQuestFields();
+  const source = appState.caseFormSourceFeedback || null;
   const payload = {
-    id, category, title, role, summary, features, connectors, level, steps, prompt, proTip, translations, promptType,
+    id, categories, creator: creator || null, title, summary, features, connectors, steps, prompt, proTip, translations, promptType,
+    ...(source ? { sourceFeedbackId: source.id } : {}),
     timing: questFields.timing.length ? questFields.timing : ["anytime"],
     hints: questFields.hints.filter(h => h.question.en),
     helperPrompts: rowsToHelpers(readCaseHelperRows())
@@ -4608,7 +4514,9 @@ async function saveAdminUseCase() {
 
     if (data.success) {
       document.getElementById("adminCaseEditModal").classList.remove("active");
-      showToast(isEdit ? tr().caseUpdated : tr().caseCreated);
+      showToast(source ? tr().feedbackConverted : (isEdit ? tr().caseUpdated : tr().caseCreated));
+      appState.caseFormSourceFeedback = null;
+      if (source) loadAdminFeedbacks();
       loadAdminUseCases();
       loadUseCasesFromServer().then(() => renderUseCases());
     } else {
@@ -4667,17 +4575,13 @@ async function triggerGeminiPlaybookGeneration() {
   }
 
   // Gather current inputs
-  const category = document.getElementById("formCaseCategory").value;
-  const role = document.getElementById("formCaseRole").value.trim() || "Lecturer";
+  const categories = readCategoryChecklist("formCaseCat");
 
   const features = [];
   document.querySelectorAll("input[name='formFeatures']:checked").forEach(b => features.push(b.value));
   
   const connectors = [];
   document.querySelectorAll("input[name='formConnectors']:checked").forEach(b => connectors.push(b.value));
-
-  const level = [];
-  document.querySelectorAll("input[name='formLevel']:checked").forEach(b => level.push(b.value));
 
   // Activate dynamic Gemini generating loader overlay
   const loader = document.getElementById("geminiLoadingOverlay");
@@ -4702,11 +4606,9 @@ async function triggerGeminiPlaybookGeneration() {
       body: JSON.stringify({
         id: editingUseCaseId, // null if creation
         title,
-        category,
+        categories,
         features,
         connectors,
-        role,
-        level,
         promptType: document.getElementById("formCasePromptType")?.value || "general",
         instruction
       })
@@ -4775,50 +4677,12 @@ function applyGeminiSuggestions(aiRes) {
   if (en.title) {
     document.getElementById("formCaseTitle").value = en.title;
   }
-  if (aiRes.category) {
-    document.getElementById("formCaseCategory").value = normalizeCaseCategory(aiRes.category);
-  }
+  // Gemini suggests categories; keep the admin's existing ticks when it returns none
+  const aiCats = CategoryCore.normalizeCategories(aiRes.categories || []);
+  if (aiCats.length) mountCategoryChecklist("formCaseCategories", "formCaseCat", aiCats);
   const promptTypeSelect = document.getElementById("formCasePromptType");
   if (promptTypeSelect && aiRes.promptType && Array.from(promptTypeSelect.options).some(o => o.value === aiRes.promptType)) {
     promptTypeSelect.value = aiRes.promptType;
-  }
-  if (aiRes.role) {
-    const rVal = aiRes.role.trim();
-    const select = document.getElementById("formCaseRole");
-    if (select) {
-      let found = false;
-      for (let i = 0; i < select.options.length; i++) {
-        if (select.options[i].value.toLowerCase() === rVal.toLowerCase()) {
-          select.selectedIndex = i;
-          found = true;
-          break;
-        }
-      }
-      if (!found) {
-        const lower = rVal.toLowerCase();
-        if (lower.includes("lecturer") || lower.includes("teacher") || lower.includes("educator") || lower.includes("faculty")) {
-          select.value = "Lecturer";
-        } else if (lower.includes("assistant") || lower.includes("ta")) {
-          select.value = "TA";
-        } else if (lower.includes("student") || lower.includes("club")) {
-          select.value = "Student";
-        } else if (lower.includes("leader") || lower.includes("head") || lower.includes("director")) {
-          select.value = "Program Leader";
-        } else if (lower.includes("dean") || lower.includes("educational")) {
-          select.value = "Dean";
-        } else if (lower.includes("it") || lower.includes("admin") || lower.includes("sysadmin")) {
-          select.value = "IT Admin";
-        } else if (lower.includes("affairs") || lower.includes("sao")) {
-          select.value = "SAO";
-        } else if (lower.includes("security") || lower.includes("safety") || lower.includes("officer")) {
-          select.value = "Security";
-        } else if (lower.includes("finance") || lower.includes("audit") || lower.includes("accountant")) {
-          select.value = "Finance";
-        } else {
-          select.value = "Lecturer";
-        }
-      }
-    }
   }
   if (aiRes.id && !editingUseCaseId) {
     document.getElementById("formCaseId").value = aiRes.id;
@@ -5256,27 +5120,118 @@ window.loadAdminFeedbacks = async function() {
   const tbody = document.getElementById("adminFeedbacksTableBody");
   if (!tbody) return;
   const t = tr();
-  const emptyRow = (text, cls = "") => `<tr><td colspan="4" class="table-empty ${cls}">${escapeHtml(text)}</td></tr>`;
+  const emptyRow = (text, cls = "") => `<tr><td colspan="5" class="table-empty ${cls}">${escapeHtml(text)}</td></tr>`;
   tbody.innerHTML = emptyRow(t.loading);
   const { ok, data } = await apiJson('/api/feedbacks');
   if (!ok || !data || !data.success) {
     tbody.innerHTML = emptyRow(errText(data, t.networkError), "is-error");
     return;
   }
+  appState.adminFeedbacks = data.feedbacks;
   if (!data.feedbacks.length) {
     tbody.innerHTML = emptyRow(t.feedbackEmpty || "No feedback yet.");
     return;
   }
   const isAssist = appState.isAssist === true;
+  const statusHtml = (fb) => fb.converted_use_case_id
+    ? `<span class="fb-status is-converted" title="${escapeHtml(fb.converted_use_case_id)}"><span class="material-symbols-outlined" aria-hidden="true">check_circle</span>${escapeHtml(fmt(t.fbConvertedTo, { title: fb.converted_use_case_title || fb.converted_use_case_id }))}</span>`
+    : `<span class="fb-status">${escapeHtml(t.fbStatusNew)}</span>`;
   tbody.innerHTML = data.feedbacks.map(fb => `
     <tr>
       <td class="cell-strong">${escapeHtml(fb.user_email || "")}</td>
       <td class="cell-pre">${escapeHtml(fb.feedback_text || "")}</td>
       <td class="muted">${escapeHtml(formatDateTime(fb.created_at))}</td>
-      <td class="col-actions">
+      <td>${statusHtml(fb)}</td>
+      <td class="col-actions"><div class="row-actions">
+        ${isAssist ? '' : `<button type="button" class="nav-button btn-sm btn-convert-feedback" onclick="openFeedbackConvert(${Number(fb.id)})"><span class="material-symbols-outlined" aria-hidden="true">auto_awesome</span>${escapeHtml(t.convertBtn)}</button>`}
         ${isAssist ? '' : `<button type="button" class="icon-btn btn-sm" onclick="deleteFeedback(${Number(fb.id)})" title="${escapeHtml(t.deleteLabel)}" aria-label="${escapeHtml(t.deleteLabel)}"><span class="material-symbols-outlined">close</span></button>`}
-      </td>
+      </div></td>
     </tr>`).join("");
+};
+
+/**
+ * Feedback -> playbook conversion.
+ * 1. Ask the server for similar playbooks (Gemini ranking, keyword fallback).
+ * 2. Show matches with scores; the server recommends "enhance" when the best score >= its threshold.
+ * 3. Enhance: open the existing playbook with the feedback as the Gemini instruction (diff review).
+ *    Create new: open a blank form, creator = feedback author, and auto-draft from the feedback.
+ * Saving the form sends sourceFeedbackId, which marks the feedback as converted.
+ */
+window.openFeedbackConvert = async function(id) {
+  const t = tr();
+  const modal = document.getElementById("feedbackConvertModal");
+  const fb = (appState.adminFeedbacks || []).find(f => Number(f.id) === Number(id)) || { id, feedback_text: "" };
+  const statusEl = document.getElementById("convertStatus");
+  const listEl = document.getElementById("convertMatches");
+  const btnEnhance = document.getElementById("btnConvertEnhance");
+  const btnNew = document.getElementById("btnConvertNew");
+  const close = () => modal.classList.remove("active");
+
+  document.getElementById("convertFeedbackText").textContent = fb.feedback_text || "";
+  document.getElementById("convertFeedbackAuthor").textContent = fb.user_email
+    ? fmt(t.convertFrom, { email: fb.user_email }) : t.convertAnonymous;
+  statusEl.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(t.convertChecking)}`;
+  listEl.innerHTML = "";
+  btnEnhance.disabled = true;
+  btnNew.disabled = true;
+  document.getElementById("feedbackConvertClose").onclick = close;
+  document.getElementById("btnConvertCancel").onclick = close;
+  modal.onclick = (e) => { if (e.target === modal) close(); };
+  modal.classList.add("active");
+
+  const { ok, data } = await apiJson(`/api/admin/feedbacks/${Number(id)}/similar`, { method: "POST" });
+  if (!ok) { statusEl.innerHTML = `<span class="is-error">${escapeHtml(errText(data))}</span>`; return; }
+
+  const source = { id: Number(id), text: data.feedback?.text || fb.feedback_text || "", userEmail: data.feedback?.userEmail || null };
+  const matches = data.matches || [];
+  const recommendEnhance = data.recommendation === "enhance" && data.recommendedId;
+  statusEl.innerHTML = `
+    ${data.feedback?.convertedUseCaseId ? `<p class="convert-note">${escapeHtml(fmt(t.convertAlready, { id: data.feedback.convertedUseCaseId }))}</p>` : ""}
+    <p class="convert-reco ${recommendEnhance ? "is-enhance" : "is-new"}">
+      <span class="material-symbols-outlined" aria-hidden="true">${recommendEnhance ? "upgrade" : "add_circle"}</span>
+      ${escapeHtml(recommendEnhance ? t.convertRecoEnhance : t.convertRecoNew)}
+    </p>
+    <p class="field-hint">${escapeHtml(data.source === "gemini" ? t.convertSourceGemini : t.convertSourceKeyword)}</p>`;
+  listEl.innerHTML = matches.length
+    ? matches.map(m => `
+      <label class="convert-match${m.id === data.recommendedId && recommendEnhance ? " is-recommended" : ""}">
+        <input type="radio" name="convertTarget" value="${escapeHtml(m.id)}" ${m.id === data.recommendedId && recommendEnhance ? "checked" : ""}>
+        <div class="convert-match-body">
+          <div class="convert-match-head">
+            <span class="convert-match-title">${escapeHtml(m.title || m.id)}</span>
+            ${m.id === data.recommendedId && recommendEnhance ? `<span class="convert-badge">${escapeHtml(t.convertRecommended)}</span>` : ""}
+            <span class="convert-score" title="${escapeHtml(t.convertScore)}">${Number(m.score) || 0}%</span>
+          </div>
+          ${m.reason ? `<div class="convert-reason">${escapeHtml(m.reason)}</div>` : ""}
+          <div class="liked-meta">${categoryChipsHtml(m.categories)}<span class="card-creator${m.creator ? "" : " is-default"}">${escapeHtml(creatorLabel(m, t))}</span></div>
+        </div>
+      </label>`).join("")
+    : `<p class="lb-empty">${escapeHtml(t.convertNoMatches)}</p>`;
+
+  const selected = () => listEl.querySelector('input[name="convertTarget"]:checked')?.value || null;
+  listEl.onchange = () => { btnEnhance.disabled = !selected(); };
+  btnEnhance.disabled = !selected();
+  btnNew.disabled = false;
+
+  btnEnhance.onclick = async () => {
+    const targetId = selected();
+    if (!targetId) return;
+    let uc = (appState.loadedAdminUseCases || []).find(c => c.id === targetId);
+    if (!uc) {
+      const res = await apiJson('/api/use-cases');
+      uc = (Array.isArray(res.data) ? res.data : []).find(c => c.id === targetId);
+    }
+    if (!uc) { showToast(t.caseSaveFailed, "warning"); return; }
+    close();
+    openAdminEditModal(uc, { sourceFeedback: source, instruction: fmt(t.convertEnhanceInstruction, { text: source.text }), autoDraft: true });
+  };
+  btnNew.onclick = () => {
+    close();
+    openAdminEditModal(null, {
+      sourceFeedback: source, instruction: source.text, creator: source.userEmail || "",
+      suggestedTitle: data.suggestedTitle || "", autoDraft: true
+    });
+  };
 };
 
 window.deleteFeedback = async function(id) {
@@ -6637,6 +6592,235 @@ Object.keys(uiTranslationsV6).forEach(lang => {
   if (uiTranslations[lang]) Object.assign(uiTranslations[lang], uiTranslationsV6[lang]);
 });
 
+/**
+ * V7: categories on accounts and playbooks, idea providers, feedback -> playbook conversion
+ * and the idea provider dashboard. Product names stay in English in every language.
+ */
+const uiTranslationsV7 = {
+  en: {
+    catAll: "All my categories",
+    catAllAdmin: "All categories",
+    resultsHeadlineMine: "{n} playbooks for you",
+    resultsHeadlineMineOne: "1 playbook for you",
+    resultsHeadlineCat: "{n} playbooks · {category}",
+    resultsHeadlineCatOne: "1 playbook · {category}",
+    resultsHeadlineAll: "{n} playbooks across all categories",
+    resultsHeadlineAllOne: "1 playbook across all categories",
+    noCategoriesTitle: "No playbooks assigned yet",
+    noCategoriesDesc: "Your account has no categories yet. Ask your admin to add the categories that match your work.",
+    noCategoriesShort: "No categories",
+    ideaBy: "Idea by {name}",
+    defaultPlaybook: "Default playbook",
+    adminCrudThCategories: "Categories",
+    adminCrudThCreator: "Idea provider",
+    adminFormLabelCreator: "Idea provider",
+    adminFormCreatorPh: "Leave empty for a default playbook",
+    adminFormLabelCategories: "Categories",
+    adminFormCategoriesHint: "Users see this playbook if they have at least one of these categories.",
+    useFeedbackAuthor: "Use feedback author",
+    caseFormNeedCategory: "Pick at least one category.",
+    userCategoriesLabel: "Categories",
+    userCategoriesHint: "Users only see playbooks in the categories you tick.",
+    adminThCategories: "Categories",
+    creatorDashTitle: "Idea providers",
+    creatorDashDesc: "Who contributes playbooks, and whose ideas get used. Default playbooks are excluded.",
+    creatorRangeLabel: "Timeframe",
+    rangeAll: "Overall",
+    range1m: "Last month",
+    range3m: "Last 3 months",
+    range6m: "Last 6 months",
+    creatorSumCommunity: "Community playbooks",
+    creatorSumCreators: "Idea providers",
+    creatorSumConverted: "Feedback converted",
+    creatorSumDefault: "Default playbooks",
+    lbProviders: "Most playbooks provided",
+    lbViews: "Most viewed ideas",
+    lbLikes: "Most liked ideas",
+    lbTopCases: "Top community playbooks",
+    lbColPlaybook: "Playbook",
+    lbColViews: "Views",
+    lbColLikes: "Likes",
+    lbUnitPlaybooks: "{n} playbooks",
+    lbUnitViews: "{n} views",
+    lbUnitLikes: "{n} likes",
+    lbEmpty: "Nothing in this timeframe yet.",
+    noLikesYet: "No likes recorded yet.",
+    fbThStatus: "Status",
+    fbStatusNew: "New",
+    fbConvertedTo: "Converted: {title}",
+    convertBtn: "Convert to playbook",
+    convertTitle: "Convert to playbook",
+    convertFrom: "From {email}. They'll be credited as the idea provider.",
+    convertAnonymous: "Anonymous feedback. The playbook will have no idea provider unless you add one.",
+    convertChecking: "Checking for similar playbooks…",
+    convertAlready: "Already converted to {id}. Converting again re-links it.",
+    convertRecoEnhance: "A similar playbook exists. We suggest improving it.",
+    convertRecoNew: "No close match. We suggest creating a new playbook.",
+    convertSourceGemini: "Matched by Gemini.",
+    convertSourceKeyword: "Matched by keywords (Gemini unavailable).",
+    convertRecommended: "Recommended",
+    convertScore: "Similarity",
+    convertNoMatches: "No similar playbooks found.",
+    convertEnhance: "Improve selected",
+    convertNew: "Create new playbook",
+    convertEnhanceInstruction: "Improve this playbook using this user suggestion. Keep what works and add what's missing:\n\n{text}",
+    feedbackConverted: "Saved. Feedback marked as converted.",
+    feedbackTitle: "Share feedback or a use case idea",
+    feedbackDesc: "Tell us what would make this portal more useful, or suggest a new use case. Good ideas become playbooks, credited to you.",
+    feedbackLabel: "Your feedback or idea",
+    feedbackPlaceholder: "e.g. A playbook that drafts parent emails from my class notes"
+  },
+  "zh-TW": {
+    catAll: "我的所有類別",
+    catAllAdmin: "所有類別",
+    resultsHeadlineMine: "為您準備的 {n} 個 Playbook",
+    resultsHeadlineMineOne: "為您準備的 1 個 Playbook",
+    resultsHeadlineCat: "{n} 個 Playbook · {category}",
+    resultsHeadlineCatOne: "1 個 Playbook · {category}",
+    resultsHeadlineAll: "所有類別共 {n} 個 Playbook",
+    resultsHeadlineAllOne: "所有類別共 1 個 Playbook",
+    noCategoriesTitle: "尚未指派 Playbook",
+    noCategoriesDesc: "您的帳戶尚未設定類別。請聯絡管理員加入符合您工作的類別。",
+    noCategoriesShort: "未設定類別",
+    ideaBy: "構想提供：{name}",
+    defaultPlaybook: "預設 Playbook",
+    adminCrudThCategories: "類別",
+    adminCrudThCreator: "構想提供者",
+    adminFormLabelCreator: "構想提供者",
+    adminFormCreatorPh: "留空即為預設 Playbook",
+    adminFormLabelCategories: "類別",
+    adminFormCategoriesHint: "擁有其中任一類別的使用者都會看到此 Playbook。",
+    useFeedbackAuthor: "使用意見提交者",
+    caseFormNeedCategory: "請至少選擇一個類別。",
+    userCategoriesLabel: "類別",
+    userCategoriesHint: "使用者只會看到您勾選類別中的 Playbook。",
+    adminThCategories: "類別",
+    creatorDashTitle: "構想提供者",
+    creatorDashDesc: "誰貢獻了 Playbook，以及誰的構想最常被使用。不包括預設 Playbook。",
+    creatorRangeLabel: "時間範圍",
+    rangeAll: "全部",
+    range1m: "過去 1 個月",
+    range3m: "過去 3 個月",
+    range6m: "過去 6 個月",
+    creatorSumCommunity: "社群 Playbook",
+    creatorSumCreators: "構想提供者",
+    creatorSumConverted: "已轉換的意見",
+    creatorSumDefault: "預設 Playbook",
+    lbProviders: "提供最多 Playbook",
+    lbViews: "瀏覽次數最多的構想",
+    lbLikes: "最多讚好的構想",
+    lbTopCases: "熱門社群 Playbook",
+    lbColPlaybook: "Playbook",
+    lbColViews: "瀏覽",
+    lbColLikes: "讚好",
+    lbUnitPlaybooks: "{n} 個 Playbook",
+    lbUnitViews: "{n} 次瀏覽",
+    lbUnitLikes: "{n} 個讚好",
+    lbEmpty: "此時間範圍內暫無資料。",
+    noLikesYet: "暫未有讚好紀錄。",
+    fbThStatus: "狀態",
+    fbStatusNew: "新",
+    fbConvertedTo: "已轉換：{title}",
+    convertBtn: "轉換為 Playbook",
+    convertTitle: "轉換為 Playbook",
+    convertFrom: "來自 {email}，對方將列為構想提供者。",
+    convertAnonymous: "匿名意見。除非您手動加入，否則 Playbook 不會有構想提供者。",
+    convertChecking: "正在檢查相似的 Playbook…",
+    convertAlready: "已轉換為 {id}。再次轉換會重新連結。",
+    convertRecoEnhance: "已有相似的 Playbook，建議改進該 Playbook。",
+    convertRecoNew: "沒有相近的 Playbook，建議建立新的 Playbook。",
+    convertSourceGemini: "由 Gemini 配對。",
+    convertSourceKeyword: "按關鍵字配對（Gemini 暫時無法使用）。",
+    convertRecommended: "建議",
+    convertScore: "相似度",
+    convertNoMatches: "找不到相似的 Playbook。",
+    convertEnhance: "改進所選項目",
+    convertNew: "建立新 Playbook",
+    convertEnhanceInstruction: "請根據以下使用者建議改進此 Playbook，保留有效內容並補充缺少的部分：\n\n{text}",
+    feedbackConverted: "已儲存，意見已標示為已轉換。",
+    feedbackTitle: "分享意見或使用案例構想",
+    feedbackDesc: "告訴我們如何讓入口網站更實用，或建議新的使用案例。好的構想會成為 Playbook，並註明由您提供。",
+    feedbackLabel: "您的意見或構想",
+    feedbackPlaceholder: "例如：根據我的課堂筆記草擬家長電郵的 Playbook"
+  },
+  "zh-CN": {
+    catAll: "我的所有类别",
+    catAllAdmin: "所有类别",
+    resultsHeadlineMine: "为您准备的 {n} 个 Playbook",
+    resultsHeadlineMineOne: "为您准备的 1 个 Playbook",
+    resultsHeadlineCat: "{n} 个 Playbook · {category}",
+    resultsHeadlineCatOne: "1 个 Playbook · {category}",
+    resultsHeadlineAll: "所有类别共 {n} 个 Playbook",
+    resultsHeadlineAllOne: "所有类别共 1 个 Playbook",
+    noCategoriesTitle: "尚未分配 Playbook",
+    noCategoriesDesc: "您的账户尚未设置类别。请联系管理员添加符合您工作的类别。",
+    noCategoriesShort: "未设置类别",
+    ideaBy: "创意提供：{name}",
+    defaultPlaybook: "默认 Playbook",
+    adminCrudThCategories: "类别",
+    adminCrudThCreator: "创意提供者",
+    adminFormLabelCreator: "创意提供者",
+    adminFormCreatorPh: "留空即为默认 Playbook",
+    adminFormLabelCategories: "类别",
+    adminFormCategoriesHint: "拥有其中任一类别的用户都会看到此 Playbook。",
+    useFeedbackAuthor: "使用意见提交者",
+    caseFormNeedCategory: "请至少选择一个类别。",
+    userCategoriesLabel: "类别",
+    userCategoriesHint: "用户只会看到您勾选类别中的 Playbook。",
+    adminThCategories: "类别",
+    creatorDashTitle: "创意提供者",
+    creatorDashDesc: "谁贡献了 Playbook，以及谁的创意最常被使用。不包括默认 Playbook。",
+    creatorRangeLabel: "时间范围",
+    rangeAll: "全部",
+    range1m: "过去 1 个月",
+    range3m: "过去 3 个月",
+    range6m: "过去 6 个月",
+    creatorSumCommunity: "社区 Playbook",
+    creatorSumCreators: "创意提供者",
+    creatorSumConverted: "已转换的意见",
+    creatorSumDefault: "默认 Playbook",
+    lbProviders: "提供最多 Playbook",
+    lbViews: "浏览次数最多的创意",
+    lbLikes: "点赞最多的创意",
+    lbTopCases: "热门社区 Playbook",
+    lbColPlaybook: "Playbook",
+    lbColViews: "浏览",
+    lbColLikes: "点赞",
+    lbUnitPlaybooks: "{n} 个 Playbook",
+    lbUnitViews: "{n} 次浏览",
+    lbUnitLikes: "{n} 个赞",
+    lbEmpty: "此时间范围内暂无数据。",
+    noLikesYet: "暂无点赞记录。",
+    fbThStatus: "状态",
+    fbStatusNew: "新",
+    fbConvertedTo: "已转换：{title}",
+    convertBtn: "转换为 Playbook",
+    convertTitle: "转换为 Playbook",
+    convertFrom: "来自 {email}，对方将列为创意提供者。",
+    convertAnonymous: "匿名意见。除非您手动添加，否则 Playbook 不会有创意提供者。",
+    convertChecking: "正在检查相似的 Playbook…",
+    convertAlready: "已转换为 {id}。再次转换会重新关联。",
+    convertRecoEnhance: "已有相似的 Playbook，建议改进该 Playbook。",
+    convertRecoNew: "没有相近的 Playbook，建议创建新的 Playbook。",
+    convertSourceGemini: "由 Gemini 匹配。",
+    convertSourceKeyword: "按关键词匹配（Gemini 暂时不可用）。",
+    convertRecommended: "建议",
+    convertScore: "相似度",
+    convertNoMatches: "找不到相似的 Playbook。",
+    convertEnhance: "改进所选项",
+    convertNew: "创建新 Playbook",
+    convertEnhanceInstruction: "请根据以下用户建议改进此 Playbook，保留有效内容并补充缺少的部分：\n\n{text}",
+    feedbackConverted: "已保存，意见已标记为已转换。",
+    feedbackTitle: "分享意见或用例创意",
+    feedbackDesc: "告诉我们如何让门户更实用，或建议新的用例。好的创意会成为 Playbook，并注明由您提供。",
+    feedbackLabel: "您的意见或创意",
+    feedbackPlaceholder: "例如：根据我的课堂笔记起草家长邮件的 Playbook"
+  }
+};
+Object.keys(uiTranslationsV7).forEach(lang => {
+  if (uiTranslations[lang]) Object.assign(uiTranslations[lang], uiTranslationsV7[lang]);
+});
+
 /** Current translation table (falls back to English). */
 const tr = () => uiTranslations[appState.activeLanguage] || uiTranslations.en;
 
@@ -6672,13 +6856,6 @@ function applyI18nAttributes() {
 // ---------------------------------------------------------------------------
 // Pure helpers: prompt types, Try it URL, variables, filtering and sorting
 // ---------------------------------------------------------------------------
-
-/** Map legacy / loose category values onto the stored ones ("admin" -> "administrative"). Pure. */
-const normalizeCaseCategory = (c) => {
-  const v = String(c || "").toLowerCase().trim();
-  if (v === "admin" || v === "administration") return "administrative";
-  return ["academic", "student", "operational", "administrative"].includes(v) ? v : "academic";
-};
 
 /** Prompt types that Gemini Enterprise can open straight from a ?q= link. */
 const TRYABLE = new Set(["general", "canvas", "image", "video"]);
@@ -6754,41 +6931,29 @@ const ucTitle = (uc, lang) => (useCasesTranslations[uc.id]?.[lang]?.title) || uc
 const ucSummary = (uc, lang) => (useCasesTranslations[uc.id]?.[lang]?.summary) || uc.summary || "";
 const isOn = (v) => v === true || v === 1;
 
-/** Role / level visibility rules (unchanged from v1, now pure). */
-function matchesRoleAndLevel(uc, state) {
+/**
+ * Category visibility (pure). A playbook is visible when its categories intersect the user's.
+ * Admin previews see everything. The server already filters standard users; this keeps the client
+ * consistent when categories change mid-session.
+ */
+function matchesUserCategories(uc, state) {
   if (state.isAdmin === true) return true;
-  const role = state.userRole;
-  const isSupportRole = ["Security", "Finance", "IT Admin", "SAO"].includes(role);
-  let roleOk = true;
-  if (role === "Lecturer" || role === "TA") {
-    roleOk = ["Lecturer", "TA"].includes(uc.role) || ["academic", "operational", "administrative"].includes(uc.category) || !uc.role;
-  } else if (role === "Student") {
-    roleOk = uc.role === "Student" || uc.category === "student" || !uc.role;
-  } else if (isSupportRole) {
-    roleOk = [role, "IT Admin", "Program Leader", "Dean", "SAO"].includes(uc.role) || ["operational", "administrative"].includes(uc.category) || !uc.role;
-  } else if (role === "Program Leader" || role === "Dean") {
-    roleOk = ["Lecturer", "Program Leader", "Dean"].includes(uc.role) || ["academic", "operational", "administrative"].includes(uc.category) || !uc.role;
-  }
-  let levelOk = true;
-  if (!isSupportRole && Array.isArray(uc.level) && uc.level.length > 0) {
-    levelOk = uc.level.includes("Generic") || uc.level.includes(state.institutionLevel);
-  }
-  return roleOk && levelOk;
+  return CategoryCore.isVisibleTo(uc.categories || [], state.userCategories || []);
 }
 
 /** Apply search, category, feature and collection filters. Pure. */
 function filterUseCases(list, state, lang) {
   const q = (state.searchQuery || "").toLowerCase();
-  const cat = state.activeFilterCategory === "admin" ? "administrative" : state.activeFilterCategory;
+  const cat = state.activeFilterCategory;
   return list.filter(uc => {
-    if (!matchesRoleAndLevel(uc, state)) return false;
-    // Legacy admin-made rows may still say "admin"; seeds and the form use "administrative"
-    if (cat && cat !== "all" && (uc.category === "admin" ? "administrative" : uc.category) !== cat) return false;
+    if (!matchesUserCategories(uc, state)) return false;
+    if (cat && cat !== "all" && !(uc.categories || []).includes(cat)) return false;
     if (state.activeFilterFeature && state.activeFilterFeature !== "all" &&
         !(uc.features || []).some(f => f.toLowerCase() === state.activeFilterFeature.toLowerCase())) return false;
     if (state.activeFilterStatus === "liked" && !isOn(uc.isLiked)) return false;
     if (q) {
-      const hay = [ucTitle(uc, lang), ucSummary(uc, lang), uc.role || "", ...(uc.features || [])].join(" ").toLowerCase();
+      const hay = [ucTitle(uc, lang), ucSummary(uc, lang), uc.creator || "",
+        ...(uc.categories || []).map(id => categoryLabel(id, lang)), ...(uc.features || [])].join(" ").toLowerCase();
       if (!hay.includes(q)) return false;
     }
     return true;
@@ -6807,10 +6972,76 @@ function sortUseCases(list, sortBy, lang) {
   return [...list].sort(cmp);
 }
 
-/** "{n} playbooks for {role}" with the plural role map; admins see "all roles". Pure. */
+/**
+ * Results headline. Pure.
+ *   category selected -> "{n} playbooks · Teaching"
+ *   otherwise         -> "{n} playbooks for you" (admins: "… across all categories")
+ */
 function formatResultsHeadline(t, n, state) {
-  const role = state.isAdmin === true ? t.allRoles : (t.rolesPlural?.[state.userRole] || t.allRoles);
-  return fmt(n === 1 ? t.resultsHeadlineOne : t.resultsHeadline, { n, role });
+  const one = n === 1;
+  const cat = state.activeFilterCategory;
+  if (cat && cat !== "all") {
+    return fmt(one ? t.resultsHeadlineCatOne : t.resultsHeadlineCat, { n, category: categoryLabel(cat, state.activeLanguage) });
+  }
+  if (state.isAdmin === true) return fmt(one ? t.resultsHeadlineAllOne : t.resultsHeadlineAll, { n });
+  return fmt(one ? t.resultsHeadlineMineOne : t.resultsHeadlineMine, { n });
+}
+
+/** Localised category label (CategoryCore), defaulting to the active language. */
+const categoryLabel = (id, lang) => CategoryCore.categoryLabel(id, lang || appState.activeLanguage || "en");
+
+/** "Idea by alice@x.edu" / "Default playbook". Pure apart from tr(). */
+const creatorLabel = (uc, t = tr()) => (uc && uc.creator ? fmt(t.ideaBy, { name: uc.creator }) : t.defaultPlaybook);
+
+/** Small inline chip list for category ids. */
+const categoryChipsHtml = (ids, lang) => (ids || [])
+  .map(id => `<span class="cat-chip" data-cat="${escapeHtml(id)}">${escapeHtml(categoryLabel(id, lang))}</span>`).join("");
+
+/**
+ * Rebuilds the category filter: "All my categories" plus only the categories this user has
+ * (admin previews get all 7). An unknown saved value (e.g. a legacy "academic") falls back to "all".
+ */
+function renderCategoryFilterOptions() {
+  const el = document.getElementById("filterCategory");
+  if (!el) return;
+  const t = tr();
+  const cats = appState.isAdmin === true ? CategoryCore.CATEGORY_IDS : (appState.userCategories || []);
+  el.innerHTML = [`<option value="all">${escapeHtml(appState.isAdmin === true ? t.catAllAdmin : t.catAll)}</option>`]
+    .concat(cats.map(id => `<option value="${escapeHtml(id)}">${escapeHtml(categoryLabel(id))}</option>`)).join("");
+  if (!cats.includes(appState.activeFilterCategory)) appState.activeFilterCategory = "all";
+  el.value = appState.activeFilterCategory;
+  // One category only: the filter has nothing to choose, so hide it
+  el.hidden = appState.isAdmin !== true && cats.length <= 1;
+}
+
+/**
+ * Checklist markup for picking categories (users + case form). `name` groups the checkboxes;
+ * `selected` is an array of ids.
+ */
+const categoryChecklistHtml = (name, selected) => `
+  <div class="cat-checklist" role="group">
+    ${CategoryCore.CATEGORIES.map(c => `
+      <label class="cat-check">
+        <input type="checkbox" name="${escapeHtml(name)}" value="${c.id}" ${(selected || []).includes(c.id) ? "checked" : ""}>
+        <span class="material-symbols-outlined" aria-hidden="true">${c.icon}</span>
+        <span class="cat-check-label" data-cat-label="${c.id}">${escapeHtml(categoryLabel(c.id))}</span>
+        <span class="cat-check-roles">${escapeHtml(c.roles.map(r => (tr().roles || {})[r] || r).join(" · "))}</span>
+      </label>`).join("")}
+  </div>`;
+
+/** Mounts a checklist into a container element id. */
+function mountCategoryChecklist(containerId, name, selected) {
+  const box = document.getElementById(containerId);
+  if (box) box.innerHTML = categoryChecklistHtml(name, selected);
+}
+
+/** Checked ids of a checklist group. */
+const readCategoryChecklist = (name) =>
+  Array.from(document.querySelectorAll(`input[name="${name}"]:checked`)).map(b => b.value);
+
+/** Re-labels mounted checklists after a language switch (keeps the checked state). */
+function refreshCategoryChecklistLabels() {
+  document.querySelectorAll("[data-cat-label]").forEach(el => { el.textContent = categoryLabel(el.dataset.catLabel); });
 }
 
 // ---------------------------------------------------------------------------
@@ -6936,7 +7167,8 @@ function initFilterBar() {
     if (!el || el.dataset.bound) return;
     el.dataset.bound = "1";
     el.value = appState[key];
-    if (el.value !== appState[key]) { el.value = "all"; appState[key] = el.value; }
+    // Category options are built later from the session (renderCategoryFilterOptions validates that value)
+    if (el.value !== appState[key] && id !== "filterCategory") { el.value = "all"; appState[key] = el.value; }
     el.addEventListener("change", () => {
       appState[key] = el.value;
       sessionStorage.setItem(storageKey, el.value);
@@ -7065,7 +7297,10 @@ function cardHtml(uc, lang, t) {
       <h3 class="card-title">${escapeHtml(title)}</h3>
       <p class="card-summary">${escapeHtml(ucSummary(uc, lang))}</p>
       <div class="card-footer">
-        <span class="card-role">${escapeHtml(t.roles[uc.role] || uc.role || "")}</span>
+        <span class="card-creator${uc.creator ? "" : " is-default"}" title="${escapeHtml(creatorLabel(uc, t))}">
+          <span class="material-symbols-outlined" aria-hidden="true">${uc.creator ? "emoji_objects" : "verified"}</span>
+          <span class="card-creator-text">${escapeHtml(creatorLabel(uc, t))}</span>
+        </span>
         <div class="card-actions">${prefButtonsHtml(uc, t)}</div>
       </div>
     </article>`;
@@ -7443,6 +7678,12 @@ function openUseCaseModal(useCase) {
       <div class="uc-hero-main">
         ${heroHtml}
         <p class="uc-summary">${escapeHtml(summary)}</p>
+        <div class="uc-meta">
+          <span class="uc-creator${useCase.creator ? "" : " is-default"}" id="modalCreator">
+            <span class="material-symbols-outlined" aria-hidden="true">${useCase.creator ? "emoji_objects" : "verified"}</span>${escapeHtml(creatorLabel(useCase, t))}
+          </span>
+          <span class="uc-cats">${categoryChipsHtml(useCase.categories, lang)}</span>
+        </div>
       </div>
       ${varsPanelHtml}
     </div>
@@ -7597,7 +7838,7 @@ async function onTryIt(scopeId) {
 // Token auth: forgot password + ?verify= / ?reset= set-password flow
 // ---------------------------------------------------------------------------
 function showAuthCard(id) {
-  ["loginCard", "forgotCard", "setPasswordCard", "resetCard", "profileCard"].forEach(cid => {
+  ["loginCard", "forgotCard", "setPasswordCard", "resetCard"].forEach(cid => {
     const el = document.getElementById(cid);
     if (el) el.style.display = cid === id ? "block" : "none";
   });
@@ -7716,7 +7957,7 @@ function enterLearningPortalPreview() {
   document.getElementById("adminPortal").style.display = "none";
   document.getElementById("appLayout").style.display = "flex";
   appState.userRole = "Lecturer";
-  appState.institutionLevel = "University & College";
+  appState.userCategories = CategoryCore.CATEGORY_IDS.slice(); // admin preview: every category
   updateAccountMenus();
   updateSidebarContextUI();
   updateUILanguage();
@@ -7740,6 +7981,7 @@ function openUserEditModal(u) {
   const modal = document.getElementById("adminUserEditModal");
   document.getElementById("editUserEmail").value = u.email || "";
   document.getElementById("editUserGeLink").value = u.geAppLink || "";
+  mountCategoryChecklist("editUserCategories", "editUserCat", u.categories || []);
   ["editUserEmail", "editUserGeLink"].forEach(id => setFieldError(id, ""));
   document.getElementById("editUserFeedback").hidden = true;
   document.getElementById("editUserTempPw").hidden = true;
@@ -7776,7 +8018,7 @@ function bindUserEditModal() {
     const btn = document.getElementById("btnEditUserSave");
     btn.disabled = true;
     const { ok, data } = await apiJson("/api/admin/users", {
-      method: "PUT", body: { originalEmail: editingUser.email, email, geAppLink }
+      method: "PUT", body: { originalEmail: editingUser.email, email, geAppLink, categories: readCategoryChecklist("editUserCat") }
     });
     btn.disabled = false;
     if (ok) {

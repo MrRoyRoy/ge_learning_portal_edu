@@ -24,7 +24,9 @@ The **Gemini Enterprise - Edu Portal** is a playbook library for academic instit
 ## 🌟 Features
 
 ### Playbook library
-* Card grid of playbooks with dropdown filters for **Category**, **GE feature** (Agent Designer, Gemini Notebook, Deep Research, Canvas Mode, Image Generation, Video Generation), **Collection** (All / Liked) and **Sort** (popular, newest, A–Z). The headline reads "{n} playbooks for {role}".
+* **Categories decide what each user sees.** There are 7: Teaching (Lecturer, TA), Programme & Faculty Leadership (Program Leader, Dean), Student Affairs (SAO), Finance, Campus Security, IT Administration and Students (defined in `lib/categories.js`). Admins tick categories on each account and on each playbook. A user sees a playbook when they share at least one category; with no categories they see an "ask your admin" empty state. There is no profile wizard or "Switch profile".
+* Card grid of playbooks with dropdown filters for **Category** (the user's own categories; hidden if they have only one) (Agent Designer, Gemini Notebook, Deep Research, Canvas Mode, Image Generation, Video Generation), **Collection** (All / Liked) and **Sort** (popular, newest, A–Z). The headline reads "{n} playbooks for you" or "{n} playbooks · {category}".
+* Each card and modal shows the **idea provider** ("Idea by …"), or "Default playbook" when there is none.
 * Every card shows a **like** button (heart), a read-only **view** counter (eye), colour-toned GE feature icons and red connector icons.
 * **Feature colour tones** (`tone-*` classes in `style.css`) are the same on cards, modal chips, playbook-type chips and the GE feature filter (the filter takes the selected feature's tone): Gemini Notebook / Deep Research green, Canvas Mode / Video Generation blue, Agent Designer yellow, Image Generation purple. Each tone has a light-theme variant for contrast.
 
@@ -62,9 +64,9 @@ A pixel-art banner above the library (canvas renderer in `app.js`; sprites from 
 | `notebooklm`, `deep_research`, `agent_designer` | **Copy prompt** only (these features can't be prefilled from a URL) |
 
 ### Admin console
-* **Users:** bulk-provision users with temporary passwords. **Edit user** changes a user's email (cascades to preferences, analytics and feedback) and their Gemini Enterprise app link, and can reset access.
+* **Users:** bulk-provision users with temporary passwords and a **Categories** checklist. **Edit user** changes a user's email (cascades to preferences, analytics and feedback) and their Gemini Enterprise app link, edits their categories, and can reset access.
 * **Admins** (super admin only): invite by email (`super` or `assist`), resend or remove invites.
-* **Analytics:** total views, likes and tries; a 6-month line chart; a playbook leaderboard.
+* **Analytics:** total views, likes and tries; a 6-month line chart; an **Idea providers** dashboard (Overall / last month / 3 months / 6 months) with the top providers by playbooks, by views and by likes, plus the top community playbooks (default playbooks excluded); a most-liked playbook list.
 * **Use cases:** create, edit, delete, import and export (JSON). Includes Gemini-assisted drafting with a diff viewer, plus infographic **Generate / Regenerate / Generate missing**.
   * The form also sets **Quest timing**: any of the 6 term/phase chips, or "Anytime".
   * It also holds up to 3 **Quest questions** per playbook (en / zh-TW / zh-CN).
@@ -76,7 +78,9 @@ A pixel-art banner above the library (canvas renderer in `app.js`; sprites from 
   * The form shows character counters, a live scroll preview and per-field validation.
   * **Translate with Gemini** fills in the zh fields. It needs Vertex AI credentials and returns 502 without them.
   * The table shows each item's status (Scheduled / Live / Ended / Off), its reach (distinct viewers) and its clicks.
-* **Feedback:** review and dismiss submissions from the floating Feedback button. The button only appears in the user portal.
+* **Feedback:** review and dismiss submissions from the floating Feedback button (the modal invites use case ideas too). The button only appears in the user portal.
+  * **Convert to playbook** (super admin): checks for similar playbooks (Gemini ranking, keyword fallback in `lib/similarity.js`) and recommends improving the best match (score ≥ 60) or creating a new one. Either path opens the case form with the feedback as the Gemini instruction; a new playbook credits the feedback author as idea provider. Saving marks the feedback **Converted**.
+* The case form has **Categories** (at least one) and an editable **Idea provider** (empty = default playbook).
 * **Settings → Email** (super admin only): SMTP presets (Gmail, Outlook.com, Microsoft 365, Custom) with a test send.
 * **Settings → Calendar** (super admin only): edit the start and end dates of the four terms.
   * Changing a start date moves the previous term's end date to the day before, and changing an end date moves the next term's start date to the day after.
@@ -131,11 +135,11 @@ These tables are created by `initializeSchemas()` in `server.js` (and `sessions`
 
 | Table | Columns |
 | :--- | :--- |
-| `users` | `email` PK, `password_hash` NOT NULL, `is_temp_password` BOOLEAN default TRUE (forces a reset on first login), `role`, `institution_level`, `created_at`, `ge_app_link` VARCHAR(1024) (Gemini Enterprise app URL for Try it) |
-| `use_cases` | `id` PK, `category`, `title`, `summary`, `features` (JSON), `connectors` (JSON), `role`, `level` (JSON), `steps` (JSON), `prompt`, `pro_tip`, `connector_guide`, `translations` (JSON), `is_verified` BOOLEAN (deprecated, unused), `created_at`, `updated_at`, `infographic_url` VARCHAR(1024), `prompt_type` VARCHAR(50) default `'general'`, `timing` (JSON array of phases `sem_start`, `teaching`, `midterm`, `finals`, `winter`, `summer`, or `["anytime"]`; NULL = anytime), `helper_prompts` TEXT (JSON `{ "en": [{type,title,prompt}], "zh-TW": [...], "zh-CN": [...] }`; NULL = use the static list in `app.js`, `{}` = none) |
+| `users` | `email` PK, `password_hash` NOT NULL, `is_temp_password` BOOLEAN default TRUE (forces a reset on first login), `role`, `institution_level` (both legacy), `created_at`, `ge_app_link` VARCHAR(1024) (Gemini Enterprise app URL for Try it), `categories` TEXT (JSON array of category ids) |
+| `use_cases` | `id` PK, `categories` TEXT (JSON array of category ids; drives visibility), `creator` (idea provider email / name; NULL = default playbook), `source_feedback_id` (feedback it was converted from), `category` (legacy), `title`, `summary`, `features` (JSON), `connectors` (JSON), `role`, `level` (JSON), `steps` (JSON), `prompt`, `pro_tip`, `connector_guide`, `translations` (JSON), `is_verified` BOOLEAN (deprecated, unused), `created_at`, `updated_at`, `infographic_url` VARCHAR(1024), `prompt_type` VARCHAR(50) default `'general'`, `timing` (JSON array of phases `sem_start`, `teaching`, `midterm`, `finals`, `winter`, `summer`, or `["anytime"]`; NULL = anytime), `helper_prompts` TEXT (JSON `{ "en": [{type,title,prompt}], "zh-TW": [...], "zh-CN": [...] }`; NULL = use the static list in `app.js`, `{}` = none) |
 | `user_preferences` | (`user_email` FK→users, `use_case_id` FK→use_cases) composite PK, `is_liked` BOOLEAN, `is_deployed` BOOLEAN (legacy, unused). Both FKs `ON DELETE CASCADE`. |
 | `analytics` | `id` SERIAL PK, `timestamp`, `action` (`view` \| `like` \| `try` \| `quest_view` \| `quest_click` \| `news_view` \| `news_click`; old rows may hold `deploy`), `use_case_id` (for quest/news events: `hint:<id>` / `news:<id>`), `user_email` |
-| `feedbacks` | `id` SERIAL PK, `user_email` NOT NULL, `feedback_text` NOT NULL, `created_at` |
+| `feedbacks` | `id` SERIAL PK, `user_email` NOT NULL, `feedback_text` NOT NULL, `created_at`, `converted_use_case_id`, `converted_at` |
 | `admins` | `email` PK, `password_hash` (NULL until verified), `role` CHECK IN (`super`, `assist`), `is_verified` INTEGER, `invited_by`, `created_at` |
 | `auth_tokens` | `token_hash` PK (SHA-256 of the emailed token), `email`, `purpose` (`verify` \| `reset`), `expires_at` (48 h verify / 1 h reset), `used_at` (single use) |
 | `quest_hints` | `id` SERIAL PK, `use_case_id` NOT NULL, `question_en` NOT NULL, `question_zh_tw`, `question_zh_cn`, `audience` (JSON roles; `[]` = everyone), `timing` (JSON; overrides the playbook's timing), `active`, `created_at`. 22 starter questions are seeded on first boot. |
@@ -272,20 +276,22 @@ All endpoints return JSON and use the session cookie. "User" means a signed-in s
 | Method & path | Access | Purpose |
 | :--- | :--- | :--- |
 | `POST /api/auth/login` | Public | Sign in (user email or admin username) |
-| `POST /api/auth/reset-password` | User | Replace a temporary password; save role / level |
-| `GET /api/auth/session` | Public | Current session, role and profile |
+| `POST /api/auth/reset-password` | User | Replace a temporary password |
+| `GET /api/auth/session` | Public | Current session, role and categories |
 | `POST /api/auth/forgot-password` | Public | Email a reset link (verified DB admins) |
 | `POST /api/auth/complete-token` | Public | Finish `?verify=` / `?reset=` and set a password |
 | `POST /api/auth/logout` | Any | End the session |
-| `GET /api/use-cases` | Signed in | Playbooks with `likeCount`, `viewCount`, the user's like state, `infographicUrl`, `promptType` |
+| `GET /api/use-cases` | Signed in | Playbooks visible to the user's categories (admins: all) with `categories`, `creator`, `likeCount`, `viewCount`, the user's like state, `infographicUrl`, `promptType` |
 | `POST /api/use-cases/like` | User | Toggle a like |
 | `POST /api/use-cases/view` | Signed in | Record a view; returns the new `viewCount` |
 | `POST /api/use-cases/try` | Signed in | Log a Try it launch |
 | `POST /api/feedbacks` | User | Submit feedback |
-| `GET /api/feedbacks` · `POST /api/feedbacks/delete` | Admin · Super | List · dismiss feedback |
+| `GET /api/feedbacks` · `POST /api/feedbacks/delete` | Admin · Super | List (with conversion status) · dismiss feedback |
+| `POST /api/admin/feedbacks/:id/similar` · `POST /api/admin/feedbacks/:id/convert` | Super | Rank similar playbooks + recommend enhance / new · link feedback to a playbook |
 | `GET/POST/PUT/DELETE /api/admin/users` · `POST/PUT /api/admin/users/reset` | Admin (writes: Super) | List, provision, edit, delete, reset users |
 | `GET/POST/DELETE /api/admin/admins` · `POST /api/admin/admins/resend` | Super | Manage invited admins |
 | `GET /api/admin/stats` | Admin | Totals and 6-month history (views / likes / tries) |
+| `GET /api/admin/stats/creators?range=all\|1m\|3m\|6m` | Admin | Idea provider summary and leaderboards (playbooks, views, likes) |
 | `POST/PUT/DELETE /api/admin/use-cases` · `GET /api/admin/use-cases/export` | Super · Admin | Edit · export playbooks |
 | `POST /api/admin/use-cases/:id/infographic` · `POST /api/admin/infographics/generate-missing` | Super | Generate infographics |
 | `GET/PUT /api/admin/settings/smtp` · `POST /api/admin/settings/smtp/test` | Super | SMTP settings and test send |

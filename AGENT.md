@@ -100,11 +100,8 @@ graph TD
   B -->|Is Admin| D[Display Administration Portal]
   B -->|Is Standard User| E{isTemp Password?}
   E -->|True| F[Enforce Temp Reset Card]
-  F -->|Reset Success| G[Display Profile Configuration Wizard]
-  E -->|False| H{Has Context Profile?}
-  H -->|No| G
-  G -->|Submit Config| I[Load Server-Side Playbooks & Active Main App]
-  H -->|Yes| I
+  F -->|Reset Success| I[Load playbooks matching the account's categories]
+  E -->|False| I
   I --> J[Sync Likes & Record Views on Card / Modal Interaction]
 ```
 
@@ -134,6 +131,20 @@ graph TD
 
 ############# 7. App State & Progress
  
+##### Accomplished Tasks (Latest Session Milestone — 2026-10-20, categories on accounts + playbooks, idea providers, feedback → playbook conversion, creator dashboard; local only, NOT yet committed or deployed; Playwright `test_v7.js` 33/33 (brain `873aae1c…/scratch`), `test_admin_helpers` 11/11, `test_workflows` 34/34 when the test user has every category)
+* **Categories replace role / level / profile wizard.** `lib/categories.js` (UMD → `window.CategoryCore`) defines 7 categories: `teaching` (Lecturer, TA), `leadership` (Program Leader, Dean), `student_affairs` (SAO), `finance`, `security`, `it_admin`, `students`. It also has `normalizeCategories` (legacy category / role / CSV / JSON) and `isVisibleTo`. The Institution / School Level wizard, the "Switch profile" button and the case form Role / Category / School level fields are gone. The DB `role` / `level` / `category` columns stay as NOT NULL legacy values that the server derives.
+* **Visibility:** `users.categories` / `use_cases.categories` (JSON). A user sees a playbook when they share at least one category; the server filters `GET /api/use-cases` and `/api/quest` for standard users. A user with no categories sees an empty state ("ask your admin"). Admins and the admin preview see everything. `applyCategoryMigration()` backfills NULLs on boot: playbooks from `SEED_CATEGORIES` or their legacy role + quest hint audiences; users from their saved profile role (`categoryForRole`), or `[]` if they never set one.
+* **Admin users:** a category checklist in Add users (applied to every email) and in the Edit user modal; the users table has a Categories column.
+* **Granular filter:** `#filterCategory` is built from the user's own categories ("All my categories" + each). It's hidden when the user has only one; admins get all 7.
+* **Idea provider:** `use_cases.creator`. Cards / modal show "Idea by …" or "Default playbook". It can be edited in the case form (`#formCaseCreator`), and renaming a user's email re-points `creator`.
+* **Feedback → playbook:** a "Convert to playbook" button (hidden for assistant admins; endpoints 403 for them). `POST /api/admin/feedbacks/:id/similar` → Gemini ranks every playbook (25 s timeout), falling back to keyword cosine (`lib/similarity.js`). It recommends `enhance` at a score ≥ 60, else `new`. Enhance opens the existing playbook with the feedback as the Gemini instruction (diff review); Create new opens a blank form with creator = feedback author and auto-drafts. Saving sends `sourceFeedbackId` → `feedbacks.converted_use_case_id / converted_at` and `use_cases.source_feedback_id`. The feedback table has a Status column ("Converted: title").
+* **Creator dashboard (Analytics):** `GET /api/admin/stats/creators?range=all|1m|3m|6m` returns the summary (community / default playbooks, creators, converted feedback), plus the providers, views and likes leaderboards (likes = like − unlike events in the window) and top community playbooks. Default playbooks are excluded. The Most liked list now shows category chips + idea provider.
+* **Feedback wording:** "Share feedback or a use case idea" with copy saying good ideas become credited playbooks (en / zh-TW / zh-CN, `uiTranslationsV7`).
+* **Gemini:** draft schema uses `categories`. `callGeminiJson` now sends `generationConfig.responseMimeType: application/json` and joins all text parts. This fixed intermittent "Failed to parse Gemini response as JSON" on long multilingual drafts.
+* **Removed:** `normalizeCaseCategory`, `handleWizardRoleChange`, `setupProfileOnboardingHandlers`, `profileCard`, `btnChangeContext`.
+* **Known scope choice:** Quest hint audiences still use the role chips (matched against the roles of the user's categories).
+* **Next:** commit (`server.js`, `app.js`, `index.html`, `style.css`, `lib/categories.js`, `lib/similarity.js`, `lib/draft-normalize.js`, `AGENT.md`, `README.md`) and deploy to dev, then prod. On first boot the prod DB backfills categories (playbooks from role / hints, users from their saved profile role). **Users who never completed the old profile wizard get no categories**; review Admin → Users and tick categories for them, or they'll see the empty state. Then re-run `test_v7.js` against dev / prod and review the categories of the prod-only playbooks.
+
 ##### Accomplished Tasks (Latest Session Milestone — 2026-10-19, no `{{VARIABLES}}` in step instructions; data fix + code guard live on dev + prod, commit `664dca8` on `main`; dev rev `your-dev-service-00018-fhf`, prod rev `your-service-00042-zcz`; `test_step_vars` 20/20, `test_admin_helpers` 11/11, `test_canvas_helpers` 15/15, `test_workflows` 34/34, `test_logic_fix` 27/27, `test_notebook_rename` 15/15, `verify_logic_api` ALL OK on local, dev and prod; `scan_step_vars.js` 0 on seeds, dev and prod)
 * **Problem:** steps are not substituted (only prompts are), so `{{VAR}}` tokens in steps showed raw.
 * **Data fix (live):** data-only PUT on dev + prod (brain scratch `fix_step_vars.js`, backups `step_vars_backup_{dev,prod}.json`) to 4 DB-only playbooks × 3 languages: academic-ops-assistant-agent-designer (step 1, `{{DEPARTMENT_NAME}}` → "your department" / 你的科系 / 你的院系), automated-assessment-rubric-generation-agent (step 2), multi-source-pedagogical-research-synthesis (steps 1–2), program_ops_curriculum_review (step 1). `scan_step_vars.js` → 0 on seeds, dev and prod.

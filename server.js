@@ -16,6 +16,8 @@ const mailer = require('./lib/mailer');
 const { encrypt } = require('./lib/secrets');
 const infographics = require('./lib/infographics');
 const QuestCore = require('./lib/quest-core');
+const CategoryCore = require('./lib/categories');
+const { rankBySimilarity } = require('./lib/similarity');
 const { normalizeDraft, plainStepsForCase } = require('./lib/draft-normalize');
 const { validateHelperPrompts, parseHelperPrompts } = require('./lib/helper-prompts');
 
@@ -231,7 +233,17 @@ async function initializeSchemas() {
     // Quest Run: JSON array of academic phases when this playbook is most relevant (see lib/quest-core.js TIMINGS)
     { table: 'use_cases', column: 'timing', pg: `TEXT DEFAULT '["anytime"]'`, sqlite: `TEXT DEFAULT '["anytime"]'` },
     // Set up helper prompts: JSON { en: [{type,title,prompt}], 'zh-TW': [...], 'zh-CN': [...] }; NULL = never set
-    { table: 'use_cases', column: 'helper_prompts', pg: 'TEXT', sqlite: 'TEXT' }
+    { table: 'use_cases', column: 'helper_prompts', pg: 'TEXT', sqlite: 'TEXT' },
+    // Audience categories (lib/categories.js ids), JSON array. users.categories decides which playbooks a user sees:
+    // a playbook is visible when the two arrays intersect. NULL = not migrated yet (see applyCategoryMigration).
+    { table: 'use_cases', column: 'categories', pg: 'TEXT', sqlite: 'TEXT' },
+    { table: 'users', column: 'categories', pg: 'TEXT', sqlite: 'TEXT' },
+    // Idea provider shown on the playbook ("Idea by …"); NULL = default playbook. Free text, usually an email.
+    { table: 'use_cases', column: 'creator', pg: 'VARCHAR(255)', sqlite: 'TEXT' },
+    // Feedback -> playbook conversion link (both directions)
+    { table: 'use_cases', column: 'source_feedback_id', pg: 'INTEGER', sqlite: 'INTEGER' },
+    { table: 'feedbacks', column: 'converted_use_case_id', pg: 'VARCHAR(100)', sqlite: 'TEXT' },
+    { table: 'feedbacks', column: 'converted_at', pg: 'TIMESTAMP', sqlite: 'DATETIME' }
   ];
   for (const m of columnMigrations) {
     try {
@@ -438,6 +450,7 @@ async function seedDatabase() {
     await applySeedInfographics();
     await applySeedTiming();
     await applySeedQuestHints();
+    await applyCategoryMigration();
     console.log('✅ Use cases database synchronized successfully.');
 
     // Clean up any previously pre-seeded mock analytics data to reflect actual adoption metrics
@@ -451,8 +464,8 @@ async function seedDatabase() {
       const salt = await bcrypt.genSalt(10);
       const hash = await bcrypt.hash('***REMOVED***', salt);
       await query(
-        'INSERT INTO users (email, password_hash, is_temp_password, role, institution_level) VALUES (?, ?, ?, ?, ?)',
-        ['demo-user@example.com', hash, dbType === 'postgres' ? false : 0, 'Lecturer', 'University & College']
+        'INSERT INTO users (email, password_hash, is_temp_password, role, institution_level, categories) VALUES (?, ?, ?, ?, ?, ?)',
+        ['demo-user@example.com', hash, dbType === 'postgres' ? false : 0, 'Lecturer', 'University & College', JSON.stringify(['teaching'])]
       );
     }
 
@@ -706,6 +719,71 @@ async function applySeedQuestHints() {
 }
 
 /*
+ * Audience categories for the seeded playbooks (ids from lib/categories.js). Written only while a row's
+ * categories column is NULL, so admin edits always win and the boot-time seed upsert never resets them.
+ */
+const SEED_CATEGORIES = Object.freeze({
+  socratic_tutor: ['teaching', 'students'],
+  rubric_grading: ['teaching'],
+  curriculum_design: ['teaching', 'leadership'],
+  lab_manual_creator: ['teaching'],
+  su_advocacy: ['students', 'leadership'],
+  club_funding: ['students', 'finance', 'student_affairs'],
+  su_helpdesk: ['students', 'student_affairs'],
+  visual_campaign: ['students', 'student_affairs'],
+  at_risk_cohort: ['leadership', 'teaching'],
+  accreditation_reports: ['leadership'],
+  workforce_federation: ['it_admin'],
+  sao_scavenger_hunt: ['student_affairs', 'students'],
+  finance_compliance: ['finance'],
+  security_simulator: ['security'],
+  special_consideration_workflow: ['student_affairs'],
+  scholarship_application_workflow: ['students']
+});
+
+/**
+ * Pure: best-guess categories for a playbook that predates categories.
+ * Union of (a) its legacy `role`, (b) every role named in its Quest hint audiences, then
+ * (c) the legacy single `category` value as a last resort. Falls back to ['teaching'] so no
+ * playbook silently disappears for everyone.
+ */
+const deriveCaseCategories = (row, hintAudiences) => {
+  const roles = [row.role].concat(...hintAudiences.map(a => parseJsonArray(a)));
+  const fromRoles = CategoryCore.normalizeCategories(roles.filter(Boolean));
+  if (fromRoles.length) return fromRoles;
+  const fromLegacy = CategoryCore.normalizeCategories([row.category]);
+  return fromLegacy.length ? fromLegacy : ['teaching'];
+};
+
+/** Lenient JSON-array parse used for TEXT columns holding arrays. */
+function parseJsonArray(text) {
+  if (Array.isArray(text)) return text;
+  try { const v = JSON.parse(text || '[]'); return Array.isArray(v) ? v : []; } catch (_) { return []; }
+}
+
+/**
+ * Idempotent backfill run on every boot (cheap: only touches rows whose categories is NULL):
+ *   - use cases: SEED_CATEGORIES for seeds, deriveCaseCategories() for DB-only playbooks;
+ *   - users: their legacy profile role mapped to a category (e.g. Lecturer -> teaching), or [] if none.
+ */
+async function applyCategoryMigration() {
+  const cases = await query('SELECT id, role, category FROM use_cases WHERE categories IS NULL');
+  for (const row of cases) {
+    const hints = await query('SELECT audience FROM quest_hints WHERE use_case_id = ?', [row.id]);
+    const cats = SEED_CATEGORIES[row.id] || deriveCaseCategories(row, hints.map(h => h.audience));
+    await query('UPDATE use_cases SET categories = ? WHERE id = ?', [JSON.stringify(cats), row.id]);
+  }
+  const users = await query('SELECT email, role FROM users WHERE categories IS NULL');
+  for (const u of users) {
+    const cat = CategoryCore.categoryForRole(u.role);
+    await query('UPDATE users SET categories = ? WHERE email = ?', [JSON.stringify(cat ? [cat] : []), u.email]);
+  }
+  if (cases.length || users.length) {
+    console.log(`🔄 Category migration: ${cases.length} playbook(s), ${users.length} user(s) backfilled.`);
+  }
+}
+
+/*
  * Infographics already generated with gemini-nano-banana-2.1 (v2: Archimedes mascot, cel-shaded editorial)
  * and stored in the public bucket. On boot every instance (local SQLite, dev/prod Postgres) picks these up,
  * so a fresh deploy shows images immediately without spending Vertex calls. See applySeedInfographics()
@@ -930,7 +1008,7 @@ app.post('/api/auth/login', async (req, res) => {
 
     const isTemp = user.is_temp_password === 1 || user.is_temp_password === true;
 
-    // Save session credentials
+    // Save session credentials (categories decide which playbooks the user sees; role/level are legacy)
     req.session.user = {
       email: user.email,
       isAdmin: false,
@@ -939,6 +1017,7 @@ app.post('/api/auth/login', async (req, res) => {
       isTemp: isTemp,
       role: user.role,
       institutionLevel: user.institution_level,
+      categories: CategoryCore.normalizeCategories(user.categories),
       geAppLink: user.ge_app_link || null
     };
 
@@ -951,6 +1030,7 @@ app.post('/api/auth/login', async (req, res) => {
       email: user.email,
       role: user.role,
       institutionLevel: user.institution_level,
+      categories: req.session.user.categories,
       geAppLink: user.ge_app_link || null
     });
 
@@ -960,50 +1040,38 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-// Force Password Reset or Profile Setup for Accounts
+// Forced password reset for accounts on a temporary password. The legacy role / institution-level profile
+// step is gone (admins assign categories instead), so role / level are left untouched here.
 app.post('/api/auth/reset-password', async (req, res) => {
   if (!req.session.user) {
     return res.status(401).json({ success: false, message: 'Unauthorized session.' });
   }
 
-  const { newPassword, role, institutionLevel } = req.body;
+  const { newPassword } = req.body;
 
   try {
     const email = req.session.user.email;
 
-    if (newPassword && newPassword.trim().length > 0) {
-      if (newPassword.length < 6) {
-        return res.status(400).json({ success: false, message: 'Password must be at least 6 characters long.' });
-      }
-      const salt = await bcrypt.genSalt(10);
-      const hash = await bcrypt.hash(newPassword, salt);
-
-      await query(
-        'UPDATE users SET password_hash = ?, is_temp_password = false, role = ?, institution_level = ? WHERE email = ?',
-        [hash, role || null, institutionLevel || null, email]
-      );
-      req.session.user.isTemp = false;
-    } else {
-      // Profile context update only (no password change)
-      await query(
-        'UPDATE users SET role = ?, institution_level = ? WHERE email = ?',
-        [role || null, institutionLevel || null, email]
-      );
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({ success: false, message: 'Password must be at least 6 characters long.' });
     }
+    const salt = await bcrypt.genSalt(10);
+    const hash = await bcrypt.hash(newPassword, salt);
+    await query(
+      `UPDATE users SET password_hash = ?, is_temp_password = ${dbType === 'postgres' ? 'false' : '0'} WHERE email = ?`,
+      [hash, email]
+    );
+    req.session.user.isTemp = false;
 
-    // Update active session metadata
-    req.session.user.role = role || null;
-    req.session.user.institutionLevel = institutionLevel || null;
-
-    res.json({ success: true, role: role, institutionLevel: institutionLevel });
+    res.json({ success: true });
   } catch (error) {
-    console.error('Password reset / profile setup error:', error);
-    res.status(500).json({ success: false, message: 'Server database error during password reset / profile setup.' });
+    console.error('Password reset error:', error);
+    res.status(500).json({ success: false, message: 'Server database error during password reset.' });
   }
 });
 
 // Get session state
-// Re-reads ge_app_link (standard users) and role/existence (DB admins) so admin edits apply without re-login.
+// Re-reads ge_app_link + categories (standard users) and role/existence (DB admins) so admin edits apply without re-login.
 app.get('/api/auth/session', async (req, res) => {
   const sessionUser = req.session.user;
   if (!sessionUser) {
@@ -1021,8 +1089,12 @@ app.get('/api/auth/session', async (req, res) => {
     } else if (sessionUser.isAdmin) {
       req.session.user = { ...sessionUser, isSuper: isSuperSession(sessionUser), isAssist: !isSuperSession(sessionUser) };
     } else {
-      const rows = await query('SELECT ge_app_link FROM users WHERE email = ?', [sessionUser.email]);
-      req.session.user = { ...sessionUser, isSuper: false, isAssist: false, geAppLink: rows.length ? (rows[0].ge_app_link || null) : null };
+      const rows = await query('SELECT ge_app_link, categories FROM users WHERE email = ?', [sessionUser.email]);
+      req.session.user = {
+        ...sessionUser, isSuper: false, isAssist: false,
+        geAppLink: rows.length ? (rows[0].ge_app_link || null) : null,
+        categories: rows.length ? CategoryCore.normalizeCategories(rows[0].categories) : []
+      };
     }
   } catch (error) {
     console.error('Session refresh error:', error);
@@ -1136,6 +1208,13 @@ app.post('/api/auth/logout', (req, res) => {
 // ==========================================
 
 // Get All Use Cases with individual User Preferences joined dynamically
+
+/** Current categories of a standard user account ([] when unknown). */
+async function userCategories(email) {
+  const rows = await query('SELECT categories FROM users WHERE email = ?', [email]);
+  return rows.length ? CategoryCore.normalizeCategories(rows[0].categories) : [];
+}
+
 app.get('/api/use-cases', async (req, res) => {
   try {
     const useCases = await query('SELECT * FROM use_cases ORDER BY id ASC');
@@ -1171,6 +1250,9 @@ app.get('/api/use-cases', async (req, res) => {
         promptType: PROMPT_TYPES.includes(uc.prompt_type) ? uc.prompt_type : 'general',
         timing: parseTiming(uc.timing),
         helperPrompts: parseHelperPrompts(uc.helper_prompts),
+        categories: CategoryCore.normalizeCategories(uc.categories),
+        creator: uc.creator || null, // null => "Default playbook"
+        sourceFeedbackId: uc.source_feedback_id || null,
         isLiked: false,
         likeCount: likesMap[uc.id] || 0,
         totalLikes: likesMap[uc.id] || 0, // legacy alias of likeCount
@@ -1180,12 +1262,16 @@ app.get('/api/use-cases', async (req, res) => {
       };
     });
 
-    // If an authorized standard user is logged in, fetch their specific preferences
+    // Standard users only receive the playbooks whose categories intersect their own (read fresh from the DB
+    // so an admin's change applies on the next fetch). No categories assigned => an empty list.
     if (req.session.user && !req.session.user.isAdmin) {
       const email = req.session.user.email;
+      const userCats = await userCategories(email);
+      const visible = formattedUseCases.filter(uc => CategoryCore.isVisibleTo(uc.categories, userCats));
       const prefs = await query('SELECT use_case_id, is_liked FROM user_preferences WHERE user_email = ?', [email]);
       const likedIds = new Set(prefs.filter(p => p.is_liked === 1 || p.is_liked === true).map(p => p.use_case_id));
-      formattedUseCases.forEach(uc => { uc.isLiked = likedIds.has(uc.id); });
+      visible.forEach(uc => { uc.isLiked = likedIds.has(uc.id); });
+      return res.json(visible);
     }
 
     // Admins edit Quest Run hints inside the case form, so they get the full set per use case
@@ -1326,6 +1412,12 @@ app.get('/api/feedbacks', async (req, res) => {
       return res.status(403).json({ error: 'Unauthorized access. Administrator role required.' });
     }
     const feedbacks = await query('SELECT * FROM feedbacks ORDER BY created_at DESC');
+    // Attach the title of the playbook each converted feedback became (or enhanced)
+    const convertedIds = [...new Set(feedbacks.map(f => f.converted_use_case_id).filter(Boolean))];
+    const titles = convertedIds.length
+      ? Object.fromEntries((await query(`SELECT id, title FROM use_cases WHERE id IN (${convertedIds.map(() => '?').join(',')})`, convertedIds)).map(r => [r.id, r.title]))
+      : {};
+    feedbacks.forEach(f => { f.converted_use_case_title = f.converted_use_case_id ? (titles[f.converted_use_case_id] || null) : null; });
     res.json({ success: true, feedbacks });
   } catch (err) {
     console.error('List feedbacks error:', err);
@@ -1380,18 +1472,24 @@ app.get('/api/admin/users', requireAdmin, async (req, res) => {
   }
 
   try {
-    const users = await query('SELECT email, is_temp_password, ge_app_link, created_at FROM users ORDER BY created_at DESC');
-    const formattedUsers = users.map(u => ({
-      email: u.email,
-      isTemp: u.is_temp_password === 1 || u.is_temp_password === true,
-      geAppLink: u.ge_app_link || null,
-      createdAt: u.created_at
-    }));
+    const users = await query('SELECT email, is_temp_password, ge_app_link, categories, created_at FROM users ORDER BY created_at DESC');
+    const formattedUsers = users.map(formatUserRow);
     res.json(formattedUsers);
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
 });
+
+/** DB row -> admin API user shape. */
+function formatUserRow(u) {
+  return {
+    email: u.email,
+    isTemp: u.is_temp_password === 1 || u.is_temp_password === true,
+    geAppLink: u.ge_app_link || null,
+    categories: CategoryCore.normalizeCategories(u.categories),
+    createdAt: u.created_at
+  };
+}
 
 // User CRUD: Add / Provision User
 app.post('/api/admin/users', requireAdmin, async (req, res) => {
@@ -1400,6 +1498,8 @@ app.post('/api/admin/users', requireAdmin, async (req, res) => {
   }
 
   const { email } = req.body;
+  // Categories picked in the Add-users form apply to every email in this request ([] = sees no playbooks yet)
+  const categoriesJson = JSON.stringify(CategoryCore.normalizeCategories(req.body.categories));
   if (!email) {
     return res.status(400).json({ success: false, message: 'Please provide at least one valid email address.' });
   }
@@ -1439,8 +1539,8 @@ app.post('/api/admin/users', requireAdmin, async (req, res) => {
           }
 
           await query(
-            'INSERT INTO users (email, password_hash, is_temp_password) VALUES (?, ?, ?)',
-            [singleEmail, passwordHash, tempFlag]
+            'INSERT INTO users (email, password_hash, is_temp_password, categories) VALUES (?, ?, ?, ?)',
+            [singleEmail, passwordHash, tempFlag, categoriesJson]
           );
           results.success.push(singleEmail);
         } catch (err) {
@@ -1472,8 +1572,8 @@ app.post('/api/admin/users', requireAdmin, async (req, res) => {
 
       const passwordHash = await bcrypt.hash(tempPassword, salt);
       await query(
-        'INSERT INTO users (email, password_hash, is_temp_password) VALUES (?, ?, ?)',
-        [singleEmail, passwordHash, dbType === 'postgres' ? true : 1]
+        'INSERT INTO users (email, password_hash, is_temp_password, categories) VALUES (?, ?, ?, ?)',
+        [singleEmail, passwordHash, dbType === 'postgres' ? true : 1, categoriesJson]
       );
 
       res.json({ success: true, multiple: false, email: singleEmail, tempPassword: tempPassword });
@@ -1539,7 +1639,7 @@ app.put('/api/admin/users/reset', requireAdmin, resetUserPasswordHandler);
 app.post('/api/admin/users/reset', requireAdmin, resetUserPasswordHandler);
 
 /*
- * User CRUD: Edit user { originalEmail, email, geAppLink } (super only).
+ * User CRUD: Edit user { originalEmail, email, geAppLink, categories? } (super only).
  * An email change is done as copy -> re-point -> delete inside one transaction, because users.email is the PK and
  * user_preferences references it (SQLite never cascades updates; Postgres would reject updating a referenced key).
  * analytics + feedbacks carry the email as plain text, so they are re-pointed too.
@@ -1571,29 +1671,27 @@ app.put('/api/admin/users', requireSuper, async (req, res) => {
 
       await db.withTransaction(async (tx) => {
         await tx(`
-          INSERT INTO users (email, password_hash, is_temp_password, role, institution_level, created_at, ge_app_link)
-          SELECT ?, password_hash, is_temp_password, role, institution_level, created_at, ? FROM users WHERE email = ?
+          INSERT INTO users (email, password_hash, is_temp_password, role, institution_level, created_at, ge_app_link, categories)
+          SELECT ?, password_hash, is_temp_password, role, institution_level, created_at, ?, categories FROM users WHERE email = ?
         `, [newEmail, link.value, originalEmail]);
         await tx('UPDATE user_preferences SET user_email = ? WHERE user_email = ?', [newEmail, originalEmail]);
         await tx('UPDATE analytics SET user_email = ? WHERE user_email = ?', [newEmail, originalEmail]);
         await tx('UPDATE feedbacks SET user_email = ? WHERE user_email = ?', [newEmail, originalEmail]);
+        // Playbooks credited to this account follow the rename
+        await tx('UPDATE use_cases SET creator = ? WHERE creator = ?', [newEmail, originalEmail]);
         await tx('DELETE FROM users WHERE email = ?', [originalEmail]);
       });
     } else {
       await query('UPDATE users SET ge_app_link = ? WHERE email = ?', [link.value, originalEmail]);
     }
+    // categories is optional on this endpoint: omitted = unchanged, [] = clear (user then sees no playbooks)
+    if (req.body && req.body.categories !== undefined) {
+      await query('UPDATE users SET categories = ? WHERE email = ?',
+        [JSON.stringify(CategoryCore.normalizeCategories(req.body.categories)), newEmail]);
+    }
 
-    const rows = await query('SELECT email, is_temp_password, ge_app_link, created_at FROM users WHERE email = ?', [newEmail]);
-    const u = rows[0];
-    res.json({
-      success: true,
-      user: {
-        email: u.email,
-        isTemp: u.is_temp_password === 1 || u.is_temp_password === true,
-        geAppLink: u.ge_app_link || null,
-        createdAt: u.created_at
-      }
-    });
+    const rows = await query('SELECT email, is_temp_password, ge_app_link, categories, created_at FROM users WHERE email = ?', [newEmail]);
+    res.json({ success: true, user: formatUserRow(rows[0]) });
   } catch (error) {
     console.error('Edit user error:', error);
     res.status(500).json({ success: false, message: 'Failed to update user.' });
@@ -1746,7 +1844,8 @@ app.get('/api/admin/stats', requireAdmin, async (req, res) => {
         uc.id, 
         uc.title, 
         uc.category, 
-        uc.role,
+        uc.categories,
+        uc.creator,
         COALESCE(likes_tbl.cnt, 0) as likes_count
       FROM use_cases uc
       LEFT JOIN (
@@ -1766,7 +1865,7 @@ app.get('/api/admin/stats', requireAdmin, async (req, res) => {
       totalViews,
       totalTries,
       history: historicalAnalytics,
-      mostLiked: mostLikedRes
+      mostLiked: mostLikedRes.map(r => ({ ...r, categories: CategoryCore.normalizeCategories(r.categories), creator: r.creator || null }))
     });
 
   } catch (error) {
@@ -1776,14 +1875,34 @@ app.get('/api/admin/stats', requireAdmin, async (req, res) => {
 });
 
 // Use Case CRUD: Add or Modify
+
+/**
+ * Audience categories from a case payload. New clients send `categories`; legacy export files only have
+ * `category` ('academic', …) and `role` ('Lecturer', …), which are mapped onto the new ids.
+ */
+const caseCategoriesFrom = (uc) => {
+  const direct = CategoryCore.normalizeCategories(uc.categories);
+  return direct.length ? direct : CategoryCore.normalizeCategories([uc.role, uc.category].filter(Boolean));
+};
+
+/** Creator input -> trimmed string (max 255) or null (= default playbook). */
+const cleanCreator = (v) => {
+  const s = String(v == null ? '' : v).trim().slice(0, 255);
+  return s || null;
+};
+
 app.post('/api/admin/use-cases', requireAdmin, async (req, res) => {
   if (req.session.user.isAssist) {
     return res.status(403).json({ success: false, message: 'Access denied. Administrative assistants are not authorized to create or import playbooks.' });
   }
 
   const uc = req.body;
-  if (!uc.id || !uc.title || !uc.category) {
+  const categories = caseCategoriesFrom(uc || {});
+  if (!uc.id || !uc.title) {
     return res.status(400).json({ success: false, message: 'Missing required use case parameter fields.' });
+  }
+  if (!categories.length) {
+    return res.status(400).json({ success: false, message: 'Select at least one category.' });
   }
   if (uc.promptType !== undefined && uc.promptType !== null && !PROMPT_TYPES.includes(uc.promptType)) {
     return res.status(400).json({ success: false, message: `promptType must be one of: ${PROMPT_TYPES.join(', ')}.` });
@@ -1800,9 +1919,10 @@ app.post('/api/admin/use-cases', requireAdmin, async (req, res) => {
     const importedInfographic = parseGeAppLink(uc.infographicUrl);
 
     const insertSql = `
-      INSERT INTO use_cases (id, category, title, summary, features, connectors, role, level, steps, prompt, pro_tip, connector_guide, translations, prompt_type, infographic_url, timing, helper_prompts)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO use_cases (id, category, title, summary, features, connectors, role, level, steps, prompt, pro_tip, connector_guide, translations, prompt_type, infographic_url, timing, helper_prompts, categories, creator, source_feedback_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
+    const sourceFeedbackId = parseInt(uc.sourceFeedbackId, 10) || null;
 
     // Steps never keep {{VARIABLES}} (they are shown as-is, only prompts are substituted)
     const fixed = plainStepsForCase({
@@ -1812,12 +1932,14 @@ app.post('/api/admin/use-cases', requireAdmin, async (req, res) => {
 
     const params = [
       uc.id,
-      uc.category,
+      // Legacy NOT NULL column: keep an old-style value when imported, otherwise the first category id
+      uc.category || categories[0],
       uc.title,
       uc.summary,
       JSON.stringify(uc.features || []),
       JSON.stringify(uc.connectors || []),
-      uc.role,
+      // Legacy NOT NULL column: the first role of the first category when the payload has no role
+      uc.role || CategoryCore.rolesForCategories(categories)[0],
       JSON.stringify(uc.level || []),
       JSON.stringify(fixed.steps),
       uc.prompt,
@@ -1827,11 +1949,15 @@ app.post('/api/admin/use-cases', requireAdmin, async (req, res) => {
       uc.promptType || 'general',
       importedInfographic.ok ? importedInfographic.value : null,
       JSON.stringify(timingCheck.value || ['anytime']),
-      helperCheck.value ? JSON.stringify(helperCheck.value) : null
+      helperCheck.value ? JSON.stringify(helperCheck.value) : null,
+      JSON.stringify(categories),
+      cleanCreator(uc.creator),
+      sourceFeedbackId
     ];
 
     await query(insertSql, params);
     if (hintsCheck.value) await replaceHints(uc.id, hintsCheck.value);
+    if (sourceFeedbackId) await markFeedbackConverted(sourceFeedbackId, uc.id);
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
@@ -1859,11 +1985,17 @@ app.put('/api/admin/use-cases', requireAdmin, async (req, res) => {
   if (!helperCheck.ok) return res.status(400).json({ success: false, message: helperCheck.message });
 
   try {
-    // prompt_type / timing / helper_prompts = COALESCE(?, column): omitting the field keeps the stored value
-    // ({} clears helper prompts, because it is a non-NULL value)
+    // prompt_type / timing / helper_prompts / categories = COALESCE(?, column): omitting the field keeps the stored
+    // value ({} clears helper prompts, because it is a non-NULL value). creator is only touched when the key is sent
+    // (null / '' clears it back to "Default playbook"). category / role / level are legacy: kept unless sent.
+    const categories = uc.categories !== undefined ? CategoryCore.normalizeCategories(uc.categories) : null;
+    if (categories && !categories.length) {
+      return res.status(400).json({ success: false, message: 'Select at least one category.' });
+    }
+    const creatorSent = Object.prototype.hasOwnProperty.call(uc, 'creator');
     const updateSql = `
       UPDATE use_cases
-      SET category = ?, title = ?, summary = ?, features = ?, connectors = ?, role = ?, level = ?, steps = ?, prompt = ?, pro_tip = ?, connector_guide = ?, translations = ?, prompt_type = COALESCE(?, prompt_type), timing = COALESCE(?, timing), helper_prompts = COALESCE(?, helper_prompts), updated_at = CURRENT_TIMESTAMP
+      SET category = COALESCE(?, category), title = ?, summary = ?, features = ?, connectors = ?, role = COALESCE(?, role), level = COALESCE(?, level), steps = ?, prompt = ?, pro_tip = ?, connector_guide = ?, translations = ?, prompt_type = COALESCE(?, prompt_type), timing = COALESCE(?, timing), helper_prompts = COALESCE(?, helper_prompts), categories = COALESCE(?, categories)${creatorSent ? ', creator = ?' : ''}, updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `;
 
@@ -1871,13 +2003,13 @@ app.put('/api/admin/use-cases', requireAdmin, async (req, res) => {
     const fixed = plainStepsForCase({ steps: uc.steps || [], translations: uc.translations || {} });
 
     const params = [
-      uc.category,
+      uc.category || null,
       uc.title,
       uc.summary,
       JSON.stringify(uc.features || []),
       JSON.stringify(uc.connectors || []),
-      uc.role,
-      JSON.stringify(uc.level || []),
+      uc.role || null,
+      uc.level ? JSON.stringify(uc.level) : null,
       JSON.stringify(fixed.steps),
       uc.prompt,
       uc.proTip || '',
@@ -1886,11 +2018,16 @@ app.put('/api/admin/use-cases', requireAdmin, async (req, res) => {
       uc.promptType || null,
       timingCheck.value ? JSON.stringify(timingCheck.value) : null,
       helperCheck.value ? JSON.stringify(helperCheck.value) : null,
+      categories ? JSON.stringify(categories) : null,
+      ...(creatorSent ? [cleanCreator(uc.creator)] : []),
       uc.id
     ];
 
     await query(updateSql, params);
     if (hintsCheck.value) await replaceHints(uc.id, hintsCheck.value);
+    // "Enhance existing playbook" from a feedback: link the feedback to this playbook once saved
+    const sourceFeedbackId = parseInt(uc.sourceFeedbackId, 10) || null;
+    if (sourceFeedbackId) await markFeedbackConverted(sourceFeedbackId, uc.id);
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
@@ -1940,6 +2077,8 @@ app.get('/api/admin/use-cases/export', requireAdmin, async (req, res) => {
       promptType: PROMPT_TYPES.includes(uc.prompt_type) ? uc.prompt_type : 'general',
       timing: parseTiming(uc.timing),
       helperPrompts: parseHelperPrompts(uc.helper_prompts),
+      categories: CategoryCore.normalizeCategories(uc.categories),
+      creator: uc.creator || null,
       hints: hintRows.filter(h => h.use_case_id === uc.id).map(formatHintRow)
         .map(({ question, audience, timing }) => ({ question, audience, timing }))
     }));
@@ -2108,36 +2247,42 @@ async function readAcademicCalendar() {
 }
 
 /**
- * Everything the Quest Run strip needs in one call. Standard users get their own role; admins
- * previewing the portal may pass ?role= (defaults to Lecturer). Hints are filtered to active ones
- * whose audience includes the role, with timing resolved (hint timing, else the use case timing).
- * News is filtered to active items for the role that have not clearly expired; the client applies
- * the exact local-date window with QuestCore.newsStatus().
+ * Everything the Quest Run strip needs in one call. Standard users are matched through their categories:
+ * the roles those categories group (teaching -> Lecturer, TA) form the audience set, and hints are limited
+ * to playbooks the user can see. Admins previewing the portal may pass ?role= (defaults to Lecturer).
+ * Hints are filtered to active ones whose audience includes any of the roles, with timing resolved (hint
+ * timing, else the use case timing). News is filtered to active items for those roles that have not clearly
+ * expired; the client applies the exact local-date window with QuestCore.newsStatus().
  */
 app.get('/api/quest', async (req, res) => {
   const user = req.session.user;
   if (!user) return res.status(401).json({ success: false, code: 'session_expired', message: 'Your session has expired. Sign in again.' });
   try {
     const requested = String(req.query.role || '');
-    const role = user.isAdmin
-      ? (QuestCore.ROLES.includes(requested) ? requested : 'Lecturer')
-      : (QuestCore.ROLES.includes(user.role) ? user.role : 'Lecturer');
+    const userCats = user.isAdmin ? null : await userCategories(user.email);
+    const roles = user.isAdmin
+      ? [QuestCore.ROLES.includes(requested) ? requested : 'Lecturer']
+      : CategoryCore.rolesForCategories(userCats);
+    const role = roles[0] || 'Lecturer';
+    // Empty audience = everyone; otherwise any overlap with the viewer's roles counts
+    const audienceMatches = (audience) => !Array.isArray(audience) || audience.length === 0 || roles.some(r => audience.includes(r));
     const calendar = await readAcademicCalendar();
     const now = new Date();
     const position = QuestCore.getAcademicPosition(now, calendar);
 
-    const cases = await query('SELECT id, timing FROM use_cases');
+    const cases = (await query('SELECT id, timing, categories FROM use_cases'))
+      .filter(c => user.isAdmin || CategoryCore.isVisibleTo(c.categories, userCats));
     const timingByCase = Object.fromEntries(cases.map(c => [c.id, parseTiming(c.timing)]));
     const hints = (await query('SELECT * FROM quest_hints WHERE active = 1 ORDER BY id ASC'))
       .map(formatHintRow)
-      .filter(h => timingByCase[h.useCaseId] && QuestCore.audienceIncludes(h.audience, role))
+      .filter(h => timingByCase[h.useCaseId] && audienceMatches(h.audience))
       .map(h => ({ id: h.id, useCaseId: h.useCaseId, question: h.question, audience: h.audience, timing: h.timing || timingByCase[h.useCaseId] }));
 
     // Server-side filter is deliberately loose (one day of slack for time zones); the client is exact.
     const yesterday = QuestCore.localDateIso(new Date(now.getTime() - 86400000));
     const news = (await query('SELECT * FROM announcements WHERE active = 1 ORDER BY pinned DESC, id DESC'))
       .map(formatAnnouncementRow)
-      .filter(n => QuestCore.audienceIncludes(n.audience, role) && (!n.endsAt || n.endsAt >= yesterday))
+      .filter(n => audienceMatches(n.audience) && (!n.endsAt || n.endsAt >= yesterday))
       .map(({ id, title, body, linkUrl, useCaseId, pinned, startsAt, endsAt, active }) => ({ id, title, body, linkUrl, useCaseId, pinned, startsAt, endsAt, active }));
 
     res.json({
@@ -2172,6 +2317,235 @@ app.post('/api/quest/event', async (req, res) => {
 const blockAssistWrites = (req, res, next) => (req.session.user.isAssist
   ? res.status(403).json({ success: false, message: 'Access denied. Administrative assistants are not authorized to edit playbook hints.' })
   : next());
+
+// ==========================================
+// 5b-3. Feedback -> playbook conversion
+// ==========================================
+
+/** Links a feedback to the playbook it became / enhanced. Silently ignores unknown ids. */
+async function markFeedbackConverted(feedbackId, useCaseId) {
+  await query('UPDATE feedbacks SET converted_use_case_id = ?, converted_at = CURRENT_TIMESTAMP WHERE id = ?',
+    [useCaseId ? String(useCaseId).slice(0, 100) : null, feedbackId]);
+}
+
+/** Rejects after `ms` so a slow / unavailable Vertex call never blocks the admin UI. */
+const withTimeout = (promise, ms) => Promise.race([
+  promise,
+  new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), ms))
+]);
+
+/** Score at/above which "enhance the existing playbook" is recommended over "create a new one". */
+const ENHANCE_THRESHOLD = 60;
+
+/** One searchable text per playbook: title twice (titles matter most), summary, and the zh title/summary. */
+const caseSearchText = (uc) => {
+  const t = safeJsonObject(uc.translations);
+  const zh = ['zh-TW', 'zh-CN'].map(l => `${(t[l] && t[l].title) || ''} ${(t[l] && t[l].summary) || ''}`).join(' ');
+  return `${uc.title} ${uc.title} ${uc.summary || ''} ${zh}`;
+};
+
+function safeJsonObject(raw) {
+  try { const v = typeof raw === 'string' ? JSON.parse(raw) : raw; return v && typeof v === 'object' ? v : {}; } catch (_) { return {}; }
+}
+
+/**
+ * Ask Gemini to judge which playbooks the feedback idea overlaps with. Gemini sees every playbook's id, title and
+ * summary (short, so this stays cheap) because keyword matching misses cross-language or paraphrased ideas.
+ * Returns { matches:[{id, score, reason}], recommendation, suggestedTitle } or throws.
+ */
+async function geminiSimilarity(feedbackText, cases) {
+  const catalogue = cases.map(c => ({ id: c.id, title: c.title, summary: String(c.summary || '').slice(0, 280) }));
+  const promptText = `
+You help the admin of a university "Gemini Enterprise" playbook portal turn user feedback into playbooks.
+A playbook is a step-by-step guide + sample prompt for one teaching or campus-operations task.
+
+User feedback:
+"""${String(feedbackText).slice(0, 2000)}"""
+
+Existing playbooks (JSON):
+${JSON.stringify(catalogue)}
+
+Decide whether the feedback describes an idea that an EXISTING playbook already covers (so it should be enhanced)
+or a genuinely NEW idea. Score how closely each relevant playbook matches the idea (0-100; 80+ = same task,
+50-79 = closely related, below 50 = loosely related). Only include playbooks scoring 30 or more, best first, max 5.
+
+Return ONLY JSON, no markdown:
+{"matches":[{"id":"<playbook id>","score":<0-100>,"reason":"<one short sentence in English>"}],
+ "recommendation":"enhance" | "new",
+ "suggestedTitle":"<short English title for a new playbook based on the feedback>"}`;
+  const out = await withTimeout(callGeminiJson(promptText), 25000);
+  const known = new Set(cases.map(c => c.id));
+  const matches = (Array.isArray(out && out.matches) ? out.matches : [])
+    .filter(m => m && known.has(m.id))
+    .map(m => ({ id: m.id, score: Math.max(0, Math.min(100, Math.round(Number(m.score) || 0))), reason: String(m.reason || '').slice(0, 300) }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 5);
+  return {
+    matches,
+    recommendation: out && out.recommendation === 'enhance' && matches.length ? 'enhance' : 'new',
+    suggestedTitle: String((out && out.suggestedTitle) || '').slice(0, 120)
+  };
+}
+
+/*
+ * Step 1 of "Convert to Playbook": find existing playbooks similar to the feedback idea.
+ * Gemini ranks first; if Vertex is unavailable (local dev, quota, timeout) the keyword cosine ranking from
+ * lib/similarity.js is used instead. "enhance" is recommended when the best match scores >= ENHANCE_THRESHOLD.
+ */
+app.post('/api/admin/feedbacks/:id/similar', requireAdmin, async (req, res) => {
+  if (req.session.user.isAssist) {
+    return res.status(403).json({ success: false, message: 'Access denied. Administrative assistants are not authorized to create playbooks.' });
+  }
+  try {
+    const rows = await query('SELECT * FROM feedbacks WHERE id = ?', [parseInt(req.params.id, 10) || 0]);
+    if (!rows.length) return res.status(404).json({ success: false, message: 'Feedback not found.' });
+    const feedback = rows[0];
+    const cases = await query('SELECT id, title, summary, translations, categories, creator FROM use_cases ORDER BY id ASC');
+    const byId = Object.fromEntries(cases.map(c => [c.id, c]));
+
+    let result;
+    let source = 'gemini';
+    try {
+      result = await geminiSimilarity(feedback.feedback_text, cases);
+    } catch (err) {
+      console.warn('Feedback similarity: Gemini unavailable, using keyword ranking.', err.message);
+      source = 'keyword';
+      const ranked = rankBySimilarity(feedback.feedback_text, cases.map(c => ({ id: c.id, text: caseSearchText(c) })), 5);
+      result = { matches: ranked.map(r => ({ id: r.id, score: r.score, reason: '' })), recommendation: null, suggestedTitle: '' };
+    }
+
+    const matches = result.matches.map(m => ({
+      ...m,
+      title: byId[m.id].title,
+      summary: byId[m.id].summary,
+      categories: CategoryCore.normalizeCategories(byId[m.id].categories),
+      creator: byId[m.id].creator || null
+    }));
+    const top = matches[0];
+    const recommendation = top && top.score >= ENHANCE_THRESHOLD && result.recommendation !== 'new' ? 'enhance' : 'new';
+    const creatorEmail = feedback.user_email && feedback.user_email !== 'anonymous' ? feedback.user_email : null;
+
+    res.json({
+      success: true,
+      source,
+      feedback: { id: feedback.id, text: feedback.feedback_text, userEmail: creatorEmail, convertedUseCaseId: feedback.converted_use_case_id || null },
+      matches,
+      recommendation,
+      recommendedId: recommendation === 'enhance' ? top.id : null,
+      suggestedTitle: result.suggestedTitle,
+      threshold: ENHANCE_THRESHOLD
+    });
+  } catch (error) {
+    console.error('Feedback similarity error:', error);
+    res.status(500).json({ success: false, message: 'Failed to look for similar playbooks.' });
+  }
+});
+
+// Link (or unlink with useCaseId: null) a feedback to a playbook manually.
+app.post('/api/admin/feedbacks/:id/convert', requireAdmin, async (req, res) => {
+  if (req.session.user.isAssist) {
+    return res.status(403).json({ success: false, message: 'Access denied. Administrative assistants are not authorized to create playbooks.' });
+  }
+  const id = parseInt(req.params.id, 10) || 0;
+  const useCaseId = req.body && req.body.useCaseId ? String(req.body.useCaseId) : null;
+  try {
+    if (useCaseId && !(await query('SELECT id FROM use_cases WHERE id = ?', [useCaseId])).length) {
+      return res.status(404).json({ success: false, message: 'Playbook not found.' });
+    }
+    await markFeedbackConverted(id, useCaseId);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to update the feedback.' });
+  }
+});
+
+// ==========================================
+// 5b-4. Creator dashboards
+// ==========================================
+
+/** Pure: '1m' | '3m' | '6m' -> 'YYYY-MM-DD HH:MM:SS' (UTC, same format CURRENT_TIMESTAMP stores); 'all' -> null. */
+const sinceForRange = (range, now = new Date()) => {
+  const months = { '1m': 1, '3m': 3, '6m': 6 }[range];
+  if (!months) return null;
+  const d = new Date(now.getTime());
+  d.setUTCMonth(d.getUTCMonth() - months);
+  return d.toISOString().replace('T', ' ').substring(0, 19);
+};
+
+/** Rows [{creator, cnt}] -> [{creator, count}] with numeric counts (pg returns COUNT as a string). */
+const toLeaderboard = (rows) => rows
+  .map(r => ({ creator: r.creator, count: Math.max(0, parseInt(r.cnt, 10) || 0) }))
+  .filter(r => r.count > 0)
+  .sort((a, b) => b.count - a.count || String(a.creator).localeCompare(String(b.creator)))
+  .slice(0, 10);
+
+/*
+ * GET /api/admin/stats/creators?range=all|1m|3m|6m
+ *   providers : playbooks credited to each creator, created in the window (default playbooks excluded)
+ *   views     : 'view' events in the window on each creator's playbooks
+ *   likes     : overall = current likes (user_preferences); windowed = like - unlike events in the window
+ *               (user_preferences has no timestamp), floored at 0
+ *   topCases  : most viewed / liked playbooks in the window, default playbooks included for context
+ */
+app.get('/api/admin/stats/creators', requireAdmin, async (req, res) => {
+  const range = ['all', '1m', '3m', '6m'].includes(req.query.range) ? req.query.range : 'all';
+  const since = sinceForRange(range);
+  const hasCreator = "uc.creator IS NOT NULL AND uc.creator <> ''";
+  const tsFilter = (col) => (since ? ` AND ${col} >= ?` : '');
+  const p = since ? [since] : [];
+  try {
+    const providers = await query(
+      `SELECT uc.creator, COUNT(*) as cnt FROM use_cases uc WHERE ${hasCreator}${tsFilter('uc.created_at')} GROUP BY uc.creator`, p);
+    const views = await query(
+      `SELECT uc.creator, COUNT(*) as cnt FROM analytics a JOIN use_cases uc ON uc.id = a.use_case_id
+       WHERE a.action = 'view' AND ${hasCreator}${tsFilter('a.timestamp')} GROUP BY uc.creator`, p);
+    const likes = since
+      ? await query(
+        `SELECT uc.creator, SUM(CASE WHEN a.action = 'like' THEN 1 WHEN a.action = 'unlike' THEN -1 ELSE 0 END) as cnt
+         FROM analytics a JOIN use_cases uc ON uc.id = a.use_case_id
+         WHERE a.action IN ('like','unlike') AND ${hasCreator} AND a.timestamp >= ? GROUP BY uc.creator`, p)
+      : await query(
+        `SELECT uc.creator, COUNT(*) as cnt FROM user_preferences up JOIN use_cases uc ON uc.id = up.use_case_id
+         WHERE up.is_liked = true AND ${hasCreator} GROUP BY uc.creator`);
+
+    // Per-playbook views + likes in the same window
+    const caseViews = await query(
+      `SELECT use_case_id, COUNT(*) as cnt FROM analytics a WHERE action = 'view'${tsFilter('a.timestamp')} GROUP BY use_case_id`, p);
+    const caseLikes = since
+      ? await query(
+        `SELECT use_case_id, SUM(CASE WHEN action = 'like' THEN 1 WHEN action = 'unlike' THEN -1 ELSE 0 END) as cnt
+         FROM analytics a WHERE action IN ('like','unlike') AND a.timestamp >= ? GROUP BY use_case_id`, p)
+      : await query('SELECT use_case_id, COUNT(*) as cnt FROM user_preferences WHERE is_liked = true GROUP BY use_case_id');
+    const toMap = (rows) => Object.fromEntries(rows.map(r => [r.use_case_id, Math.max(0, parseInt(r.cnt, 10) || 0)]));
+    const vMap = toMap(caseViews);
+    const lMap = toMap(caseLikes);
+    const allCases = await query('SELECT id, title, creator FROM use_cases');
+    const topCases = allCases
+      .map(c => ({ id: c.id, title: c.title, creator: c.creator || null, views: vMap[c.id] || 0, likes: lMap[c.id] || 0 }))
+      .filter(c => c.views || c.likes)
+      .sort((a, b) => (b.views + b.likes * 3) - (a.views + a.likes * 3) || a.title.localeCompare(b.title))
+      .slice(0, 10);
+
+    const community = allCases.filter(c => c.creator);
+    const converted = await query('SELECT COUNT(*) as cnt FROM feedbacks WHERE converted_use_case_id IS NOT NULL');
+    res.json({
+      success: true, range, since,
+      summary: {
+        communityPlaybooks: community.length,
+        defaultPlaybooks: allCases.length - community.length,
+        creators: new Set(community.map(c => c.creator)).size,
+        convertedFeedbacks: parseInt(converted[0].cnt, 10) || 0
+      },
+      providers: toLeaderboard(providers),
+      views: toLeaderboard(views),
+      likes: toLeaderboard(likes),
+      topCases
+    });
+  } catch (error) {
+    console.error('Creator stats error:', error);
+    res.status(500).json({ success: false, message: 'Failed to load creator statistics.' });
+  }
+});
 
 app.get('/api/admin/hints', requireAdmin, async (req, res) => {
   try {
@@ -2575,7 +2949,7 @@ PLAYBOOK CONVENTIONS (match the portal's existing playbooks exactly):
 
 /**
  * Build the drafting brief. Pure.
- * @param {object} form        current case-form values (title, category, role, level, features, connectors, promptType)
+ * @param {object} form        current case-form values (title, categories, features, connectors, promptType)
  * @param {string} original    JSON of the stored playbook when refining, '' when creating
  * @param {string} instruction admin's free-text request (may be empty)
  */
@@ -2584,9 +2958,7 @@ const buildDraftPrompt = ({ form, original, instruction }) => {
 
 CURRENT FORM VALUES
 - Title: ${JSON.stringify(form.title || '')}
-- Category: ${JSON.stringify(form.category || 'academic')}
-- Role: ${JSON.stringify(form.role || 'Lecturer')}
-- School levels: ${JSON.stringify(form.level || [])}
+- Audience categories: ${JSON.stringify(CategoryCore.normalizeCategories(form.categories))}
 - GE features: ${JSON.stringify(form.features || [])}
 - Connectors: ${JSON.stringify(form.connectors || [])}
 - Prompt type: ${JSON.stringify(form.promptType || 'general')}
@@ -2612,8 +2984,7 @@ LANGUAGE CONSISTENCY: write the English profile first, then translate it 1-to-1 
 OUTPUT: only a raw JSON object (no markdown fences, no commentary) with exactly these keys:
 {
   "id": "snake_case_id_based_on_the_title",
-  "category": "one of: academic | student | operational | administrative",
-  "role": "one of: Lecturer | TA | Student | Program Leader | Dean | IT Admin | SAO | Security | Finance",
+  "categories": ["1-3 audience categories, from: ${CategoryCore.CATEGORY_IDS.join(' | ')}"],
   "features": ["only the features used, from: Agent Designer, Gemini Notebook, Deep Research, Canvas Mode, Image Generation, Video Generation"],
   "connectors": [],
   "promptType": "one of: general | notebooklm | deep_research | agent_designer | canvas | image | video",
@@ -2630,13 +3001,13 @@ OUTPUT: only a raw JSON object (no markdown fences, no commentary) with exactly 
   "zh-TW": { "title": "...", "summary": "...", "steps": ["...", "...", "..."], "prompt": "...", "proTip": "..." },
   "zh-CN": { "title": "...", "summary": "...", "steps": ["...", "...", "..."], "prompt": "...", "proTip": "..." }
 }
-Field notes: "hints" holds exactly 2 short pain-point questions (at most 60 characters in English) that the target audience would ask and this playbook answers; "audience" uses the role names above. "summary" is 1-2 sentences on the outcome. "proTip" is one practical sentence.`;
+Field notes: "hints" holds exactly 2 short pain-point questions (at most 60 characters in English) that the target audience would ask and this playbook answers; "audience" uses these role names: ${QuestCore.ROLES.join(', ')}. Category ids: ${CategoryCore.CATEGORIES.map(c => `${c.id} = ${c.label.en} (${c.roles.join(', ')})`).join('; ')}. "summary" is 1-2 sentences on the outcome. "proTip" is one practical sentence.`;
 };
 
 // Admin: draft a new playbook or refine an existing one with Gemini (GEMINI_MODEL, service-account auth).
 // The reply is normalised (lib/draft-normalize.js) so {{VARIABLE}} tokens and enum values always match the portal.
 app.post('/api/admin/generate-gemini', requireAdmin, async (req, res) => {
-  const { id, title, category, features, connectors, role, level, promptType } = req.body;
+  const { id, title, categories, features, connectors, promptType } = req.body;
   const instruction = String(req.body.instruction || '').trim();
   if (!title && !instruction) {
     return res.status(400).json({ success: false, message: 'Please specify either a playbook title or custom instructions so Gemini can draft relevant content.' });
@@ -2650,9 +3021,7 @@ app.post('/api/admin/generate-gemini', requireAdmin, async (req, res) => {
         const uc = existing[0];
         original = JSON.stringify({
           id: uc.id,
-          category: uc.category,
-          role: uc.role,
-          level: JSON.parse(uc.level || '[]'),
+          categories: CategoryCore.normalizeCategories(uc.categories),
           features: JSON.parse(uc.features || '[]'),
           connectors: JSON.parse(uc.connectors || '[]'),
           promptType: uc.prompt_type || 'general',
@@ -2664,7 +3033,7 @@ app.post('/api/admin/generate-gemini', requireAdmin, async (req, res) => {
     }
 
     const promptText = buildDraftPrompt({
-      form: { title, category, role, level, features, connectors, promptType },
+      form: { title, categories, features, connectors, promptType },
       original,
       instruction
     });
@@ -2694,7 +3063,10 @@ async function callGeminiJson(promptText) {
       contents: {
         role: 'USER',
         parts: [{ text: promptText }]
-      }
+      },
+      // JSON mode: the model must emit a single valid JSON value (long multilingual drafts
+      // occasionally broke string escaping in free-text mode)
+      generationConfig: { responseMimeType: 'application/json' }
     })
   });
 
@@ -2704,7 +3076,8 @@ async function callGeminiJson(promptText) {
   }
 
   const data = await response.json();
-  let text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+  // Thinking models may return several parts; join the text parts
+  let text = (data.candidates?.[0]?.content?.parts || []).map(p => p.text || '').join('');
   if (!text) {
     throw Object.assign(new Error('Empty response returned from Gemini.'), { status: 500 });
   }

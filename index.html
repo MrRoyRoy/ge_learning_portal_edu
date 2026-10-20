@@ -20,6 +20,7 @@
   
   <link rel="stylesheet" href="style.css">
   <script src="lib/quest-core.js" defer></script>
+  <script src="lib/categories.js" defer></script>
   <script src="app.js" defer></script>
 </head>
 <body>
@@ -142,64 +143,6 @@
       </div>
     </div>
 
-    <!-- CARD 3: Profile Configuration (Original Onboarding Selection) -->
-    <div class="wizard-card glass-panel" id="profileCard" style="display: none;">
-      <div class="wizard-header">
-        <div class="wizard-logo">
-          <span class="material-symbols-outlined" style="font-size: 32px; color: white;">account_circle</span>
-        </div>
-        <h1 class="wizard-title" id="wizardTitle">Identify Your Context</h1>
-        <p class="wizard-desc" id="wizardDesc">Customizing your reference workspace filters to match your educational objectives and student audience.</p>
-      </div>
-
-      <div class="wizard-form">
-        <!-- Role Selection -->
-        <div class="form-group">
-          <label class="form-label" for="wizardRole" id="labelRole">Select Your Role</label>
-          <select class="select-control" id="wizardRole">
-            <option value="Lecturer" selected>Lecturer / Educator</option>
-            <option value="TA">Teaching Assistant (TA)</option>
-            <option value="Student">Student Representative / Club Leader</option>
-            <option value="Program Leader">Program Leader / Department Head</option>
-            <option value="Dean">Dean / Educational Leader</option>
-            <option value="IT Admin">IT Director / System Administrator</option>
-            <option value="SAO">Student Affairs Office (SAO) Staff</option>
-            <option value="Security">Campus Security Officer</option>
-            <option value="Finance">Institutional Finance / Auditor</option>
-          </select>
-        </div>
-
-        <!-- Institution Level Selection -->
-        <div class="form-group" id="levelFormGroup">
-          <label class="form-label" for="wizardLevel" id="labelLevel">Institution / School Level</label>
-          <select class="select-control" id="wizardLevel">
-            <option value="Generic" style="display: none;">Generic (Cross-Level Adaptable)</option>
-            <option value="University & College" selected>University & College (Higher Edu)</option>
-            <option value="High School">High School (Grades 6-12)</option>
-            <option value="Primary School">Primary School (Grades K-5)</option>
-          </select>
-          <p id="levelHelperText" style="font-size: 13px; color: var(--text-muted); margin-top: 4px;"></p>
-        </div>
-
-        <!-- Language Selection -->
-        <div class="form-group">
-          <label class="form-label" for="wizardLang" id="labelLang">Select Language / 選擇語言</label>
-          <select class="select-control" id="wizardLang">
-            <option value="en" selected>English</option>
-            <option value="zh-TW">繁體中文</option>
-            <option value="zh-CN">简体中文</option>
-          </select>
-        </div>
-
-        <!-- Action Button -->
-        <div class="wizard-actions">
-          <button class="nav-button nav-button-primary btn-wide" id="btnStart">
-            Enter Workspace <span class="material-symbols-outlined">arrow_forward</span>
-          </button>
-        </div>
-      </div>
-    </div>
-
   </div>
 
   <!-- MAIN APPLICATION LAYOUT (shared topbar, no sidebar) -->
@@ -231,11 +174,8 @@
           <div class="avatar-menu" id="userAvatarMenu" role="menu" hidden>
             <div class="avatar-menu-head">
               <div class="avatar-menu-email" id="userMenuEmail"></div>
-              <div class="avatar-menu-context"><span id="profileRoleName">Lecturer</span> · <span id="profileInstitutionName">Higher Education</span></div>
+              <div class="avatar-menu-context" id="profileCategoryNames"></div>
             </div>
-            <button class="avatar-menu-item" id="btnChangeContext" role="menuitem">
-              <span class="material-symbols-outlined">manage_accounts</span><span id="btnChangeContextText">Switch profile</span>
-            </button>
             <button class="avatar-menu-item" id="btnBackToAdminDash" role="menuitem" hidden>
               <span class="material-symbols-outlined">admin_panel_settings</span><span data-i18n="goAdminPortal">Admin portal</span>
             </button>
@@ -313,11 +253,8 @@
           <!-- Filter bar: native selects styled as pills -->
           <div class="filter-bar" role="group" aria-label="Filters">
             <select class="pill-select" id="filterCategory" aria-label="Category" data-i18n-aria="filterCategoryLabel">
-              <option value="all" data-i18n="catAll">All categories</option>
-              <option value="academic" data-i18n="catAcademic">Academic</option>
-              <option value="student" data-i18n="catStudent">Student support</option>
-              <option value="operational" data-i18n="catOperational">Operations</option>
-              <option value="admin" data-i18n="catAdmin">Administration</option>
+              <!-- Options built by renderCategoryFilterOptions() from the user's categories (lib/categories.js) -->
+              <option value="all" data-i18n="catAll">All my categories</option>
             </select>
             <select class="pill-select" id="filterFeature" aria-label="GE feature" data-i18n-aria="filterFeatureLabel">
               <option value="all" data-i18n="featAll">All GE features</option>
@@ -466,6 +403,11 @@
               <input type="text" class="select-control" id="inputNewUserEmail" placeholder="prof1@edu.hk, prof2@edu.hk" required>
             </div>
             <button id="adminBtnProvision" class="nav-button nav-button-primary" type="submit">Add users</button>
+            <div class="form-group form-group-full">
+              <span class="form-label" data-i18n="userCategoriesLabel">Categories</span>
+              <div class="cat-checklist-mount" id="addUserCategories"></div>
+              <p class="field-hint" data-i18n="userCategoriesHint">Users only see playbooks in the categories you tick.</p>
+            </div>
           </form>
         </div>
 
@@ -478,6 +420,7 @@
                 <tr>
                   <th id="adminThUserEmail">Email</th>
                   <th data-i18n="adminThGeLink">GE app link</th>
+                  <th data-i18n="adminThCategories">Categories</th>
                   <th id="adminThPasswordStatus">Status</th>
                   <th id="adminThCreatedDate">Created</th>
                   <th class="col-actions"><span class="sr-only" id="adminThAdminActions">Actions</span></th>
@@ -519,6 +462,47 @@
             <div id="adminLabelTriesLegend"><span style="display: inline-block; width: 12px; height: 3px; background: var(--color-success);"></span> Try it</div>
           </div>
           <div id="adminChartContainer" style="width: 100%; height: 260px;"></div>
+        </div>
+
+        <div class="panel" id="creatorDashboard">
+          <div class="panel-head">
+            <div>
+              <h2 class="panel-title"><span class="material-symbols-outlined" style="color: var(--color-primary);">emoji_objects</span> <span data-i18n="creatorDashTitle">Idea providers</span></h2>
+              <p class="panel-desc" data-i18n="creatorDashDesc">Who contributes playbooks, and whose ideas get used. Default playbooks are excluded.</p>
+            </div>
+            <div class="panel-actions">
+              <label class="sr-only" for="creatorRange" data-i18n="creatorRangeLabel">Timeframe</label>
+              <select class="select-control" id="creatorRange">
+                <option value="all" data-i18n="rangeAll">Overall</option>
+                <option value="1m" data-i18n="range1m">Last month</option>
+                <option value="3m" data-i18n="range3m">Last 3 months</option>
+                <option value="6m" data-i18n="range6m">Last 6 months</option>
+              </select>
+            </div>
+          </div>
+          <div class="creator-summary">
+            <div class="stat-card-mini"><div class="stat-label" data-i18n="creatorSumCommunity">Community playbooks</div><div class="stat-value" id="creatorSumCommunity">0</div></div>
+            <div class="stat-card-mini"><div class="stat-label" data-i18n="creatorSumCreators">Idea providers</div><div class="stat-value" id="creatorSumCreators">0</div></div>
+            <div class="stat-card-mini"><div class="stat-label" data-i18n="creatorSumConverted">Feedback converted</div><div class="stat-value" id="creatorSumConverted">0</div></div>
+            <div class="stat-card-mini"><div class="stat-label" data-i18n="creatorSumDefault">Default playbooks</div><div class="stat-value" id="creatorSumDefault">0</div></div>
+          </div>
+          <div class="leaderboard-grid">
+            <div class="leaderboard-col"><h3 class="leaderboard-title" data-i18n="lbProviders">Most playbooks provided</h3><ol class="leaderboard" id="lbProviders"></ol></div>
+            <div class="leaderboard-col"><h3 class="leaderboard-title" data-i18n="lbViews">Most viewed ideas</h3><ol class="leaderboard" id="lbViews"></ol></div>
+            <div class="leaderboard-col"><h3 class="leaderboard-title" data-i18n="lbLikes">Most liked ideas</h3><ol class="leaderboard" id="lbLikes"></ol></div>
+          </div>
+          <h3 class="leaderboard-title" data-i18n="lbTopCases">Top community playbooks</h3>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead><tr>
+                <th data-i18n="lbColPlaybook">Playbook</th>
+                <th data-i18n="adminCrudThCreator">Idea provider</th>
+                <th data-i18n="lbColViews">Views</th>
+                <th data-i18n="lbColLikes">Likes</th>
+              </tr></thead>
+              <tbody id="lbTopCases"></tbody>
+            </table>
+          </div>
         </div>
 
         <div class="panel">
@@ -584,6 +568,7 @@
                 <th data-i18n="fbThAuthor">From</th>
                 <th data-i18n="fbThContent">Feedback</th>
                 <th data-i18n="fbThDate">Submitted</th>
+                <th data-i18n="fbThStatus">Status</th>
                 <th class="col-actions"><span class="sr-only" data-i18n="adminThAdminActions">Actions</span></th>
               </tr>
             </thead>
@@ -876,6 +861,11 @@
           <p class="field-hint" data-i18n="geLinkHint">Opens prompts directly in this user's Gemini Enterprise app.</p>
           <p class="field-error" data-error-for="editUserGeLink"></p>
         </div>
+        <div class="form-group">
+          <span class="form-label" data-i18n="userCategoriesLabel">Categories</span>
+          <div class="cat-checklist-mount" id="editUserCategories"></div>
+          <p class="field-hint" data-i18n="userCategoriesHint">Users only see playbooks in the categories you tick.</p>
+        </div>
         <div class="reset-access-box">
           <div>
             <div class="reset-access-title" data-i18n="resetAccess">Reset access</div>
@@ -946,36 +936,23 @@
               <input type="text" class="select-control" id="formCaseId" required placeholder="e.g. research_agent">
             </div>
             <div class="form-group">
-              <label id="adminFormLabelCategory" class="form-label" for="formCaseCategory" data-i18n="adminFormLabelCategory">Category</label>
-              <select class="select-control" id="formCaseCategory" required>
-                <option value="academic" data-i18n="catAcademic">Academic</option>
-                <option value="student" data-i18n="catStudent">Student support</option>
-                <option value="operational" data-i18n="catOperational">Operations</option>
-                <option value="administrative" data-i18n="catAdmin">Administration</option>
-              </select>
+              <label class="form-label" for="formCaseCreator" data-i18n="adminFormLabelCreator">Idea provider</label>
+              <div class="creator-input-row">
+                <input type="text" class="select-control" id="formCaseCreator" placeholder="Leave empty for a default playbook" data-i18n-placeholder="adminFormCreatorPh">
+                <button type="button" class="nav-button" id="btnUseFeedbackAuthor" hidden data-i18n="useFeedbackAuthor">Use feedback author</button>
+              </div>
             </div>
           </div>
 
-          <!-- Title and Role Row -->
-          <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 16px;">
-            <div class="form-group">
-              <label id="adminFormLabelTitle" class="form-label" for="formCaseTitle" data-i18n="adminFormLabelTitle">Title</label>
-              <input type="text" class="select-control" id="formCaseTitle" required placeholder="e.g. Chemistry lab safety agent" data-i18n-placeholder="caseFormTitlePh">
-            </div>
-            <div class="form-group">
-              <label id="adminFormLabelRole" class="form-label" for="formCaseRole" data-i18n="adminFormLabelRole">Role</label>
-              <select class="select-control" id="formCaseRole" required>
-                <option value="Lecturer">Lecturer / Educator</option>
-                <option value="TA">Teaching Assistant (TA)</option>
-                <option value="Student">Student / Club Leader</option>
-                <option value="Program Leader">Program Leader / Department Head</option>
-                <option value="Dean">Dean / Educational Leader</option>
-                <option value="IT Admin">IT Administrator / SysAdmin</option>
-                <option value="SAO">Student Affairs Officer (SAO)</option>
-                <option value="Security">Campus Security Officer</option>
-                <option value="Finance">Financial Administrator</option>
-              </select>
-            </div>
+          <div class="form-group">
+            <label id="adminFormLabelTitle" class="form-label" for="formCaseTitle" data-i18n="adminFormLabelTitle">Title</label>
+            <input type="text" class="select-control" id="formCaseTitle" required placeholder="e.g. Chemistry lab safety agent" data-i18n-placeholder="caseFormTitlePh">
+          </div>
+
+          <div class="form-group">
+            <span class="form-label" data-i18n="adminFormLabelCategories">Categories</span>
+            <div class="cat-checklist-mount" id="formCaseCategories"></div>
+            <p class="field-hint" data-i18n="adminFormCategoriesHint">Users see this playbook if they have at least one of these categories.</p>
           </div>
 
           <div class="form-group">
@@ -1004,16 +981,6 @@
                 <label style="display: flex; align-items: center; gap: 6px;"><input type="checkbox" name="formConnectors" value="LMS Connector"> LMS Connector</label>
                 <label style="display: flex; align-items: center; gap: 6px;"><input type="checkbox" name="formConnectors" value="Calendar Connector"> Calendar Connector</label>
               </div>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label id="adminFormLabelLevel" class="form-label" data-i18n="adminFormLabelLevel">School levels</label>
-            <div class="glass-panel" style="padding: 10px; display: flex; gap: 16px; font-size: 13px;">
-              <label style="display: flex; align-items: center; gap: 6px;"><input type="checkbox" name="formLevel" value="University & College"> <span data-i18n="levelUni">University & college</span></label>
-              <label style="display: flex; align-items: center; gap: 6px;"><input type="checkbox" name="formLevel" value="High School"> <span data-i18n="levelHigh">High school</span></label>
-              <label style="display: flex; align-items: center; gap: 6px;"><input type="checkbox" name="formLevel" value="Primary School"> <span data-i18n="levelPrimary">Primary school</span></label>
-              <label style="display: flex; align-items: center; gap: 6px;"><input type="checkbox" name="formLevel" value="Generic"> <span data-i18n="levelGeneric">Any level</span></label>
             </div>
           </div>
 
@@ -1200,14 +1167,14 @@
       <div class="modal-header" style="margin-bottom: 16px;">
         <div class="modal-header-left feedback-modal-heading">
           <span class="material-symbols-outlined feedback-modal-icon" aria-hidden="true">rate_review</span>
-          <h3 class="modal-title feedback-modal-title" data-i18n="feedbackTitle">Share feedback</h3>
+          <h3 class="modal-title feedback-modal-title" data-i18n="feedbackTitle">Share feedback or a use case idea</h3>
         </div>
         <button class="close-btn" id="feedbackModalClose" aria-label="Close" data-i18n-aria="closeLabel">
           <span class="material-symbols-outlined">close</span>
         </button>
       </div>
       
-      <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px; line-height: 1.4;" data-i18n="feedbackDesc">Tell us what would make this portal more useful. Admins read every note.</p>
+      <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px; line-height: 1.4;" data-i18n="feedbackDesc">Tell us what would make this portal more useful, or suggest a new use case. Good ideas become playbooks, credited to you.</p>
 
       <form id="formFeedbackSubmit" onsubmit="handleFeedbackSubmit(event)">
         <div class="form-group">
@@ -1220,6 +1187,31 @@
           <button class="nav-button nav-button-primary btn-feedback-submit" type="submit" data-i18n="feedbackSubmit">Send</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- FEEDBACK -> PLAYBOOK CONVERSION MODAL -->
+  <div class="modal-overlay" id="feedbackConvertModal" aria-modal="true" role="dialog" aria-labelledby="feedbackConvertTitle">
+    <div class="modal-content-card" style="max-width: 680px; height: auto; max-height: 90vh;">
+      <div class="modal-header">
+        <div class="modal-header-left">
+          <h3 class="modal-title" id="feedbackConvertTitle" data-i18n="convertTitle">Convert to playbook</h3>
+        </div>
+        <button class="close-btn" id="feedbackConvertClose" aria-label="Close" data-i18n-aria="closeLabel">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <div class="modal-body convert-body">
+        <blockquote class="convert-quote" id="convertFeedbackText"></blockquote>
+        <p class="field-hint" id="convertFeedbackAuthor"></p>
+        <div id="convertStatus" class="convert-status"></div>
+        <div id="convertMatches" class="convert-matches"></div>
+        <div class="modal-footer-row">
+          <button type="button" class="nav-button" id="btnConvertCancel" data-i18n="cancel">Cancel</button>
+          <button type="button" class="nav-button" id="btnConvertEnhance" disabled data-i18n="convertEnhance">Enhance selected</button>
+          <button type="button" class="nav-button nav-button-primary" id="btnConvertNew" disabled data-i18n="convertNew">Create new playbook</button>
+        </div>
+      </div>
     </div>
   </div>
 
