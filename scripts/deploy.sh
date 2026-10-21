@@ -86,7 +86,6 @@ run_terraform() {
   export TF_VAR_demo_user_ge_app_link="${DEMO_USER_GE_APP_LINK:-}"
   export TF_VAR_super_admin_password="$SUPER_ADMIN_PASSWORD"
   export TF_VAR_admin_password="${ADMIN_PASSWORD:-}"
-  export TF_VAR_demo_admin_password="${DEMO_ADMIN_PASSWORD:-}"
   export TF_VAR_demo_user_password="${DEMO_USER_PASSWORD:-}"
   export TF_VAR_db_password="${DB_PASSWORD:-}"
   export TF_VAR_session_secret="${SESSION_SECRET:-}"

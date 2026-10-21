@@ -115,13 +115,6 @@ variable "admin_password" {
   default     = ""
 }
 
-variable "demo_admin_password" {
-  description = "Password for the built-in assistant admin demo-admin (.env: DEMO_ADMIN_PASSWORD). Empty = account disabled."
-  type        = string
-  sensitive   = true
-  default     = ""
-}
-
 variable "demo_user_password" {
   description = "Password for the optional demo user (.env: DEMO_USER_PASSWORD)."
   type        = string

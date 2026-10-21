@@ -140,14 +140,12 @@ locals {
     SETTINGS_ENCRYPTION_KEY = local.settings_encryption_key
     SUPER_ADMIN_PASSWORD    = var.super_admin_password
     ADMIN_PASSWORD          = var.admin_password
-    DEMO_ADMIN_PASSWORD     = var.demo_admin_password
     DEMO_USER_PASSWORD      = var.demo_user_password
   }
 
   secret_names = toset(concat(
     ["DATABASE_URL", "SESSION_SECRET", "SETTINGS_ENCRYPTION_KEY", "SUPER_ADMIN_PASSWORD"],
     nonsensitive(var.admin_password != "") ? ["ADMIN_PASSWORD"] : [],
-    nonsensitive(var.demo_admin_password != "") ? ["DEMO_ADMIN_PASSWORD"] : [],
     nonsensitive(var.demo_user_password != "") && var.demo_user_email != "" ? ["DEMO_USER_PASSWORD"] : []
   ))
 }

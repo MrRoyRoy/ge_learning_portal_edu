@@ -905,8 +905,6 @@ async function seedAnalytics() {
 
 const crypto = require('crypto');
 
-// Hard-coded accounts are reserved identifiers and can never be invited as DB admins.
-const BUILT_IN_ADMINS = Object.freeze(['edu_portal_s_admin', 'edu_portal_admin', 'demo-admin']);
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const TOKEN_TTL_MS = Object.freeze({ verify: 48 * 60 * 60 * 1000, reset: 60 * 60 * 1000 });
 const MIN_ADMIN_PASSWORD = 8;
@@ -934,9 +932,11 @@ const adminSession = (email, role, extra = {}) => ({
  */
 const BUILT_IN_ADMIN_ACCOUNTS = Object.freeze([
   { username: 'edu_portal_s_admin', role: 'super', env: 'SUPER_ADMIN_PASSWORD' },
-  { username: 'edu_portal_admin', role: 'assist', env: 'ADMIN_PASSWORD' },
-  { username: 'demo-admin', role: 'assist', env: 'DEMO_ADMIN_PASSWORD' }
+  { username: 'edu_portal_admin', role: 'assist', env: 'ADMIN_PASSWORD' }
 ]);
+
+// Built-in usernames are reserved identifiers and can never be invited as DB admins.
+const BUILT_IN_ADMINS = Object.freeze(BUILT_IN_ADMIN_ACCOUNTS.map(a => a.username));
 
 const builtInAdminPasswords = Object.freeze(Object.fromEntries(BUILT_IN_ADMIN_ACCOUNTS.map(({ username, role, env }) => {
   if (process.env[env]) return [username, process.env[env]];
@@ -960,6 +960,46 @@ const matchBuiltInAdmin = (username, password) => {
   const account = BUILT_IN_ADMIN_ACCOUNTS.find(a => a.username === String(username || '').trim());
   const expected = account ? builtInAdminPasswords[account.username] : '';
   return expected && safeEqual(password, expected) ? account : null;
+};
+
+/*
+ * Built-in account enable / disable state (super admins toggle it in the Admins tab).
+ * Stored as app_settings['builtin_admins'] = { disabled: [username, ...] } so it survives deploys and is shared
+ * by every Cloud Run instance. Reads are cached for BUILT_IN_STATE_TTL_MS: the guards below run on every admin
+ * request, and another instance's toggle becomes visible here within that window. Writes refresh the cache.
+ * Recovery if every super admin is locked out: DELETE FROM app_settings WHERE key = 'builtin_admins'.
+ */
+const BUILT_IN_STATE_KEY = 'builtin_admins';
+const BUILT_IN_STATE_TTL_MS = 10 * 1000;
+let builtInStateCache = { at: 0, disabled: new Set() };
+
+const readDisabledBuiltIns = async ({ fresh = false } = {}) => {
+  if (!fresh && Date.now() - builtInStateCache.at < BUILT_IN_STATE_TTL_MS) return builtInStateCache.disabled;
+  const stored = await mailer.readSetting(query, BUILT_IN_STATE_KEY);
+  const list = stored && stored.value && Array.isArray(stored.value.disabled) ? stored.value.disabled : [];
+  const disabled = new Set(list.filter(u => BUILT_IN_ADMINS.includes(u)));
+  builtInStateCache = { at: Date.now(), disabled };
+  return disabled;
+};
+
+// 'not_configured' (no password env var) | 'disabled' (turned off by a super admin) | 'active'
+const builtInStatus = (account, disabled) => {
+  if (!builtInAdminPasswords[account.username]) return 'not_configured';
+  return disabled.has(account.username) ? 'disabled' : 'active';
+};
+
+// True when the session belongs to a built-in account (DB admins may never use a built-in username).
+const isBuiltInSession = (u) => Boolean(u && u.isAdmin && !u.isDbAdmin && BUILT_IN_ADMINS.includes(u.email));
+
+/*
+ * Active super admins = active built-in super accounts + verified DB admins with role 'super'.
+ * `disabled` is the (possibly hypothetical) disabled set, and `excludeDbEmail` drops one DB admin, so callers can
+ * ask "how many would remain after this change?" before applying it. The portal must always keep >= 1.
+ */
+const countActiveSupers = async (disabled, excludeDbEmail = null) => {
+  const builtIn = BUILT_IN_ADMIN_ACCOUNTS.filter(a => a.role === 'super' && builtInStatus(a, disabled) === 'active').length;
+  const rows = await query("SELECT email FROM admins WHERE role = 'super' AND is_verified = 1");
+  return builtIn + rows.filter(r => normalizeEmail(r.email) !== excludeDbEmail).length;
 };
 
 // Older sessions (pre-upgrade) lack isSuper; derive it so the hard-coded super admin always qualifies.
@@ -1024,6 +1064,9 @@ app.post('/api/auth/login', async (req, res) => {
 
   // Built-in (break-glass) admin accounts; passwords only from env, disabled when unset (see BUILT_IN_ADMIN_ACCOUNTS)
   const builtIn = matchBuiltInAdmin(email, password);
+  if (builtIn && (await readDisabledBuiltIns({ fresh: true })).has(builtIn.username)) {
+    return res.status(403).json({ success: false, message: 'This default admin account has been disabled by a super admin.' });
+  }
   if (builtIn) {
     req.session.user = adminSession(builtIn.username, builtIn.role);
     const isSuper = builtIn.role === 'super';
@@ -1135,6 +1178,8 @@ app.get('/api/auth/session', async (req, res) => {
         return req.session.destroy(() => res.json({ success: false, loggedIn: false }));
       }
       req.session.user = adminSession(sessionUser.email, rows[0].role, { isDbAdmin: true });
+    } else if (isBuiltInSession(sessionUser) && (await readDisabledBuiltIns({ fresh: true })).has(sessionUser.email)) {
+      return req.session.destroy(() => res.json({ success: false, loggedIn: false }));
     } else if (sessionUser.isAdmin) {
       req.session.user = { ...sessionUser, isSuper: isSuperSession(sessionUser), isAssist: !isSuperSession(sessionUser) };
     } else {
@@ -1497,21 +1542,34 @@ app.post('/api/feedbacks/delete', async (req, res) => {
 // ==========================================
 
 // Guard middleware to block standard users
-function requireAdmin(req, res, next) {
-  if (req.session.user && req.session.user.isAdmin) {
-    next();
-  } else {
-    res.status(403).json({ success: false, message: 'Access denied. Administrator privileges required.' });
+// Ends the session of a built-in admin that a super admin has since disabled. Resolves true when it was revoked.
+const revokeIfDisabledBuiltIn = async (req, res) => {
+  if (!isBuiltInSession(req.session.user)) return false;
+  try {
+    if (!(await readDisabledBuiltIns()).has(req.session.user.email)) return false;
+  } catch (err) {
+    console.error('Built-in admin state check failed:', err);
+    return false;
   }
+  req.session.destroy(() => res.status(401).json({ success: false, message: 'This admin account has been disabled.' }));
+  return true;
+};
+
+async function requireAdmin(req, res, next) {
+  if (!(req.session.user && req.session.user.isAdmin)) {
+    return res.status(403).json({ success: false, message: 'Access denied. Administrator privileges required.' });
+  }
+  if (await revokeIfDisabledBuiltIn(req, res)) return;
+  next();
 }
 
 // Guard middleware for super-admin-only features (hard-coded edu_portal_s_admin or a DB admin with role 'super')
-function requireSuper(req, res, next) {
-  if (isSuperSession(req.session.user)) {
-    next();
-  } else {
-    res.status(403).json({ success: false, message: 'Access denied. Super admin privileges required.' });
+async function requireSuper(req, res, next) {
+  if (!isSuperSession(req.session.user)) {
+    return res.status(403).json({ success: false, message: 'Access denied. Super admin privileges required.' });
   }
+  if (await revokeIfDisabledBuiltIn(req, res)) return;
+  next();
 }
 
 // User CRUD: Fetch all users
@@ -1759,6 +1817,17 @@ const formatAdmin = (a) => ({
   createdAt: a.created_at
 });
 
+// Built-in account row for the Admins tab. isSelf hides the Disable button for the account you're signed in with.
+const formatBuiltInAdmin = (a, disabled, sessionUser) => ({
+  email: a.username,
+  role: a.role,
+  status: builtInStatus(a, disabled),
+  builtIn: true,
+  isSelf: isBuiltInSession(sessionUser) && sessionUser.email === a.username,
+  invitedBy: null,
+  createdAt: null
+});
+
 // Response fragment for an email attempt: previewLink only when the email did not go out (demo mode / failure).
 const deliveryFields = (result) => ({
   delivered: Boolean(result.delivered),
@@ -1770,7 +1839,9 @@ const deliveryFields = (result) => ({
 app.get('/api/admin/admins', requireSuper, async (req, res) => {
   try {
     const rows = await query('SELECT email, role, is_verified, invited_by, created_at FROM admins ORDER BY created_at DESC');
-    res.json({ success: true, admins: rows.map(formatAdmin) });
+    const disabled = await readDisabledBuiltIns({ fresh: true });
+    const builtIns = BUILT_IN_ADMIN_ACCOUNTS.map(a => formatBuiltInAdmin(a, disabled, req.session.user));
+    res.json({ success: true, admins: [...builtIns, ...rows.map(formatAdmin)] });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
@@ -1824,15 +1895,58 @@ app.post('/api/admin/admins/resend', requireSuper, async (req, res) => {
   }
 });
 
+/*
+ * Enable / disable a built-in (default) admin. Rules:
+ *  - the account must have a password configured (otherwise there is nothing to enable);
+ *  - you can't disable the account you're signed in with;
+ *  - disabling must leave at least one active super admin (built-in or verified DB super).
+ * Enabling is always allowed.
+ */
+app.put('/api/admin/admins/builtin', requireSuper, async (req, res) => {
+  const username = String((req.body && req.body.username) || '').trim();
+  const disable = Boolean(req.body && req.body.disabled);
+  const account = BUILT_IN_ADMIN_ACCOUNTS.find(a => a.username === username);
+  if (!account) {
+    return res.status(404).json({ success: false, message: 'Default admin account not found.' });
+  }
+  if (!builtInAdminPasswords[username]) {
+    return res.status(400).json({ success: false, message: `This account has no password configured (${account.env}).` });
+  }
+  if (disable && isBuiltInSession(req.session.user) && req.session.user.email === username) {
+    return res.status(400).json({ success: false, message: "You can't disable the account you're signed in with." });
+  }
+  try {
+    const disabled = new Set(await readDisabledBuiltIns({ fresh: true }));
+    if (disable) disabled.add(username); else disabled.delete(username);
+    if (disable && account.role === 'super' && await countActiveSupers(disabled) < 1) {
+      return res.status(400).json({ success: false, message: 'Keep at least one active super admin. Invite and activate another super admin first.' });
+    }
+    await mailer.writeSetting(query, BUILT_IN_STATE_KEY, { disabled: [...disabled] }, req.session.user.email);
+    builtInStateCache = { at: Date.now(), disabled };
+    res.json({ success: true, admin: formatBuiltInAdmin(account, disabled, req.session.user) });
+  } catch (error) {
+    console.error('Toggle built-in admin error:', error);
+    res.status(500).json({ success: false, message: 'Failed to update the admin account.' });
+  }
+});
+
 app.delete('/api/admin/admins', requireSuper, async (req, res) => {
   const email = normalizeEmail(req.body && req.body.email);
   if (!email) {
     return res.status(400).json({ success: false, message: 'Please specify the admin email.' });
   }
+  if (BUILT_IN_ADMINS.includes(email)) {
+    return res.status(400).json({ success: false, message: 'Default admin accounts can be disabled but not removed.' });
+  }
   if (email === normalizeEmail(req.session.user.email)) {
     return res.status(400).json({ success: false, message: "You can't remove your own admin account." });
   }
   try {
+    const target = (await query("SELECT role, is_verified FROM admins WHERE email = ?", [email]))[0];
+    if (target && target.role === 'super' && isTruthyFlag(target.is_verified)
+        && await countActiveSupers(await readDisabledBuiltIns({ fresh: true }), email) < 1) {
+      return res.status(400).json({ success: false, message: 'Keep at least one active super admin. Enable a default super admin or activate another super admin first.' });
+    }
     await query('DELETE FROM auth_tokens WHERE email = ?', [email]);
     await query('DELETE FROM admins WHERE email = ?', [email]);
     res.json({ success: true });

@@ -65,7 +65,7 @@ A pixel-art banner above the library (canvas renderer in `app.js`; sprites from 
 
 ### Admin console
 * **Users:** bulk-provision users with temporary passwords and a **Categories** checklist. **Edit user** changes a user's email (cascades to preferences, analytics and feedback) and their Gemini Enterprise app link, edits their categories, and can reset access.
-* **Admins** (super admin only): invite by email (`super` or `assist`), resend or remove invites.
+* **Admins** (super admin only): lists every admin, starting with the two **default accounts** (`edu_portal_s_admin`, `edu_portal_admin`). Invite by email (`super` or `assist`), resend or remove invites. The default accounts can't be removed, but they can be **disabled / enabled** as long as at least one super admin stays active (and never the account you're signed in with).
 * **Analytics:** total views, likes and tries; a 6-month line chart; an **Idea providers** dashboard (Overall / last month / 3 months / 6 months) with the top providers by playbooks, by views and by likes, plus the top community playbooks (default playbooks excluded); a most-liked playbook list.
 * **Use cases:** create, edit, delete, import and export (JSON). Includes Gemini-assisted drafting with a diff viewer, plus infographic **Generate / Regenerate / Generate missing**.
   * The form also sets **Quest timing**: any of the 6 term/phase chips, or "Anytime".
@@ -99,17 +99,47 @@ All UI strings live in `uiTranslationsV3` (with V4/V6 layers merged on top) in `
 | Server | Node.js 20 + Express (`server.js`): REST API, `express-session` cookies, `bcryptjs` hashing, VM-sandbox seeding of the 14 playbooks from `app.js` |
 | Sessions | `lib/session-store.js`: `express-session` store backed by the `sessions` table, with lazy pruning. Sessions survive Cloud Run scale-to-zero and are shared across instances. |
 | Database | `lib/db.js`: PostgreSQL (`pg` pool, Cloud SQL) when `DATABASE_URL` is set, otherwise SQLite (`edu_portal.db`). The schema is created and migrated on boot. |
-| Secrets | `lib/secrets.js`: AES-256-GCM encryption for secret settings (for example the SMTP password) |
+| Secrets | Credentials (admin passwords, session secret, encryption key, `DATABASE_URL`) live in **Secret Manager** and reach Cloud Run as env vars. `lib/secrets.js` adds AES-256-GCM encryption for secret settings stored in the DB (for example the SMTP password). |
 | Email | `lib/mailer.js` (nodemailer). Config comes from the DB (`app_settings.smtp`), then `SMTP_*` env vars, then demo mode. |
 | GCP auth | `lib/gcp.js`: access token from the metadata server (Cloud Run) or local `gcloud`, plus the quota-project header |
 | Infographics | `lib/infographics.js` + `scripts/generate-infographics.js`: Vertex AI `gemini-nano-banana-2.1` (location `global`, 16:9) with the Archimedes mascot reference image `imgs/archimedes-ref.jpg`. Images go to a public GCS bucket. |
 | Quest Run | `lib/quest-core.js` (UMD module shared by the server and the browser as `window.QuestCore`): the academic calendar, term/week/phase position, hero classes and weighted hint picking. Sprites live in `game/`, and `GET /game/manifest.json` lists the assets that exist. |
-| Hosting | Cloud Run (containerised by the `Dockerfile`) + Cloud SQL for PostgreSQL. Infrastructure lives in `terraform/`. |
+| Hosting | Cloud Run (built from the `Dockerfile` by Cloud Build, image in Artifact Registry) + Cloud SQL for PostgreSQL + Secret Manager + Cloud Storage. Everything is provisioned by Terraform (`terraform/`) through `scripts/deploy.sh`. |
+
+**Runtime** (everything inside the box lives in your project and is created by Terraform, except the Artifact Registry repository, which `gcloud run deploy --source` creates on the first app deploy; Vertex AI is an enabled API, not a resource):
 
 ```mermaid
 flowchart LR
-  Browser["Browser: index.html + app.js + style.css"] -->|"REST + session cookie"| Express["Express server.js (Cloud Run)"]
-  Express --> Store["lib/session-store.js"]
+  Browser["Browser: index.html + app.js + style.css"]
+  GE["Gemini Enterprise app"]
+  SMTP["SMTP server"]
+  subgraph GCP["Your Google Cloud project"]
+    direction LR
+    Run["Cloud Run service: Express server.js"]
+    SA["Runtime service account"]
+    SM[("Secret Manager: admin passwords, SESSION_SECRET, SETTINGS_ENCRYPTION_KEY, DATABASE_URL")]
+    SQL[("Cloud SQL PostgreSQL: users, playbooks, sessions, settings")]
+    GCS[("Cloud Storage public bucket: infographics")]
+    Vertex["Vertex AI: Gemini drafting, translation, similarity + image model"]
+    AR[("Artifact Registry: app image")]
+  end
+  Browser -->|"HTTPS, REST + session cookie"| Run
+  Browser -->|"img src"| GCS
+  Browser -->|"Try it: ge_app_link?q="| GE
+  Run -. "runs as" .-> SA
+  SM -->|"env vars at start-up"| Run
+  Run -->|"Unix socket, lib/db.js"| SQL
+  Run -->|"lib/infographics.js upload"| GCS
+  Run -->|"lib/gcp.js token"| Vertex
+  Run -->|"lib/mailer.js"| SMTP
+  AR -->|"image"| Run
+```
+
+**Inside the server:**
+
+```mermaid
+flowchart LR
+  Express["Express server.js"] --> Store["lib/session-store.js"]
   Express --> DBL["lib/db.js"]
   Store --> DBL
   DBL -->|"DATABASE_URL set"| PG[("Cloud SQL PostgreSQL")]
@@ -123,8 +153,23 @@ flowchart LR
   Info --> GCP["lib/gcp.js token"]
   Info -->|"prompt + imgs/archimedes-ref.jpg"| Vertex["Vertex AI gemini-nano-banana-2.1"]
   Info -->|"upload"| GCS[("GCS public bucket")]
-  Browser -->|"img src"| GCS
-  Browser -->|"Try it: ge_app_link?q="| GE["Gemini Enterprise app"]
+```
+
+**Provisioning** (`scripts/deploy.sh`):
+
+```mermaid
+flowchart LR
+  Env[".env.prod (your values, gitignored)"] --> Deploy["scripts/deploy.sh"]
+  Deploy -->|"infra: TF_VAR_*"| TF["Terraform (terraform/)"]
+  Deploy -->|"app: gcloud run deploy --source ."| CB["Cloud Build"]
+  TF --> APIs["Enable APIs"]
+  TF --> SQL[("Cloud SQL instance, database, user")]
+  TF --> SM[("Secret Manager secrets + versions")]
+  TF --> SA["Runtime service account + IAM"]
+  TF --> GCS[("Infographics bucket")]
+  TF --> Run["Cloud Run service (+ optional domain mapping)"]
+  CB --> AR[("Artifact Registry image")]
+  AR --> Run
 ```
 
 ---
@@ -289,7 +334,8 @@ All endpoints return JSON and use the session cookie. "User" means a signed-in s
 | `GET /api/feedbacks` · `POST /api/feedbacks/delete` | Admin · Super | List (with conversion status) · dismiss feedback |
 | `POST /api/admin/feedbacks/:id/similar` · `POST /api/admin/feedbacks/:id/convert` | Super | Rank similar playbooks + recommend enhance / new · link feedback to a playbook |
 | `GET/POST/PUT/DELETE /api/admin/users` · `POST/PUT /api/admin/users/reset` | Admin (writes: Super) | List, provision, edit, delete, reset users |
-| `GET/POST/DELETE /api/admin/admins` · `POST /api/admin/admins/resend` | Super | Manage invited admins |
+| `GET/POST/DELETE /api/admin/admins` · `POST /api/admin/admins/resend` | Super | List all admins (default accounts first) · invite · remove · resend invites |
+| `PUT /api/admin/admins/builtin` | Super | Enable / disable a default admin (`{ username, disabled }`); rejected if it would leave no active super admin or targets yourself |
 | `GET /api/admin/stats` | Admin | Totals and 6-month history (views / likes / tries) |
 | `GET /api/admin/stats/creators?range=all\|1m\|3m\|6m` | Admin | Idea provider summary and leaderboards (playbooks, views, likes) |
 | `POST/PUT/DELETE /api/admin/use-cases` · `GET /api/admin/use-cases/export` | Super · Admin | Edit · export playbooks |
@@ -348,7 +394,7 @@ npm start               # SQLite is used automatically when DATABASE_URL is blan
 | Variable | Required | Purpose |
 | :--- | :---: | :--- |
 | `SUPER_ADMIN_PASSWORD` | ✅ deploy | Password for the built-in super admin `edu_portal_s_admin` (min 12 chars) |
-| `ADMIN_PASSWORD`, `DEMO_ADMIN_PASSWORD` | – | Built-in assistant admins `edu_portal_admin` / `demo-admin`. Blank = account disabled. |
+| `ADMIN_PASSWORD` | – | Built-in assistant admin `edu_portal_admin`. Blank = account disabled. |
 | `SESSION_SECRET` | – | Signs session cookies. Blank on deploy = generated by Terraform. |
 | `SETTINGS_ENCRYPTION_KEY` | – | AES-256-GCM key for secrets in `app_settings` (SMTP password). Blank on deploy = generated. |
 | `DB_PASSWORD` | – | Cloud SQL `postgres` password. Blank = generated. |
@@ -377,7 +423,10 @@ npm start               # SQLite is used automatically when DATABASE_URL is blan
 ## 🔐 Accounts, roles & password recovery
 
 * **Standard users** are provisioned by an admin with an auto-generated temporary password and must change it on first sign-in. What they see is decided by the categories an admin ticks on their account.
-* **Built-in admin accounts** (`edu_portal_s_admin` = super, `edu_portal_admin` = assist, `demo-admin` = assist) are break-glass logins. Their passwords come only from `SUPER_ADMIN_PASSWORD` / `ADMIN_PASSWORD` / `DEMO_ADMIN_PASSWORD` (Secret Manager in the cloud). An account without a password is disabled.
+* **Default admin accounts** (`edu_portal_s_admin` = super, `edu_portal_admin` = assist). Their passwords come only from `SUPER_ADMIN_PASSWORD` / `ADMIN_PASSWORD` (Secret Manager in the cloud); an account without a password shows as *Not configured* and can't sign in.
+  * Both appear at the top of **Admin → Admins**. A super admin can **disable** either one (for example once named super admins have been invited) and enable it again later. The state is stored in `app_settings['builtin_admins']`, and a disabled account's open sessions end within about 10 seconds.
+  * The portal always keeps **at least one active super admin**: disabling `edu_portal_s_admin` needs another verified super admin, and the last active super admin can't be removed. Nobody can disable the account they're signed in with.
+  * Recovery if every super admin is locked out: run `DELETE FROM app_settings WHERE key = 'builtin_admins';` against the database to re-enable the default accounts.
 * **Invited admins** (`admins` table): a super admin invites an email address. The invitee gets a single-use `/?verify=TOKEN` link (48 h) and sets a password. Verified admins can use **Forgot password?**, which sends a `/?reset=TOKEN` link (1 h). Tokens are stored only as SHA-256 hashes.
 
 | Capability | Super | Assist |
@@ -386,7 +435,7 @@ npm start               # SQLite is used automatically when DATABASE_URL is blan
 | Add / edit / delete / import playbooks, generate infographics | ✅ | ❌ |
 | Provision / edit users, reset access | ✅ | ❌ |
 | Dismiss feedback | ✅ | ❌ |
-| Invite / remove admins, SMTP settings | ✅ | ❌ |
+| Invite / remove admins, enable / disable default admins, SMTP settings | ✅ | ❌ |
 
 **Email:** configure SMTP in **Admin → Settings → Email**. The SMTP password is encrypted at rest. With no SMTP configured, the portal runs in demo mode: links are written to the server log and shown to the super admin only.
 

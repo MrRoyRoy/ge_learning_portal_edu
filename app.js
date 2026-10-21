@@ -5387,6 +5387,14 @@ const uiTranslationsV2 = {
     inviteSentToast: "Invite sent",
     resentToast: "Invite resent",
     removedToast: "Admin removed",
+    statusDisabled: "Disabled",
+    statusNotConfigured: "Not configured",
+    builtInAdmin: "Default account",
+    disableAdmin: "Disable",
+    enableAdmin: "Enable",
+    confirmDisableAdmin: "Disable the default account {email}? It can't sign in until a super admin enables it again.",
+    adminDisabledToast: "Admin disabled",
+    adminEnabledToast: "Admin enabled",
     adminRegisteredUsersTitle: "Users",
     adminThUserEmail: "Email",
     adminThGeLink: "GE app link",
@@ -5606,6 +5614,14 @@ const uiTranslationsV2 = {
     inviteSentToast: "已傳送邀請",
     resentToast: "已重新傳送邀請",
     removedToast: "已移除管理員",
+    statusDisabled: "已停用",
+    statusNotConfigured: "未設定",
+    builtInAdmin: "預設帳戶",
+    disableAdmin: "停用",
+    enableAdmin: "啟用",
+    confirmDisableAdmin: "要停用預設帳戶 {email} 嗎？在超級管理員重新啟用前，此帳戶將無法登入。",
+    adminDisabledToast: "已停用管理員",
+    adminEnabledToast: "已啟用管理員",
     adminRegisteredUsersTitle: "使用者",
     adminThUserEmail: "電郵",
     adminThGeLink: "GE 應用程式連結",
@@ -5825,6 +5841,14 @@ const uiTranslationsV2 = {
     inviteSentToast: "已发送邀请",
     resentToast: "已重新发送邀请",
     removedToast: "已移除管理员",
+    statusDisabled: "已停用",
+    statusNotConfigured: "未配置",
+    builtInAdmin: "默认账户",
+    disableAdmin: "停用",
+    enableAdmin: "启用",
+    confirmDisableAdmin: "要停用默认账户 {email} 吗？在超级管理员重新启用前，该账户将无法登录。",
+    adminDisabledToast: "已停用管理员",
+    adminEnabledToast: "已启用管理员",
     adminRegisteredUsersTitle: "用户",
     adminThUserEmail: "邮箱",
     adminThGeLink: "GE 应用链接",
@@ -8064,7 +8088,7 @@ async function loadAdminAdmins() {
   const list = Array.isArray(data) ? data : (Array.isArray(data.admins) ? data.admins : []);
   if (!ok && !list.length) { tbody.innerHTML = `<tr><td colspan="5" class="table-empty">${escapeHtml(errText(data))}</td></tr>`; return; }
   if (!list.length) { tbody.innerHTML = `<tr><td colspan="5" class="table-empty">${escapeHtml(t.adminsEmpty)}</td></tr>`; return; }
-  tbody.innerHTML = list.map(a => {
+  tbody.innerHTML = list.map(a => a.builtIn ? builtInAdminRowHtml(a, t) : (() => {
     const verified = a.status ? a.status === "active" : isOn(a.isVerified);
     return `<tr>
       <td class="cell-strong">${escapeHtml(a.email)}</td>
@@ -8076,7 +8100,30 @@ async function loadAdminAdmins() {
         <button type="button" class="nav-button btn-sm btn-danger btn-remove-admin" data-email="${escapeHtml(a.email)}">${escapeHtml(t.remove)}</button>
       </div></td>
     </tr>`;
-  }).join("");
+  })()).join("");
+}
+
+/**
+ * Row for a built-in (default) admin. These can't be removed, only disabled / enabled, and the server enforces
+ * the rules (keep >= 1 active super admin, never disable yourself). An account without a configured password
+ * shows "Not configured" with no action.
+ */
+function builtInAdminRowHtml(a, t) {
+  const status = a.status || "active";
+  const dot = { active: "is-ok", disabled: "is-off", not_configured: "is-pending" }[status] || "is-pending";
+  const label = { active: t.statusActive, disabled: t.statusDisabled, not_configured: t.statusNotConfigured }[status] || status;
+  const action = status === "active"
+    ? (a.isSelf ? "" : `<button type="button" class="nav-button btn-sm btn-danger btn-toggle-builtin" data-username="${escapeHtml(a.email)}" data-disable="1">${escapeHtml(t.disableAdmin)}</button>`)
+    : status === "disabled"
+      ? `<button type="button" class="nav-button btn-sm btn-toggle-builtin" data-username="${escapeHtml(a.email)}" data-disable="0">${escapeHtml(t.enableAdmin)}</button>`
+      : "";
+  return `<tr class="row-builtin-admin">
+    <td class="cell-strong">${escapeHtml(a.email)}</td>
+    <td>${escapeHtml(a.role === "super" ? t.roleSuper : t.roleAssist)}</td>
+    <td><span class="status-dot ${dot}">${escapeHtml(label)}</span></td>
+    <td class="muted">${escapeHtml(t.builtInAdmin)}</td>
+    <td class="col-actions"><div class="row-actions">${action}</div></td>
+  </tr>`;
 }
 
 /** Show the invite outcome; a previewLink means email isn't configured (demo mode). */
@@ -8110,7 +8157,16 @@ function bindAdminsPanel() {
     const t = tr();
     const resend = e.target.closest(".btn-resend-admin");
     const remove = e.target.closest(".btn-remove-admin");
-    if (resend) {
+    const toggle = e.target.closest(".btn-toggle-builtin");
+    if (toggle) {
+      const disable = toggle.dataset.disable === "1";
+      if (disable && !confirm(fmt(t.confirmDisableAdmin, { email: toggle.dataset.username }))) return;
+      toggle.disabled = true;
+      const { ok, data } = await apiJson("/api/admin/admins/builtin", { method: "PUT", body: { username: toggle.dataset.username, disabled: disable } });
+      toggle.disabled = false;
+      if (ok) { showToast(disable ? t.adminDisabledToast : t.adminEnabledToast); loadAdminAdmins(); }
+      else showToast(errText(data), "warning");
+    } else if (resend) {
       resend.disabled = true;
       const { ok, data } = await apiJson("/api/admin/admins/resend", { method: "POST", body: { email: resend.dataset.email } });
       resend.disabled = false;
