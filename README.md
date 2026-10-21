@@ -18,6 +18,9 @@ The **Gemini Enterprise - Edu Portal** is a playbook library for academic instit
 7. [Accounts, roles & password recovery](#-accounts-roles--password-recovery)
 8. [Infographics](#-infographics)
 9. [Deployment](#-deployment)
+10. [Estimated monthly cost](#-estimated-monthly-cost)
+
+Self-hosting guide, GitHub details and the full cost breakdown: [docs/HANDBOOK.md](docs/HANDBOOK.md).
 
 ---
 
@@ -109,30 +112,29 @@ All UI strings live in `uiTranslationsV3` (with V4/V6 layers merged on top) in `
 **Runtime** (everything inside the box lives in your project and is created by Terraform, except the Artifact Registry repository, which `gcloud run deploy --source` creates on the first app deploy; Vertex AI is an enabled API, not a resource):
 
 ```mermaid
-flowchart LR
+flowchart TB
   Browser["Browser: index.html + app.js + style.css"]
+  subgraph GCP["Your Google Cloud project"]
+    Run["Cloud Run service<br/>Express server.js"]
+    SA["Runtime service account"]
+    SM[("Secret Manager<br/>admin passwords, session secret,<br/>encryption key, DATABASE_URL")]
+    AR[("Artifact Registry<br/>app image")]
+    SQL[("Cloud SQL PostgreSQL<br/>users, playbooks, sessions, settings")]
+    GCS[("Cloud Storage<br/>public infographics bucket")]
+    Vertex["Vertex AI<br/>Gemini drafting / translation /<br/>similarity + image model"]
+  end
   GE["Gemini Enterprise app"]
   SMTP["SMTP server"]
-  subgraph GCP["Your Google Cloud project"]
-    direction LR
-    Run["Cloud Run service: Express server.js"]
-    SA["Runtime service account"]
-    SM[("Secret Manager: admin passwords, SESSION_SECRET, SETTINGS_ENCRYPTION_KEY, DATABASE_URL")]
-    SQL[("Cloud SQL PostgreSQL: users, playbooks, sessions, settings")]
-    GCS[("Cloud Storage public bucket: infographics")]
-    Vertex["Vertex AI: Gemini drafting, translation, similarity + image model"]
-    AR[("Artifact Registry: app image")]
-  end
-  Browser -->|"HTTPS, REST + session cookie"| Run
+  Browser -->|"HTTPS: REST + session cookie"| Run
   Browser -->|"img src"| GCS
   Browser -->|"Try it: ge_app_link?q="| GE
-  Run -. "runs as" .-> SA
   SM -->|"env vars at start-up"| Run
-  Run -->|"Unix socket, lib/db.js"| SQL
-  Run -->|"lib/infographics.js upload"| GCS
-  Run -->|"lib/gcp.js token"| Vertex
-  Run -->|"lib/mailer.js"| SMTP
   AR -->|"image"| Run
+  Run -. "runs as" .-> SA
+  Run -->|"Unix socket"| SQL
+  Run -->|"upload"| GCS
+  Run -->|"access token"| Vertex
+  Run -->|"invites, resets"| SMTP
 ```
 
 **Inside the server:**
@@ -495,6 +497,7 @@ For several environments, keep one file each with different `CLOUD_RUN_SERVICE` 
 | `./scripts/deploy.sh infra` | Terraform only (APIs, Cloud SQL, secrets, service account, bucket, Cloud Run config) |
 | `./scripts/deploy.sh app` | New app revision only (keeps the env vars and secrets Terraform set) |
 | `./scripts/deploy.sh plan` | `terraform plan` |
+| `./scripts/deploy.sh destroy` | `terraform destroy` (needs `CLOUD_SQL_DELETION_PROTECTION=false` applied first; deletes all data) |
 
 Add `--env-file <file>` to pick the environment (default `.env`) and `--yes` to skip Terraform's confirmation.
 
@@ -522,6 +525,20 @@ printf '%s' 'NEW_VALUE' | gcloud secrets versions add <CLOUD_RUN_SERVICE>-super-
 ```
 
 Update the value in your env file too, so the next `terraform apply` doesn't roll it back.
+
+---
+
+## 💰 Estimated monthly cost
+
+List prices checked 2026-10-21 (USD per month, on-demand, asia-east2 / Hong Kong). Full assumptions and unit prices: [docs/HANDBOOK.md](docs/HANDBOOK.md#3-monthly-cost-estimate-google-cloud).
+
+| Scenario | Cloud SQL tier | asia-east2 | us-central1 |
+| :--- | :--- | ---: | ---: |
+| Pilot (~50 users, ~20k requests) | `db-f1-micro` (default) | ≈ $16 | ≈ $11 |
+| Department (~500 users, ~200k requests) | `db-g1-small` | ≈ $49 | ≈ $35 |
+| Campus-wide (~5,000 users, ~2M requests) | `db-custom-1-3840` | ≈ $129 | ≈ $97 |
+
+Cloud SQL is most of the bill; Cloud Run scales to zero and usually stays inside its free tier. Gemini (drafting, translation, infographics) is pay-per-use and only triggered by admins.
 
 ---
 

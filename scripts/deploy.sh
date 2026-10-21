@@ -8,6 +8,7 @@
 #   ./scripts/deploy.sh infra --env-file .env.dev   # Terraform only
 #   ./scripts/deploy.sh app   --env-file .env.dev   # new app revision only
 #   ./scripts/deploy.sh plan  --env-file .env.dev   # terraform plan, no changes
+#   ./scripts/deploy.sh destroy --env-file .env.dev # delete the environment (data too!)
 #   add --yes to skip Terraform's confirmation prompt
 #
 # Nothing environment-specific lives in this script: project, region, service
@@ -27,11 +28,11 @@ step() { printf '\n\033[36m▶ %s\033[0m\n' "$*"; }
 # ---- Arguments ----------------------------------------------------------------
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    all|infra|app|plan) ACTION="$1" ;;
+    all|infra|app|plan|destroy) ACTION="$1" ;;
     --env-file) shift; [[ $# -gt 0 ]] || die "--env-file needs a path"; ENV_FILE="$1" ;;
     --env-file=*) ENV_FILE="${1#*=}" ;;
     --yes|-y) AUTO_APPROVE="-auto-approve" ;;
-    -h|--help) sed -n '2,15p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,16p' "$0"; exit 0 ;;
     *) die "Unknown argument: $1 (try --help)" ;;
   esac
   shift
@@ -106,6 +107,8 @@ run_terraform() {
 
   if [[ "$tf_cmd" == "plan" ]]; then
     terraform -chdir="$TF_DIR" plan -input=false
+  elif [[ "$tf_cmd" == "destroy" ]]; then
+    terraform -chdir="$TF_DIR" destroy -input=false $AUTO_APPROVE
   else
     terraform -chdir="$TF_DIR" apply -input=false $AUTO_APPROVE
   fi
@@ -129,6 +132,10 @@ case "$ACTION" in
   infra) step "Terraform apply"; run_terraform apply ;;
   app)   deploy_app ;;
   all)   step "Terraform apply"; run_terraform apply; deploy_app ;;
+  destroy)
+    # Cloud SQL deletion protection must be lifted (and applied) first, otherwise Terraform refuses.
+    [[ "${CLOUD_SQL_DELETION_PROTECTION:-true}" == "false" ]] || die "Set CLOUD_SQL_DELETION_PROTECTION=false in ${ENV_FILE#"$ROOT/"} and run 'infra' first. Destroy deletes the database and all portal data."
+    step "Terraform destroy ($CLOUD_RUN_SERVICE in $GCP_PROJECT_ID)"; run_terraform destroy ;;
 esac
 
 step "Done."
