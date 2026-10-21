@@ -11,7 +11,7 @@ require('dotenv').config();
 // Shared libraries (required after dotenv so env overrides apply)
 const { createDb } = require('./lib/db');
 const { createDbSessionStore } = require('./lib/session-store');
-const { gcpHeaders } = require('./lib/gcp');
+const { gcpHeaders, getProjectId } = require('./lib/gcp');
 const mailer = require('./lib/mailer');
 const { encrypt } = require('./lib/secrets');
 const infographics = require('./lib/infographics');
@@ -54,11 +54,22 @@ app.get('/game/manifest.json', (req, res) => {
 // Serve static assets from project root and public subdirectories (before sessions: no DB lookup per asset)
 app.use(express.static(__dirname));
 
+/*
+ * Session signing secret. Comes from SESSION_SECRET (Secret Manager on Cloud Run). There is no hard-coded
+ * fallback: without it we use a random per-process secret, which is fine locally but signs everyone out on
+ * restart and breaks multi-instance deployments, hence the loud warning in production.
+ */
+const SESSION_SECRET = process.env.SESSION_SECRET || (() => {
+  const level = process.env.NODE_ENV === 'production' ? 'error' : 'warn';
+  console[level]('⚠️  SESSION_SECRET is not set; using a random secret for this process. Set it in .env (see .env.example).');
+  return require('crypto').randomBytes(32).toString('hex');
+})();
+
 // Express Session Management — stored in the DB (lib/session-store.js) so a session survives
 // Cloud Run scale-to-zero, new revisions and multiple instances (MemoryStore lost them → 401s on likes).
 app.use(session({
   store: createDbSessionStore(session, db),
-  secret: process.env.SESSION_SECRET || 'edu-gemini-enterprise-swiss-minimalist-secret',
+  secret: SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
   cookie: {
@@ -456,24 +467,7 @@ async function seedDatabase() {
     // Clean up any previously pre-seeded mock analytics data to reflect actual adoption metrics
     await query("DELETE FROM analytics WHERE user_email = 'academic_trial@edu.hk'");
 
-    // Seed standard trial user demo-user@example.com with password ***REMOVED*** if missing
-    const existingTestUser = await query('SELECT count(*) as count FROM users WHERE email = ?', ['demo-user@example.com']);
-    const testUserCount = parseInt(existingTestUser[0].count || existingTestUser[0]['count(*)'] || 0);
-    if (testUserCount === 0) {
-      console.log('👤 Seeding default user: demo-user@example.com with password: ***REMOVED***');
-      const salt = await bcrypt.genSalt(10);
-      const hash = await bcrypt.hash('***REMOVED***', salt);
-      await query(
-        'INSERT INTO users (email, password_hash, is_temp_password, role, institution_level, categories) VALUES (?, ?, ?, ?, ?, ?)',
-        ['demo-user@example.com', hash, dbType === 'postgres' ? false : 0, 'Lecturer', 'University & College', JSON.stringify(['teaching'])]
-      );
-    }
-
-    // Idempotent: give the trial user its Gemini Enterprise app link (never overwrites an admin edit)
-    await query(
-      "UPDATE users SET ge_app_link = ? WHERE email = ? AND (ge_app_link IS NULL OR ge_app_link = '')",
-      [TEST_USER_GE_APP_LINK, 'demo-user@example.com']
-    );
+    await seedDemoUser();
 
   } catch (error) {
     console.error('❌ Database seeding failed:', error.message);
@@ -542,7 +536,35 @@ async function applyProductRename() {
 }
 
 const PROMPT_TYPES = Object.freeze(['general', 'notebooklm', 'deep_research', 'agent_designer', 'canvas', 'image', 'video']);
-const TEST_USER_GE_APP_LINK = 'https://your-gemini-enterprise-app-link';
+
+/*
+ * Optional demo / test user, created only when DEMO_USER_EMAIL and DEMO_USER_PASSWORD are set (.env or
+ * Secret Manager). Nothing is created by default, so a fresh clone never ships a known login.
+ * DEMO_USER_GE_APP_LINK (optional) fills the user's Gemini Enterprise app link without overwriting an admin edit.
+ */
+async function seedDemoUser() {
+  const email = String(process.env.DEMO_USER_EMAIL || '').trim().toLowerCase();
+  const password = process.env.DEMO_USER_PASSWORD || '';
+  if (!email || !password) return;
+
+  const existing = await query('SELECT count(*) as count FROM users WHERE email = ?', [email]);
+  if (parseInt(existing[0].count || existing[0]['count(*)'] || 0) === 0) {
+    console.log(`👤 Seeding demo user from DEMO_USER_EMAIL: ${email}`);
+    const hash = await bcrypt.hash(password, await bcrypt.genSalt(10));
+    await query(
+      'INSERT INTO users (email, password_hash, is_temp_password, role, institution_level, categories) VALUES (?, ?, ?, ?, ?, ?)',
+      [email, hash, dbType === 'postgres' ? false : 0, 'Lecturer', 'University & College', JSON.stringify(['teaching'])]
+    );
+  }
+
+  const link = String(process.env.DEMO_USER_GE_APP_LINK || '').trim();
+  if (link) {
+    await query(
+      "UPDATE users SET ge_app_link = ? WHERE email = ? AND (ge_app_link IS NULL OR ge_app_link = '')",
+      [link, email]
+    );
+  }
+}
 
 async function upsertSeedUseCase(uc, ucTranslations, ucHelpers) {
   const translationsObj = ucTranslations || { en: uc, 'zh-TW': {}, 'zh-CN': {} };
@@ -785,11 +807,15 @@ async function applyCategoryMigration() {
 
 /*
  * Infographics already generated with gemini-nano-banana-2.1 (v2: Archimedes mascot, cel-shaded editorial)
- * and stored in the public bucket. On boot every instance (local SQLite, dev/prod Postgres) picks these up,
- * so a fresh deploy shows images immediately without spending Vertex calls. See applySeedInfographics()
- * for exactly when an existing value is replaced.
+ * and stored in INFOGRAPHIC_BUCKET. When INFOGRAPHIC_SEED_IMAGES=true every instance picks these up on boot,
+ * so a fresh deploy shows images immediately without spending Vertex calls. Leave it off for a new bucket
+ * (the objects don't exist there yet) and generate them instead: Admin → Generate missing, or
+ * `npm run infographics`. See applySeedInfographics() for exactly when an existing value is replaced.
  */
-const INFOGRAPHIC_BASE = `https://storage.googleapis.com/${process.env.INFOGRAPHIC_BUCKET || 'your-infographic-bucket'}/infographics`;
+const INFOGRAPHIC_BASE = process.env.INFOGRAPHIC_BUCKET
+  ? `https://storage.googleapis.com/${process.env.INFOGRAPHIC_BUCKET}/infographics`
+  : '';
+const SEED_INFOGRAPHIC_IMAGES = Boolean(INFOGRAPHIC_BASE) && process.env.INFOGRAPHIC_SEED_IMAGES === 'true';
 const SEED_INFOGRAPHIC_VERSIONS = Object.freeze({
   accreditation_reports: 1791779876, at_risk_cohort: 1791779899, club_funding: 1791779917,
   curriculum_design: 1791780321, finance_compliance: 1791780221, lab_manual_creator: 1791779965,
@@ -809,6 +835,7 @@ const SEED_INFOGRAPHIC_VERSIONS = Object.freeze({
  * Comparison is done in JS (select, compare, update) rather than in SQL so it behaves the same on SQLite and Postgres.
  */
 async function applySeedInfographics() {
+  if (!SEED_INFOGRAPHIC_IMAGES) return;
   const ids = Object.keys(SEED_INFOGRAPHIC_VERSIONS);
   const rows = await query('SELECT id, infographic_url FROM use_cases');
 
@@ -899,6 +926,42 @@ const adminSession = (email, role, extra = {}) => ({
   ...extra
 });
 
+/*
+ * Built-in break-glass admin accounts. The password for each comes ONLY from its env var (Secret Manager on
+ * Cloud Run, .env locally); nothing is hard-coded. An unset password disables the account, except the super
+ * admin outside production: there a random password is generated once per process and printed to the console,
+ * so a fresh clone can sign in without inventing credentials first.
+ */
+const BUILT_IN_ADMIN_ACCOUNTS = Object.freeze([
+  { username: 'edu_portal_s_admin', role: 'super', env: 'SUPER_ADMIN_PASSWORD' },
+  { username: 'edu_portal_admin', role: 'assist', env: 'ADMIN_PASSWORD' },
+  { username: 'demo-admin', role: 'assist', env: 'DEMO_ADMIN_PASSWORD' }
+]);
+
+const builtInAdminPasswords = Object.freeze(Object.fromEntries(BUILT_IN_ADMIN_ACCOUNTS.map(({ username, role, env }) => {
+  if (process.env[env]) return [username, process.env[env]];
+  if (role === 'super' && process.env.NODE_ENV !== 'production') {
+    const generated = crypto.randomBytes(9).toString('base64url');
+    console.warn(`🔑 ${env} is not set. Local-only password for ${username} (this run): ${generated}`);
+    return [username, generated];
+  }
+  console.warn(`🔒 ${env} is not set; built-in account ${username} is disabled.`);
+  return [username, ''];
+})));
+
+// Constant-time comparison on equal-length digests, so response timing doesn't leak password prefixes.
+const safeEqual = (a, b) => crypto.timingSafeEqual(
+  crypto.createHash('sha256').update(String(a)).digest(),
+  crypto.createHash('sha256').update(String(b)).digest()
+);
+
+// matchBuiltInAdmin(username, password) -> account | null. Disabled accounts (empty password) never match.
+const matchBuiltInAdmin = (username, password) => {
+  const account = BUILT_IN_ADMIN_ACCOUNTS.find(a => a.username === String(username || '').trim());
+  const expected = account ? builtInAdminPasswords[account.username] : '';
+  return expected && safeEqual(password, expected) ? account : null;
+};
+
 // Older sessions (pre-upgrade) lack isSuper; derive it so the hard-coded super admin always qualifies.
 const isSuperSession = (u) => Boolean(u && u.isAdmin && (u.isSuper || (u.email === 'edu_portal_s_admin' && !u.isAssist)));
 
@@ -959,26 +1022,12 @@ app.post('/api/auth/login', async (req, res) => {
     return res.status(400).json({ success: false, message: 'Please provide both email and password.' });
   }
 
-  const superAdminPassword = process.env.SUPER_ADMIN_PASSWORD || '***REMOVED***';
-  const adminPassword = process.env.ADMIN_PASSWORD || '***REMOVED***';
-  const demoAdminPassword = process.env.DEMO_ADMIN_PASSWORD || '***REMOVED***';
-
-  // Admin bypass credentials
-  if (email.trim() === 'edu_portal_s_admin' && password === superAdminPassword) {
-    req.session.user = adminSession('edu_portal_s_admin', 'super');
-    return res.json({ success: true, isAdmin: true, isSuper: true, isAssist: false });
-  }
-
-  // Admin Assist bypass credentials
-  if (email.trim() === 'edu_portal_admin' && password === adminPassword) {
-    req.session.user = adminSession('edu_portal_admin', 'assist');
-    return res.json({ success: true, isAdmin: true, isSuper: false, isAssist: true });
-  }
-
-  // Demo Admin credentials (cloning edu_portal_admin permissions)
-  if (email.trim() === 'demo-admin' && password === demoAdminPassword) {
-    req.session.user = adminSession('demo-admin', 'assist');
-    return res.json({ success: true, isAdmin: true, isSuper: false, isAssist: true });
+  // Built-in (break-glass) admin accounts; passwords only from env, disabled when unset (see BUILT_IN_ADMIN_ACCOUNTS)
+  const builtIn = matchBuiltInAdmin(email, password);
+  if (builtIn) {
+    req.session.user = adminSession(builtIn.username, builtIn.role);
+    const isSuper = builtIn.role === 'super';
+    return res.json({ success: true, isAdmin: true, isSuper, isAssist: !isSuper });
   }
 
   // DB-managed admins (verified only). A wrong admin password falls through to the standard user check.
@@ -2874,7 +2923,8 @@ app.put('/api/admin/settings/smtp', requireSuper, async (req, res) => {
     res.json(await smtpSettingsPayload());
   } catch (error) {
     console.error('Save SMTP settings error:', error);
-    res.status(500).json({ success: false, message: 'Failed to save email settings.' });
+    const message = error.code === 'NO_ENCRYPTION_KEY' ? error.message : 'Failed to save email settings.';
+    res.status(500).json({ success: false, message });
   }
 });
 
@@ -3055,7 +3105,7 @@ app.post('/api/admin/generate-gemini', requireAdmin, async (req, res) => {
  * (upstream HTTP status, or 500 for empty / unparsable output) and `.raw` (model text) for callers to map.
  */
 async function callGeminiJson(promptText) {
-  const url = `https://aiplatform.googleapis.com/v1/projects/your-gcp-project-id/locations/global/publishers/google/models/${GEMINI_MODEL}:generateContent`;
+  const url = `https://aiplatform.googleapis.com/v1/projects/${await getProjectId()}/locations/global/publishers/google/models/${GEMINI_MODEL}:generateContent`;
   const response = await fetch(url, {
     method: 'POST',
     headers: await gcpHeaders({ 'Content-Type': 'application/json' }),

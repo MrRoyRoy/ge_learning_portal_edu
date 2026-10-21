@@ -1,15 +1,38 @@
+# OS / editor
 .DS_Store
+*.swp
+
+# Dependencies (install with `npm ci`)
+node_modules/
+
+# Local secrets and environment files: only the template is tracked
+.env
+.env.*
+!.env.example
+
+# Local data (SQLite DB and session files)
+*.db
+*.db-journal
+*.sqlite
+
+# Agent / environment-specific notes (deploy URLs, revisions, accounts)
+AGENT.local.md
+
+# Scratch work, generated raw assets, test scripts
+scratch/
 *.zip
-gp
 *.pdf
+gp
 test-*.js
 find-working-model.js
 
-# Terraform Workspace & Local Secrets Ignore list
+# Terraform workspace, state and local inputs (state contains secrets)
 .terraform/
 *.tfstate
 *.tfstate.*
+terraform.tfstate.d/
 *.tfvars
 *.tfvars.json
 .terraform.lock.hcl
-
+backend_override.tf
+crash.log

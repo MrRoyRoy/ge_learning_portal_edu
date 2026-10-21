@@ -308,55 +308,76 @@ All endpoints return JSON and use the session cookie. "User" means a signed-in s
 
 ## 🚀 Local development
 
-Prerequisites: Node.js 18+ (the container uses 20) and npm.
+Prerequisites: Node.js 18+ (the container uses 20) and npm. The Google Cloud features (Draft with Gemini, infographics) also need the `gcloud` CLI.
 
 ```bash
 git clone <REPO_URL>
 cd edu-ge-adoption-portal
-npm install
-npm start               # SQLite is used automatically when DATABASE_URL is unset
+npm ci
+cp .env.example .env    # fill in what you need; everything is optional locally
+npm start               # SQLite is used automatically when DATABASE_URL is blank
 # open http://localhost:8080 (override with PORT)
 ```
 
-* Set variables in a local `.env` file (loaded by `dotenv`). Never commit it.
-* To use Postgres locally, set `DATABASE_URL` (and `DISABLE_PG_SSL=true` for a local server without TLS).
-* Infographic generation locally uses your `gcloud auth application-default` / `gcloud auth print-access-token` credentials, billed to `GCP_QUOTA_PROJECT`.
+* **First sign-in:** set `SUPER_ADMIN_PASSWORD` in `.env` and sign in as `edu_portal_s_admin`. If you leave it blank, the server prints a one-off random password for that account at startup (local runs only; in production the account stays disabled until the variable is set).
+* **Demo user (optional):** set `DEMO_USER_EMAIL` and `DEMO_USER_PASSWORD` to have a standard user created on first boot. No user exists by default.
+* **Postgres locally:** set `DATABASE_URL` (and `DISABLE_PG_SSL=true` for a local server without TLS).
+* **Google Cloud calls** use your `gcloud auth application-default` / `gcloud auth print-access-token` credentials against `GCP_PROJECT_ID` (or your `gcloud` default project), billed to `GCP_QUOTA_PROJECT`.
 
 ---
 
 ## ⚙️ Environment variables
 
+[`.env.example`](.env.example) is the full, commented list and the only template. Copy it to `.env` (or one file per environment such as `.env.dev` / `.env.prod`). Every `.env*` file except the template is gitignored.
+
+**Deployment target** (read by [`scripts/deploy.sh`](scripts/deploy.sh) and passed to Terraform):
+
 | Variable | Required | Purpose |
 | :--- | :---: | :--- |
-| `PORT` | – | HTTP port (default `8080`) |
-| `NODE_ENV` | Prod | `production` turns on secure cookies |
-| `SESSION_SECRET` | Prod | Signs session cookies. Also the fallback encryption key. |
-| `SETTINGS_ENCRYPTION_KEY` | Prod | AES-256-GCM key for secrets in `app_settings`. Use a separate value per environment. |
-| `DATABASE_URL` | Prod | PostgreSQL connection string. When unset, SQLite is used. |
-| `DISABLE_PG_SSL` | Cloud Run | `true` when connecting over the Cloud SQL Unix socket |
-| `SQLITE_PATH` | – | SQLite file path (default `edu_portal.db`) |
-| `SUPER_ADMIN_PASSWORD`, `ADMIN_PASSWORD`, `DEMO_ADMIN_PASSWORD` | Prod | Built-in admin passwords. Always set them via environment or Secret Manager. |
-| `PUBLIC_BASE_URL` | Recommended | Base URL for emailed links (otherwise the request origin is used) |
-| `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURITY`, `SMTP_USER`, `SMTP_PASS` / `SMTP_PASSWORD`, `SMTP_FROM`, `SMTP_FROM_NAME`, `SMTP_FROM_EMAIL` | – | SMTP fallback when nothing is saved in Admin → Settings → Email |
-| `INFOGRAPHIC_BUCKET` | – | Public GCS bucket for infographics |
-| `INFOGRAPHIC_MODEL` | – | Default `gemini-nano-banana-2.1` |
-| `INFOGRAPHIC_LOCATION` | – | Default `global` |
-| `GEMINI_MODEL` | – | Model for admin drafting and translation. Default `gemini-3.8-flash` |
-| `INFOGRAPHIC_PROJECT` | – | Vertex project (defaults to `GCP_PROJECT_ID`) |
-| `INFOGRAPHIC_REF_IMAGE` | – | Mascot reference image (default `imgs/archimedes-ref.jpg`) |
-| `INFOGRAPHIC_CONCURRENCY` | – | Worker pool for "Generate missing" (1–4, default 2) |
-| `GCP_PROJECT_ID` / `GOOGLE_CLOUD_PROJECT` | – | GCP project for Vertex and GCS |
-| `GCP_QUOTA_PROJECT`, `GCP_FORCE_QUOTA_HEADER` | – | Quota / billing project header for local credentials |
+| `GCP_PROJECT_ID` | ✅ | Project ID to deploy into. Also used at runtime for Vertex AI. |
+| `GCP_REGION` | ✅ | Region for Cloud Run, Cloud SQL and the bucket |
+| `CLOUD_RUN_SERVICE` | ✅ | Cloud Run service name; also prefixes the secrets and the runtime service account |
+| `CLOUD_SQL_INSTANCE`, `CLOUD_SQL_DATABASE` | ✅ / – | Cloud SQL instance and database name (default `edu_portal`) |
+| `INFOGRAPHIC_BUCKET` | ✅ | Globally unique public bucket for infographics |
+| `CUSTOM_DOMAIN` | – | Custom domain; sets `PUBLIC_BASE_URL` and a Cloud Run domain mapping |
+| `CLOUD_SQL_TIER`, `CLOUD_SQL_DELETION_PROTECTION`, `ALLOW_UNAUTHENTICATED`, `CLOUD_RUN_MAX_INSTANCES` | – | Sizing and safety switches |
+| `TF_STATE_BUCKET` | – | GCS bucket for Terraform state (blank = local state, one workspace per environment) |
+
+**Secrets** (Terraform stores them in Secret Manager; Cloud Run reads them from there):
+
+| Variable | Required | Purpose |
+| :--- | :---: | :--- |
+| `SUPER_ADMIN_PASSWORD` | ✅ deploy | Password for the built-in super admin `edu_portal_s_admin` (min 12 chars) |
+| `ADMIN_PASSWORD`, `DEMO_ADMIN_PASSWORD` | – | Built-in assistant admins `edu_portal_admin` / `demo-admin`. Blank = account disabled. |
+| `SESSION_SECRET` | – | Signs session cookies. Blank on deploy = generated by Terraform. |
+| `SETTINGS_ENCRYPTION_KEY` | – | AES-256-GCM key for secrets in `app_settings` (SMTP password). Blank on deploy = generated. |
+| `DB_PASSWORD` | – | Cloud SQL `postgres` password. Blank = generated. |
+| `DEMO_USER_EMAIL`, `DEMO_USER_PASSWORD`, `DEMO_USER_GE_APP_LINK` | – | Optional demo user created on first boot |
+
+**App runtime:**
+
+| Variable | Purpose |
+| :--- | :--- |
+| `PORT` | HTTP port (default `8080`) |
+| `NODE_ENV` | `production` on Cloud Run (built-in admins without a password stay disabled) |
+| `DATABASE_URL` / `SQLITE_PATH` | PostgreSQL connection string; blank = SQLite file (default `edu_portal.db`) |
+| `DISABLE_PG_SSL` | `true` when connecting over the Cloud SQL Unix socket |
+| `GEMINI_MODEL` | Model for admin drafting and translation (default `gemini-3.8-flash`) |
+| `INFOGRAPHIC_MODEL`, `INFOGRAPHIC_LOCATION`, `INFOGRAPHIC_PROJECT`, `INFOGRAPHIC_REF_IMAGE`, `INFOGRAPHIC_CONCURRENCY` | Infographic generation settings |
+| `INFOGRAPHIC_SEED_IMAGES` | `true` only if `INFOGRAPHIC_BUCKET` already holds the pre-generated seed images |
+| `PUBLIC_BASE_URL` | Base URL for emailed links (otherwise the request origin) |
+| `GCP_QUOTA_PROJECT`, `GCP_FORCE_QUOTA_HEADER` | Quota / billing project header for local credentials |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURITY`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM_NAME`, `SMTP_FROM_EMAIL` | SMTP fallback when nothing is saved in Admin → Settings → Email |
 
 > [!CAUTION]
-> Never put passwords, connection strings with credentials or encryption keys in this README, in `terraform.tfvars` or in Git. Set them through environment variables or Secret Manager. Ask your administrator for the values.
+> Never put passwords, connection strings with credentials or encryption keys in this README, in Terraform files or in Git. Keep them in your local `.env*` files (gitignored) and Secret Manager.
 
 ---
 
 ## 🔐 Accounts, roles & password recovery
 
-* **Standard users** are provisioned by an admin with an auto-generated temporary password and must change it on first sign-in. They then pick their role and institution level.
-* **Built-in admin accounts** (`edu_portal_s_admin` = super, `edu_portal_admin` = assist, `demo-admin` = assist) are break-glass logins. Their passwords are set via environment variables. Ask your administrator.
+* **Standard users** are provisioned by an admin with an auto-generated temporary password and must change it on first sign-in. What they see is decided by the categories an admin ticks on their account.
+* **Built-in admin accounts** (`edu_portal_s_admin` = super, `edu_portal_admin` = assist, `demo-admin` = assist) are break-glass logins. Their passwords come only from `SUPER_ADMIN_PASSWORD` / `ADMIN_PASSWORD` / `DEMO_ADMIN_PASSWORD` (Secret Manager in the cloud). An account without a password is disabled.
 * **Invited admins** (`admins` table): a super admin invites an email address. The invitee gets a single-use `/?verify=TOKEN` link (48 h) and sets a password. Verified admins can use **Forgot password?**, which sends a `/?reset=TOKEN` link (1 h). Tokens are stored only as SHA-256 hashes.
 
 | Capability | Super | Assist |
@@ -384,49 +405,74 @@ npm run infographics -- --force      # regenerate everything
 npm run infographics -- --id=<id>    # a single playbook
 ```
 
-Admins can also generate from **Admin → Use cases**. The Cloud Run service account needs `roles/aiplatform.user` and object-admin access to the bucket. The bucket grants `allUsers` `roles/storage.objectViewer`.
+A new bucket starts empty, so generate the images once after the first deploy (**Admin → Use cases → Generate missing**, or the CLI above with `.env` pointing at your project). Admins can also regenerate single playbooks from **Admin → Use cases**. The Cloud Run service account needs `roles/aiplatform.user` and object-admin access to the bucket. The bucket grants `allUsers` `roles/storage.objectViewer`.
 
 ---
 
 ## ☁️ Deployment
 
-Target: **Cloud Run** + **Cloud SQL for PostgreSQL**. The Cloud Run service account needs `roles/cloudsql.client`, plus the infographic roles above.
+Target: **Cloud Run** + **Cloud SQL for PostgreSQL** + **Secret Manager** + a public **Cloud Storage** bucket, all in your own project. Nothing in the repo points at a particular project, service or domain; [`scripts/deploy.sh`](scripts/deploy.sh) reads everything from an env file.
 
-### Deploy from source
+### 1. Prerequisites
 
-```bash
-gcloud run deploy <SERVICE_NAME> \
-  --source . \
-  --region <REGION> \
-  --project <PROJECT_ID> \
-  --allow-unauthenticated \
-  --timeout 600 \
-  --add-cloudsql-instances <PROJECT_ID>:<REGION>:<INSTANCE_NAME> \
-  --set-env-vars NODE_ENV=production,DISABLE_PG_SSL=true,INFOGRAPHIC_BUCKET=<BUCKET_NAME>,PUBLIC_BASE_URL=<https://your-domain> \
-  --set-secrets DATABASE_URL=<DB_URL_SECRET>:latest,SESSION_SECRET=<SESSION_SECRET_NAME>:latest,SETTINGS_ENCRYPTION_KEY=<ENC_KEY_SECRET>:latest,SUPER_ADMIN_PASSWORD=<SUPER_PW_SECRET>:latest,ADMIN_PASSWORD=<ADMIN_PW_SECRET>:latest,DEMO_ADMIN_PASSWORD=<DEMO_PW_SECRET>:latest
-```
-
-* `DATABASE_URL` uses the Cloud SQL Unix socket form `postgres://<DB_USER>:<DB_PASSWORD>@/<DB_NAME>?host=/cloudsql/<INSTANCE_CONNECTION_NAME>`. Keep it in Secret Manager, never in plain env flags or docs.
-* Each environment (dev, prod) needs its own database and its own `SETTINGS_ENCRYPTION_KEY`.
-* On first boot the schema is created, migrations run and the 14 playbooks are seeded.
-
-### Terraform
-
-`terraform/` provisions the APIs, the Cloud SQL instance and database, IAM bindings, the Cloud Run service and public ingress.
+* A Google Cloud project with billing enabled, and an account with Owner (or equivalent) on it
+* [`gcloud`](https://cloud.google.com/sdk/docs/install) and [Terraform](https://developer.hashicorp.com/terraform/install) ≥ 1.5
 
 ```bash
-cd terraform
-terraform init
-cp terraform.tfvars.example terraform.tfvars   # project_id, project_number, region, service_name, db_instance_name
-export TF_VAR_db_password=...                  # supply secrets via env / prompt, never in tfvars
-export TF_VAR_super_admin_password=...
-export TF_VAR_admin_password=...
-terraform plan
-terraform apply
+gcloud auth login
+gcloud auth application-default login     # credentials Terraform uses
 ```
+
+### 2. Describe your environment
+
+```bash
+cp .env.example .env.prod                 # or .env, .env.dev, ...
+```
+
+Fill in at least `GCP_PROJECT_ID`, `GCP_REGION`, `CLOUD_RUN_SERVICE`, `CLOUD_SQL_INSTANCE`, `INFOGRAPHIC_BUCKET` and `SUPER_ADMIN_PASSWORD`. Leave `SESSION_SECRET`, `SETTINGS_ENCRYPTION_KEY` and `DB_PASSWORD` blank to have Terraform generate them. The script refuses to run while a required value is empty or still a placeholder.
+
+For several environments, keep one file each with different `CLOUD_RUN_SERVICE` (and `CLOUD_SQL_DATABASE` / `INFOGRAPHIC_BUCKET`) values. They can share a project and Cloud SQL instance.
+
+### 3. Deploy
+
+```bash
+./scripts/deploy.sh plan --env-file .env.prod   # preview the Terraform changes
+./scripts/deploy.sh      --env-file .env.prod   # Terraform apply, then build + deploy the app
+```
+
+| Command | What it does |
+| :--- | :--- |
+| `./scripts/deploy.sh [all]` | `terraform apply`, then `gcloud run deploy --source .` |
+| `./scripts/deploy.sh infra` | Terraform only (APIs, Cloud SQL, secrets, service account, bucket, Cloud Run config) |
+| `./scripts/deploy.sh app` | New app revision only (keeps the env vars and secrets Terraform set) |
+| `./scripts/deploy.sh plan` | `terraform plan` |
+
+Add `--env-file <file>` to pick the environment (default `.env`) and `--yes` to skip Terraform's confirmation.
+
+Terraform ([`terraform/`](terraform)) creates:
+
+* the required APIs, a Cloud SQL Postgres 15 instance, database and user
+* a dedicated runtime service account with `roles/cloudsql.client`, `roles/aiplatform.user`, object admin on the bucket and access to its own secrets only
+* one Secret Manager secret per credential, named `<CLOUD_RUN_SERVICE>-<variable>` (for example `edu-portal-super-admin-password`)
+* the Cloud Run service (placeholder image on the first apply; Terraform then ignores image changes so `deploy.sh app` owns releases), public ingress and the optional domain mapping
+* the public infographics bucket
+
+On first boot the app creates the schema, runs migrations and seeds the playbooks. Then sign in as `edu_portal_s_admin` and generate the infographics.
 
 > [!IMPORTANT]
-> Resources created manually with `gcloud` (for example the infographics bucket and its IAM) must be added with `terraform import` before the next `apply`. Supplying `project_number` avoids Cloud Resource Manager lookups in restricted projects.
+> Terraform state contains the generated secrets. Local state lives in `terraform/terraform.tfstate.d/` (gitignored); for teams set `TF_STATE_BUCKET` to a private, versioned GCS bucket. Existing resources created by hand must be brought in with `terraform import` before the first `apply`.
+
+> [!NOTE]
+> Cloud Run domain mappings need a verified domain and are only offered in some regions. Elsewhere, put an external HTTPS load balancer in front and still set `CUSTOM_DOMAIN` so emailed links use it.
+
+### Rotating a secret
+
+```bash
+printf '%s' 'NEW_VALUE' | gcloud secrets versions add <CLOUD_RUN_SERVICE>-super-admin-password --data-file=- --project <PROJECT_ID>
+./scripts/deploy.sh app --env-file .env.prod   # new revision picks up "latest"
+```
+
+Update the value in your env file too, so the next `terraform apply` doesn't roll it back.
 
 ---
 

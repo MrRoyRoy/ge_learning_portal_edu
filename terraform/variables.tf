@@ -1,59 +1,151 @@
+# ==============================================================================
+# Input variables. Nothing here is specific to any one environment: values come
+# from your gitignored .env file via scripts/deploy.sh (TF_VAR_* exports).
+# See .env.example for what each one means.
+# ==============================================================================
+
+# ---- Where to deploy (required) ----------------------------------------------
 variable "project_id" {
-  description = "The Google Cloud Project ID to deploy resources into."
+  description = "Google Cloud project ID to deploy into (.env: GCP_PROJECT_ID)."
   type        = string
-  default     = "your-gcp-project-id"
 }
 
 variable "region" {
-  description = "The Google Cloud region to deploy serverless services."
+  description = "Region for Cloud Run, Cloud SQL and the bucket, e.g. us-central1 (.env: GCP_REGION)."
   type        = string
-  default     = "your-region"
 }
 
 variable "service_name" {
-  description = "The name of the Cloud Run serverless container service."
+  description = "Cloud Run service name. Also prefixes the secrets and service account (.env: CLOUD_RUN_SERVICE)."
   type        = string
-  default     = "your-service"
+
+  validation {
+    condition     = can(regex("^[a-z]([-a-z0-9]{0,47}[a-z0-9])?$", var.service_name))
+    error_message = "service_name must be lowercase letters, digits and hyphens (max 49 chars), starting with a letter."
+  }
 }
 
 variable "db_instance_name" {
-  description = "The name of the Cloud SQL PostgreSQL database instance."
+  description = "Cloud SQL for PostgreSQL instance name (.env: CLOUD_SQL_INSTANCE)."
   type        = string
-  default     = "your-sql-instance"
 }
 
-variable "db_password" {
-  description = "The password for the PostgreSQL master admin user. Note: Declared as sensitive to hide from CLI outputs. Since standard resources (google_sql_user) persist password state, do not set ephemeral=true as it would cause resource tracking errors in Terraform."
+variable "infographic_bucket_name" {
+  description = "Globally unique name for the public bucket that stores generated infographics (.env: INFOGRAPHIC_BUCKET)."
   type        = string
-  sensitive   = true
 }
 
-variable "super_admin_password" {
-  description = "The custom password for the edu_portal_s_admin account. Note: Declared as sensitive to hide from logs. Do not store in plain tfvars."
+# ---- Optional settings ---------------------------------------------------------
+variable "db_name" {
+  description = "Database name inside the Cloud SQL instance (.env: CLOUD_SQL_DATABASE)."
   type        = string
-  sensitive   = true
+  default     = "edu_portal"
 }
 
-variable "admin_password" {
-  description = "The custom password for the edu_portal_admin assistant account. Note: Declared as sensitive to prevent exposure."
+variable "db_tier" {
+  description = "Cloud SQL machine tier (.env: CLOUD_SQL_TIER)."
   type        = string
-  sensitive   = true
+  default     = "db-f1-micro"
 }
 
-variable "project_number" {
-  description = "The numeric project number of your Google Cloud project. Providing this is highly recommended as it completely bypasses the need for the Cloud Resource Manager API, preventing common chicken-and-egg deployment errors."
+variable "db_deletion_protection" {
+  description = "Protect the Cloud SQL instance from terraform destroy (.env: CLOUD_SQL_DELETION_PROTECTION)."
+  type        = bool
+  default     = true
+}
+
+variable "custom_domain" {
+  description = "Optional custom domain (e.g. portal.example.edu). Sets PUBLIC_BASE_URL and creates a Cloud Run domain mapping (.env: CUSTOM_DOMAIN)."
   type        = string
   default     = ""
 }
 
-variable "settings_encryption_key" {
-  description = "Secret used to derive the AES-256-GCM key that encrypts the SMTP password stored in the app_settings table. Declared as sensitive. Supply via TF_VAR_settings_encryption_key. Changing it makes the stored SMTP password unreadable (it must be re-entered)."
-  type        = string
-  sensitive   = true
+variable "allow_unauthenticated" {
+  description = "Let anyone reach the portal (the app has its own login). Set false to require IAM (.env: ALLOW_UNAUTHENTICATED)."
+  type        = bool
+  default     = true
 }
 
-variable "infographic_bucket_name" {
-  description = "Globally unique name of the public GCS bucket that stores generated use case infographics."
+variable "max_instances" {
+  description = "Cloud Run maximum instance count (.env: CLOUD_RUN_MAX_INSTANCES)."
+  type        = number
+  default     = 10
+}
+
+variable "gemini_model" {
+  description = "Vertex AI model used for Draft with Gemini (.env: GEMINI_MODEL)."
   type        = string
-  default     = "your-infographic-bucket"
+  default     = "gemini-3.8-flash"
+}
+
+variable "initial_image" {
+  description = "Placeholder image for the first apply. scripts/deploy.sh then deploys the real app with gcloud; Terraform ignores later image changes."
+  type        = string
+  default     = "us-docker.pkg.dev/cloudrun/container/hello"
+}
+
+variable "demo_user_email" {
+  description = "Optional demo user created on boot (.env: DEMO_USER_EMAIL). Needs demo_user_password."
+  type        = string
+  default     = ""
+}
+
+variable "demo_user_ge_app_link" {
+  description = "Optional Gemini Enterprise app URL for the demo user (.env: DEMO_USER_GE_APP_LINK)."
+  type        = string
+  default     = ""
+}
+
+# ---- Secrets (stored in Secret Manager, never in tfvars or git) ---------------
+variable "super_admin_password" {
+  description = "Password for the built-in super admin edu_portal_s_admin (.env: SUPER_ADMIN_PASSWORD). Required."
+  type        = string
+  sensitive   = true
+
+  validation {
+    condition     = length(var.super_admin_password) >= 12
+    error_message = "super_admin_password must be at least 12 characters."
+  }
+}
+
+variable "admin_password" {
+  description = "Password for the built-in assistant admin edu_portal_admin (.env: ADMIN_PASSWORD). Empty = account disabled."
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "demo_admin_password" {
+  description = "Password for the built-in assistant admin demo-admin (.env: DEMO_ADMIN_PASSWORD). Empty = account disabled."
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "demo_user_password" {
+  description = "Password for the optional demo user (.env: DEMO_USER_PASSWORD)."
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "db_password" {
+  description = "Password for the Cloud SQL postgres user (.env: DB_PASSWORD). Empty = generated by Terraform."
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "session_secret" {
+  description = "Session cookie signing secret (.env: SESSION_SECRET). Empty = generated by Terraform."
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "settings_encryption_key" {
+  description = "Key material for encrypting the stored SMTP password (.env: SETTINGS_ENCRYPTION_KEY). Empty = generated. Changing it later means re-entering the SMTP password."
+  type        = string
+  sensitive   = true
+  default     = ""
 }

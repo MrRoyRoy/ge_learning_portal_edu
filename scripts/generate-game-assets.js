@@ -27,12 +27,12 @@ const fs = require('fs');
 const path = require('path');
 const sharp = require('sharp');
 const { gcpHeaders } = require('../lib/gcp');
-const { INFOGRAPHIC_MODEL, INFOGRAPHIC_LOCATION, INFOGRAPHIC_PROJECT, INFOGRAPHIC_REF_IMAGE } = require('../lib/infographics');
+const { INFOGRAPHIC_REF_IMAGE, vertexUrl } = require('../lib/infographics');
 
 const ROOT = path.join(__dirname, '..');
 const OUT_DIR = path.join(ROOT, 'game');
-const RAW_DIR = process.env.GAME_RAW_DIR
-  || '/path/to/home/.gemini/antigravity-cli/brain/de7c9517-58b1-4fde-bcc6-80d82dbc7402/scratch/game_raw';
+// Raw (un-keyed) model output is cached here so re-runs don't pay for images twice. Kept out of git.
+const RAW_DIR = process.env.GAME_RAW_DIR || path.join(ROOT, 'scratch', 'game_raw');
 
 /* ------------------------------------------------------------------------------------------------
  * Asset catalogue
@@ -147,11 +147,6 @@ const ASSETS = [
  * Generation (Vertex AI generateContent, image modality)
  * ---------------------------------------------------------------------------------------------- */
 
-const vertexUrl = () => {
-  const host = INFOGRAPHIC_LOCATION === 'global' ? 'aiplatform.googleapis.com' : `${INFOGRAPHIC_LOCATION}-aiplatform.googleapis.com`;
-  return `https://${host}/v1/projects/${INFOGRAPHIC_PROJECT}/locations/${INFOGRAPHIC_LOCATION}/publishers/google/models/${INFOGRAPHIC_MODEL}:generateContent`;
-};
-
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
 const refImagePart = () => {
@@ -168,7 +163,7 @@ async function callModel(parts, aspects) {
   let lastErr;
   for (const aspectRatio of aspects) {
     for (let i = 0; i < 3; i++) {
-      const res = await fetch(vertexUrl(), {
+      const res = await fetch(await vertexUrl(), {
         method: 'POST',
         headers: await gcpHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
