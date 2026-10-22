@@ -123,12 +123,13 @@ graph TD
 
 ## 7. App State & Progress
  
-##### Accomplished Tasks (Latest Session Milestone — 2026-10-22, Quest Run hero follows categories; `test_hero.js` 17/17, `test_hero_api.sh` 10/10 local)
+##### Accomplished Tasks (Latest Session Milestone — 2026-10-22, Quest Run hero follows categories, commit `5b8b528`, deployed to dev and prod; `test_hero.js` 17/17, `test_hero_api.sh` 10/10 on local, dev and prod, `test_v7.js` 33/33 on local, dev and prod)
 * **Rule:** new pure `QuestCore.heroClassForCategories(cats)` in `lib/quest-core.js`. Precedence: `teaching` → wizard; any `ADMIN_STAFF_CATEGORIES` (`leadership`, `student_affairs`, `finance`, `security`, `it_admin`) → priest; otherwise (students only, none) → **warrior (default)**. `heroClassForRole` now also defaults to warrior.
 * **Server:** `/api/quest` returns `heroClass` from the user's categories instead of the first role. Admin previews (`?role=`) map the role through `CategoryCore.categoryForRole` and use the same rule.
 * **Client:** `app.js` fallbacks (`data.heroClass || ...`, `QUEST_HERO_COLOURS`) changed from wizard to warrior. README "Hero by category" updated.
 * **Decision to confirm:** Programme & Faculty Leadership counts as admin staff (priest). Move it out of `ADMIN_STAFF_CATEGORIES` if leaders should be wizards.
-* **Next:** deploy to dev and prod when asked; run `test_hero_api.sh` + `test_v7.js` there.
+* **Test note:** `test_v7.js` step 5 now answers Gemini's clarification question when it asks one ("Create new" is disabled until answered, by design). A crash mid-run leaves the test user with extra categories; reset them in Admin → Users.
+* **Next:** confirm the Leadership → priest choice; otherwise no open work on this feature.
 
 ##### Previous Milestone (2026-10-22, idea quality gate + clarification step + two-stage similarity on convert AND manual create; `test_idea_quality` 29/29, `test_idea_api.sh` 15/15, `test_idea_ui.js` 21/21 local with live Gemini)
 * **Two-stage similarity (`server.js` `findSimilarPlaybooks`):** reads compact columns only (id, title, summary, translations; never steps / prompts). Stage 1: `lib/similarity.js` `shortlistForRerank` (whole catalogue while ≤ 40 playbooks, else the 40 best keyword / CJK-bigram matches over en + zh text). Stage 2: `geminiSimilarity` reranks the shortlist (~60 input tokens per playbook, 25 s timeout). Results are cached 15 min in memory (`similarityCache`, key = sha256 of kind / text / catalogue version = count + newest `updated_at`). Keyword cosine is the fallback. The response adds `prefiltered`, `considered`, `total`.
