@@ -130,7 +130,9 @@ graph TD
 * **Convert dialog (`renderSimilarityDialog`, modes `feedback` | `draft`):** a vague idea shows `#convertClarify` with questions (Gemini's, or `clarifyQ_*` templates), answer boxes and an "Ask the author by email" mailto link. Create new stays disabled until one answer is given; answers are appended to the Gemini instruction (`withClarifications`). Improve selected is always available.
 * **Manual create:** `checkSimilarBeforeCreate()` runs before Draft with Gemini and before the first save of a new hand-made playbook (skipped for edits and feedback conversions). On an `enhance` recommendation the dialog offers Improve selected (opens the existing playbook with `similarEnhanceInstruction`, autoDraft) or Create new anyway (no more checks until the form is reopened). Same text is never re-checked. New endpoint `POST /api/admin/use-cases/similar` (super only; assist 403 via `blockAssistCreate`).
 * **i18n:** `uiTranslationsV8` (en / zh-TW / zh-CN).
-* **Next:** commit, deploy to dev, then prod; re-run `test_v7.js` + `test_idea_api.sh` against both. Existing vague feedback in prod will now show the clarification step when converted.
+* **Deployed (2026-10-22)** to dev and prod (commit `cf58cad`). On both: `test_idea_api.sh` 15/15 and `test_v7.js` 33/33, live Gemini over all 23 playbooks.
+* **Known behaviour:** if Vertex times out (25 s; seen once on prod during parallel drafting), the keyword fallback scores rarely reach 60, so the manual-create dialog won't interrupt and conversion recommends "new". Matches are still listed in the convert dialog.
+* **Next:** consider a lower enhance threshold for keyword-only results, or a retry on timeout, if fallbacks become frequent.
 
 ##### Previous Milestone (2026-10-21, default admins manageable + demo-admin removed; API test 21/21, `test_v7.js` 33/33 local)
 * **`demo-admin` removed** from code, Terraform (`demo_admin_password`), `deploy.sh`, `.env.example` and the README. Its Secret Manager secrets were deleted and unwired from the services.
