@@ -35,7 +35,7 @@ Self-hosting guide, GitHub details and the full cost breakdown: [docs/HANDBOOK.m
 
 ### Quest Run strip
 A pixel-art banner above the library (canvas renderer in `app.js`; sprites from `game/manifest.json`, with a drawn fallback for each missing asset).
-* **Hero by role:** Wizard (Lecturer, TA, Program Leader, Dean), Warrior (Student), Priest (SAO, IT Admin, Finance, Security). The mapping is `HERO_CLASS_BY_ROLE` in `lib/quest-core.js`.
+* **Hero by category:** the hero follows the user's categories. Teaching gives a Wizard. Otherwise any admin staff category (Programme & Faculty Leadership, Student Affairs, Finance, Campus Security, IT Administration) gives a Priest. Everyone else (Students only, or no categories) gets the default Warrior. Teaching wins over admin staff. The rule is `heroClassForCategories` in `lib/quest-core.js`; admins previewing with `?role=` get the hero of that role's category.
 * **Academic timeline:** Semester A, Winter, Semester B and Summer with month ticks and a "today" flag. The label reads, for example, "Semester A · Week 7 · Midterms". The phases are `sem_start`, `teaching`, `midterm`, `finals`, `winter` and `summer`. Defaults are in `DEFAULT_ACADEMIC_CALENDAR`; super admins can override them in **Settings → Calendar**.
 * **Quest bubble:** the hero asks a question that fits the current term and phase, for example "Drowning in essays to mark?". **Open playbook** opens the matching modal.
   * Questions come from `quest_hints`, filtered by audience and timing and picked with a weighted shuffle (`pickWeightedHint`).

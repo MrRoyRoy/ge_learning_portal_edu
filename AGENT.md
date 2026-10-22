@@ -123,7 +123,14 @@ graph TD
 
 ## 7. App State & Progress
  
-##### Accomplished Tasks (Latest Session Milestone — 2026-10-22, idea quality gate + clarification step + two-stage similarity on convert AND manual create; `test_idea_quality` 29/29, `test_idea_api.sh` 15/15, `test_idea_ui.js` 21/21 local with live Gemini)
+##### Accomplished Tasks (Latest Session Milestone — 2026-10-22, Quest Run hero follows categories; `test_hero.js` 17/17, `test_hero_api.sh` 10/10 local)
+* **Rule:** new pure `QuestCore.heroClassForCategories(cats)` in `lib/quest-core.js`. Precedence: `teaching` → wizard; any `ADMIN_STAFF_CATEGORIES` (`leadership`, `student_affairs`, `finance`, `security`, `it_admin`) → priest; otherwise (students only, none) → **warrior (default)**. `heroClassForRole` now also defaults to warrior.
+* **Server:** `/api/quest` returns `heroClass` from the user's categories instead of the first role. Admin previews (`?role=`) map the role through `CategoryCore.categoryForRole` and use the same rule.
+* **Client:** `app.js` fallbacks (`data.heroClass || ...`, `QUEST_HERO_COLOURS`) changed from wizard to warrior. README "Hero by category" updated.
+* **Decision to confirm:** Programme & Faculty Leadership counts as admin staff (priest). Move it out of `ADMIN_STAFF_CATEGORIES` if leaders should be wizards.
+* **Next:** deploy to dev and prod when asked; run `test_hero_api.sh` + `test_v7.js` there.
+
+##### Previous Milestone (2026-10-22, idea quality gate + clarification step + two-stage similarity on convert AND manual create; `test_idea_quality` 29/29, `test_idea_api.sh` 15/15, `test_idea_ui.js` 21/21 local with live Gemini)
 * **Two-stage similarity (`server.js` `findSimilarPlaybooks`):** reads compact columns only (id, title, summary, translations; never steps / prompts). Stage 1: `lib/similarity.js` `shortlistForRerank` (whole catalogue while ≤ 40 playbooks, else the 40 best keyword / CJK-bigram matches over en + zh text). Stage 2: `geminiSimilarity` reranks the shortlist (~60 input tokens per playbook, 25 s timeout). Results are cached 15 min in memory (`similarityCache`, key = sha256 of kind / text / catalogue version = count + newest `updated_at`). Keyword cosine is the fallback. The response adds `prefiltered`, `considered`, `total`.
 * **Clarity verdict:** with `assessClarity` (feedback conversion) the same Gemini call returns `clarity {actionable, missing[audience|task|output], questions[≤3, in the feedback's language]}` (`normalizeClarity`). The heuristic `IdeaQuality.assessIdea` is the fallback and the gate always applies (text that fails `assessFeedback` is never actionable).
 * **Feedback quality gate (`lib/idea-quality.js`, UMD → `window.IdeaQuality`):** `assessFeedback` rejects `empty` / `too_short` (< 4 effective words; CJK ≈ 2 chars per word) / `too_vague` (< 2 meaningful tokens after removing stop words, generic praise / thanks / test words and zh generic phrases, or repetitive text) / `too_long` (> 4000). Used by the client (inline `#feedbackError`, hint `#feedbackHint`) and `POST /api/feedbacks` (400 + `code`).
@@ -258,7 +265,7 @@ graph TD
 * **Colour tones (100%):** `toneClass(feature)` adds `tone-*` to card feature chips, modal chips and `typeChipHtml`; `#filterFeature[data-tone]` takes the selected feature's tone. Gemini Notebook / Deep Research green, Canvas / Video blue, Agent Designer yellow, Image purple. Dark and light variants live in the V6 layer at the end of `style.css`. Connectors stay red.
 * **Quest Run strip (100%):** `lib/quest-core.js` is a UMD module shared by the server and `window.QuestCore`:
   * calendar defaults and validation, `getAcademicPosition` (term / week / phase)
-  * `HERO_CLASS_BY_ROLE` (Wizard / Warrior / Priest), `pickWeightedHint`, `newsStatus`
+  * `HERO_CLASS_BY_ROLE` (Wizard / Warrior / Priest; superseded 2026-10-22 by `heroClassForCategories`), `pickWeightedHint`, `newsStatus`
   * The canvas renderer (`createQuestRenderer` at the end of `app.js`):
     * Draws real sprites from `GET /game/manifest.json`, falling back per asset.
     * Runs at 30 fps and pauses when off-screen or when the tab is hidden. Reduced motion draws a static frame.

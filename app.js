@@ -8743,7 +8743,7 @@ async function mountQuestRun() {
   strip.hidden = false;
   questState.collapsed = questLsGet(QUEST_LS.collapsed) === "1";
   if (questState.renderer) questState.renderer.destroy();
-  questState.renderer = createQuestRenderer(document.getElementById("questCanvas"), data.heroClass || "wizard");
+  questState.renderer = createQuestRenderer(document.getElementById("questCanvas"), data.heroClass || "warrior");
   applyQuestCollapsed();
   renderQuestTimeline();
   updateQuestBell();
@@ -8900,7 +8900,7 @@ function createQuestRenderer(canvas, heroClass) {
       return;
     }
     const px = 3;
-    const colours = { ...QUEST_HERO_COLOURS[heroClass] || QUEST_HERO_COLOURS.wizard, s: "#f1c27d", d: "#222", l: "#5c3d2e" };
+    const colours = { ...QUEST_HERO_COLOURS[heroClass] || QUEST_HERO_COLOURS.warrior, s: "#f1c27d", d: "#222", l: "#5c3d2e" };
     const rows = [...QUEST_FALLBACK_HERO, ...QUEST_FALLBACK_LEGS[Math.floor(st.t * 6) % 2]];
     const x0 = Math.round(heroX() - (rows[0].length * px) / 2);
     const y0 = Math.round(feetY() - rows.length * px - lift);

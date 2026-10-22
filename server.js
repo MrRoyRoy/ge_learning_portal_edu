@@ -2457,8 +2457,11 @@ app.get('/api/quest', async (req, res) => {
       .filter(n => audienceMatches(n.audience) && (!n.endsAt || n.endsAt >= yesterday))
       .map(({ id, title, body, linkUrl, useCaseId, pinned, startsAt, endsAt, active }) => ({ id, title, body, linkUrl, useCaseId, pinned, startsAt, endsAt, active }));
 
+    // Hero follows the viewer's categories (teaching > admin staff > default warrior).
+    // Admin previews map the previewed role to its category so the same rule applies.
+    const heroCats = user.isAdmin ? [CategoryCore.categoryForRole(role)].filter(Boolean) : userCats;
     res.json({
-      success: true, role, heroClass: QuestCore.heroClassForRole(role),
+      success: true, role, heroClass: QuestCore.heroClassForCategories(heroCats),
       calendar, position, today: QuestCore.localDateIso(now), hints, news
     });
   } catch (error) {
