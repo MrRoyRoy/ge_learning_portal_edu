@@ -82,7 +82,10 @@ A pixel-art banner above the library (canvas renderer in `app.js`; sprites from 
   * **Translate with Gemini** fills in the zh fields. It needs Vertex AI credentials and returns 502 without them.
   * The table shows each item's status (Scheduled / Live / Ended / Off), its reach (distinct viewers) and its clicks.
 * **Feedback:** review and dismiss submissions from the floating Feedback button (the modal invites use case ideas too). The button only appears in the user portal.
-  * **Convert to playbook** (super admin): checks for similar playbooks (Gemini ranking, keyword fallback in `lib/similarity.js`) and recommends improving the best match (score ≥ 60) or creating a new one. Either path opens the case form with the feedback as the Gemini instruction; a new playbook credits the feedback author as idea provider. Saving marks the feedback **Converted**.
+  * **Quality gate** (`lib/idea-quality.js`, shared by browser and server): feedback that is too short (fewer than ~4 words; Chinese counts ≈ 2 characters per word) or only generic ("great, thanks!", "test", 「很好用，謝謝」) is rejected with a localised hint asking who it's for, the task and the expected output. Real bug reports such as "Search is slow on mobile" pass.
+  * **Convert to playbook** (super admin): a two-stage similarity check (below) recommends improving the best match (score ≥ 60) or creating a new one. The same Gemini call judges whether the idea is specific enough to draft from. If it isn't, the dialog shows 1–3 clarification questions (written by Gemini in the feedback's language, or template questions when Gemini is unavailable) and an **Ask the author by email** link. **Create new playbook** unlocks once at least one question is answered, and the answers are appended to the Gemini instruction. Either path opens the case form; a new playbook credits the feedback author as idea provider. Saving marks the feedback **Converted**.
+  * **Similarity check on manual create:** before **Draft with Gemini** and before the first save of a new playbook, the same check runs on the title, summary and instruction. If a close match exists, the admin can improve it instead (opens it with a Gemini instruction) or **Create new anyway**.
+  * **How the similarity check scales:** only compact fields are read (id, title, summary, zh title / summary), never steps or prompts. Stage 1 is a local keyword / CJK-bigram cosine shortlist (`lib/similarity.js`, the whole catalogue while it has ≤ 40 playbooks); stage 2 is a Gemini rerank of that shortlist at ~60 input tokens per playbook. Results are cached for 15 minutes and invalidated by any playbook change. Keyword ranking is the fallback when Vertex AI is unavailable.
 * The case form has **Categories** (at least one) and an editable **Idea provider** (empty = default playbook).
 * **Settings → Email** (super admin only): SMTP presets (Gmail, Outlook.com, Microsoft 365, Custom) with a test send.
 * **Settings → Calendar** (super admin only): edit the start and end dates of the four terms.
@@ -332,9 +335,10 @@ All endpoints return JSON and use the session cookie. "User" means a signed-in s
 | `POST /api/use-cases/like` | User | Toggle a like |
 | `POST /api/use-cases/view` | Signed in | Record a view; returns the new `viewCount` |
 | `POST /api/use-cases/try` | Signed in | Log a Try it launch |
-| `POST /api/feedbacks` | User | Submit feedback |
+| `POST /api/feedbacks` | User | Submit feedback (400 `code: too_short / too_vague / too_long` from the quality gate) |
 | `GET /api/feedbacks` · `POST /api/feedbacks/delete` | Admin · Super | List (with conversion status) · dismiss feedback |
-| `POST /api/admin/feedbacks/:id/similar` · `POST /api/admin/feedbacks/:id/convert` | Super | Rank similar playbooks + recommend enhance / new · link feedback to a playbook |
+| `POST /api/admin/feedbacks/:id/similar` · `POST /api/admin/feedbacks/:id/convert` | Super | Similar playbooks + enhance / new recommendation + `clarity` (actionable, missing, questions) · link feedback to a playbook |
+| `POST /api/admin/use-cases/similar` | Super | `{title, summary, instruction, excludeId?}` → similar playbooks before creating one by hand |
 | `GET/POST/PUT/DELETE /api/admin/users` · `POST/PUT /api/admin/users/reset` | Admin (writes: Super) | List, provision, edit, delete, reset users |
 | `GET/POST/DELETE /api/admin/admins` · `POST /api/admin/admins/resend` | Super | List all admins (default accounts first) · invite · remove · resend invites |
 | `PUT /api/admin/admins/builtin` | Super | Enable / disable a default admin (`{ username, disabled }`); rejected if it would leave no active super admin or targets yourself |

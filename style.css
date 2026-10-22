@@ -4734,3 +4734,31 @@ html[data-theme="light"] .quest-scene { background: #bfe3ff; }
 }
 .convert-score { font-family: var(--font-mono); font-size: 13px; color: var(--text-muted); }
 .convert-reason { font-size: 13px; color: var(--text-muted); line-height: 1.45; }
+
+/* Idea quality: clarification step in the convert dialog + feedback submit hint */
+.convert-reco.is-clarify { color: var(--warn); }
+.convert-clarify {
+  display: flex; flex-direction: column; gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--warn);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+.convert-clarify[hidden] { display: none; }
+.convert-clarify-head { display: flex; align-items: center; gap: 6px; font-weight: 700; color: var(--text-primary); }
+.convert-clarify-head .material-symbols-outlined { color: var(--warn); font-size: 20px; }
+.convert-clarify p { margin: 0; font-size: 13px; color: var(--text-muted); line-height: 1.45; }
+.clarify-q { display: flex; flex-direction: column; gap: 4px; }
+.clarify-q label { font-size: 13px; font-weight: 600; color: var(--text-primary); line-height: 1.4; }
+.clarify-q textarea {
+  min-height: 44px; resize: vertical; padding: 8px 10px;
+  font: inherit; font-size: 13px; line-height: 1.45;
+  color: var(--text-primary); background: var(--bg-primary);
+  border: 1px solid var(--line); border-radius: var(--radius-sm);
+}
+.clarify-q textarea:focus { outline: none; border-color: var(--accent); }
+.clarify-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.clarify-actions a.nav-button { text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+.feedback-hint { font-size: 12px; color: var(--text-muted); margin: 6px 0 0; line-height: 1.4; }
+.feedback-error { font-size: 13px; color: var(--err); margin: 8px 0 0; line-height: 1.4; }
+.feedback-error[hidden] { display: none; }

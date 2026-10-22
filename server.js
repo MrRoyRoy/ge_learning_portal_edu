@@ -17,7 +17,8 @@ const { encrypt } = require('./lib/secrets');
 const infographics = require('./lib/infographics');
 const QuestCore = require('./lib/quest-core');
 const CategoryCore = require('./lib/categories');
-const { rankBySimilarity } = require('./lib/similarity');
+const { rankBySimilarity, shortlistForRerank } = require('./lib/similarity');
+const IdeaQuality = require('./lib/idea-quality');
 const { normalizeDraft, plainStepsForCase } = require('./lib/draft-normalize');
 const { validateHelperPrompts, parseHelperPrompts } = require('./lib/helper-prompts');
 
@@ -1483,12 +1484,20 @@ app.post('/api/use-cases/try', async (req, res) => {
 // User Feedback submission and admin control
 // ==========================================
 
-// Submit Feedback
+// Submit Feedback. The idea-quality gate (lib/idea-quality.js, same rules the client checks first) rejects
+// text that is too short or only generic praise, with a `code` the client turns into a localised hint.
 app.post('/api/feedbacks', async (req, res) => {
   try {
-    const feedbackText = req.body.feedback_text;
-    if (!feedbackText || !feedbackText.trim()) {
-      return res.status(400).json({ error: 'Feedback text is mandatory.' });
+    const feedbackText = typeof req.body.feedback_text === 'string' ? req.body.feedback_text : '';
+    const gate = IdeaQuality.assessFeedback(feedbackText);
+    if (!gate.ok) {
+      const messages = {
+        empty: 'Feedback text is mandatory.',
+        too_long: `Feedback is limited to ${IdeaQuality.MAX_LENGTH} characters.`,
+        too_short: 'Please add a little more detail so we can act on it.',
+        too_vague: 'Please describe what you need: who it is for, the task, and what Gemini should produce.'
+      };
+      return res.status(400).json({ success: false, code: gate.code, error: messages[gate.code] });
     }
     const email = req.session.user ? req.session.user.email : 'anonymous';
     await query('INSERT INTO feedbacks (user_email, feedback_text) VALUES (?, ?)', [email, feedbackText.trim()]);
@@ -2512,30 +2521,43 @@ function safeJsonObject(raw) {
 }
 
 /**
- * Ask Gemini to judge which playbooks the feedback idea overlaps with. Gemini sees every playbook's id, title and
- * summary (short, so this stays cheap) because keyword matching misses cross-language or paraphrased ideas.
- * Returns { matches:[{id, score, reason}], recommendation, suggestedTitle } or throws.
+ * Stage 2 of the similarity check: Gemini reranks the shortlist from stage 1 (lib/similarity.js
+ * shortlistForRerank). Gemini only ever sees id + title + a 280-char summary per playbook, never steps or
+ * prompts, so a call costs ~60 input tokens per shortlisted playbook. Keyword matching alone misses
+ * cross-language or paraphrased ideas, which is why Gemini does the final judgement.
+ *
+ * With `assessClarity` (feedback conversion) the same call also judges whether the idea is specific enough
+ * to draft a playbook, and writes clarification questions when it isn't. One call, no extra latency.
+ * Returns { matches:[{id, score, reason}], recommendation, suggestedTitle, clarity|null } or throws.
  */
-async function geminiSimilarity(feedbackText, cases) {
+async function geminiSimilarity(ideaText, cases, { assessClarity = false, kind = 'feedback' } = {}) {
   const catalogue = cases.map(c => ({ id: c.id, title: c.title, summary: String(c.summary || '').slice(0, 280) }));
+  const label = kind === 'draft' ? 'A new playbook the admin is about to create' : 'User feedback';
+  const clarityRule = assessClarity ? `
+Also judge whether the feedback is specific enough to draft a playbook WITHOUT guessing. It must make clear
+(a) who would use it (audience), (b) the task or problem, and (c) roughly what Gemini should produce (output).
+If it is not, set actionable=false, list the missing facts, and write 1-3 short, friendly questions to ask the
+author, in the SAME language as the feedback. If it is clear enough, set actionable=true and questions=[].` : '';
+  const claritySchema = assessClarity
+    ? `,\n "clarity":{"actionable":true|false,"missing":["audience"|"task"|"output"],"questions":["<question>"]}` : '';
   const promptText = `
-You help the admin of a university "Gemini Enterprise" playbook portal turn user feedback into playbooks.
+You help the admin of a university "Gemini Enterprise" playbook portal avoid duplicate playbooks.
 A playbook is a step-by-step guide + sample prompt for one teaching or campus-operations task.
 
-User feedback:
-"""${String(feedbackText).slice(0, 2000)}"""
+${label}:
+"""${String(ideaText).slice(0, 2000)}"""
 
 Existing playbooks (JSON):
 ${JSON.stringify(catalogue)}
 
-Decide whether the feedback describes an idea that an EXISTING playbook already covers (so it should be enhanced)
+Decide whether the idea is something an EXISTING playbook already covers (so it should be enhanced)
 or a genuinely NEW idea. Score how closely each relevant playbook matches the idea (0-100; 80+ = same task,
-50-79 = closely related, below 50 = loosely related). Only include playbooks scoring 30 or more, best first, max 5.
+50-79 = closely related, below 50 = loosely related). Only include playbooks scoring 30 or more, best first, max 5.${clarityRule}
 
 Return ONLY JSON, no markdown:
 {"matches":[{"id":"<playbook id>","score":<0-100>,"reason":"<one short sentence in English>"}],
  "recommendation":"enhance" | "new",
- "suggestedTitle":"<short English title for a new playbook based on the feedback>"}`;
+ "suggestedTitle":"<short English title for a new playbook based on the idea>"${claritySchema}}`;
   const out = await withTimeout(callGeminiJson(promptText), 25000);
   const known = new Set(cases.map(c => c.id));
   const matches = (Array.isArray(out && out.matches) ? out.matches : [])
@@ -2546,60 +2568,141 @@ Return ONLY JSON, no markdown:
   return {
     matches,
     recommendation: out && out.recommendation === 'enhance' && matches.length ? 'enhance' : 'new',
-    suggestedTitle: String((out && out.suggestedTitle) || '').slice(0, 120)
+    suggestedTitle: String((out && out.suggestedTitle) || '').slice(0, 120),
+    clarity: assessClarity ? normalizeClarity(out && out.clarity) : null
   };
 }
 
+/** Gemini's clarity block -> { actionable, missing:[known keys], questions:[<=3 strings] }; garbage -> null. */
+const normalizeClarity = (c) => {
+  if (!c || typeof c !== 'object' || typeof c.actionable !== 'boolean') return null;
+  const missing = (Array.isArray(c.missing) ? c.missing : []).filter(k => ['audience', 'task', 'output'].includes(k));
+  const questions = (Array.isArray(c.questions) ? c.questions : [])
+    .map(q => String(q || '').trim().slice(0, 240)).filter(Boolean).slice(0, 3);
+  return { actionable: c.actionable, missing: c.actionable ? [] : missing, questions: c.actionable ? [] : questions };
+};
+
 /*
- * Step 1 of "Convert to Playbook": find existing playbooks similar to the feedback idea.
- * Gemini ranks first; if Vertex is unavailable (local dev, quota, timeout) the keyword cosine ranking from
- * lib/similarity.js is used instead. "enhance" is recommended when the best match scores >= ENHANCE_THRESHOLD.
+ * Short-lived cache of Gemini similarity results. Re-opening the convert dialog, or saving a new playbook
+ * right after drafting it, would otherwise repeat an identical Vertex call. The key includes a catalogue
+ * version (playbook count + newest updated_at), so any playbook create / edit / delete invalidates it.
  */
-app.post('/api/admin/feedbacks/:id/similar', requireAdmin, async (req, res) => {
-  if (req.session.user.isAssist) {
-    return res.status(403).json({ success: false, message: 'Access denied. Administrative assistants are not authorized to create playbooks.' });
+const SIMILARITY_CACHE_TTL_MS = 15 * 60 * 1000;
+const SIMILARITY_CACHE_MAX = 200;
+const similarityCache = new Map();
+const cacheGet = (key) => {
+  const hit = similarityCache.get(key);
+  if (!hit) return null;
+  if (Date.now() - hit.at > SIMILARITY_CACHE_TTL_MS) { similarityCache.delete(key); return null; }
+  return hit.value;
+};
+const cacheSet = (key, value) => {
+  if (similarityCache.size >= SIMILARITY_CACHE_MAX) similarityCache.delete(similarityCache.keys().next().value);
+  similarityCache.set(key, { at: Date.now(), value });
+};
+
+/*
+ * Shared similarity check, used by "Convert to playbook" and by the admin's "New playbook" form.
+ *   1. Load only the compact columns (id, title, summary, translations), never steps / prompts.
+ *   2. Stage 1: keyword shortlist (whole catalogue while it has <= 40 playbooks).
+ *   3. Stage 2: Gemini rerank of the shortlist (cached 15 min); keyword cosine ranking if Vertex fails.
+ *   4. "enhance" is recommended when the best match scores >= ENHANCE_THRESHOLD.
+ *   5. With assessClarity, the result also says whether the idea is specific enough to draft from.
+ *      The heuristic gate (lib/idea-quality.js) always applies, so text that fails it is never "actionable"
+ *      even if Gemini is generous; when Gemini is unavailable the heuristic's missing facts are used.
+ */
+async function findSimilarPlaybooks({ text, excludeId = null, assessClarity = false, kind = 'feedback' }) {
+  const all = await query('SELECT id, title, summary, translations, categories, creator, updated_at FROM use_cases ORDER BY id ASC');
+  const cases = excludeId ? all.filter(c => c.id !== excludeId) : all;
+  const byId = Object.fromEntries(cases.map(c => [c.id, c]));
+  const version = `${cases.length}:${cases.reduce((m, c) => (String(c.updated_at || '') > m ? String(c.updated_at || '') : m), '')}`;
+  const { docs: shortlist, prefiltered } = shortlistForRerank(text, cases.map(c => ({ ...c, text: caseSearchText(c) })));
+
+  let result;
+  let source = 'gemini';
+  const cacheKey = sha256(JSON.stringify([kind, assessClarity, excludeId, String(text), version]));
+  try {
+    result = cacheGet(cacheKey);
+    if (!result) {
+      result = await geminiSimilarity(text, shortlist, { assessClarity, kind });
+      cacheSet(cacheKey, result);
+    }
+  } catch (err) {
+    console.warn('Similarity: Gemini unavailable, using keyword ranking.', err.message);
+    source = 'keyword';
+    const ranked = rankBySimilarity(text, cases.map(c => ({ id: c.id, text: caseSearchText(c) })), 5);
+    result = { matches: ranked.map(r => ({ id: r.id, score: r.score, reason: '' })), recommendation: null, suggestedTitle: '', clarity: null };
   }
+
+  const matches = result.matches.filter(m => byId[m.id]).map(m => ({
+    ...m,
+    title: byId[m.id].title,
+    summary: byId[m.id].summary,
+    categories: CategoryCore.normalizeCategories(byId[m.id].categories),
+    creator: byId[m.id].creator || null
+  }));
+  const top = matches[0];
+  const recommendation = top && top.score >= ENHANCE_THRESHOLD && result.recommendation !== 'new' ? 'enhance' : 'new';
+
+  let clarity = null;
+  if (assessClarity) {
+    const heuristic = IdeaQuality.assessIdea(text);
+    const gate = IdeaQuality.assessFeedback(text);
+    const fromGemini = result.clarity;
+    clarity = fromGemini
+      ? { ...fromGemini, actionable: fromGemini.actionable && gate.ok, missing: fromGemini.actionable && !gate.ok ? heuristic.missing : fromGemini.missing, source: 'gemini' }
+      : { actionable: heuristic.actionable, missing: heuristic.actionable ? [] : heuristic.missing, questions: [], source: 'heuristic' };
+  }
+
+  return {
+    source, prefiltered, considered: source === 'gemini' ? shortlist.length : cases.length, total: cases.length,
+    matches, recommendation, recommendedId: recommendation === 'enhance' ? top.id : null,
+    suggestedTitle: result.suggestedTitle, threshold: ENHANCE_THRESHOLD, clarity
+  };
+}
+
+/** Assistant admins can read but never create playbooks: shared guard for the similarity endpoints. */
+const blockAssistCreate = (req, res, next) => (req.session.user.isAssist
+  ? res.status(403).json({ success: false, message: 'Access denied. Administrative assistants are not authorized to create playbooks.' })
+  : next());
+
+/*
+ * Step 1 of "Convert to Playbook": similar playbooks + a clarity verdict for the feedback idea.
+ * When clarity.actionable is false the client asks the admin to answer (or email the author) the
+ * clarification questions before a new playbook is drafted.
+ */
+app.post('/api/admin/feedbacks/:id/similar', requireAdmin, blockAssistCreate, async (req, res) => {
   try {
     const rows = await query('SELECT * FROM feedbacks WHERE id = ?', [parseInt(req.params.id, 10) || 0]);
     if (!rows.length) return res.status(404).json({ success: false, message: 'Feedback not found.' });
     const feedback = rows[0];
-    const cases = await query('SELECT id, title, summary, translations, categories, creator FROM use_cases ORDER BY id ASC');
-    const byId = Object.fromEntries(cases.map(c => [c.id, c]));
-
-    let result;
-    let source = 'gemini';
-    try {
-      result = await geminiSimilarity(feedback.feedback_text, cases);
-    } catch (err) {
-      console.warn('Feedback similarity: Gemini unavailable, using keyword ranking.', err.message);
-      source = 'keyword';
-      const ranked = rankBySimilarity(feedback.feedback_text, cases.map(c => ({ id: c.id, text: caseSearchText(c) })), 5);
-      result = { matches: ranked.map(r => ({ id: r.id, score: r.score, reason: '' })), recommendation: null, suggestedTitle: '' };
-    }
-
-    const matches = result.matches.map(m => ({
-      ...m,
-      title: byId[m.id].title,
-      summary: byId[m.id].summary,
-      categories: CategoryCore.normalizeCategories(byId[m.id].categories),
-      creator: byId[m.id].creator || null
-    }));
-    const top = matches[0];
-    const recommendation = top && top.score >= ENHANCE_THRESHOLD && result.recommendation !== 'new' ? 'enhance' : 'new';
+    const result = await findSimilarPlaybooks({ text: feedback.feedback_text, assessClarity: true, kind: 'feedback' });
     const creatorEmail = feedback.user_email && feedback.user_email !== 'anonymous' ? feedback.user_email : null;
-
     res.json({
       success: true,
-      source,
-      feedback: { id: feedback.id, text: feedback.feedback_text, userEmail: creatorEmail, convertedUseCaseId: feedback.converted_use_case_id || null },
-      matches,
-      recommendation,
-      recommendedId: recommendation === 'enhance' ? top.id : null,
-      suggestedTitle: result.suggestedTitle,
-      threshold: ENHANCE_THRESHOLD
+      ...result,
+      feedback: { id: feedback.id, text: feedback.feedback_text, userEmail: creatorEmail, convertedUseCaseId: feedback.converted_use_case_id || null }
     });
   } catch (error) {
     console.error('Feedback similarity error:', error);
+    res.status(500).json({ success: false, message: 'Failed to look for similar playbooks.' });
+  }
+});
+
+/*
+ * Same check for a playbook the admin creates by hand: called before "Draft with Gemini" and before the
+ * first save of a new playbook. Body: { title, summary, instruction, excludeId? }.
+ */
+app.post('/api/admin/use-cases/similar', requireAdmin, blockAssistCreate, async (req, res) => {
+  const b = req.body || {};
+  const pick = (v, n) => (typeof v === 'string' ? v.trim().slice(0, n) : '');
+  const text = [pick(b.title, 200), pick(b.summary, 800), pick(b.instruction, 1500)].filter(Boolean).join('\n');
+  if (!text) return res.status(400).json({ success: false, message: 'Enter a title, summary or Gemini instruction first.' });
+  try {
+    const result = await findSimilarPlaybooks({ text, excludeId: pick(b.excludeId, 100) || null, kind: 'draft' });
+    res.json({ success: true, ...result });
+  } catch (error) {
+    console.error('Playbook similarity error:', error);
     res.status(500).json({ success: false, message: 'Failed to look for similar playbooks.' });
   }
 });

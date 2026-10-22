@@ -21,6 +21,7 @@
   <link rel="stylesheet" href="style.css">
   <script src="lib/quest-core.js" defer></script>
   <script src="lib/categories.js" defer></script>
+  <script src="lib/idea-quality.js" defer></script>
   <script src="app.js" defer></script>
 </head>
 <body>
@@ -1179,7 +1180,9 @@
       <form id="formFeedbackSubmit" onsubmit="handleFeedbackSubmit(event)">
         <div class="form-group">
           <label class="form-label" for="txtFeedbackContent" data-i18n="feedbackLabel">Your feedback</label>
-          <textarea class="select-control" id="txtFeedbackContent" rows="5" style="height: 120px; padding: 12px; resize: none; font-family: inherit; line-height: 1.5; background: var(--bg-primary); border: 1px solid var(--border-glass);" placeholder="What would you like to see?" data-i18n-placeholder="feedbackPlaceholder" required></textarea>
+          <textarea class="select-control" id="txtFeedbackContent" rows="5" style="height: 120px; padding: 12px; resize: none; font-family: inherit; line-height: 1.5; background: var(--bg-primary); border: 1px solid var(--border-glass);" placeholder="What would you like to see?" data-i18n-placeholder="feedbackPlaceholder" maxlength="4000" aria-describedby="feedbackHint feedbackError" required></textarea>
+          <p class="feedback-hint" id="feedbackHint" data-i18n="feedbackHint">For a use case idea, say who it's for, the task, and what Gemini should produce.</p>
+          <p class="feedback-error" id="feedbackError" role="alert" hidden></p>
         </div>
         
         <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 16px;">
@@ -1205,6 +1208,7 @@
         <blockquote class="convert-quote" id="convertFeedbackText"></blockquote>
         <p class="field-hint" id="convertFeedbackAuthor"></p>
         <div id="convertStatus" class="convert-status"></div>
+        <div id="convertClarify" class="convert-clarify" hidden></div>
         <div id="convertMatches" class="convert-matches"></div>
         <div class="modal-footer-row">
           <button type="button" class="nav-button" id="btnConvertCancel" data-i18n="cancel">Cancel</button>

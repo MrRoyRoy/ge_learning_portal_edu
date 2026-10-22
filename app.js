@@ -4301,6 +4301,9 @@ function openAdminEditModal(uc, opts = {}) {
   creatorInput.value = uc ? (uc.creator || "") : (opts.creator || "");
   const source = opts.sourceFeedback || null;
   appState.caseFormSourceFeedback = source;
+  // Similarity check state for hand-made playbooks (see checkSimilarBeforeCreate)
+  appState.caseFormSimilarAck = false;
+  appState.caseFormSimilarKey = null;
   const authorBtn = document.getElementById("btnUseFeedbackAuthor");
   authorBtn.hidden = !(source && source.userEmail) || isAssist;
   authorBtn.onclick = () => { creatorInput.value = source.userEmail; };
@@ -4492,6 +4495,8 @@ async function saveAdminUseCase() {
 
   const questFields = readCaseQuestFields();
   const source = appState.caseFormSourceFeedback || null;
+  // New hand-made playbook: offer to improve a similar existing one first (no-op for edits / conversions)
+  if (!(await checkSimilarBeforeCreate())) return;
   const payload = {
     id, categories, creator: creator || null, title, summary, features, connectors, steps, prompt, proTip, translations, promptType,
     ...(source ? { sourceFeedbackId: source.id } : {}),
@@ -4573,6 +4578,9 @@ async function triggerGeminiPlaybookGeneration() {
     }
     return;
   }
+
+  // New hand-made playbook: check for similar ones before spending a Gemini draft on a duplicate
+  if (!(await checkSimilarBeforeCreate())) return;
 
   // Gather current inputs
   const categories = readCategoryChecklist("formCaseCat");
@@ -5049,6 +5057,8 @@ window.initFeedbackSystem = function() {
     modal.style.display = "flex";
     modal.classList.add("active");
     txtContent.value = "";
+    const errorEl = document.getElementById("feedbackError");
+    if (errorEl) { errorEl.hidden = true; errorEl.textContent = ""; }
     txtContent.focus();
   });
 
@@ -5086,13 +5096,28 @@ window.initFeedbackSystem = function() {
   sync();
 };
 
+/** idea-quality code ('too_short' | 'too_vague' | 'too_long') -> localised message. */
+const feedbackGateMessage = (code, t = tr()) =>
+  ({ too_short: t.feedbackTooShort, too_vague: t.feedbackTooVague, too_long: t.feedbackTooLong })[code] || t.feedbackFailed;
+
 window.handleFeedbackSubmit = async function(event) {
   event.preventDefault();
   const txtContent = document.getElementById("txtFeedbackContent");
+  const errorEl = document.getElementById("feedbackError");
   if (!txtContent) return;
+  const showError = (msg) => {
+    if (!errorEl) { alert(msg); return; }
+    errorEl.textContent = msg;
+    errorEl.hidden = !msg;
+    if (msg) txtContent.focus();
+  };
+  showError("");
 
   const feedbackText = txtContent.value.trim();
   if (!feedbackText) return;
+  // Same gate the server applies (lib/idea-quality.js); checked here first for instant feedback.
+  const gate = window.IdeaQuality ? IdeaQuality.assessFeedback(feedbackText) : { ok: true };
+  if (!gate.ok) { showError(feedbackGateMessage(gate.code)); return; }
 
   try {
     const res = await fetch('/api/feedbacks', {
@@ -5109,10 +5134,10 @@ window.handleFeedbackSubmit = async function(event) {
         modal.style.display = "none";
       }
     } else {
-      alert(data.error || tr().feedbackFailed);
+      showError(data.code ? feedbackGateMessage(data.code) : (data.error || tr().feedbackFailed));
     }
   } catch (err) {
-    alert(tr().networkError);
+    showError(tr().networkError);
   }
 };
 
@@ -5150,48 +5175,113 @@ window.loadAdminFeedbacks = async function() {
 };
 
 /**
- * Feedback -> playbook conversion.
- * 1. Ask the server for similar playbooks (Gemini ranking, keyword fallback).
- * 2. Show matches with scores; the server recommends "enhance" when the best score >= its threshold.
- * 3. Enhance: open the existing playbook with the feedback as the Gemini instruction (diff review).
- *    Create new: open a blank form, creator = feedback author, and auto-draft from the feedback.
- * Saving the form sends sourceFeedbackId, which marks the feedback as converted.
+ * Pure: clarification questions for a vague idea. Gemini's own questions win; otherwise one localised
+ * template question per missing fact (audience / task / output).
  */
-window.openFeedbackConvert = async function(id) {
+const clarifyQuestions = (clarity, t = tr()) => {
+  if (!clarity || clarity.actionable) return [];
+  if (Array.isArray(clarity.questions) && clarity.questions.length) return clarity.questions.slice(0, 3);
+  const keys = Array.isArray(clarity.missing) && clarity.missing.length ? clarity.missing : ["audience", "task", "output"];
+  return keys.map(k => t[`clarifyQ_${k}`]).filter(Boolean);
+};
+
+/** Pure: original idea + answered clarification questions -> Gemini instruction text. */
+const withClarifications = (text, qa, t = tr()) => {
+  const answered = (qa || []).filter(x => x.a && x.a.trim());
+  if (!answered.length) return text;
+  return `${text}\n\n${t.clarificationsHeading}:\n${answered.map(x => `Q: ${x.q}\nA: ${x.a.trim()}`).join("\n")}`;
+};
+
+/** Pure: mailto: link asking the feedback author the clarification questions. */
+const clarifyMailto = (email, text, questions, t = tr()) => {
+  const body = `${fmt(t.clarifyEmailIntro, { text: String(text).slice(0, 600) })}\n\n${questions.map((q, i) => `${i + 1}. ${q}`).join("\n")}\n`;
+  return `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(t.clarifyEmailSubject)}&body=${encodeURIComponent(body)}`;
+};
+
+/**
+ * Shared dialog for both similarity checks (#feedbackConvertModal).
+ *   mode "feedback": Convert to playbook. Shows matches, the recommendation and, when the server says the
+ *                    idea isn't actionable, clarification questions. "Create new" stays disabled until at
+ *                    least one question is answered (the admin can still improve an existing playbook).
+ *   mode "draft":    an admin is creating a playbook by hand and similar ones exist. "Create new anyway"
+ *                    continues; "Improve selected" switches to editing the existing playbook instead.
+ * `data` is the response of /api/admin/feedbacks/:id/similar or /api/admin/use-cases/similar (or null while
+ * loading). Handlers receive (targetId, qa) where qa = [{q, a}] clarification answers.
+ */
+function renderSimilarityDialog({ mode, quote, author, data, onEnhance, onNew, onCancel }) {
   const t = tr();
   const modal = document.getElementById("feedbackConvertModal");
-  const fb = (appState.adminFeedbacks || []).find(f => Number(f.id) === Number(id)) || { id, feedback_text: "" };
   const statusEl = document.getElementById("convertStatus");
+  const clarifyEl = document.getElementById("convertClarify");
   const listEl = document.getElementById("convertMatches");
   const btnEnhance = document.getElementById("btnConvertEnhance");
   const btnNew = document.getElementById("btnConvertNew");
-  const close = () => modal.classList.remove("active");
+  const close = () => { modal.classList.remove("active"); };
+  const cancel = () => { close(); if (onCancel) onCancel(); };
 
-  document.getElementById("convertFeedbackText").textContent = fb.feedback_text || "";
-  document.getElementById("convertFeedbackAuthor").textContent = fb.user_email
-    ? fmt(t.convertFrom, { email: fb.user_email }) : t.convertAnonymous;
-  statusEl.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(t.convertChecking)}`;
-  listEl.innerHTML = "";
-  btnEnhance.disabled = true;
-  btnNew.disabled = true;
-  document.getElementById("feedbackConvertClose").onclick = close;
-  document.getElementById("btnConvertCancel").onclick = close;
-  modal.onclick = (e) => { if (e.target === modal) close(); };
+  document.getElementById("feedbackConvertTitle").textContent = mode === "draft" ? t.similarTitle : t.convertTitle;
+  document.getElementById("convertFeedbackText").textContent = quote || "";
+  document.getElementById("convertFeedbackAuthor").textContent = author || "";
+  btnEnhance.textContent = t.convertEnhance;
+  btnNew.textContent = mode === "draft" ? t.similarCreateAnyway : t.convertNew;
+  document.getElementById("feedbackConvertClose").onclick = cancel;
+  document.getElementById("btnConvertCancel").onclick = cancel;
+  modal.onclick = (e) => { if (e.target === modal) cancel(); };
   modal.classList.add("active");
 
-  const { ok, data } = await apiJson(`/api/admin/feedbacks/${Number(id)}/similar`, { method: "POST" });
-  if (!ok) { statusEl.innerHTML = `<span class="is-error">${escapeHtml(errText(data))}</span>`; return; }
+  clarifyEl.hidden = true;
+  clarifyEl.innerHTML = "";
+  if (!data) {
+    statusEl.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(mode === "draft" ? t.similarChecking : t.convertChecking)}`;
+    listEl.innerHTML = "";
+    btnEnhance.disabled = true;
+    btnNew.disabled = true;
+    return;
+  }
 
-  const source = { id: Number(id), text: data.feedback?.text || fb.feedback_text || "", userEmail: data.feedback?.userEmail || null };
   const matches = data.matches || [];
   const recommendEnhance = data.recommendation === "enhance" && data.recommendedId;
+  const questions = mode === "feedback" ? clarifyQuestions(data.clarity, t) : [];
+  const needsClarify = questions.length > 0;
+  const reco = needsClarify && !recommendEnhance
+    ? { cls: "is-clarify", icon: "help", text: t.convertRecoClarify }
+    : recommendEnhance
+      ? { cls: "is-enhance", icon: "upgrade", text: mode === "draft" ? t.similarRecoEnhance : t.convertRecoEnhance }
+      : { cls: "is-new", icon: "add_circle", text: t.convertRecoNew };
   statusEl.innerHTML = `
     ${data.feedback?.convertedUseCaseId ? `<p class="convert-note">${escapeHtml(fmt(t.convertAlready, { id: data.feedback.convertedUseCaseId }))}</p>` : ""}
-    <p class="convert-reco ${recommendEnhance ? "is-enhance" : "is-new"}">
-      <span class="material-symbols-outlined" aria-hidden="true">${recommendEnhance ? "upgrade" : "add_circle"}</span>
-      ${escapeHtml(recommendEnhance ? t.convertRecoEnhance : t.convertRecoNew)}
+    <p class="convert-reco ${reco.cls}">
+      <span class="material-symbols-outlined" aria-hidden="true">${reco.icon}</span>
+      ${escapeHtml(reco.text)}
     </p>
-    <p class="field-hint">${escapeHtml(data.source === "gemini" ? t.convertSourceGemini : t.convertSourceKeyword)}</p>`;
+    ${mode === "draft" ? `<p class="field-hint">${escapeHtml(t.similarDraftHint)}</p>` : ""}
+    <p class="field-hint">${escapeHtml(data.source === "gemini" ? t.convertSourceGemini : t.convertSourceKeyword)}${data.prefiltered ? ` ${escapeHtml(fmt(t.convertConsidered, { n: data.considered, total: data.total }))}` : ""}</p>`;
+
+  if (needsClarify) {
+    const authorEmail = data.feedback?.userEmail;
+    clarifyEl.innerHTML = `
+      <div class="convert-clarify-head"><span class="material-symbols-outlined" aria-hidden="true">help</span>${escapeHtml(t.clarifyTitle)}</div>
+      <p>${escapeHtml(t.clarifyDesc)}</p>
+      ${questions.map((q, i) => `
+        <div class="clarify-q">
+          <label for="clarifyAnswer${i}">${escapeHtml(q)}</label>
+          <textarea id="clarifyAnswer${i}" class="clarify-answer" data-q="${escapeHtml(q)}" rows="2" placeholder="${escapeHtml(t.clarifyAnswerPh)}"></textarea>
+        </div>`).join("")}
+      <div class="clarify-actions">
+        ${authorEmail ? `<a class="nav-button btn-sm" id="btnClarifyEmail" href="${escapeHtml(clarifyMailto(authorEmail, data.feedback.text || quote, questions, t))}"><span class="material-symbols-outlined" aria-hidden="true">mail</span>${escapeHtml(t.clarifyAskAuthor)}</a>` : ""}
+        <span class="field-hint" id="clarifyNeedAnswer">${escapeHtml(t.clarifyNeedAnswer)}</span>
+      </div>`;
+    clarifyEl.hidden = false;
+  }
+  const readQa = () => [...clarifyEl.querySelectorAll(".clarify-answer")].map(el => ({ q: el.dataset.q, a: el.value }));
+  const answered = () => readQa().some(x => x.a.trim());
+  const syncNew = () => {
+    btnNew.disabled = needsClarify && !answered();
+    const hint = document.getElementById("clarifyNeedAnswer");
+    if (hint) hint.hidden = !btnNew.disabled;
+  };
+  clarifyEl.oninput = syncNew;
+
   listEl.innerHTML = matches.length
     ? matches.map(m => `
       <label class="convert-match${m.id === data.recommendedId && recommendEnhance ? " is-recommended" : ""}">
@@ -5211,28 +5301,98 @@ window.openFeedbackConvert = async function(id) {
   const selected = () => listEl.querySelector('input[name="convertTarget"]:checked')?.value || null;
   listEl.onchange = () => { btnEnhance.disabled = !selected(); };
   btnEnhance.disabled = !selected();
-  btnNew.disabled = false;
+  syncNew();
 
-  btnEnhance.onclick = async () => {
-    const targetId = selected();
-    if (!targetId) return;
-    let uc = (appState.loadedAdminUseCases || []).find(c => c.id === targetId);
-    if (!uc) {
-      const res = await apiJson('/api/use-cases');
-      uc = (Array.isArray(res.data) ? res.data : []).find(c => c.id === targetId);
-    }
-    if (!uc) { showToast(t.caseSaveFailed, "warning"); return; }
-    close();
-    openAdminEditModal(uc, { sourceFeedback: source, instruction: fmt(t.convertEnhanceInstruction, { text: source.text }), autoDraft: true });
-  };
-  btnNew.onclick = () => {
-    close();
-    openAdminEditModal(null, {
-      sourceFeedback: source, instruction: source.text, creator: source.userEmail || "",
+  btnEnhance.onclick = () => { const id = selected(); if (!id) return; close(); onEnhance(id, readQa()); };
+  btnNew.onclick = () => { if (btnNew.disabled) return; close(); onNew(readQa()); };
+}
+
+/** Finds a playbook by id in the admin list, falling back to the API. */
+async function findUseCaseById(id) {
+  const local = (appState.loadedAdminUseCases || []).find(c => c.id === id);
+  if (local) return local;
+  const res = await apiJson('/api/use-cases');
+  return (Array.isArray(res.data) ? res.data : []).find(c => c.id === id) || null;
+}
+
+/**
+ * Feedback -> playbook conversion.
+ * 1. Ask the server for similar playbooks + a clarity verdict (two-stage: keyword shortlist, Gemini rerank).
+ * 2. Show matches with scores; the server recommends "enhance" when the best score >= its threshold.
+ *    A vague idea shows clarification questions; answers (or the author's reply) are appended to the
+ *    Gemini instruction.
+ * 3. Enhance: open the existing playbook with the feedback as the Gemini instruction (diff review).
+ *    Create new: open a blank form, creator = feedback author, and auto-draft from the feedback.
+ * Saving the form sends sourceFeedbackId, which marks the feedback as converted.
+ */
+window.openFeedbackConvert = async function(id) {
+  const t = tr();
+  const fb = (appState.adminFeedbacks || []).find(f => Number(f.id) === Number(id)) || { id, feedback_text: "" };
+  const author = fb.user_email && fb.user_email !== "anonymous" ? fmt(t.convertFrom, { email: fb.user_email }) : t.convertAnonymous;
+  const base = { mode: "feedback", quote: fb.feedback_text || "", author };
+  renderSimilarityDialog({ ...base, data: null });
+
+  const { ok, data } = await apiJson(`/api/admin/feedbacks/${Number(id)}/similar`, { method: "POST" });
+  if (!ok) {
+    document.getElementById("convertStatus").innerHTML = `<span class="is-error">${escapeHtml(errText(data))}</span>`;
+    return;
+  }
+  const source = { id: Number(id), text: data.feedback?.text || fb.feedback_text || "", userEmail: data.feedback?.userEmail || null };
+  renderSimilarityDialog({
+    ...base, data,
+    onEnhance: async (targetId, qa) => {
+      const uc = await findUseCaseById(targetId);
+      if (!uc) { showToast(t.caseSaveFailed, "warning"); return; }
+      openAdminEditModal(uc, { sourceFeedback: source, instruction: fmt(t.convertEnhanceInstruction, { text: withClarifications(source.text, qa, t) }), autoDraft: true });
+    },
+    onNew: (qa) => openAdminEditModal(null, {
+      sourceFeedback: source, instruction: withClarifications(source.text, qa, t), creator: source.userEmail || "",
       suggestedTitle: data.suggestedTitle || "", autoDraft: true
-    });
-  };
+    })
+  });
 };
+
+/*
+ * Similarity check for playbooks an admin creates by hand ("New playbook"), run before Draft with Gemini
+ * and before the first save. Resolves true to continue creating, false to stop (the admin cancelled or
+ * chose to improve an existing playbook instead). Network / server errors never block creation.
+ * Once the admin picks "Create new anyway" the form isn't checked again until it is reopened.
+ */
+async function checkSimilarBeforeCreate() {
+  if (editingUseCaseId !== null || appState.caseFormSourceFeedback || appState.caseFormSimilarAck) return true;
+  const val = (id) => (document.getElementById(id)?.value || "").trim();
+  const title = val("formCaseTitle");
+  const summary = val("formCaseSummary");
+  const instruction = val("formCaseGeminiInstruction");
+  if (!title && !summary && !instruction) return true;
+  const key = JSON.stringify([title, summary, instruction]);
+  if (appState.caseFormSimilarKey === key) return true;
+
+  const t = tr();
+  const btn = document.getElementById("btnAdminFormSave");
+  btn.disabled = true;
+  const { ok, data } = await apiJson('/api/admin/use-cases/similar', { method: "POST", body: { title, summary, instruction } })
+    .catch(() => ({ ok: false, data: null }));
+  btn.disabled = false;
+  appState.caseFormSimilarKey = key;
+  if (!ok || !data || data.recommendation !== "enhance") return true;
+
+  const quote = [title, summary, instruction].filter(Boolean).join("\n\n");
+  return new Promise(resolve => {
+    renderSimilarityDialog({
+      mode: "draft", quote, author: "", data,
+      onCancel: () => resolve(false),
+      onNew: () => { appState.caseFormSimilarAck = true; resolve(true); },
+      onEnhance: async (targetId) => {
+        resolve(false);
+        const uc = await findUseCaseById(targetId);
+        if (!uc) { showToast(t.caseSaveFailed, "warning"); return; }
+        document.getElementById("adminCaseEditModal").classList.remove("active");
+        openAdminEditModal(uc, { instruction: fmt(t.similarEnhanceInstruction, { text: quote }), autoDraft: true });
+      }
+    });
+  });
+}
 
 window.deleteFeedback = async function(id) {
   if (!confirm(tr().confirmDismissFeedback)) return;
@@ -6843,6 +7003,88 @@ const uiTranslationsV7 = {
 };
 Object.keys(uiTranslationsV7).forEach(lang => {
   if (uiTranslations[lang]) Object.assign(uiTranslations[lang], uiTranslationsV7[lang]);
+});
+
+/* V8: idea quality gate, clarification questions, similarity check before creating a playbook */
+const uiTranslationsV8 = {
+  en: {
+    feedbackHint: "For a use case idea, say who it's for, the task, and what Gemini should produce.",
+    feedbackTooShort: "Please add a little more detail so we can act on it.",
+    feedbackTooVague: "Please be more specific: who is it for, what task should it help with, and what should Gemini produce?",
+    feedbackTooLong: "Feedback is limited to 4,000 characters.",
+    convertRecoClarify: "This idea needs more detail before it becomes a playbook.",
+    clarifyTitle: "Clarify the idea first",
+    clarifyDesc: "Answer what you know, or email the author. Your answers are added to the Gemini instruction.",
+    clarifyQ_audience: "Who would use this playbook (e.g. lecturers, students, finance staff)?",
+    clarifyQ_task: "What task or problem should it help with?",
+    clarifyQ_output: "What should Gemini produce (e.g. an email, a quiz, a report, an Agent)?",
+    clarifyAnswerPh: "Your answer (optional)",
+    clarifyAskAuthor: "Ask the author by email",
+    clarifyEmailSubject: "Your use case idea for the Edu Portal",
+    clarifyEmailIntro: "Thanks for your idea:\n\"{text}\"\n\nTo turn it into a playbook, could you tell us:",
+    clarifyNeedAnswer: "Answer at least one question to create a new playbook, or improve an existing one.",
+    clarificationsHeading: "Clarifications",
+    similarTitle: "Similar playbooks already exist",
+    similarChecking: "Checking for similar playbooks…",
+    similarDraftHint: "You're creating a new playbook. Improving an existing one keeps the library tidy.",
+    similarRecoEnhance: "A very similar playbook already exists. Consider improving it instead.",
+    similarCreateAnyway: "Create new anyway",
+    similarEnhanceInstruction: "Improve this playbook with this idea. Keep what works and add what's missing:\n\n{text}",
+    convertConsidered: "Gemini compared the {n} closest of {total} playbooks."
+  },
+  "zh-TW": {
+    feedbackHint: "如提出使用案例構想，請說明對象、要處理的工作，以及希望 Gemini 產出甚麼。",
+    feedbackTooShort: "請補充多一點細節，方便我們跟進。",
+    feedbackTooVague: "請具體一點：給誰使用？要協助甚麼工作？希望 Gemini 產出甚麼？",
+    feedbackTooLong: "意見最多 4,000 個字元。",
+    convertRecoClarify: "此構想需要更多細節才能成為 Playbook。",
+    clarifyTitle: "請先釐清構想",
+    clarifyDesc: "請回答您知道的部分，或以電郵詢問提交者。答案會加入 Gemini 指示。",
+    clarifyQ_audience: "誰會使用這個 Playbook（例如講師、學生、財務同事）？",
+    clarifyQ_task: "它要協助處理甚麼工作或問題？",
+    clarifyQ_output: "希望 Gemini 產出甚麼（例如電郵、測驗、報告、Agent）？",
+    clarifyAnswerPh: "您的答案（選填）",
+    clarifyAskAuthor: "以電郵詢問提交者",
+    clarifyEmailSubject: "關於您在 Edu Portal 提出的使用案例構想",
+    clarifyEmailIntro: "感謝您的構想：\n「{text}」\n\n為了把它製作成 Playbook，可否告訴我們：",
+    clarifyNeedAnswer: "請至少回答一條問題才可建立新 Playbook，或改為改進現有 Playbook。",
+    clarificationsHeading: "補充說明",
+    similarTitle: "已有相似的 Playbook",
+    similarChecking: "正在檢查相似的 Playbook…",
+    similarDraftHint: "您正在建立新 Playbook。改進現有 Playbook 可避免內容重複。",
+    similarRecoEnhance: "已有非常相似的 Playbook，建議改為改進該 Playbook。",
+    similarCreateAnyway: "仍然建立新 Playbook",
+    similarEnhanceInstruction: "請根據以下構想改進此 Playbook，保留有效內容並補充缺少的部分：\n\n{text}",
+    convertConsidered: "Gemini 比較了 {total} 個 Playbook 中最相近的 {n} 個。"
+  },
+  "zh-CN": {
+    feedbackHint: "如提出用例创意，请说明对象、要处理的工作，以及希望 Gemini 生成什么。",
+    feedbackTooShort: "请补充多一点细节，方便我们跟进。",
+    feedbackTooVague: "请具体一点：给谁使用？要协助什么工作？希望 Gemini 生成什么？",
+    feedbackTooLong: "意见最多 4,000 个字符。",
+    convertRecoClarify: "此创意需要更多细节才能成为 Playbook。",
+    clarifyTitle: "请先澄清创意",
+    clarifyDesc: "请回答您知道的部分，或通过邮件询问提交者。答案会加入 Gemini 指令。",
+    clarifyQ_audience: "谁会使用这个 Playbook（例如讲师、学生、财务同事）？",
+    clarifyQ_task: "它要协助处理什么工作或问题？",
+    clarifyQ_output: "希望 Gemini 生成什么（例如邮件、测验、报告、Agent）？",
+    clarifyAnswerPh: "您的答案（选填）",
+    clarifyAskAuthor: "通过邮件询问提交者",
+    clarifyEmailSubject: "关于您在 Edu Portal 提出的用例创意",
+    clarifyEmailIntro: "感谢您的创意：\n“{text}”\n\n为了把它制作成 Playbook，能否告诉我们：",
+    clarifyNeedAnswer: "请至少回答一个问题才能创建新 Playbook，或改为改进现有 Playbook。",
+    clarificationsHeading: "补充说明",
+    similarTitle: "已有相似的 Playbook",
+    similarChecking: "正在检查相似的 Playbook…",
+    similarDraftHint: "您正在创建新 Playbook。改进现有 Playbook 可避免内容重复。",
+    similarRecoEnhance: "已有非常相似的 Playbook，建议改为改进该 Playbook。",
+    similarCreateAnyway: "仍然创建新 Playbook",
+    similarEnhanceInstruction: "请根据以下创意改进此 Playbook，保留有效内容并补充缺少的部分：\n\n{text}",
+    convertConsidered: "Gemini 比较了 {total} 个 Playbook 中最相近的 {n} 个。"
+  }
+};
+Object.keys(uiTranslationsV8).forEach(lang => {
+  if (uiTranslations[lang]) Object.assign(uiTranslations[lang], uiTranslationsV8[lang]);
 });
 
 /** Current translation table (falls back to English). */
