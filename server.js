@@ -19,7 +19,9 @@ const QuestCore = require('./lib/quest-core');
 const CategoryCore = require('./lib/categories');
 const { rankBySimilarity, shortlistForRerank } = require('./lib/similarity');
 const IdeaQuality = require('./lib/idea-quality');
-const { normalizeDraft, plainStepsForCase } = require('./lib/draft-normalize');
+const { normalizeDraft, plainStepsForCase, FEATURES: FEATURE_NAMES } = require('./lib/draft-normalize');
+// Research, Skills and Agent Designer chat / workflow playbooks seeded from lib/ (en + zh JSON), next to the app.js seeds
+const SEED_PLAYBOOKS = require('./lib/seed-playbooks').buildSeedPlaybooks();
 const { validateHelperPrompts, parseHelperPrompts } = require('./lib/helper-prompts');
 
 /** Vertex AI model for admin drafting / translation. Override per environment with GEMINI_MODEL. */
@@ -240,7 +242,7 @@ async function initializeSchemas() {
   const columnMigrations = [
     { table: 'users', column: 'ge_app_link', pg: 'VARCHAR(1024)', sqlite: 'TEXT' },
     { table: 'use_cases', column: 'infographic_url', pg: 'VARCHAR(1024)', sqlite: 'TEXT' },
-    // 'general' | 'notebooklm' | 'deep_research' | 'agent_designer' | 'canvas' | 'image' | 'video'
+    // 'general' | 'notebooklm' | 'deep_research' | 'agent_designer' | 'skills' | 'canvas' | 'image' | 'video'
     { table: 'use_cases', column: 'prompt_type', pg: "VARCHAR(50) DEFAULT 'general'", sqlite: "TEXT DEFAULT 'general'" },
     // Quest Run: JSON array of academic phases when this playbook is most relevant (see lib/quest-core.js TIMINGS)
     { table: 'use_cases', column: 'timing', pg: `TEXT DEFAULT '["anytime"]'`, sqlite: `TEXT DEFAULT '["anytime"]'` },
@@ -455,7 +457,12 @@ async function seedDatabase() {
       // Upsert (not DELETE + INSERT) so infographic_url, prompt_type and created_at survive every boot
       await upsertSeedUseCase(uc, translations[uc.id], helperPrompts[uc.id]);
     }
+    for (const p of SEED_PLAYBOOKS) {
+      await upsertSeedUseCase(p.uc, p.translations, p.helpers);
+    }
+    console.log(`🌱 Synchronized ${SEED_PLAYBOOKS.length} playbooks from lib/seed-playbooks.js.`);
     await applySeedPromptTypes();
+    await applySeedV9Refresh();
     // Idempotent fix-up: the old admin form saved "admin"; the portal filters on "administrative"
     await query("UPDATE use_cases SET category = 'administrative' WHERE category = 'admin'");
     await applyProductRename();
@@ -501,8 +508,8 @@ const SEED_PROMPT_TYPES = Object.freeze({
   sao_scavenger_hunt: 'canvas',            // clues + trivia quiz drafted as an editable Canvas document
   finance_compliance: 'notebooklm',        // audit uploaded receipts against regulations
   security_simulator: 'agent_designer',    // interactive multi-branch drill simulation run as an Agent
-  special_consideration_workflow: 'agent_designer',   // Drive folder-triggered triage workflow with routing + staff review
-  scholarship_application_workflow: 'agent_designer'  // form-triggered, forward-only coach workflow + mentor review
+  // lib/seed-playbooks.js: research (notebooklm / canvas), Skills (skills), chat + workflow agents (agent_designer)
+  ...Object.fromEntries(SEED_PLAYBOOKS.map(p => [p.id, p.promptType]))
 });
 
 /**
@@ -536,7 +543,7 @@ async function applyProductRename() {
   }
 }
 
-const PROMPT_TYPES = Object.freeze(['general', 'notebooklm', 'deep_research', 'agent_designer', 'canvas', 'image', 'video']);
+const PROMPT_TYPES = Object.freeze(['general', 'notebooklm', 'deep_research', 'agent_designer', 'skills', 'canvas', 'image', 'video']);
 
 /*
  * Optional demo / test user, created only when DEMO_USER_EMAIL and DEMO_USER_PASSWORD are set (.env or
@@ -689,20 +696,30 @@ const SEED_QUEST = Object.freeze({
     ['Safety drill due this term?', '這個學期要進行安全演習？', '这个学期要进行安全演练？', ['Security']],
     ['Does your team know what to do in an emergency?', '你的團隊知道緊急時該怎樣做嗎？', '你的团队知道紧急时该怎么做吗？', ['Security', 'IT Admin'], ['anytime']]
   ] },
-  special_consideration_workflow: { timing: ['midterm', 'finals'], hints: [
-    ['Extension requests piling up before exams?', '考試前延期申請堆積如山？', '考试前延期申请堆积如山？', ['SAO']],
-    ['Want every special case checked by a person?', '想每宗特殊個案都有真人把關？', '想每份特殊个案都有真人把关？', ['SAO', 'Dean'], ['anytime']]
-  ] },
-  scholarship_application_workflow: { timing: ['sem_start', 'summer'], hints: [
-    ['Scholarship deadline coming up?', '獎學金截止日期快到了？', '奖学金截止日期快到了？', ['Student']],
-    ['Not sure your personal statement is strong enough?', '不肯定你的個人陳述夠不夠好？', '不确定你的个人陈述够不够好？', ['Student'], ['anytime']]
-  ] }
+  ...Object.fromEntries(SEED_PLAYBOOKS.map(p => [p.id, p.quest]))
 });
 
 /** INSERT that resolves to the new row id on both dialects (pg needs RETURNING; sqlite reports lastID). */
 async function insertReturningId(sql, params, run = query) {
   const result = await run(dbType === 'postgres' ? `${sql} RETURNING id` : sql, params);
   return dbType === 'postgres' ? result[0].id : result.lastID;
+}
+
+/*
+ * One-time refresh (marker `seed_v9_refresh`) for seeds whose audience changed in v9. The scholarship workflow
+ * became a staff-side screening workflow (student affairs + finance), so its categories, timing and Quest hints
+ * are reset to the new seed values; applySeedQuestHints() then re-inserts the hints. Later admin edits win.
+ */
+const SEED_V9_RESET_IDS = Object.freeze(['scholarship_application_workflow']);
+async function applySeedV9Refresh() {
+  if (await mailer.readSetting(query, 'seed_v9_refresh')) return;
+  for (const id of SEED_V9_RESET_IDS) {
+    await query('UPDATE use_cases SET categories = ?, timing = ? WHERE id = ?',
+      [JSON.stringify(SEED_CATEGORIES[id]), JSON.stringify(SEED_QUEST[id].timing), id]);
+    await query('DELETE FROM quest_hints WHERE use_case_id = ?', [id]);
+  }
+  await mailer.writeSetting(query, 'seed_v9_refresh', { appliedAt: new Date().toISOString(), ids: SEED_V9_RESET_IDS }, 'system');
+  console.log(`🔄 Seed migration: refreshed audience of ${SEED_V9_RESET_IDS.length} playbook(s) for v9.`);
 }
 
 // Timing: filled where NULL, plus a one-time pass (marker `seed_timing_v1`) over rows still on the
@@ -760,8 +777,7 @@ const SEED_CATEGORIES = Object.freeze({
   sao_scavenger_hunt: ['student_affairs', 'students'],
   finance_compliance: ['finance'],
   security_simulator: ['security'],
-  special_consideration_workflow: ['student_affairs'],
-  scholarship_application_workflow: ['students']
+  ...Object.fromEntries(SEED_PLAYBOOKS.map(p => [p.id, p.categories]))
 });
 
 /**
@@ -823,7 +839,12 @@ const SEED_INFOGRAPHIC_VERSIONS = Object.freeze({
   rubric_grading: 1791779983, sao_scavenger_hunt: 1791780013, security_simulator: 1791780025,
   socratic_tutor: 1791779825, su_advocacy: 1791780048, su_helpdesk: 1791780242,
   visual_campaign: 1791780081, workforce_federation: 1791780116,
-  special_consideration_workflow: 1792321002, scholarship_application_workflow: 1792320981
+  special_consideration_workflow: 1792321002, scholarship_application_workflow: 1793206632,
+  // v9 (lib/seed-playbooks.js)
+  research_literature_review: 1793206341, research_grant_proposal: 1793206378, research_ethics_precheck: 1793206413,
+  skill_revision_quiz: 1793206432, skill_feedback_comments: 1793206457, skill_lesson_plan: 1793206489,
+  skill_meeting_minutes: 1793206522, it_service_desk_agent: 1793206542,
+  expense_claim_approval_workflow: 1793206561, exam_paper_moderation_workflow: 1793206598
 });
 
 /*
@@ -1195,7 +1216,35 @@ app.get('/api/auth/session', async (req, res) => {
     console.error('Session refresh error:', error);
   }
 
-  res.json({ success: true, loggedIn: true, user: req.session.user });
+  let tourSeen = {};
+  try { tourSeen = await readTourSeen(req.session.user.email); } catch (_) { /* tips simply show again */ }
+  res.json({ success: true, loggedIn: true, user: req.session.user, tourSeen });
+});
+
+/*
+ * First-login tips (overlay tour). One app_settings row per account, key `tour_seen:<email>`, value
+ * { admin?: ISO date, user?: ISO date }. Works for built-in admins too (they have no users row).
+ */
+const TOUR_PORTALS = Object.freeze(['admin', 'user']);
+const tourKey = (email) => `tour_seen:${String(email || '').toLowerCase()}`.slice(0, 100);
+async function readTourSeen(email) {
+  const setting = await mailer.readSetting(query, tourKey(email));
+  const v = setting && setting.value && typeof setting.value === 'object' ? setting.value : {};
+  return Object.fromEntries(TOUR_PORTALS.map(p => [p, Boolean(v[p])]));
+}
+app.post('/api/tour/seen', async (req, res) => {
+  const user = req.session.user;
+  if (!user) return res.status(401).json({ success: false, message: 'Not signed in.' });
+  const portal = req.body && req.body.portal;
+  if (!TOUR_PORTALS.includes(portal)) return res.status(400).json({ success: false, message: 'portal must be admin or user.' });
+  try {
+    const setting = await mailer.readSetting(query, tourKey(user.email));
+    const value = { ...(setting && setting.value && typeof setting.value === 'object' ? setting.value : {}), [portal]: new Date().toISOString() };
+    await mailer.writeSetting(query, tourKey(user.email), value, user.email);
+    res.json({ success: true, tourSeen: await readTourSeen(user.email) });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to save.' });
+  }
 });
 
 /*
@@ -1763,7 +1812,10 @@ app.post('/api/admin/users/reset', requireAdmin, resetUserPasswordHandler);
 app.put('/api/admin/users', requireSuper, async (req, res) => {
   const originalEmail = normalizeEmail(req.body && req.body.originalEmail);
   const newEmail = normalizeEmail((req.body && req.body.email) || originalEmail);
-  const link = parseGeAppLink(req.body && req.body.geAppLink);
+  // geAppLink omitted = keep the stored link ('' or null clears it). Callers that only change categories
+  // (tests, scripts) used to wipe the link because a missing field parsed as "clear".
+  const linkGiven = req.body && req.body.geAppLink !== undefined;
+  const link = parseGeAppLink(linkGiven ? req.body.geAppLink : null);
 
   const errors = {};
   if (!originalEmail) errors.originalEmail = 'originalEmail is required.';
@@ -1778,6 +1830,7 @@ app.put('/api/admin/users', requireSuper, async (req, res) => {
     if (!existing.length) {
       return res.status(404).json({ success: false, message: 'User not found.' });
     }
+    const linkValue = linkGiven ? link.value : (existing[0].ge_app_link || null);
 
     if (newEmail !== originalEmail) {
       const clash = await query('SELECT email FROM users WHERE email = ?', [newEmail]);
@@ -1789,7 +1842,7 @@ app.put('/api/admin/users', requireSuper, async (req, res) => {
         await tx(`
           INSERT INTO users (email, password_hash, is_temp_password, role, institution_level, created_at, ge_app_link, categories)
           SELECT ?, password_hash, is_temp_password, role, institution_level, created_at, ?, categories FROM users WHERE email = ?
-        `, [newEmail, link.value, originalEmail]);
+        `, [newEmail, linkValue, originalEmail]);
         await tx('UPDATE user_preferences SET user_email = ? WHERE user_email = ?', [newEmail, originalEmail]);
         await tx('UPDATE analytics SET user_email = ? WHERE user_email = ?', [newEmail, originalEmail]);
         await tx('UPDATE feedbacks SET user_email = ? WHERE user_email = ?', [newEmail, originalEmail]);
@@ -1798,7 +1851,7 @@ app.put('/api/admin/users', requireSuper, async (req, res) => {
         await tx('DELETE FROM users WHERE email = ?', [originalEmail]);
       });
     } else {
-      await query('UPDATE users SET ge_app_link = ? WHERE email = ?', [link.value, originalEmail]);
+      await query('UPDATE users SET ge_app_link = ? WHERE email = ?', [linkValue, originalEmail]);
     }
     // categories is optional on this endpoint: omitted = unchanged, [] = clear (user then sees no playbooks)
     if (req.body && req.body.categories !== undefined) {
@@ -3195,69 +3248,133 @@ app.post('/api/admin/settings/smtp/test', requireSuper, async (req, res) => {
   }
 });
 
-/**
- * Conventions every drafted playbook must follow, shared by "create" and "refine".
- * Mirrors the seeded playbooks in app.js so admin-made playbooks look and behave the same.
+/*
+ * Playbook drafting prompt. Every way of making a playbook (New playbook, Convert feedback → Create new,
+ * Convert feedback → Improve selected, similar-check → Improve selected, Refine with Gemini) goes through
+ * buildDraftPrompt(), so they all follow the same design logic and feature guide.
+ *
+ *   editable part  = DEFAULT_DRAFT_GUIDE, or the admin's override in app_settings['draft_prompt']
+ *                    (Admin → Settings → Playbook drafting prompt, super admins). Read on every draft.
+ *   fixed parts    = current form values, the task (create / improve + the idea + clarifications),
+ *                    language consistency and the JSON output contract, which the admin form parses.
  */
-const DRAFT_CONVENTIONS = `
-PLAYBOOK CONVENTIONS (match the portal's existing playbooks exactly):
-1. VARIABLES: write every fill-in value as {{UPPER_SNAKE_CASE}}, e.g. {{COURSE_NAME}}, {{INSTITUTION_NAME}}, {{TARGET_AUDIENCE}}. Use 2-6 variables. Never use square brackets such as [COURSE_NAME]. Use the SAME English variable keys in en, zh-TW and zh-CN; never translate a key. Variables belong ONLY in the prompt and Set up prompts (the portal substitutes them there); NEVER put a {{VARIABLE}} in "steps", because steps are shown as-is. In steps write plain words instead, e.g. "your department", "your course" (zh-TW 你的科系 / 你的課程, zh-CN 你的院系 / 你的课程).
+const DRAFT_PROMPT_SETTING_KEY = 'draft_prompt';
+const DRAFT_PROMPT_MAX = 30000;
+
+const DEFAULT_DRAFT_GUIDE = `You are the Playbook Architect for "Gemini Enterprise - Edu Portal", a library of ready-to-use Gemini Enterprise playbooks for schools and universities. A playbook solves one real job for one audience, using the Gemini Enterprise feature(s) that fit that job best.
+
+HOW TO DESIGN A PLAYBOOK (apply the same steps to new playbooks, user ideas and improvements)
+A. Understand the job: who does it (audience), what they do today, the input they already have (files, emails, data) and the output they need.
+B. Choose the features with the FEATURE GUIDE below. The form's current features are a starting point, not a rule: pick the smallest set that does the job well, and change it when the idea needs a different feature. Never add a feature just to list it.
+C. Design the flow: 3 steps (set up, run, review) and a ready-to-paste prompt for the main feature.
+D. Make it safe and grounded: name the sources, require evidence, and keep a person in the loop before anything reaches students or the public.
+E. Explain the feature choice in "designNotes".
+
+FEATURE GUIDE (pick by the job, not by habit)
+- Gemini (general chat): a quick one-off answer, rewrite or brainstorm with no files. promptType general.
+- Canvas Mode: a long document the user will edit and share (guide, letter, proposal, lesson plan, report). promptType canvas.
+- Gemini Notebook: answers, checks or analysis grounded in the user's OWN files (rubrics, policies, transcripts, receipts, papers), with citations. promptType notebooklm.
+- Deep Research: a cited report from many public web sources (market trends, literature, regulations, funder priorities). promptType deep_research. Deep Research cannot read a Gemini Notebook; run it in Gemini and add the report to a notebook as a source if needed.
+- Skills: a reusable, named procedure the user saves once and Gemini applies every time the same kind of task comes up (feedback in "my marking voice", minutes in the office's format, a revision quiz from any notes). Use it when the same task repeats with different inputs and must always follow the same steps and format. promptType skills. The prompt is the skill definition with these labelled sections: SKILL NAME, DESCRIPTION (when Gemini should use it, starting "Use this skill when ..."), INPUTS, INSTRUCTIONS (numbered), OUTPUT FORMAT, QUALITY CHECKS and one short EXAMPLE.
+  SKILLS ARE GENERIC: the skill definition never names a course, school, office, person or other specific context and contains NO {{VARIABLES}}. INPUTS lists what the user gives in the request when calling the skill (course, level, rubric, template, examples), with sensible defaults when they don't. Skills cannot hold attachments: never tell the user to attach or upload files to a skill; rubrics, templates and example texts are pasted or attached in the chat request each time. Put the specifics in a Set up prompt titled "Prompt to Use the Skill ..." (type general, or canvas when the result is a document) that calls the skill by name and carries the {{VARIABLES}}.
+- Agent Designer, CHAT AGENT: an assistant that many people talk to over time (tutor, policy help desk, IT service desk, drill simulator). It answers from Knowledge files with citations. Title ends "Chat Agent"; step 1 or 2 says "create a chat agent in Agent Designer". promptType agent_designer.
+- Agent Designer, WORKFLOW AGENT: a repeatable multi-step process that starts on its own or from a form, branches on conditions and needs human approval (intake triage, approvals, moderation, screening). Title ends "Workflow Agent"; steps say "create a workflow agent in Agent Designer and paste the prompt into the assistant to build the flow". The Agent Designer assistant cannot take attachments, so knowledge files are added by hand to the agent nodes AFTER the flow is created; the steps must say this. Prefer a real trigger: a new file in a Google Drive folder (Drive Connector) or a new email in a shared mailbox (Email Connector). After approval, the workflow can send the approved email or save the file through the connector. promptType agent_designer.
+- Image Generation / Video Generation: visuals (posters, diagrams, short clips). promptType image / video.
+Typical combinations: Gemini Notebook to prepare and verify sources → Agent Designer chat agent with the same files; Deep Research → Gemini Notebook → Canvas Mode for a cited document; Skills for the repeated step inside a larger routine.
+
+PLAYBOOK CONVENTIONS (match the portal's existing playbooks exactly)
+1. VARIABLES: write every fill-in value as {{UPPER_SNAKE_CASE}}, e.g. {{COURSE_NAME}}, {{INSTITUTION_NAME}}, {{TARGET_AUDIENCE}}. Use 2-6 variables (Skills: none in the skill definition; put them in the "Prompt to Use the Skill ..." Set up prompt). Never use square brackets such as [COURSE_NAME]. Use the SAME English variable keys in en, zh-TW and zh-CN; never translate a key. Variables belong ONLY in the prompt and Set up prompts (the portal substitutes them there); NEVER put a {{VARIABLE}} in "steps", because steps are shown as-is. In steps write plain words instead, e.g. "your department", "your course" (zh-TW 你的科系 / 你的課程, zh-CN 你的院系 / 你的课程).
 2. STEPS: exactly 3 steps of one or two sentences each, with no {{VARIABLES}}, in this order:
    (1) Set up and ground: what to prepare, which files to add and which feature to open.
    (2) Run: use the sample prompt in the named feature.
    (3) Review and deliver: what a person checks before the result is shared.
-3. PROMPT: a ready-to-paste prompt for the main feature. Open with the role ("You are ..." or "Act as ..."), use numbered or labelled sections, and describe the expected output. If the prompt should produce a document, end it with: "Use Canvas to create this as an editable document." Exception: never add the Canvas sentence or "in Canvas Mode" to Agent Designer instructions (promptType agent_designer); the Agent replies with structured text (headings, tables) and Canvas Mode is only used by Set up prompts run in Gemini.
-4. PROMPT TYPE ("promptType"), one of: general | notebooklm | deep_research | agent_designer | canvas | image | video. Match the feature the prompt is pasted into: Agent Designer -> agent_designer, Gemini Notebook -> notebooklm, Deep Research -> deep_research, Canvas Mode -> canvas, Image Generation -> image, Video Generation -> video, anything else -> general.
-5. AGENT DESIGNER WORKFLOWS (promptType agent_designer with several steps): label each step "STEP n · NAME (node type)"; write branches as "IF ... → go to Step n"; keep the flow forward-only (never loop back to an earlier step); give approval nodes exactly two outcomes, Approve or Reject; start the run from a trigger (for example a new file in a folder) or a form; attach reference files as Knowledge Sources on agent nodes and never ask for file uploads during a run; include a human review step before anything reaches a student or the public.
-6. CONNECTORS: list one only when the playbook really reads live data from that system, otherwise return []. Use these names exactly: "Drive Connector", "Email Connector", "LMS Connector", "Calendar Connector".
-7. WRITING: plain, friendly English with short sentences. zh-TW is Traditional Chinese as written in Hong Kong; zh-CN is Simplified Chinese. Keep product names in English inside Chinese text: Gemini, Gemini Enterprise, Gemini Notebook, Canvas Mode, Deep Research, Agent Designer, Image Generation, Video Generation and the connector names.
-8. BRAND: never say "Gem" (always "Agent") and never say "Copilot".
-9. SET UP PROMPTS ("helperPrompts"): 1-3 short ready-to-paste prompts that prepare what step 1 needs (sample data, a rules table, a template, a source summary). Each has a title starting "Prompt to ..." (zh-TW / zh-CN titles end with 提示詞 / 提示词), a type from the PROMPT TYPE list, and reuses the main prompt's {{VARIABLE}} keys where they fit. If a set up prompt creates a document, set type "canvas" and end it with the Canvas sentence in that language: en "Use Canvas to create this as an editable document.", zh-TW "請使用 Canvas 將此內容建立為可編輯文件。", zh-CN "请使用 Canvas 将此内容创建为可编辑文档。" Keep the same number and order of entries in en, zh-TW and zh-CN.
-10. GROUNDING: Agent Designer cannot read a Gemini Notebook and there is no notebook connector. When a playbook prepares sources in Gemini Notebook and then builds an Agent, step 1 or 2 must tell the user to add the same files under "Agent Designer › Knowledge › Add files" (same file names, so citations match), and use the notebook to check the Agent's answers. A prompt that relies on files must include a "KNOWLEDGE SOURCES" section (what the files are) and "GROUNDING RULES": use only those sources, cite the file and page / slide / section, say clearly when something isn't covered (and who to ask), never invent facts, figures or quotes. Never write "manually upload ... into the system instructions" or "connect Gemini Notebook to the Agent". Gemini Notebook cannot run Deep Research: run Deep Research in Gemini first, then add the report to the notebook as a source.
-11. CONSISTENCY: every listed GE feature and connector must be used in a step or in the prompt; remove any that are not. A connector-based prompt names the connector as its data source and never searches the web for personal data. Prompts that analyse sources or data must require evidence (citations or data points) and say what to do when evidence is missing.
-`;
+3. PROMPT: a ready-to-paste prompt for the main feature. Open with the role ("You are ..." or "Act as ...") or, for Skills, with "SKILL NAME:"; use numbered or labelled sections, and describe the expected output. If the prompt should produce a document, end it with: "Use Canvas to create this as an editable document." Exception: never add the Canvas sentence or "in Canvas Mode" to Agent Designer instructions or Skills (promptType agent_designer / skills); they reply with structured text (headings, tables) and Canvas Mode is only used by Set up prompts run in Gemini.
+4. PROMPT TYPE ("promptType"), one of: general | notebooklm | deep_research | agent_designer | skills | canvas | image | video. Match the feature the prompt is pasted into: Agent Designer -> agent_designer, Skills -> skills, Gemini Notebook -> notebooklm, Deep Research -> deep_research, Canvas Mode -> canvas, Image Generation -> image, Video Generation -> video, anything else -> general.
+5. AGENT DESIGNER WORKFLOWS (workflow agents): label each step "STEP n · NAME (node type)"; start with "STEP 1 · TRIGGER (...)" naming the trigger (Drive Connector: new file in folder, Email Connector: new email in a shared mailbox, or a start form); write branches as "IF ... → go to Step n" in a condition node; keep the flow forward-only (never loop back to an earlier step); give approval nodes exactly two outcomes, Approve or Reject, and name the approver; label the reference files "KNOWLEDGE SOURCES (added manually to the agent nodes after the flow is created)": never say to attach files while building the workflow, because the assistant that builds it can't take attachments, and never ask for file uploads during a run; send or save results through the connector only after approval; end with a log row (date, reference, route, approver, outcome).
+6. AGENT DESIGNER CHAT AGENTS: the prompt is the agent's instructions: who it serves, KNOWLEDGE SOURCES, GROUNDING RULES, how to answer (format, tone, length), what to refuse, and when to hand over to a named person or office.
+7. CONNECTORS: list one only when the playbook really reads or writes live data through that system (a workflow trigger counts), otherwise return []. Use these names exactly: "Drive Connector", "Email Connector", "LMS Connector", "Calendar Connector".
+8. WRITING: plain, friendly English with short sentences. zh-TW is Traditional Chinese as written in Hong Kong; zh-CN is Simplified Chinese. Keep product names in English inside Chinese text: Gemini, Gemini Enterprise, Gemini Notebook, Canvas Mode, Deep Research, Agent Designer, Skills, Image Generation, Video Generation and the connector names.
+9. BRAND: never say "Gem" (always "Agent") and never say "Copilot".
+10. SET UP PROMPTS ("helperPrompts"): 1-3 short ready-to-paste prompts that prepare what step 1 needs (sample data, a rules table, a template, a source summary; for Skills, first the "Prompt to Use the Skill ..." calling prompt). Each has a title starting "Prompt to ..." (zh-TW / zh-CN titles end with 提示詞 / 提示词), a type from the PROMPT TYPE list, and reuses the main prompt's {{VARIABLE}} keys where they fit. If a set up prompt creates a document, set type "canvas" and end it with the Canvas sentence in that language: en "Use Canvas to create this as an editable document.", zh-TW "請使用 Canvas 將此內容建立為可編輯文件。", zh-CN "请使用 Canvas 将此内容创建为可编辑文档。" Keep the same number and order of entries in en, zh-TW and zh-CN.
+11. GROUNDING: Agent Designer cannot read a Gemini Notebook and there is no notebook connector. When a playbook prepares sources in Gemini Notebook and then builds an Agent, step 1 or 2 must tell the user to add the same files under "Agent Designer › Knowledge › Add files" (same file names, so citations match), and use the notebook to check the Agent's answers. A prompt that relies on files must include a "KNOWLEDGE SOURCES" section (what the files are) and "GROUNDING RULES": use only those sources, cite the file and page / slide / section, say clearly when something isn't covered (and who to ask), never invent facts, figures or quotes. Never write "manually upload ... into the system instructions" or "connect Gemini Notebook to the Agent".
+12. CONSISTENCY: every listed GE feature and connector must be used in a step or in the prompt; remove any that are not. A connector-based prompt names the connector as its data source and never searches the web for personal data. Prompts that analyse sources or data must require evidence (citations or data points) and say what to do when evidence is missing.`;
+
+/** The admin's saved drafting guide, or the default. Never throws (a DB error falls back to the default). */
+async function readDraftGuide() {
+  try {
+    const setting = await mailer.readSetting(query, DRAFT_PROMPT_SETTING_KEY);
+    const text = setting && setting.value && typeof setting.value.text === 'string' ? setting.value.text.trim() : '';
+    return text ? { text, isDefault: false, updatedBy: setting.updatedBy, updatedAt: setting.updatedAt }
+      : { text: DEFAULT_DRAFT_GUIDE, isDefault: true, updatedBy: null, updatedAt: null };
+  } catch (err) {
+    console.warn('⚠️ Draft prompt setting unreadable, using the default:', err.message);
+    return { text: DEFAULT_DRAFT_GUIDE, isDefault: true, updatedBy: null, updatedAt: null };
+  }
+}
+
+/** Where a draft request comes from. Only changes the wording of the task, never the design rules. */
+const DRAFT_ORIGINS = Object.freeze({
+  manual: 'an admin\'s own idea',
+  feedback: 'a user\'s feedback idea submitted in the portal',
+  similar: 'an admin\'s idea that overlaps this existing playbook'
+});
 
 /**
  * Build the drafting brief. Pure.
- * @param {object} form        current case-form values (title, categories, features, connectors, promptType)
- * @param {string} original    JSON of the stored playbook when refining, '' when creating
- * @param {string} instruction admin's free-text request (may be empty)
+ * @param {object}  form           current case-form values (title, categories, features, connectors, promptType)
+ * @param {string}  original       JSON of the stored playbook when improving, '' when creating
+ * @param {string}  instruction    admin's free-text request (may be empty)
+ * @param {string}  [origin]       manual | feedback | similar (see DRAFT_ORIGINS)
+ * @param {string}  [idea]         the idea text (feedback text / similar-check quote), may be empty
+ * @param {Array}   [clarifications] [{q, a}] answers to clarification questions
+ * @param {string}  [guide]        editable guide text (defaults to DEFAULT_DRAFT_GUIDE)
  */
-const buildDraftPrompt = ({ form, original, instruction }) => {
-  const head = `You are the Playbook Architect for "Gemini Enterprise - Edu Portal", a library of ready-to-use Gemini Enterprise playbooks for schools and universities.
+const buildDraftPrompt = ({ form, original, instruction, origin, idea, clarifications, guide }) => {
+  const source = DRAFT_ORIGINS[origin] || DRAFT_ORIGINS.manual;
+  const qa = (Array.isArray(clarifications) ? clarifications : [])
+    .filter(x => x && String(x.a || '').trim())
+    .map(x => `- Q: ${String(x.q || '').slice(0, 300)}\n  A: ${String(x.a).slice(0, 1000)}`);
+  const ideaBlock = [
+    `Source: ${source}.`,
+    idea ? `Idea: ${JSON.stringify(String(idea).slice(0, 4000))}` : '',
+    qa.length ? `Clarifications from the author / admin:\n${qa.join('\n')}` : '',
+    instruction ? `Admin instructions (highest priority): ${JSON.stringify(instruction)}` : ''
+  ].filter(Boolean).join('\n');
 
-CURRENT FORM VALUES
+  const head = `CURRENT FORM VALUES
 - Title: ${JSON.stringify(form.title || '')}
 - Audience categories: ${JSON.stringify(CategoryCore.normalizeCategories(form.categories))}
 - GE features: ${JSON.stringify(form.features || [])}
 - Connectors: ${JSON.stringify(form.connectors || [])}
-- Prompt type: ${JSON.stringify(form.promptType || 'general')}
-`;
+- Prompt type: ${JSON.stringify(form.promptType || 'general')}`;
 
   const task = original
-    ? `TASK: REFINE AN EXISTING PLAYBOOK
+    ? `TASK: IMPROVE AN EXISTING PLAYBOOK
+${ideaBlock}
 Stored playbook (all languages):
 ${original}
 
-Admin instructions: ${JSON.stringify(instruction || 'Tidy the playbook so it follows the conventions below.')}
+Follow HOW TO DESIGN A PLAYBOOK for the parts the idea or instructions touch. ${idea ? 'Work the idea into the playbook: keep what already works and add what is missing.' : 'With instructions only, apply just the changes they ask for.'} Re-check the feature choice against the FEATURE GUIDE and change features, connectors and promptType only when the idea or instructions need it or the current choice clearly breaks the guide; say so in "designNotes". Echo every untouched title, summary, step, prompt, tip and Set up prompt back unchanged (draft 1-3 Set up prompts if there are none). Always allowed: convert [VARIABLE] placeholders to {{VARIABLE}}, keep variable keys identical across languages, fix brand terms. Apply each change to en, zh-TW and zh-CN alike.`
+    : `TASK: CREATE A NEW PLAYBOOK
+${idea || instruction ? ideaBlock : `Source: ${source}. No extra instructions: draft from the form values.`}
+Follow HOW TO DESIGN A PLAYBOOK from step A. Suggest a clear, specific title if the form title is empty.`;
 
-Apply only the changes the instructions ask for (helperPrompts included: echo the stored ones unchanged unless asked, or draft 1-3 if there are none), plus these always-allowed fixes: convert [VARIABLE] placeholders to {{VARIABLE}}, keep variable keys identical across languages, and fix brand terms. Keep every other title, summary, step, prompt and tip as it is and echo the unchanged text back. Apply each change to en, zh-TW and zh-CN alike.`
-    : `TASK: DRAFT A NEW PLAYBOOK
-${instruction ? `Admin instructions (highest priority): ${JSON.stringify(instruction)}` : 'No extra instructions: draft from the form values.'}
-Suggest a clear, specific title if the form title is empty.`;
+  return `${guide || DEFAULT_DRAFT_GUIDE}
 
-  return `${head}
+${head}
+
 ${task}
-${DRAFT_CONVENTIONS}
+
 LANGUAGE CONSISTENCY: write the English profile first, then translate it 1-to-1 into zh-TW and zh-CN with the same number of steps, the same sections and the same {{VARIABLE}} keys.
 
 OUTPUT: only a raw JSON object (no markdown fences, no commentary) with exactly these keys:
 {
   "id": "snake_case_id_based_on_the_title",
   "categories": ["1-3 audience categories, from: ${CategoryCore.CATEGORY_IDS.join(' | ')}"],
-  "features": ["only the features used, from: Agent Designer, Gemini Notebook, Deep Research, Canvas Mode, Image Generation, Video Generation"],
+  "features": ["only the features used, from: ${FEATURE_NAMES.join(', ')}"],
   "connectors": [],
-  "promptType": "one of: general | notebooklm | deep_research | agent_designer | canvas | image | video",
+  "promptType": "one of: ${PROMPT_TYPES.join(' | ')}",
+  "designNotes": "1-3 sentences in English: which features you chose and why",
   "timing": ["any of: anytime, sem_start, teaching, midterm, finals, winter, summer"],
   "hints": [
     { "en": "Drowning in essays to mark?", "zh-TW": "批改論文批改到喘不過氣？", "zh-CN": "批改论文批改到喘不过气？", "audience": ["Lecturer", "TA"] }
@@ -3274,12 +3391,43 @@ OUTPUT: only a raw JSON object (no markdown fences, no commentary) with exactly 
 Field notes: "hints" holds exactly 2 short pain-point questions (at most 60 characters in English) that the target audience would ask and this playbook answers; "audience" uses these role names: ${QuestCore.ROLES.join(', ')}. Category ids: ${CategoryCore.CATEGORIES.map(c => `${c.id} = ${c.label.en} (${c.roles.join(', ')})`).join('; ')}. "summary" is 1-2 sentences on the outcome. "proTip" is one practical sentence.`;
 };
 
+// --- Super admin: playbook drafting prompt (Admin → Settings → Playbook drafting prompt) ---
+app.get('/api/admin/settings/draft-prompt', requireSuper, async (req, res) => {
+  const g = await readDraftGuide();
+  res.json({ success: true, text: g.text, defaultText: DEFAULT_DRAFT_GUIDE, isDefault: g.isDefault, updatedBy: g.updatedBy, updatedAt: g.updatedAt, maxLength: DRAFT_PROMPT_MAX });
+});
+
+app.put('/api/admin/settings/draft-prompt', requireSuper, async (req, res) => {
+  const text = typeof (req.body && req.body.text) === 'string' ? req.body.text.trim() : '';
+  if (text.length < 200) return res.status(400).json({ success: false, message: 'The prompt is too short. Use Reset to default to start again.' });
+  if (text.length > DRAFT_PROMPT_MAX) return res.status(400).json({ success: false, message: `Keep the prompt under ${DRAFT_PROMPT_MAX} characters.` });
+  try {
+    await mailer.writeSetting(query, DRAFT_PROMPT_SETTING_KEY, { text }, req.session.user.email);
+    const g = await readDraftGuide();
+    res.json({ success: true, text: g.text, isDefault: g.isDefault, updatedBy: g.updatedBy, updatedAt: g.updatedAt });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to save the prompt.' });
+  }
+});
+
+app.delete('/api/admin/settings/draft-prompt', requireSuper, async (req, res) => {
+  try {
+    await query('DELETE FROM app_settings WHERE key = ?', [DRAFT_PROMPT_SETTING_KEY]);
+    res.json({ success: true, text: DEFAULT_DRAFT_GUIDE, isDefault: true });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to reset the prompt.' });
+  }
+});
+
 // Admin: draft a new playbook or refine an existing one with Gemini (GEMINI_MODEL, service-account auth).
 // The reply is normalised (lib/draft-normalize.js) so {{VARIABLE}} tokens and enum values always match the portal.
 app.post('/api/admin/generate-gemini', requireAdmin, async (req, res) => {
   const { id, title, categories, features, connectors, promptType } = req.body;
   const instruction = String(req.body.instruction || '').trim();
-  if (!title && !instruction) {
+  const idea = String(req.body.idea || '').trim().slice(0, 4000);
+  const origin = Object.prototype.hasOwnProperty.call(DRAFT_ORIGINS, req.body.origin) ? req.body.origin : 'manual';
+  const clarifications = Array.isArray(req.body.clarifications) ? req.body.clarifications.slice(0, 5) : [];
+  if (!title && !instruction && !idea) {
     return res.status(400).json({ success: false, message: 'Please specify either a playbook title or custom instructions so Gemini can draft relevant content.' });
   }
 
@@ -3305,7 +3453,11 @@ app.post('/api/admin/generate-gemini', requireAdmin, async (req, res) => {
     const promptText = buildDraftPrompt({
       form: { title, categories, features, connectors, promptType },
       original,
-      instruction
+      instruction,
+      origin,
+      idea,
+      clarifications,
+      guide: (await readDraftGuide()).text
     });
     const parsedResult = normalizeDraft(await callGeminiJson(promptText));
     res.json({ success: true, result: parsedResult });
@@ -3380,7 +3532,7 @@ app.post('/api/admin/translate', requireAdmin, async (req, res) => {
   const promptText = `
 Translate this short in-app announcement for a university portal from English into Traditional Chinese (Hong Kong usage, "zh-TW") and Simplified Chinese ("zh-CN").
 Rules:
-1. Keep ALL product and feature names (e.g. "Gemini Enterprise", "Gemini", "Gemini Notebook", "Canvas Mode", "Deep Research", "Agent Designer", "Image Generation", "Video Generation") in ENGLISH.
+1. Keep ALL product and feature names (e.g. "Gemini Enterprise", "Gemini", "Gemini Notebook", "Canvas Mode", "Deep Research", "Agent Designer", "Skills", "Image Generation", "Video Generation") in ENGLISH.
 2. Never use the term "Gem" (use "Agent"). Never use the term "Copilot".
 3. Keep it concise: titles at most 30 Chinese characters, messages at most 80 Chinese characters.
 4. Output ONLY raw JSON, no markdown fences, exactly: {"zh-TW":{"title":"...","body":"..."},"zh-CN":{"title":"...","body":"..."}}

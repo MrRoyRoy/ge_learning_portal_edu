@@ -2,142 +2,22 @@
 
 // Core Datastore - Comprehensive, Generalized Use Case Database (English defaults)
 
-/*
- * Agent Designer WORKFLOW playbooks (admin staff + student). Each prompt is a multi-step workflow with
- * conditional branches (→ arrows) and a mandatory human review step. Both follow Agent Designer's limits:
- *   - the graph is forward-only (no cycles: new evidence or a new draft starts a new run);
- *   - the approval node has exactly two outcomes, Approve or Reject;
- *   - reference files are attached as Knowledge Sources on agent nodes, never uploaded during a run;
- *   - no step pauses mid-run to wait for a reply (only the approval node waits for a person).
- * Special consideration starts from a Drive Connector folder trigger (one run per student application file).
- * Scholarship coach starts from a manual trigger form the student fills in (typed / pasted text; no connectors).
- * Shared by useCasesDb and useCasesTranslations.en so the English text lives in one place.
- */
-const SPECIAL_CONSIDERATION_EN = Object.freeze({
-  title: "Special Consideration Workflow Agent",
-  summary: "A forward-only Agent Designer workflow that starts when a student's special consideration application lands in an intake folder. The Agent reads the form, checks the evidence against policy, routes the case and drafts a reply, and staff approve or reject every draft.",
-  steps: [
-    "Use the helper prompts to draft the evidence rules table, the decision letter templates and a sample student application form. In Agent Designer, attach the policy, rules and templates as Knowledge Sources on the agent nodes, and set up the Google Drive intake folder where student application forms are saved, connected through the Drive Connector.",
-    "Build a forward-only workflow that starts when a new application lands in the intake folder. The Agent reads the form, checks the evidence against policy, then routes the case to an evidence request, a standard letter or an escalation brief. Upload the sample applications to test each branch.",
-    "A staff member approves or rejects each draft. An approved run outputs the final letter and a log row, ready to send. A rejected run closes with a log row so staff can follow up."
-  ],
-  prompt: `You are the Special Consideration Workflow Agent for the {{OFFICE_NAME}} at {{INSTITUTION_NAME}}. You process student applications for assignment extensions, deferred exams and leave of absence. The workflow runs forward only, one run per application: never loop back to an earlier step, and never send anything to a student yourself.
-
-KNOWLEDGE SOURCES (attach in the Agent Designer UI to the agent nodes)
-The special consideration policy, the evidence rules table and the decision letter templates.
-
-STEP 1 · TRIGGER (Drive Connector: new file in folder)
-The run starts automatically when a new application form is uploaded to the {{INTAKE_FOLDER}} Google Drive folder, watched through the Drive Connector. Each new file starts one run. Ignore files that are not application forms.
-
-STEP 2 · READ APPLICATION (agent node)
-Read the application form in the new file and extract: application reference, student name, student ID, programme, course code, assessment affected, request type (extension | deferred exam | leave of absence), reason category (medical | compassionate | personal | other), affected dates, days requested, the student's statement, the evidence listed or attached (type, date and issuer), and the number of earlier requests this term.
-
-STEP 3 · EVIDENCE & POLICY CHECK (agent node)
-Compare the application with the evidence rules and the policy. Output: evidence status (Complete | Missing), missing items or blank required fields, risk flags and the policy clauses that apply.
-
-STEP 4 · ROUTING (condition node)
-- IF evidence status is Missing → go to Step 5A.
-- ELSE IF any of these is true → go to Step 5C: more than {{AUTO_LIMIT_DAYS}} days requested; dates overlap a final exam; the statement mentions safety, mental health or welfare concerns; this is the student's third or later request this term; no standard rule in the policy fits.
-- ELSE → go to Step 5B.
-
-STEP 5A · EVIDENCE REQUEST (agent node)
-Draft a short, polite email from the "more evidence needed" template that lists exactly what is missing. Status: "Awaiting evidence".
-
-STEP 5B · STANDARD DECISION (agent node)
-Draft a decision letter from the matching template and cite the policy clause that applies. Status: "Ready for review".
-
-STEP 5C · ESCALATION BRIEF (agent node)
-Write a one-page case brief: summary, timeline, evidence list, policy clauses, recommended options with pros and cons, and the flags that triggered escalation. Then draft the letter for the recommended option. Status: "Needs staff decision". If a welfare flag is present, add: "Contact Student Wellbeing today at {{WELFARE_EMAIL}}."
-
-Steps 5A, 5B and 5C each continue forward to Step 6.
-
-STEP 6 · HUMAN REVIEW (approval node: Approve or Reject)
-Show the reviewer the draft, the extracted application details, the Step 3 check and the name of the application file. Nothing is final until they choose.
-- IF Approve → go to Step 7A.
-- IF Reject → go to Step 7B.
-
-STEP 7A · FINALIZE (agent node)
-Output the approved letter or email in full, ready for staff to send to the student. Then output one log row: date, application reference, student ID, route (evidence request | standard | escalated), reviewer, outcome "Approved".
-
-STEP 7B · CLOSE AS RETURNED (agent node)
-Do not output a letter. Output one log row with outcome "Rejected, returned to staff" and a one-line note on what the staff member should check. If the student later uploads new evidence or a corrected form to the folder, that file starts a new run.
-
-Rules: base every decision on the knowledge sources and cite the clause. Do not diagnose or judge medical evidence beyond the policy rules. Keep all student details confidential.`,
-  proTip: "Test every branch before go-live: use the sample application helper to create a complete form, one with missing evidence and one with a welfare flag. Upload each to the intake folder and check where it lands."
-});
-
-const SCHOLARSHIP_COACH_EN = Object.freeze({
-  title: "Scholarship Application Coach Workflow Agent",
-  summary: "A forward-only Agent Designer workflow for one scholarship application. You fill in a start form, the Agent checks your eligibility and either plans your story or scores your draft, and your mentor approves or rejects the result before you act on it.",
-  steps: [
-    "Use the helper prompts to summarise the scholarship call and build your experience bank. In Agent Designer, attach the scholarship call and selection criteria as Knowledge Sources on the agent nodes, and add a start form with text fields for your profile, experience bank and draft statement.",
-    "Build a forward-only workflow: the Agent checks eligibility, then routes you to a not-eligible note, questions for the scholarship office, a story plan (no draft yet) or a scorecard for your draft. Write the statement yourself in Canvas Mode and paste it into the form.",
-    "Your mentor approves or rejects each plan or scorecard. An approved run gives you next steps or the final submission checklist; a rejected run returns the mentor's notes. Each new draft starts a new run, and you submit the application yourself."
-  ],
-  prompt: `You are the Scholarship Coach Agent for students at {{INSTITUTION_NAME}}, helping one student apply for {{SCHOLARSHIP_NAME}} (deadline: {{DEADLINE}}). You are a coach: the student writes and owns every word they submit. The workflow runs forward only, one run per form: never loop back to an earlier step and never pause to wait for a reply. Each new draft starts a new run.
-
-KNOWLEDGE SOURCES (attach in the Agent Designer UI to the agent nodes)
-The scholarship call, the selection criteria and any official writing guidance for {{SCHOLARSHIP_NAME}}.
-
-STEP 1 · TRIGGER (manual trigger: start form)
-The student starts a run by filling in a form with typed or pasted text only: name, programme, year of study, GPA, residency status, activities and awards (or their experience bank), financial need statement (if the scholarship asks for one), draft personal statement (leave blank for the first run) and the mentor's name.
-
-STEP 2 · PROFILE SHEET (agent node)
-Turn the form into a one-page profile sheet. List any required field that is blank.
-
-STEP 3 · ELIGIBILITY CHECK (agent node)
-Compare the profile with every hard requirement in the scholarship call (year, GPA, residency, programme, required documents). Output: eligibility (Eligible | Not eligible | Unclear), each requirement with Met, Not met or Unclear, and the clause it comes from.
-
-STEP 4 · ROUTING (condition node)
-- IF eligibility is Not eligible → go to Step 5A.
-- ELSE IF eligibility is Unclear → go to Step 5B.
-- ELSE IF the draft personal statement field is blank → go to Step 5C.
-- ELSE → go to Step 5D.
-
-STEP 5A · NOT ELIGIBLE NOTE (agent node)
-Explain in plain words which requirement is not met and suggest up to 3 kinds of similar scholarships to look for. The run ends here.
-
-STEP 5B · QUESTIONS FOR THE SCHOLARSHIP OFFICE (agent node)
-List the exact questions the student should ask the scholarship office, and say which requirement each one settles. The run ends here. When the office replies, the student starts a new run with the answers added to the form.
-
-STEP 5C · STORY PLAN (agent node)
-Map the student's experiences to each selection criterion. Propose 2 story angles, each with a 5-part outline and 3 guiding questions, for a statement of at most {{WORD_LIMIT}} words. Do not write the statement.
-
-STEP 5D · DRAFT SCORECARD (agent node)
-Score the pasted draft 1–5 on each selection criterion, with one line of evidence per score. For every criterion below 4, give up to 3 specific revision tips. Check the word count against {{WORD_LIMIT}} and flag anything that may break the scholarship's rules on AI use. Do not rewrite the statement.
-
-Steps 5C and 5D each continue forward to Step 6.
-
-STEP 6 · MENTOR REVIEW (approval node: Approve or Reject)
-Reviewer: the student's mentor or advisor ({{MENTOR_EMAIL}}). Show the profile sheet, the Step 3 eligibility check and the Step 5C story plan or Step 5D scorecard. Nothing goes back to the student as final until the mentor chooses.
-- IF Approve → go to Step 7A.
-- IF Reject → go to Step 7B.
-
-STEP 7A · NEXT STEPS (agent node)
-- IF the run came from Step 5D and every criterion scored 4 or more → output a submission checklist: documents, word count, referee details, file names and a reminder of the {{DEADLINE}} deadline. Remind the student to submit the application themselves.
-- ELSE → output the approved story plan or revision tips as a short to-do list, ending with: "When your next draft is ready, start a new run with it pasted into the form."
-
-STEP 7B · RETURNED BY MENTOR (agent node)
-Do not output a checklist. Output a short note that the mentor asked for changes, with the mentor's comments if given, and remind the student to revise and start a new run.
-
-Rules: never invent achievements or grades. Never write the whole statement for the student. Base eligibility only on the knowledge sources and cite the clause.`,
-  proTip: "Run the workflow once before you write anything to get a story plan, then again with each new draft. Keep your mentor as the approver so every plan and scorecard gets a human check before you act on it."
-});
+// Research, Skills and the Agent Designer workflow / new chat agent playbooks are seeded from lib/seed-playbooks.js.
 
 const useCasesDb = [
   // HUB 1: ACADEMIC PORTAL (Lecturers & TAs)
   {
     id: "socratic_tutor",
-    title: "Socratic AI Tutor Agent Creation",
+    title: "Socratic Tutor Chat Agent",
     category: "academic",
-    summary: "Ground a custom course Agent in your lecture notes and syllabi to act as a 24/7 Socratic learning companion.",
+    summary: "Create a chat agent in Agent Designer, grounded in your lecture notes and syllabus, that students talk to 24/7 and that guides them with Socratic questions instead of answers.",
     features: ["Agent Designer", "Gemini Notebook"],
     connectors: [],
     role: "Lecturer",
     level: ["University & College", "High School", "Generic"],
     steps: [
       "In Gemini Notebook, add your syllabus, lecture slides and key readings as sources, then use the Set up prompt to build a verification set: 10 typical student questions with cited answers.",
-      "In Agent Designer, paste the tutor prompt and add the same files under Knowledge › Add files. Keep the same file names so the citations match.",
+      "In Agent Designer, create a chat agent, paste the tutor prompt and add the same files under Knowledge › Add files. Keep the same file names so the citations match.",
       "Ask the Agent the 10 verification questions and compare its hints and citations with the notebook's answers. Fix any gaps, then publish the Agent link in your LMS."
     ],
     prompt: `You are the '{{COURSE_CODE}} Coach', a friendly and encouraging Socratic tutor for {{COURSE_NAME}}. Your sole objective is to guide students to find answers themselves.
@@ -301,16 +181,16 @@ Use Canvas to create this as an editable document.`,
   },
   {
     id: "su_helpdesk",
-    title: "24/7 Student Union Policy Agent",
+    title: "24/7 Student Union Policy Chat Agent",
     category: "student",
-    summary: "Build a student-facing policy Agent grounded in your union handbook and constitutions to answer venue booking, locker and funding questions.",
+    summary: "Create a student-facing chat agent in Agent Designer, grounded in your union handbook and constitution, that answers venue booking, locker and funding questions 24/7.",
     features: ["Agent Designer", "Gemini Notebook"],
     connectors: [],
     role: "Student",
     level: ["University & College", "High School", "Generic"],
     steps: [
       "Add the student handbook, welfare guidelines and club constitutions to Gemini Notebook as sources, then use the Set up prompt to build a verification set of 10 member questions with cited answers.",
-      "In Agent Designer, paste the policy Agent prompt and add the same files under Knowledge › Add files. Fill in the officer's email for sensitive cases.",
+      "In Agent Designer, create a chat agent, paste the policy Agent prompt and add the same files under Knowledge › Add files. Fill in the officer's email for sensitive cases.",
       "Ask the Agent the 10 verification questions plus 2 sensitive ones. Check that answers and citations match the notebook and that sensitive questions go to the officer, then share the Agent link with members."
     ],
     prompt: `You are the 24/7 Policy and Welfare Agent for {{STUDENT_UNION_NAME}} at {{INSTITUTION_NAME}}. You give quick, accurate answers to student questions about union bylaws, venue booking, lockers and society funding.
@@ -508,15 +388,15 @@ Audit requirements:
   },
   {
     id: "security_simulator",
-    title: "Campus Safety Drill Simulator",
+    title: "Campus Safety Drill Simulator Chat Agent",
     category: "administrative",
-    summary: "Simulate emergency response scenarios and evaluate campus security decision trees during emergency drill operations.",
+    summary: "Create a chat agent in Agent Designer that runs interactive emergency drills for your security team, checks every decision against the protocol handbook and scores the debrief.",
     features: ["Agent Designer", "Video Generation"],
     connectors: [],
     role: "Security",
     level: ["Generic"],
     steps: [
-      "In Agent Designer, add the emergency protocol handbook, floor plans and evacuation routes under Knowledge › Add files, then paste the drill prompt.",
+      "In Agent Designer, create a chat agent, add the emergency protocol handbook, floor plans and evacuation routes under Knowledge › Add files, then paste the drill prompt.",
       "Run a drill with the security team. The Agent presents each phase, checks every decision against the protocol and cites the section.",
       "Use Video Generation for short clips that open each phase, then review the debrief scores and update the handbook where the drill exposed gaps."
     ],
@@ -536,38 +416,6 @@ Simulation structure:
 3. **Containment & Evacuation (Minute 30)**: responder coordination, a safe perimeter and parent/press communication.
 4. **Debrief Rubric**: score decision speed, communication clarity, protocol adherence and care for casualties, and list each decision that departed from the protocol with the section it should have followed.`,
     proTip: "Open each phase with a 5-second Video Generation clip (e.g. smoke in a stairwell) to raise the pressure, but keep the protocol handbook as the only source for the right action.",
-    connectorGuide: null
-  },
-
-  // HUB 5: AGENT DESIGNER WORKFLOWS (multi-step, conditional routing, human review; special consideration uses the Drive Connector trigger)
-  {
-    id: "special_consideration_workflow",
-    ...SPECIAL_CONSIDERATION_EN,
-    steps: [...SPECIAL_CONSIDERATION_EN.steps],
-    category: "administrative",
-    features: ["Agent Designer"],
-    connectors: ["Drive Connector"],
-    role: "SAO",
-    level: ["University & College", "High School", "Generic"],
-    connectorGuide: {
-      name: "Drive Connector",
-      steps: [
-        "Ask your Gemini Enterprise admin to turn on the Drive Connector for your institution's Google Drive.",
-        "Create a shared intake folder in Google Drive for student application forms, and share it only with the staff who run this workflow.",
-        "In Agent Designer, set the workflow trigger to 'new file in folder' and pick the intake folder through the Drive Connector.",
-        "Upload the sample application forms to the folder and check that each one starts a run and lands on the right branch."
-      ]
-    }
-  },
-  {
-    id: "scholarship_application_workflow",
-    ...SCHOLARSHIP_COACH_EN,
-    steps: [...SCHOLARSHIP_COACH_EN.steps],
-    category: "student",
-    features: ["Agent Designer", "Canvas Mode"],
-    connectors: [],
-    role: "Student",
-    level: ["University & College", "High School", "Generic"],
     connectorGuide: null
   }
 ];
@@ -1165,97 +1013,6 @@ const useCaseHelperPrompts = {
         prompt: `为“{{FACILITY_LOCATION}}”发生的“{{EMERGENCY_SCENARIO}}”建立三阶段演习脚本（0分、15分、30分），每阶段提供 3 项战术选择、后续连锁后果及演练评分准则。请使用 Canvas 将此内容创建为可编辑文档。`
       }
     ]
-  },
-  special_consideration_workflow: {
-    en: [
-      {
-        type: "canvas",
-        title: "Prompt to Draft the Evidence Rules Table",
-        prompt: `Act as a student affairs policy officer at {{INSTITUTION_NAME}}. Draft an evidence rules table for special consideration requests. Rows: extension, deferred exam, leave of absence. For each row, list the accepted reasons (medical, compassionate, personal), the evidence required for each reason, the most days the office can approve without escalation (default: {{AUTO_LIMIT_DAYS}}), and who approves. End with a short list of cases that must always go to a human officer. Use Canvas to create this as an editable document.`
-      },
-      {
-        type: "canvas",
-        title: "Prompt to Draft Decision Letter Templates",
-        prompt: `Write 4 short, warm email templates for the {{OFFICE_NAME}} to send students about special consideration requests: (1) approved, (2) partly approved with new dates, (3) not approved, with the reason and how to appeal, (4) more evidence needed. Use placeholders for student name, course code, dates and policy clause. Keep each under 150 words, in plain English. Use Canvas to create this as an editable document.`
-      },
-      {
-        type: "canvas",
-        title: "Prompt to Generate a Sample Student Application Form",
-        prompt: `Create a realistic sample special consideration application form, as a student at {{INSTITUTION_NAME}} would submit it to the {{OFFICE_NAME}}, so staff can test the workflow. Use fictional details only and mark the header "SAMPLE: fictional data for testing". Include: (A) application reference and date submitted; (B) student details: name, student ID, programme, year and email; (C) request: type (deferred exam), course code, assessment affected, original date and days requested; (D) reason category (medical) and a 120-word student statement; (E) evidence checklist listing a medical certificate with its issuer and dates, plus a one-paragraph mock certificate summary at the end; (F) number of earlier requests this term; (G) declaration and signature line. Then add two short variants to test the other branches: one with the evidence missing, and one whose statement mentions a welfare concern. Use Canvas to create this as an editable document.`
-      }
-    ],
-    "zh-TW": [
-      {
-        type: "canvas",
-        title: "生成證明文件規則表提示詞",
-        prompt: `請扮演「{{INSTITUTION_NAME}}」學生事務處的政策主任，為特殊考量申請草擬一份證明文件規則表。列：延期交功課、延期考試、休學。每一列列出可接受的原因（醫療、恩恤、個人）、每個原因所需的證明文件、辦事處毋須上報即可批准的最多日數（預設：{{AUTO_LIMIT_DAYS}}），以及審批人。最後列出必須交由真人職員處理的個案類別。請使用 Canvas 將此內容建立為可編輯文件。`
-      },
-      {
-        type: "canvas",
-        title: "生成決定信範本提示詞",
-        prompt: `為{{OFFICE_NAME}}撰寫 4 封簡短而親切的電郵範本，通知學生特殊考量申請結果：(1) 批准，(2) 部分批准並附新日期，(3) 不批准，附原因及上訴方法，(4) 需補交證明文件。以佔位符表示學生姓名、科目編號、日期及政策條文。每封不多於 150 字，用語淺白。請使用 Canvas 將此內容建立為可編輯文件。`
-      },
-      {
-        type: "canvas",
-        title: "生成學生申請表樣本提示詞",
-        prompt: `製作一份逼真的特殊考量申請表樣本，模擬「{{INSTITUTION_NAME}}」學生向{{OFFICE_NAME}}提交的申請，供職員測試工作流程。只可使用虛構資料，並在頁首標明「樣本：測試用虛構資料」。內容包括：(A) 申請編號及提交日期；(B) 學生資料：姓名、學生編號、課程、年級及電郵；(C) 申請內容：類別（延期考試）、科目編號、受影響的評核、原定日期及申請日數；(D) 原因類別（醫療）及約 200 字的學生陳述；(E) 證明文件清單，列出醫生證明書的簽發者及日期，並在文末附一段模擬證明書摘要；(F) 本學期較早前的申請次數；(G) 聲明及簽署欄。另加兩個簡短版本以測試其他分支：一份欠缺證明文件，另一份的陳述提及福利問題。請使用 Canvas 將此內容建立為可編輯文件。`
-      }
-    ],
-    "zh-CN": [
-      {
-        type: "canvas",
-        title: "生成证明材料规则表提示词",
-        prompt: `请扮演“{{INSTITUTION_NAME}}”学生事务处的政策主管，为特殊考量申请草拟一份证明材料规则表。行：作业延期、缓考、休学。每一行列出可接受的原因（医疗、恩恤、个人）、每个原因所需的证明材料、办公室无需上报即可批准的最多天数（默认：{{AUTO_LIMIT_DAYS}}），以及审批人。最后列出必须交由真人职员处理的个案类别。请使用 Canvas 将此内容创建为可编辑文档。`
-      },
-      {
-        type: "canvas",
-        title: "生成决定函模板提示词",
-        prompt: `为{{OFFICE_NAME}}撰写 4 封简短而亲切的邮件模板，通知学生特殊考量申请结果：(1) 批准，(2) 部分批准并附新日期，(3) 不批准，附原因及申诉方法，(4) 需补交证明材料。以占位符表示学生姓名、课程编号、日期及政策条文。每封不超过 150 字，用语浅白。请使用 Canvas 将此内容创建为可编辑文档。`
-      },
-      {
-        type: "canvas",
-        title: "生成学生申请表样本提示词",
-        prompt: `制作一份逼真的特殊考量申请表样本，模拟“{{INSTITUTION_NAME}}”学生向{{OFFICE_NAME}}提交的申请，供职员测试工作流程。只可使用虚构资料，并在页眉标明“样本：测试用虚构资料”。内容包括：(A) 申请编号及提交日期；(B) 学生资料：姓名、学号、专业、年级及电子邮箱；(C) 申请内容：类别（缓考）、课程编号、受影响的考核、原定日期及申请天数；(D) 原因类别（医疗）及约 200 字的学生陈述；(E) 证明材料清单，列出医生证明的出具单位及日期，并在文末附一段模拟证明摘要；(F) 本学期较早前的申请次数；(G) 声明及签名栏。另加两个简短版本以测试其他分支：一份缺少证明材料，另一份的陈述提及福利问题。请使用 Canvas 将此内容创建为可编辑文档。`
-      }
-    ]
-  },
-  scholarship_application_workflow: {
-    en: [
-      {
-        type: "general",
-        title: "Prompt to Summarise the Scholarship Call",
-        prompt: `I am applying for {{SCHOLARSHIP_NAME}}. From the scholarship call I paste below, list: (1) hard eligibility requirements, (2) selection criteria and their weighting if given, (3) required documents, (4) word limits and format rules, (5) the deadline and how to submit, (6) any rules on AI use. Put it in a table and flag anything unclear that I should ask the scholarship office about.`
-      },
-      {
-        type: "general",
-        title: "Prompt to Build My Experience Bank",
-        prompt: `Help me turn my CV and activity list into an experience bank for scholarship applications. For each activity, ask me what I did, the challenge, the action I took and the result. Then write each one as a 3-line STAR summary in my own words, and tag it with the qualities it shows (leadership, service, academic excellence, resilience, creativity).`
-      }
-    ],
-    "zh-TW": [
-      {
-        type: "general",
-        title: "生成獎學金章程摘要提示詞",
-        prompt: `我正在申請「{{SCHOLARSHIP_NAME}}」。請根據我在下方貼上的獎學金章程，列出：(1) 硬性資格要求，(2) 評選準則及比重（如有），(3) 所需文件，(4) 字數及格式要求，(5) 截止日期及提交方法，(6) 有關使用 AI 的規定。以表格呈現，並標示我應向獎學金辦事處查詢的不清楚之處。`
-      },
-      {
-        type: "general",
-        title: "生成個人經歷庫提示詞",
-        prompt: `請協助我把履歷及活動清單整理成獎學金申請用的經歷庫。每項活動請先問我：做了甚麼、遇到甚麼挑戰、採取了甚麼行動、結果如何。然後以我自己的語氣寫成 3 行 STAR 摘要，並標示它展現的特質（領導力、服務、學術卓越、抗逆力、創意）。`
-      }
-    ],
-    "zh-CN": [
-      {
-        type: "general",
-        title: "生成奖学金章程摘要提示词",
-        prompt: `我正在申请“{{SCHOLARSHIP_NAME}}”。请根据我在下方粘贴的奖学金章程，列出：(1) 硬性资格要求，(2) 评选标准及权重（如有），(3) 所需材料，(4) 字数及格式要求，(5) 截止日期及提交方式，(6) 有关使用 AI 的规定。以表格呈现，并标出我应向奖学金办公室咨询的不清楚之处。`
-      },
-      {
-        type: "general",
-        title: "生成个人经历库提示词",
-        prompt: `请帮我把简历及活动清单整理成奖学金申请用的经历库。每项活动请先问我：做了什么、遇到什么挑战、采取了什么行动、结果如何。然后用我自己的语气写成 3 行 STAR 摘要，并标出它体现的特质（领导力、服务、学术卓越、抗逆力、创造力）。`
-      }
-    ]
   }
 };
 
@@ -1309,6 +1066,7 @@ const uiTranslations = {
     roles: {
       "Lecturer": "Lecturer / Educator",
       "TA": "Teaching Assistant (TA)",
+      "Researcher": "Researcher / Research Office",
       "Student": "Student / Club Leader",
       "Security": "Campus Security Officer",
       "Finance": "Financial Administrator",
@@ -1449,6 +1207,7 @@ const uiTranslations = {
     roles: {
        "Lecturer": "講師 / 教育工作者",
        "TA": "助教 (TA)",
+       "Researcher": "研究人員 / 研究事務處",
        "Student": "學生 / 社團幹部",
        "Security": "校園安全官",
        "Finance": "財務管理員",
@@ -1589,6 +1348,7 @@ const uiTranslations = {
     roles: {
       "Lecturer": "讲师 / 教育工作者",
       "TA": "助教 (TA)",
+      "Researcher": "研究人员 / 科研处",
       "Student": "学生 / 社团干部",
       "Security": "校园安全官",
       "Finance": "财务管理员",
@@ -1688,11 +1448,11 @@ const uiTranslations = {
 const useCasesTranslations = {
   socratic_tutor: {
     "en": {
-      title: "Socratic AI Tutor Agent Creation",
-      summary: "Ground a custom course Agent in your lecture notes and syllabi to act as a 24/7 Socratic learning companion.",
+      title: "Socratic Tutor Chat Agent",
+      summary: "Create a chat agent in Agent Designer, grounded in your lecture notes and syllabus, that students talk to 24/7 and that guides them with Socratic questions instead of answers.",
       steps: [
         "In Gemini Notebook, add your syllabus, lecture slides and key readings as sources, then use the Set up prompt to build a verification set: 10 typical student questions with cited answers.",
-        "In Agent Designer, paste the tutor prompt and add the same files under Knowledge › Add files. Keep the same file names so the citations match.",
+        "In Agent Designer, create a chat agent, paste the tutor prompt and add the same files under Knowledge › Add files. Keep the same file names so the citations match.",
         "Ask the Agent the 10 verification questions and compare its hints and citations with the notebook's answers. Fix any gaps, then publish the Agent link in your LMS."
       ],
       prompt: `You are the '{{COURSE_CODE}} Coach', a friendly and encouraging Socratic tutor for {{COURSE_NAME}}. Your sole objective is to guide students to find answers themselves.
@@ -1714,11 +1474,11 @@ TUTORING RULES
       proTip: "Agent Designer can't read a Gemini Notebook directly, so the Agent answers only from the files you add under Knowledge. Use the notebook as your answer key: if the Agent's citation doesn't match the notebook's, fix the files or the prompt before students use it."
     },
     "zh-TW": {
-      title: "Socratic AI Tutor Agent 創建",
-      summary: "將客製化的課程 Agent 植基於您的授課筆記與教學大綱，打造 24/7 的 Socratic 學習導師。",
+      title: "Socratic 導師 Chat Agent（對話式 Agent）",
+      summary: "在 Agent Designer 建立一個以你的講義及課程大綱為依據的 Chat Agent，學生可全天候與它對話，它以 Socratic 式提問引導學生，而不是直接給答案。",
       steps: [
         "在 Gemini Notebook 加入課程大綱、講義投影片及核心讀物作為來源，再用輔助提示詞建立驗證題組：10 條學生常問的問題，每條附有出處的答案。",
-        "在 Agent Designer 貼上導師提示詞，並在 Knowledge › Add files 加入同一批檔案。保持相同檔名，讓引用出處一致。",
+        "在 Agent Designer 建立 Chat Agent（對話式 Agent），貼上導師提示詞，並在 Knowledge › Add files 加入同一批檔案。保持相同檔名，讓引用出處一致。",
         "向 Agent 提出這 10 條驗證問題，將它的提示及出處與 Notebook 的答案逐一比對。補好缺漏後，才在 LMS 發布 Agent 連結。"
       ],
       prompt: `你是「{{COURSE_CODE}} 導師」，一位親切、循循善誘的 {{COURSE_NAME}} Socratic 學習教練。你的唯一目標是引導學生自己找到答案。
@@ -1740,11 +1500,11 @@ TUTORING RULES
       proTip: "Agent Designer 無法直接讀取 Gemini Notebook，Agent 只會根據你在 Knowledge 加入的檔案作答。把 Notebook 當作答案參考：如 Agent 的出處與 Notebook 不符，先修正檔案或提示詞，才讓學生使用。"
     },
     "zh-CN": {
-      title: "Socratic AI Tutor Agent 创建",
-      summary: "将定制的课程 Agent 植基于您的授课笔记与教学大纲，打造 24/7 的 Socratic 学习导师。",
+      title: "Socratic 导师 Chat Agent（对话式 Agent）",
+      summary: "在 Agent Designer 创建一个以你的讲义及课程大纲为依据的 Chat Agent，学生可全天候与它对话，它以 Socratic 式提问引导学生，而不是直接给答案。",
       steps: [
         "在 Gemini Notebook 加入课程大纲、讲义幻灯片及核心读物作为来源，再用辅助提示词建立验证题组：10 条学生常问的问题，每条附有出处的答案。",
-        "在 Agent Designer 贴上导师提示词，并在 Knowledge › Add files 加入同一批文件。保持相同文件名，让引用出处一致。",
+        "在 Agent Designer 创建 Chat Agent（对话式 Agent），贴上导师提示词，并在 Knowledge › Add files 加入同一批文件。保持相同文件名，让引用出处一致。",
         "向 Agent 提出这 10 条验证问题，将它的提示及出处与 Notebook 的答案逐一比对。补好缺漏后，才在 LMS 发布 Agent 链接。"
       ],
       prompt: `你是「{{COURSE_CODE}} 导师」，一位亲切、循循善诱的 {{COURSE_NAME}} Socratic 学习教练。你的唯一目标是引导学生自己找到答案。
@@ -2069,11 +1829,11 @@ Use Canvas to create this as an editable document.`,
   },
   su_helpdesk: {
     "en": {
-      title: "24/7 Student Union Policy Agent",
-      summary: "Build a student-facing policy Agent grounded in your union handbook and constitutions to answer venue booking, locker and funding questions.",
+      title: "24/7 Student Union Policy Chat Agent",
+      summary: "Create a student-facing chat agent in Agent Designer, grounded in your union handbook and constitution, that answers venue booking, locker and funding questions 24/7.",
       steps: [
         "Add the student handbook, welfare guidelines and club constitutions to Gemini Notebook as sources, then use the Set up prompt to build a verification set of 10 member questions with cited answers.",
-        "In Agent Designer, paste the policy Agent prompt and add the same files under Knowledge › Add files. Fill in the officer's email for sensitive cases.",
+        "In Agent Designer, create a chat agent, paste the policy Agent prompt and add the same files under Knowledge › Add files. Fill in the officer's email for sensitive cases.",
         "Ask the Agent the 10 verification questions plus 2 sensitive ones. Check that answers and citations match the notebook and that sensitive questions go to the officer, then share the Agent link with members."
       ],
       prompt: `You are the 24/7 Policy and Welfare Agent for {{STUDENT_UNION_NAME}} at {{INSTITUTION_NAME}}. You give quick, accurate answers to student questions about union bylaws, venue booking, lockers and society funding.
@@ -2093,11 +1853,11 @@ ANSWER RULES
       proTip: "Re-upload the Knowledge files whenever the constitution or handbook is amended, then re-run your verification set. The Agent only knows the version you uploaded."
     },
     "zh-TW": {
-      title: "24/7 學生會法規與會務諮詢 Agent",
-      summary: "以學生會手冊及會章為依據，建立一個面向學生的政策 Agent，解答場地預約、儲物櫃及資助問題。",
+      title: "24/7 學生會法規與會務諮詢 Chat Agent",
+      summary: "在 Agent Designer 建立一個以學生會手冊及會章為依據、面向學生的 Chat Agent，全天候解答場地預約、儲物櫃及資助問題。",
       steps: [
         "把學生手冊、福利指引及各學會會章加入 Gemini Notebook 作為來源，再用輔助提示詞建立驗證題組：10 條會員常問的問題，每條附有出處的答案。",
-        "在 Agent Designer 貼上政策 Agent 提示詞，並在 Knowledge › Add files 加入同一批檔案。填上處理敏感個案的幹事電郵。",
+        "在 Agent Designer 建立 Chat Agent（對話式 Agent），貼上政策 Agent 提示詞，並在 Knowledge › Add files 加入同一批檔案。填上處理敏感個案的幹事電郵。",
         "向 Agent 提出 10 條驗證問題及 2 條敏感問題，確認答案及出處與 Notebook 一致，而敏感問題會轉介幹事，然後才向會員分享 Agent 連結。"
       ],
       prompt: `你是 {{INSTITUTION_NAME}} {{STUDENT_UNION_NAME}} 的 24/7 政策及福利 Agent，為學生快速而準確地解答有關會章、場地預約、儲物櫃及學會資助的問題。
@@ -2117,11 +1877,11 @@ ANSWER RULES
       proTip: "每次修訂會章或手冊後，請重新上載 Knowledge 檔案，再跑一次驗證題組。Agent 只會知道你上載的版本。"
     },
     "zh-CN": {
-      title: "24/7 学生会法规与会务咨询 Agent",
-      summary: "以学生会手册及章程为依据，建立一个面向学生的政策 Agent，解答场地预约、储物柜及资助问题。",
+      title: "24/7 学生会法规与会务咨询 Chat Agent",
+      summary: "在 Agent Designer 创建一个以学生会手册及章程为依据、面向学生的 Chat Agent，全天候解答场地预约、储物柜及资助问题。",
       steps: [
         "把学生手册、福利指引及各社团章程加入 Gemini Notebook 作为来源，再用辅助提示词建立验证题组：10 条会员常问的问题，每条附有出处的答案。",
-        "在 Agent Designer 贴上政策 Agent 提示词，并在 Knowledge › Add files 加入同一批文件。填上处理敏感个案的干事电子邮件。",
+        "在 Agent Designer 创建 Chat Agent（对话式 Agent），贴上政策 Agent 提示词，并在 Knowledge › Add files 加入同一批文件。填上处理敏感个案的干事电子邮件。",
         "向 Agent 提出 10 条验证问题及 2 条敏感问题，确认答案及出处与 Notebook 一致，而敏感问题会转介干事，然后才向会员分享 Agent 链接。"
       ],
       prompt: `你是 {{INSTITUTION_NAME}} {{STUDENT_UNION_NAME}} 的 24/7 政策及福利 Agent，为学生快速而准确地解答有关章程、场地预约、储物柜及社团资助的问题。
@@ -2485,10 +2245,10 @@ Audit requirements:
   },
   security_simulator: {
     "en": {
-      title: "Campus Safety Drill Simulator",
-      summary: "Simulate emergency response scenarios and evaluate campus security decision trees during emergency drill operations.",
+      title: "Campus Safety Drill Simulator Chat Agent",
+      summary: "Create a chat agent in Agent Designer that runs interactive emergency drills for your security team, checks every decision against the protocol handbook and scores the debrief.",
       steps: [
-        "In Agent Designer, add the emergency protocol handbook, floor plans and evacuation routes under Knowledge › Add files, then paste the drill prompt.",
+        "In Agent Designer, create a chat agent, add the emergency protocol handbook, floor plans and evacuation routes under Knowledge › Add files, then paste the drill prompt.",
         "Run a drill with the security team. The Agent presents each phase, checks every decision against the protocol and cites the section.",
         "Use Video Generation for short clips that open each phase, then review the debrief scores and update the handbook where the drill exposed gaps."
       ],
@@ -2510,10 +2270,10 @@ Simulation structure:
       proTip: "Open each phase with a 5-second Video Generation clip (e.g. smoke in a stairwell) to raise the pressure, but keep the protocol handbook as the only source for the right action."
     },
     "zh-TW": {
-      title: "校園防救災與重大危安演練模擬",
-      summary: "透過動態危機決策樹模擬突發狀況，提升校園安保團隊在各類演練中的即時指揮處置效能。",
+      title: "校園防救災與重大危安演練模擬 Chat Agent",
+      summary: "在 Agent Designer 建立一個 Chat Agent，為保安團隊主持互動緊急演習，按應變手冊核對每個決定，並為檢討評分。",
       steps: [
-        "在 Agent Designer 的 Knowledge › Add files 加入緊急應變手冊、樓層平面圖及疏散路線，然後貼上演習提示詞。",
+        "在 Agent Designer 建立 Chat Agent（對話式 Agent），在 Knowledge › Add files 加入緊急應變手冊、樓層平面圖及疏散路線，然後貼上演習提示詞。",
         "與保安團隊進行演習。Agent 逐一展示每個階段，按應變程序核對每個決定並註明章節。",
         "用 Video Generation 製作每個階段開場的短片段，然後檢視檢討評分，並按演習暴露的不足更新手冊。"
       ],
@@ -2535,10 +2295,10 @@ Simulation structure:
       proTip: "每個階段開始時播放一段 5 秒的 Video Generation 短片（例如樓梯間冒煙）以增加壓力，但正確行動只以應變手冊為準。"
     },
     "zh-CN": {
-      title: "校园防救灾与重大危安演练模拟",
-      summary: "透过动态危机决策树模拟突发状况，提升校园安保团队在各类演练中的即时指挥处置效能。",
+      title: "校园防救灾与重大危安演练模拟 Chat Agent",
+      summary: "在 Agent Designer 创建一个 Chat Agent，为安保团队主持互动紧急演习，按应变手册核对每个决定，并为检讨评分。",
       steps: [
-        "在 Agent Designer 的 Knowledge › Add files 加入紧急应变手册、楼层平面图及疏散路线，然后贴上演习提示词。",
+        "在 Agent Designer 创建 Chat Agent（对话式 Agent），在 Knowledge › Add files 加入紧急应变手册、楼层平面图及疏散路线，然后贴上演习提示词。",
         "与安保团队进行演习。Agent 逐一展示每个阶段，按应变程序核对每个决定并注明章节。",
         "用 Video Generation 制作每个阶段开场的短视频片段，然后检视检讨评分，并按演习暴露的不足更新手册。"
       ],
@@ -2558,248 +2318,6 @@ Simulation structure:
 3. **控制及疏散（第 30 分钟）**：协调救援人员、设立安全范围，以及与家长及媒体沟通。
 4. **检讨评分准则**：就决策速度、沟通清晰度、遵从程序及照顾伤者评分，并列出每个偏离程序的决定及应遵从的章节。`,
       proTip: "每个阶段开始时播放一段 5 秒的 Video Generation 短视频（例如楼梯间冒烟）以增加压力，但正确行动只以应变手册为准。"
-    }
-  },
-  special_consideration_workflow: {
-    "en": SPECIAL_CONSIDERATION_EN,
-    "zh-TW": {
-      title: "特殊考量申請工作流程 Agent",
-      summary: "只向前執行的 Agent Designer 工作流程：學生的特殊考量申請表存入收件資料夾後即自動啟動。Agent 閱讀申請表、按政策核對證明文件、分流個案並草擬回覆，每份草稿均由職員批准或拒絕。",
-      steps: [
-        "以輔助提示詞草擬證明文件規則表、決定信範本及一份學生申請表樣本。在 Agent Designer 把政策、規則表及範本附加為 Agent 節點的知識來源 (Knowledge Sources)，並設定存放學生申請表的 Google Drive 收件資料夾，以 Drive Connector 連接。",
-        "建立只向前執行的工作流程，當收件資料夾有新申請表時自動啟動：Agent 閱讀申請表、按政策核對證明文件，再把個案分流至要求補交文件、標準決定信或上報摘要。上載申請表樣本以測試每條分支。",
-        "職員批准或拒絕每份草稿。批准後輸出最終信件及記錄行，可直接發出；拒絕則以記錄行結案，方便職員跟進。"
-      ],
-      prompt: `你是「{{INSTITUTION_NAME}}」{{OFFICE_NAME}}的特殊考量工作流程 Agent，負責處理學生的延期交功課、延期考試及休學申請。流程只會向前執行，每份申請執行一次：不可返回較早的步驟，亦絕不可自行向學生發出任何內容。
-
-知識來源（在 Agent Designer 介面附加至各 Agent 節點）
-特殊考量政策、證明文件規則表及決定信範本。
-
-步驟 1 · 觸發（Drive Connector：資料夾新增檔案）
-當有新申請表上載至「{{INTAKE_FOLDER}}」Google Drive 資料夾（由 Drive Connector 監察）時，流程會自動啟動，每個新檔案啟動一次。如檔案並非申請表，則不予處理。
-
-步驟 2 · 閱讀申請表（Agent 節點）
-閱讀新檔案中的申請表，擷取：申請編號、學生姓名、學生編號、課程、科目編號、受影響的評核、申請類別（延期交功課 | 延期考試 | 休學）、原因類別（醫療 | 恩恤 | 個人 | 其他）、受影響日期、申請日數、學生陳述、列出或附上的證明文件（類別、日期及簽發者），以及本學期較早前的申請次數。
-
-步驟 3 · 核對證明文件及政策（Agent 節點）
-按證明文件規則及政策核對申請表。輸出：證明文件狀態（齊全 | 欠缺）、欠缺項目或未填的必填欄位、風險標記及適用的政策條文。
-
-步驟 4 · 分流（條件節點）
-- 如證明文件狀態為「欠缺」 → 轉至步驟 5A。
-- 否則，如符合以下任何一項 → 轉至步驟 5C：申請日數超過 {{AUTO_LIMIT_DAYS}} 日；日期與期末考試重疊；陳述提及人身安全、精神健康或福利問題；學生本學期已是第三次或以上申請；政策中沒有適用的標準規則。
-- 其他情況 → 轉至步驟 5B。
-
-步驟 5A · 要求補交文件（Agent 節點）
-以「需補交證明文件」範本草擬一封簡短有禮的電郵，列明欠缺的文件。狀態：「等待文件」。
-
-步驟 5B · 標準決定（Agent 節點）
-以相應範本草擬決定信，並引用適用的政策條文。狀態：「待審核」。
-
-步驟 5C · 上報摘要（Agent 節點）
-撰寫一頁個案摘要：概要、時序、證明文件清單、適用政策條文、建議方案及其利弊，以及觸發上報的標記；再按建議方案草擬決定信。狀態：「需職員決定」。如有福利標記，加上：「請於今天聯絡學生福利組 {{WELFARE_EMAIL}}。」
-
-步驟 5A、5B 及 5C 均向前進入步驟 6。
-
-步驟 6 · 人工審核（審批節點：批准或拒絕）
-向審核職員展示草稿、擷取的申請資料、步驟 3 的核對結果及申請表檔案名稱。職員作出選擇前，一切內容均未定案。
-- 如批准 → 轉至步驟 7A。
-- 如拒絕 → 轉至步驟 7B。
-
-步驟 7A · 定案（Agent 節點）
-輸出已批准的信件或電郵全文，供職員直接發給學生；另輸出一行記錄：日期、申請編號、學生編號、分流路徑（要求補交文件 | 標準 | 上報）、審核職員、結果「已批准」。
-
-步驟 7B · 退回結案（Agent 節點）
-不輸出信件。輸出一行記錄，結果為「已拒絕，退回職員」，並附一句說明職員需跟進的事項。如學生其後把補交文件或更正後的申請表上載至資料夾，該檔案會啟動新一輪流程。
-
-規則：每項決定都必須以知識來源為依據並引用條文。不可診斷病情，亦不可在政策規則以外評價證明文件。學生資料必須保密。`,
-      proTip: "正式啟用前請測試每條分支：用申請表樣本輔助提示詞製作一份齊全的申請表、一份欠缺證明文件的申請表及一份帶福利標記的申請表，逐一上載至收件資料夾，確認分流正確。",
-      connectorGuide: {
-        name: "Drive Connector",
-        steps: [
-          "請 Gemini Enterprise 管理員為院校的 Google Drive 啟用 Drive Connector。",
-          "在 Google Drive 建立共用收件資料夾存放學生申請表，只與負責此工作流程的職員共用。",
-          "在 Agent Designer 把工作流程觸發設定為「資料夾新增檔案」，並透過 Drive Connector 選擇收件資料夾。",
-          "把申請表樣本上載至資料夾，確認每份都會啟動流程並進入正確分支。"
-        ]
-      }
-    },
-    "zh-CN": {
-      title: "特殊考量申请工作流程 Agent",
-      summary: "只向前执行的 Agent Designer 工作流程：学生的特殊考量申请表存入收件文件夹后即自动启动。Agent 阅读申请表、按政策核对证明材料、分流个案并草拟回复，每份草稿均由职员批准或拒绝。",
-      steps: [
-        "以辅助提示词草拟证明材料规则表、决定函模板及一份学生申请表样本。在 Agent Designer 把政策、规则表及模板附加为 Agent 节点的知识来源 (Knowledge Sources)，并设置存放学生申请表的 Google Drive 收件文件夹，以 Drive Connector 连接。",
-        "建立只向前执行的工作流程，当收件文件夹有新申请表时自动启动：Agent 阅读申请表、按政策核对证明材料，再把个案分流至要求补交材料、标准决定函或上报摘要。上传申请表样本以测试每条分支。",
-        "职员批准或拒绝每份草稿。批准后输出最终信函及记录行，可直接发出；拒绝则以记录行结案，方便职员跟进。"
-      ],
-      prompt: `你是“{{INSTITUTION_NAME}}”{{OFFICE_NAME}}的特殊考量工作流程 Agent，负责处理学生的作业延期、缓考及休学申请。流程只会向前执行，每份申请执行一次：不可返回较早的步骤，也绝不可自行向学生发出任何内容。
-
-知识来源（在 Agent Designer 界面附加至各 Agent 节点）
-特殊考量政策、证明材料规则表及决定函模板。
-
-步骤 1 · 触发（Drive Connector：文件夹新增文件）
-当有新申请表上传至“{{INTAKE_FOLDER}}”Google Drive 文件夹（由 Drive Connector 监控）时，流程会自动启动，每个新文件启动一次。如文件并非申请表，则不予处理。
-
-步骤 2 · 阅读申请表（Agent 节点）
-阅读新文件中的申请表，提取：申请编号、学生姓名、学号、专业、课程编号、受影响的考核、申请类别（作业延期 | 缓考 | 休学）、原因类别（医疗 | 恩恤 | 个人 | 其他）、受影响日期、申请天数、学生陈述、列出或附上的证明材料（类别、日期及出具单位），以及本学期较早前的申请次数。
-
-步骤 3 · 核对证明材料及政策（Agent 节点）
-按证明材料规则及政策核对申请表。输出：证明材料状态（齐全 | 缺失）、缺失项目或未填的必填字段、风险标记及适用的政策条文。
-
-步骤 4 · 分流（条件节点）
-- 如证明材料状态为“缺失” → 转至步骤 5A。
-- 否则，如符合以下任何一项 → 转至步骤 5C：申请天数超过 {{AUTO_LIMIT_DAYS}} 天；日期与期末考试重叠；陈述提及人身安全、心理健康或福利问题；学生本学期已是第三次或以上申请；政策中没有适用的标准规则。
-- 其他情况 → 转至步骤 5B。
-
-步骤 5A · 要求补交材料（Agent 节点）
-以“需补交证明材料”模板草拟一封简短有礼的邮件，列明缺少的材料。状态：“等待材料”。
-
-步骤 5B · 标准决定（Agent 节点）
-以相应模板草拟决定函，并引用适用的政策条文。状态：“待审核”。
-
-步骤 5C · 上报摘要（Agent 节点）
-撰写一页个案摘要：概要、时间线、证明材料清单、适用政策条文、建议方案及其利弊，以及触发上报的标记；再按建议方案草拟决定函。状态：“需职员决定”。如有福利标记，加上：“请于今天联系学生福利组 {{WELFARE_EMAIL}}。”
-
-步骤 5A、5B 及 5C 均向前进入步骤 6。
-
-步骤 6 · 人工审核（审批节点：批准或拒绝）
-向审核职员展示草稿、提取的申请资料、步骤 3 的核对结果及申请表文件名称。职员作出选择前，一切内容均未定案。
-- 如批准 → 转至步骤 7A。
-- 如拒绝 → 转至步骤 7B。
-
-步骤 7A · 定案（Agent 节点）
-输出已批准的信函或邮件全文，供职员直接发给学生；另输出一行记录：日期、申请编号、学号、分流路径（要求补交材料 | 标准 | 上报）、审核职员、结果“已批准”。
-
-步骤 7B · 退回结案（Agent 节点）
-不输出信函。输出一行记录，结果为“已拒绝，退回职员”，并附一句说明职员需跟进的事项。如学生其后把补交材料或更正后的申请表上传至文件夹，该文件会启动新一轮流程。
-
-规则：每项决定都必须以知识来源为依据并引用条文。不可诊断病情，也不可在政策规则以外评价证明材料。学生信息必须保密。`,
-      proTip: "正式启用前请测试每条分支：用申请表样本辅助提示词制作一份齐全的申请表、一份缺少证明材料的申请表及一份带福利标记的申请表，逐一上传至收件文件夹，确认分流正确。",
-      connectorGuide: {
-        name: "Drive Connector",
-        steps: [
-          "请 Gemini Enterprise 管理员为院校的 Google Drive 启用 Drive Connector。",
-          "在 Google Drive 创建共享收件文件夹存放学生申请表，只与负责此工作流程的职员共享。",
-          "在 Agent Designer 把工作流程触发设置为“文件夹新增文件”，并通过 Drive Connector 选择收件文件夹。",
-          "把申请表样本上传至文件夹，确认每份都会启动流程并进入正确分支。"
-        ]
-      }
-    }
-  },
-  scholarship_application_workflow: {
-    "en": SCHOLARSHIP_COACH_EN,
-    "zh-TW": {
-      title: "獎學金申請教練工作流程 Agent",
-      summary: "為一份獎學金申請而設、只向前執行的 Agent Designer 工作流程。你填寫啟動表格後，Agent 會檢查你的資格，再為你規劃故事或為草稿評分；結果經導師批准或拒絕後，你才按此行動。",
-      steps: [
-        "以輔助提示詞整理獎學金章程摘要及個人經歷庫。在 Agent Designer 把獎學金章程及評選準則附加為 Agent 節點的知識來源 (Knowledge Sources)，並加入一份啟動表格，設有個人資料、經歷庫及陳述草稿的文字欄位。",
-        "建立只向前執行的工作流程：Agent 檢查資格後，把你分流至不符資格說明、向獎學金辦事處查詢的問題、故事規劃（尚未有草稿）或草稿評分表。個人陳述由你自己在 Canvas Mode 撰寫，再貼上表格。",
-        "導師批准或拒絕每份故事規劃或評分表。批准後你會得到下一步清單或最終提交清單；拒絕則退回導師意見。每份新草稿都會啟動新一輪流程，申請由你自己提交。"
-      ],
-      prompt: `你是「{{INSTITUTION_NAME}}」學生的獎學金教練 Agent，協助一名學生申請「{{SCHOLARSHIP_NAME}}」（截止日期：{{DEADLINE}}）。你的角色是教練：提交的每一個字都由學生親自撰寫並負責。流程只會向前執行，每份表格執行一次：不可返回較早的步驟，亦不可暫停等待回覆。每份新草稿都會啟動新一輪流程。
-
-知識來源（在 Agent Designer 介面附加至各 Agent 節點）
-「{{SCHOLARSHIP_NAME}}」的獎學金章程、評選準則及任何官方寫作指引。
-
-步驟 1 · 觸發（手動觸發：啟動表格）
-學生填寫表格以啟動流程，只可輸入或貼上文字：姓名、課程、年級、GPA、居民身份、課外活動及獎項（或個人經歷庫）、經濟需要陳述（如獎學金要求）、個人陳述草稿（第一次執行可留空）及導師姓名。
-
-步驟 2 · 個人資料表（Agent 節點）
-把表格內容整理成一頁個人資料表，並列出任何留空的必填欄位。
-
-步驟 3 · 資格檢查（Agent 節點）
-將個人資料與獎學金章程中每項硬性要求比對（年級、GPA、居民身份、課程、所需文件）。輸出：資格（符合 | 不符合 | 不清楚）、每項要求的結果（達到、未達到或不清楚）及出處條文。
-
-步驟 4 · 分流（條件節點）
-- 如資格為「不符合」 → 轉至步驟 5A。
-- 否則，如資格為「不清楚」 → 轉至步驟 5B。
-- 否則，如個人陳述草稿欄位留空 → 轉至步驟 5C。
-- 其他情況 → 轉至步驟 5D。
-
-步驟 5A · 不符資格說明（Agent 節點）
-以淺白語言說明未達到哪一項要求，並建議最多 3 類可留意的類近獎學金。流程於此結束。
-
-步驟 5B · 向獎學金辦事處查詢的問題（Agent 節點）
-列出學生應向獎學金辦事處查詢的具體問題，並註明每條問題釐清哪一項要求。流程於此結束。辦事處回覆後，學生把答案加進表格，再啟動新一輪流程。
-
-步驟 5C · 故事規劃（Agent 節點）
-把學生的經歷對應到每項評選準則，提出 2 個故事角度，每個附 5 部分大綱及 3 條引導問題，供撰寫不多於 {{WORD_LIMIT}} 字的陳述之用。不可代寫陳述。
-
-步驟 5D · 草稿評分表（Agent 節點）
-按每項評選準則為貼上的草稿評 1 至 5 分，每個分數附一句證據。凡低於 4 分的準則，提供最多 3 個具體修改建議。核對字數是否符合 {{WORD_LIMIT}} 字的上限，並標示任何可能違反獎學金對使用 AI 規定的內容。不可改寫陳述。
-
-步驟 5C 及 5D 均向前進入步驟 6。
-
-步驟 6 · 導師審閱（審批節點：批准或拒絕）
-審閱人：學生的導師或學業顧問（{{MENTOR_EMAIL}}）。展示個人資料表、步驟 3 的資格檢查，以及步驟 5C 的故事規劃或步驟 5D 的評分表。導師作出選擇前，任何內容都不會作為定案交給學生。
-- 如批准 → 轉至步驟 7A。
-- 如拒絕 → 轉至步驟 7B。
-
-步驟 7A · 下一步（Agent 節點）
-- 如流程來自步驟 5D，而且每項準則均達 4 分或以上 → 輸出提交清單：文件、字數、推薦人資料、檔案名稱及 {{DEADLINE}} 截止日期提示，並提醒學生親自提交申請。
-- 其他情況 → 把已批准的故事規劃或修改建議整理成簡短待辦清單，最後加上：「下一份草稿完成後，請把它貼上表格，啟動新一輪流程。」
-
-步驟 7B · 導師退回（Agent 節點）
-不輸出提交清單。輸出一段簡短說明，表示導師要求修改，並附上導師意見（如有），提醒學生修改後啟動新一輪流程。
-
-規則：絕不可虛構成就或成績。絕不可代學生撰寫整篇陳述。資格判斷只可以知識來源為依據並引用條文。`,
-      proTip: "動筆前先執行一次流程取得故事規劃，之後每份新草稿再執行一次。讓導師擔任審批人，確保每份規劃及評分表在你行動前都經過真人把關。"
-    },
-    "zh-CN": {
-      title: "奖学金申请教练工作流程 Agent",
-      summary: "为一份奖学金申请而设、只向前执行的 Agent Designer 工作流程。你填写启动表单后，Agent 会检查你的资格，再为你规划故事或为草稿评分；结果经导师批准或拒绝后，你才按此行动。",
-      steps: [
-        "以辅助提示词整理奖学金章程摘要及个人经历库。在 Agent Designer 把奖学金章程及评选标准附加为 Agent 节点的知识来源 (Knowledge Sources)，并加入一份启动表单，设有个人资料、经历库及陈述草稿的文本字段。",
-        "建立只向前执行的工作流程：Agent 检查资格后，把你分流至不符资格说明、向奖学金办公室咨询的问题、故事规划（尚未有草稿）或草稿评分表。个人陈述由你自己在 Canvas Mode 撰写，再粘贴到表单。",
-        "导师批准或拒绝每份故事规划或评分表。批准后你会得到下一步清单或最终提交清单；拒绝则退回导师意见。每份新草稿都会启动新一轮流程，申请由你自己提交。"
-      ],
-      prompt: `你是“{{INSTITUTION_NAME}}”学生的奖学金教练 Agent，协助一名学生申请“{{SCHOLARSHIP_NAME}}”（截止日期：{{DEADLINE}}）。你的角色是教练：提交的每一个字都由学生亲自撰写并负责。流程只会向前执行，每份表单执行一次：不可返回较早的步骤，也不可暂停等待回复。每份新草稿都会启动新一轮流程。
-
-知识来源（在 Agent Designer 界面附加至各 Agent 节点）
-“{{SCHOLARSHIP_NAME}}”的奖学金章程、评选标准及任何官方写作指引。
-
-步骤 1 · 触发（手动触发：启动表单）
-学生填写表单以启动流程，只可输入或粘贴文本：姓名、专业、年级、GPA、户籍或居民身份、课外活动及奖项（或个人经历库）、经济需要陈述（如奖学金要求）、个人陈述草稿（第一次执行可留空）及导师姓名。
-
-步骤 2 · 个人资料表（Agent 节点）
-把表单内容整理成一页个人资料表，并列出任何留空的必填字段。
-
-步骤 3 · 资格检查（Agent 节点）
-将个人资料与奖学金章程中每项硬性要求比对（年级、GPA、户籍或居民身份、专业、所需材料）。输出：资格（符合 | 不符合 | 不清楚）、每项要求的结果（达到、未达到或不清楚）及出处条文。
-
-步骤 4 · 分流（条件节点）
-- 如资格为“不符合” → 转至步骤 5A。
-- 否则，如资格为“不清楚” → 转至步骤 5B。
-- 否则，如个人陈述草稿字段留空 → 转至步骤 5C。
-- 其他情况 → 转至步骤 5D。
-
-步骤 5A · 不符资格说明（Agent 节点）
-用浅白语言说明未达到哪一项要求，并推荐最多 3 类可留意的类似奖学金。流程于此结束。
-
-步骤 5B · 向奖学金办公室咨询的问题（Agent 节点）
-列出学生应向奖学金办公室咨询的具体问题，并注明每个问题澄清哪一项要求。流程于此结束。办公室回复后，学生把答案加进表单，再启动新一轮流程。
-
-步骤 5C · 故事规划（Agent 节点）
-把学生的经历对应到每项评选标准，提出 2 个故事角度，每个附 5 部分大纲及 3 个引导问题，供撰写不超过 {{WORD_LIMIT}} 字的陈述之用。不可代写陈述。
-
-步骤 5D · 草稿评分表（Agent 节点）
-按每项评选标准为粘贴的草稿打 1 至 5 分，每个分数附一句证据。凡低于 4 分的标准，提供最多 3 条具体修改建议。核对字数是否符合 {{WORD_LIMIT}} 字的上限，并标出任何可能违反奖学金对使用 AI 规定的内容。不可改写陈述。
-
-步骤 5C 及 5D 均向前进入步骤 6。
-
-步骤 6 · 导师审阅（审批节点：批准或拒绝）
-审阅人：学生的导师或学业顾问（{{MENTOR_EMAIL}}）。展示个人资料表、步骤 3 的资格检查，以及步骤 5C 的故事规划或步骤 5D 的评分表。导师作出选择前，任何内容都不会作为定稿交给学生。
-- 如批准 → 转至步骤 7A。
-- 如拒绝 → 转至步骤 7B。
-
-步骤 7A · 下一步（Agent 节点）
-- 如流程来自步骤 5D，而且每项标准均达 4 分或以上 → 输出提交清单：材料、字数、推荐人信息、文件名称及 {{DEADLINE}} 截止日期提醒，并提醒学生亲自提交申请。
-- 其他情况 → 把已批准的故事规划或修改建议整理成简短待办清单，最后加上：“下一份草稿完成后，请把它粘贴到表单，启动新一轮流程。”
-
-步骤 7B · 导师退回（Agent 节点）
-不输出提交清单。输出一段简短说明，表示导师要求修改，并附上导师意见（如有），提醒学生修改后启动新一轮流程。
-
-规则：绝不可虚构成就或成绩。绝不可代学生撰写整篇陈述。资格判断只可以知识来源为依据并引用条文。`,
-      proTip: "动笔前先执行一次流程获取故事规划，之后每份新草稿再执行一次。让导师担任审批人，确保每份规划及评分表在你行动前都经过真人把关。"
     }
   }
 };
@@ -3107,7 +2625,7 @@ function featureTone(name) {
   if (n.includes("connector")) return "connector";
   if (n.includes("notebook") || n.includes("research")) return "research";
   if (n.includes("canvas") || n.includes("image") || n.includes("video")) return "create";
-  if (n.includes("agent")) return "agent";
+  if (n.includes("agent") || n.includes("skill")) return "agent";
   return null;
 }
 const toneClass = (name) => {
@@ -3364,6 +2882,7 @@ async function initApp() {
   initFeedbackSystem();
   bindAvatarMenu("userAvatarBtn", "userAvatarMenu");
   bindAvatarMenu("adminAvatarBtn", "adminAvatarMenu");
+  bindTourButtons();
   setupForgotPasswordHandlers();
   bindUserEditModal();
 
@@ -3405,6 +2924,7 @@ async function initApp() {
 
       if (auth.loggedIn) {
         appState.userEmail = auth.user.email;
+        appState.tourSeen = auth.tourSeen || {};
         appState.isAdmin = auth.user.isAdmin;
         appState.isAssist = auth.user.isAssist || false;
         appState.isSuper = auth.user.isSuper ?? (auth.user.email === 'edu_portal_s_admin');
@@ -3439,6 +2959,7 @@ async function initApp() {
             document.getElementById("appLayout").style.display = "none";
             document.getElementById("adminPortal").style.display = "block";
             initAdminPortal();
+            maybeStartTour("admin");
           }
         } else if (auth.user.isTemp) {
           // Force reset temp accounts
@@ -3518,6 +3039,7 @@ function setupLoginHandlers() {
       const data = await res.json();
 
       if (data.success) {
+        clearSavedFilters();
         if (data.isAdmin) {
           sessionStorage.setItem("ge_current_view", "admin");
         }
@@ -3611,11 +3133,18 @@ async function enterUserPortal() {
   await loadUseCasesFromServer();
   renderUseCases();
   mountQuestRun();
+  maybeStartTour("user");
+}
+
+/** Filter / sort choices belong to one account: drop them when someone signs in or out in this tab. */
+function clearSavedFilters() {
+  ["ge_active_category", "ge_active_feature", "ge_active_status", "ge_sort_by"].forEach(k => sessionStorage.removeItem(k));
 }
 
 async function triggerUserLogout() {
   try {
     sessionStorage.removeItem("ge_current_view");
+    clearSavedFilters();
     await fetch('/api/auth/logout', { method: 'POST' });
     showToast(tr().loggedOut);
     setTimeout(() => {
@@ -4273,10 +3802,34 @@ async function loadAdminUseCases() {
 // CRUD Modal Manager
 let editingUseCaseId = null;
 
+/** Shows the idea a draft is based on (feedback text or similar-check quote) above the Gemini instruction. */
+function setCaseFormIdea(idea) {
+  appState.caseFormIdea = idea && idea.text ? idea : null;
+  const box = document.getElementById("formCaseIdeaBox");
+  if (!box) return;
+  box.hidden = !appState.caseFormIdea;
+  if (!appState.caseFormIdea) return;
+  const t = tr();
+  document.getElementById("formCaseIdeaLabel").textContent = idea.origin === "feedback" ? t.draftIdeaFeedback : t.draftIdeaSimilar;
+  const answers = (idea.clarifications || []).filter(x => x && String(x.a || "").trim());
+  document.getElementById("formCaseIdeaText").textContent = withClarifications(idea.text, answers, t);
+}
+
+/** Gemini's short explanation of the features it chose ("designNotes"); hidden when empty. */
+function setCaseDesignNotes(text) {
+  const el = document.getElementById("formCaseDesignNotes");
+  if (!el) return;
+  const v = String(text || "").trim();
+  el.hidden = !v;
+  el.textContent = v ? fmt(tr().draftDesignNotes, { text: v }) : "";
+}
+
 /**
  * Opens the playbook form. `opts` is used by the feedback conversion flow:
  *   sourceFeedback {id, text, userEmail} - links the saved playbook back to that feedback
  *   instruction    - prefilled Gemini instruction
+ *   idea           - { origin: "feedback" | "similar", text, clarifications: [{q, a}] } sent to the drafting
+ *                    endpoint as-is, so every creation path (new, convert, improve) uses the same server prompt
  *   creator        - initial idea provider (create mode)
  *   autoDraft      - run the Gemini draft immediately after opening
  */
@@ -4418,6 +3971,8 @@ function openAdminEditModal(uc, opts = {}) {
 
   const instructionEl = document.getElementById("formCaseGeminiInstruction");
   if (instructionEl) instructionEl.value = opts.instruction || "";
+  setCaseFormIdea(opts.idea || null);
+  setCaseDesignNotes("");
 
   modal.classList.add("active");
   if (opts.autoDraft && !isAssist) triggerGeminiPlaybookGeneration();
@@ -4569,8 +4124,9 @@ async function triggerGeminiPlaybookGeneration() {
   const title = document.getElementById("formCaseTitle").value.trim();
   const instructionEl = document.getElementById("formCaseGeminiInstruction");
   const instruction = instructionEl ? instructionEl.value.trim() : "";
+  const idea = appState.caseFormIdea || null;
 
-  if (!title && !instruction) {
+  if (!title && !instruction && !idea) {
     if (feedback) {
       feedback.style.display = "block";
       feedback.textContent = tr().draftNeedInput;
@@ -4618,7 +4174,10 @@ async function triggerGeminiPlaybookGeneration() {
         features,
         connectors,
         promptType: document.getElementById("formCasePromptType")?.value || "general",
-        instruction
+        instruction,
+        origin: idea ? idea.origin : "manual",
+        idea: idea ? idea.text : "",
+        clarifications: idea ? (idea.clarifications || []) : []
       })
     });
 
@@ -4641,10 +4200,11 @@ async function triggerGeminiPlaybookGeneration() {
 
     const aiRes = data.result;
 
-    // Successful generation: clear the instruction field
+    // Successful generation: clear the instruction field (the idea stays visible for reference)
     if (instructionEl) {
       instructionEl.value = "";
     }
+    setCaseDesignNotes(aiRes && aiRes.designNotes);
 
     if (!editingUseCaseId) {
       // CREATION MODE: Apply suggestions directly!
@@ -5343,10 +4903,10 @@ window.openFeedbackConvert = async function(id) {
     onEnhance: async (targetId, qa) => {
       const uc = await findUseCaseById(targetId);
       if (!uc) { showToast(t.caseSaveFailed, "warning"); return; }
-      openAdminEditModal(uc, { sourceFeedback: source, instruction: fmt(t.convertEnhanceInstruction, { text: withClarifications(source.text, qa, t) }), autoDraft: true });
+      openAdminEditModal(uc, { sourceFeedback: source, idea: { origin: "feedback", text: source.text, clarifications: qa }, autoDraft: true });
     },
     onNew: (qa) => openAdminEditModal(null, {
-      sourceFeedback: source, instruction: withClarifications(source.text, qa, t), creator: source.userEmail || "",
+      sourceFeedback: source, idea: { origin: "feedback", text: source.text, clarifications: qa }, creator: source.userEmail || "",
       suggestedTitle: data.suggestedTitle || "", autoDraft: true
     })
   });
@@ -5388,7 +4948,7 @@ async function checkSimilarBeforeCreate() {
         const uc = await findUseCaseById(targetId);
         if (!uc) { showToast(t.caseSaveFailed, "warning"); return; }
         document.getElementById("adminCaseEditModal").classList.remove("active");
-        openAdminEditModal(uc, { instruction: fmt(t.similarEnhanceInstruction, { text: quote }), autoDraft: true });
+        openAdminEditModal(uc, { idea: { origin: "similar", text: quote, clarifications: [] }, autoDraft: true });
       }
     });
   });
@@ -5458,7 +5018,7 @@ const uiTranslationsV2 = {
     resultsHeadlineOne: "1 playbook for {role}",
     allRoles: "all roles",
     rolesPlural: {
-      "Lecturer": "lecturers", "TA": "teaching assistants", "Student": "students",
+      "Lecturer": "lecturers", "TA": "teaching assistants", "Researcher": "researchers", "Student": "students",
       "Program Leader": "program leaders", "Dean": "deans", "IT Admin": "IT admins",
       "SAO": "student affairs staff", "Security": "security officers", "Finance": "finance staff"
     },
@@ -5493,7 +5053,7 @@ const uiTranslationsV2 = {
     setupGuideSuffix: "setup",
     promptTypes: {
       general: "General query", notebooklm: "Gemini Notebook", deep_research: "Deep Research",
-      agent_designer: "Agent Designer", canvas: "Canvas Mode", image: "Image Generation", video: "Video Generation"
+      agent_designer: "Agent Designer", skills: "Skills", canvas: "Canvas Mode", image: "Image Generation", video: "Video Generation"
     },
     forgotPassword: "Forgot password?",
     forgotTitle: "Reset your password",
@@ -5685,7 +5245,7 @@ const uiTranslationsV2 = {
     resultsHeadlineOne: "1 個適合{role}的案例",
     allRoles: "所有角色",
     rolesPlural: {
-      "Lecturer": "講師", "TA": "助教", "Student": "學生",
+      "Lecturer": "講師", "TA": "助教", "Researcher": "研究人員", "Student": "學生",
       "Program Leader": "課程主任", "Dean": "院長", "IT Admin": "IT 管理員",
       "SAO": "學生事務人員", "Security": "保安人員", "Finance": "財務人員"
     },
@@ -5720,7 +5280,7 @@ const uiTranslationsV2 = {
     setupGuideSuffix: "設定",
     promptTypes: {
       general: "一般查詢", notebooklm: "Gemini Notebook", deep_research: "Deep Research",
-      agent_designer: "Agent Designer", canvas: "Canvas Mode", image: "Image Generation", video: "Video Generation"
+      agent_designer: "Agent Designer", skills: "Skills", canvas: "Canvas Mode", image: "Image Generation", video: "Video Generation"
     },
     forgotPassword: "忘記密碼？",
     forgotTitle: "重設密碼",
@@ -5912,7 +5472,7 @@ const uiTranslationsV2 = {
     resultsHeadlineOne: "1 个适合{role}的案例",
     allRoles: "所有角色",
     rolesPlural: {
-      "Lecturer": "讲师", "TA": "助教", "Student": "学生",
+      "Lecturer": "讲师", "TA": "助教", "Researcher": "研究人员", "Student": "学生",
       "Program Leader": "课程主任", "Dean": "院长", "IT Admin": "IT 管理员",
       "SAO": "学生事务人员", "Security": "保安人员", "Finance": "财务人员"
     },
@@ -5947,7 +5507,7 @@ const uiTranslationsV2 = {
     setupGuideSuffix: "设置",
     promptTypes: {
       general: "一般查询", notebooklm: "Gemini Notebook", deep_research: "Deep Research",
-      agent_designer: "Agent Designer", canvas: "Canvas Mode", image: "Image Generation", video: "Video Generation"
+      agent_designer: "Agent Designer", skills: "Skills", canvas: "Canvas Mode", image: "Image Generation", video: "Video Generation"
     },
     forgotPassword: "忘记密码？",
     forgotTitle: "重置密码",
@@ -6500,7 +6060,7 @@ const uiTranslationsV6 = {
     questTermShort: { semA: "Sem A", winter: "Winter", semB: "Sem B", summer: "Summer" },
     questPhase: { sem_start: "Semester start", teaching: "Teaching", midterm: "Midterms", finals: "Finals", winter: "Winter break", summer: "Summer" },
     questAnytime: "Anytime",
-    questRoleShort: { Lecturer: "Lecturer", TA: "TA", Student: "Student", "Program Leader": "Program Leader", Dean: "Dean", "IT Admin": "IT Admin", SAO: "SAO", Security: "Security", Finance: "Finance" },
+    questRoleShort: { Lecturer: "Lecturer", TA: "TA", Researcher: "Researcher", Student: "Student", "Program Leader": "Program Leader", Dean: "Dean", "IT Admin": "IT Admin", SAO: "SAO", Security: "Security", Finance: "Finance" },
     newsBellLabel: "News",
     newsDrawerTitle: "News from Archie",
     newsDrawerClose: "Close news",
@@ -6596,7 +6156,7 @@ const uiTranslationsV6 = {
     questTermShort: { semA: "上學期", winter: "寒假", semB: "下學期", summer: "暑假" },
     questPhase: { sem_start: "開學", teaching: "授課期", midterm: "期中", finals: "期末", winter: "寒假", summer: "暑假" },
     questAnytime: "任何時候",
-    questRoleShort: { Lecturer: "講師", TA: "助教", Student: "學生", "Program Leader": "課程主任", Dean: "院長", "IT Admin": "IT 管理員", SAO: "學生事務處", Security: "保安", Finance: "財務" },
+    questRoleShort: { Lecturer: "講師", TA: "助教", Researcher: "研究人員", Student: "學生", "Program Leader": "課程主任", Dean: "院長", "IT Admin": "IT 管理員", SAO: "學生事務處", Security: "保安", Finance: "財務" },
     newsBellLabel: "最新消息",
     newsDrawerTitle: "Archie 的最新消息",
     newsDrawerClose: "關閉最新消息",
@@ -6692,7 +6252,7 @@ const uiTranslationsV6 = {
     questTermShort: { semA: "上学期", winter: "寒假", semB: "下学期", summer: "暑假" },
     questPhase: { sem_start: "开学", teaching: "授课期", midterm: "期中", finals: "期末", winter: "寒假", summer: "暑假" },
     questAnytime: "任何时候",
-    questRoleShort: { Lecturer: "讲师", TA: "助教", Student: "学生", "Program Leader": "课程主任", Dean: "院长", "IT Admin": "IT 管理员", SAO: "学生事务处", Security: "保安", Finance: "财务" },
+    questRoleShort: { Lecturer: "讲师", TA: "助教", Researcher: "研究人员", Student: "学生", "Program Leader": "课程主任", Dean: "院长", "IT Admin": "IT 管理员", SAO: "学生事务处", Security: "保安", Finance: "财务" },
     newsBellLabel: "最新消息",
     newsDrawerTitle: "Archie 的最新消息",
     newsDrawerClose: "关闭最新消息",
@@ -6782,8 +6342,7 @@ Object.keys(uiTranslationsV6).forEach(lang => {
  */
 const uiTranslationsV7 = {
   en: {
-    catAll: "All my categories",
-    catAllAdmin: "All categories",
+    catAll: "All categories",
     resultsHeadlineMine: "{n} playbooks for you",
     resultsHeadlineMineOne: "1 playbook for you",
     resultsHeadlineCat: "{n} playbooks · {category}",
@@ -6847,7 +6406,6 @@ const uiTranslationsV7 = {
     convertNoMatches: "No similar playbooks found.",
     convertEnhance: "Improve selected",
     convertNew: "Create new playbook",
-    convertEnhanceInstruction: "Improve this playbook using this user suggestion. Keep what works and add what's missing:\n\n{text}",
     feedbackConverted: "Saved. Feedback marked as converted.",
     feedbackTitle: "Share feedback or a use case idea",
     feedbackDesc: "Tell us what would make this portal more useful, or suggest a new use case. Good ideas become playbooks, credited to you.",
@@ -6855,8 +6413,7 @@ const uiTranslationsV7 = {
     feedbackPlaceholder: "e.g. A playbook that drafts parent emails from my class notes"
   },
   "zh-TW": {
-    catAll: "我的所有類別",
-    catAllAdmin: "所有類別",
+    catAll: "所有類別",
     resultsHeadlineMine: "為您準備的 {n} 個 Playbook",
     resultsHeadlineMineOne: "為您準備的 1 個 Playbook",
     resultsHeadlineCat: "{n} 個 Playbook · {category}",
@@ -6920,7 +6477,6 @@ const uiTranslationsV7 = {
     convertNoMatches: "找不到相似的 Playbook。",
     convertEnhance: "改進所選項目",
     convertNew: "建立新 Playbook",
-    convertEnhanceInstruction: "請根據以下使用者建議改進此 Playbook，保留有效內容並補充缺少的部分：\n\n{text}",
     feedbackConverted: "已儲存，意見已標示為已轉換。",
     feedbackTitle: "分享意見或使用案例構想",
     feedbackDesc: "告訴我們如何讓入口網站更實用，或建議新的使用案例。好的構想會成為 Playbook，並註明由您提供。",
@@ -6928,8 +6484,7 @@ const uiTranslationsV7 = {
     feedbackPlaceholder: "例如：根據我的課堂筆記草擬家長電郵的 Playbook"
   },
   "zh-CN": {
-    catAll: "我的所有类别",
-    catAllAdmin: "所有类别",
+    catAll: "所有类别",
     resultsHeadlineMine: "为您准备的 {n} 个 Playbook",
     resultsHeadlineMineOne: "为您准备的 1 个 Playbook",
     resultsHeadlineCat: "{n} 个 Playbook · {category}",
@@ -6993,7 +6548,6 @@ const uiTranslationsV7 = {
     convertNoMatches: "找不到相似的 Playbook。",
     convertEnhance: "改进所选项",
     convertNew: "创建新 Playbook",
-    convertEnhanceInstruction: "请根据以下用户建议改进此 Playbook，保留有效内容并补充缺少的部分：\n\n{text}",
     feedbackConverted: "已保存，意见已标记为已转换。",
     feedbackTitle: "分享意见或用例创意",
     feedbackDesc: "告诉我们如何让门户更实用，或建议新的用例。好的创意会成为 Playbook，并注明由您提供。",
@@ -7029,7 +6583,6 @@ const uiTranslationsV8 = {
     similarDraftHint: "You're creating a new playbook. Improving an existing one keeps the library tidy.",
     similarRecoEnhance: "A very similar playbook already exists. Consider improving it instead.",
     similarCreateAnyway: "Create new anyway",
-    similarEnhanceInstruction: "Improve this playbook with this idea. Keep what works and add what's missing:\n\n{text}",
     convertConsidered: "Gemini compared the {n} closest of {total} playbooks."
   },
   "zh-TW": {
@@ -7054,7 +6607,6 @@ const uiTranslationsV8 = {
     similarDraftHint: "您正在建立新 Playbook。改進現有 Playbook 可避免內容重複。",
     similarRecoEnhance: "已有非常相似的 Playbook，建議改為改進該 Playbook。",
     similarCreateAnyway: "仍然建立新 Playbook",
-    similarEnhanceInstruction: "請根據以下構想改進此 Playbook，保留有效內容並補充缺少的部分：\n\n{text}",
     convertConsidered: "Gemini 比較了 {total} 個 Playbook 中最相近的 {n} 個。"
   },
   "zh-CN": {
@@ -7079,7 +6631,6 @@ const uiTranslationsV8 = {
     similarDraftHint: "您正在创建新 Playbook。改进现有 Playbook 可避免内容重复。",
     similarRecoEnhance: "已有非常相似的 Playbook，建议改为改进该 Playbook。",
     similarCreateAnyway: "仍然创建新 Playbook",
-    similarEnhanceInstruction: "请根据以下创意改进此 Playbook，保留有效内容并补充缺少的部分：\n\n{text}",
     convertConsidered: "Gemini 比较了 {total} 个 Playbook 中最相近的 {n} 个。"
   }
 };
@@ -7140,7 +6691,7 @@ const buildTryItUrl = (geAppLink, prompt) => {
 
 const PROMPT_TYPE_ICONS = {
   general: "chat", notebooklm: "menu_book", deep_research: "travel_explore",
-  agent_designer: "smart_toy", canvas: "draw", image: "palette", video: "videocam"
+  agent_designer: "smart_toy", skills: "auto_awesome", canvas: "draw", image: "palette", video: "videocam"
 };
 
 /** Acronyms kept upper-case when humanizing variable names. */
@@ -7264,7 +6815,7 @@ const categoryChipsHtml = (ids, lang) => (ids || [])
   .map(id => `<span class="cat-chip" data-cat="${escapeHtml(id)}">${escapeHtml(categoryLabel(id, lang))}</span>`).join("");
 
 /**
- * Rebuilds the category filter: "All my categories" plus only the categories this user has
+ * Rebuilds the category filter: "All categories" plus only the categories this user has
  * (admin previews get all 7). An unknown saved value (e.g. a legacy "academic") falls back to "all".
  */
 function renderCategoryFilterOptions() {
@@ -7272,12 +6823,20 @@ function renderCategoryFilterOptions() {
   if (!el) return;
   const t = tr();
   const cats = appState.isAdmin === true ? CategoryCore.CATEGORY_IDS : (appState.userCategories || []);
-  el.innerHTML = [`<option value="all">${escapeHtml(appState.isAdmin === true ? t.catAllAdmin : t.catAll)}</option>`]
+  el.innerHTML = [`<option value="all">${escapeHtml(t.catAll)}</option>`]
     .concat(cats.map(id => `<option value="${escapeHtml(id)}">${escapeHtml(categoryLabel(id))}</option>`)).join("");
   if (!cats.includes(appState.activeFilterCategory)) appState.activeFilterCategory = "all";
   el.value = appState.activeFilterCategory;
   // One category only: the filter has nothing to choose, so hide it
   el.hidden = appState.isAdmin !== true && cats.length <= 1;
+  // Admins can't like playbooks, so "Liked" would always be empty in the admin preview
+  const liked = document.querySelector('#filterCollection option[value="liked"]');
+  if (liked) liked.hidden = liked.disabled = appState.isAdmin === true;
+  if (appState.isAdmin === true && appState.activeFilterStatus === "liked") {
+    appState.activeFilterStatus = "all";
+    sessionStorage.setItem("ge_active_status", "all");
+    const col = document.getElementById("filterCollection"); if (col) col.value = "all";
+  }
 }
 
 /**
@@ -7829,7 +7388,8 @@ const cleanHelperTitle = (title) => {
   return s.charAt(0).toUpperCase() + s.slice(1);
 };
 
-function openUseCaseModal(useCase) {
+// opts.preview: opened by the tips tour, so it doesn't count as a view
+function openUseCaseModal(useCase, opts = {}) {
   const overlay = document.getElementById("modalOverlay");
   const body = document.getElementById("modalDynamicContent");
   if (!overlay || !body) return;
@@ -7985,7 +7545,7 @@ function openUseCaseModal(useCase) {
   overlay.classList.add("active");
   document.body.classList.add("modal-open");
   body.scrollTop = 0;
-  recordView(useCase);
+  if (!opts.preview) recordView(useCase);
 }
 
 /**
@@ -8214,7 +7774,7 @@ function showAdminTab(name) {
   else if (tab === "cases") loadAdminUseCases();
   else if (tab === "feedbacks") loadAdminFeedbacks();
   else if (tab === "news") loadAdminNews();
-  else if (tab === "settings") { loadSmtpSettings(); loadCalendarSettings(); }
+  else if (tab === "settings") { loadSmtpSettings(); loadDraftPromptSettings(); loadCalendarSettings(); }
 }
 
 /** Switch from the admin portal to the learning portal preview. */
@@ -9884,7 +9444,7 @@ function renderCaseQuestFields(state, disabled) {
 // ===========================================================================
 const MAX_CASE_HELPERS = 5;
 const HELPER_FORM_LANGS = [["en", "EN"], ["zh-TW", "繁"], ["zh-CN", "简"]];
-const HELPER_TYPE_VALUES = ["general", "notebooklm", "deep_research", "agent_designer", "canvas", "image", "video"];
+const HELPER_TYPE_VALUES = ["general", "notebooklm", "deep_research", "agent_designer", "skills", "canvas", "image", "video"];
 
 /**
  * Stored shape { en: [{type,title,prompt}], "zh-TW": [...], "zh-CN": [...] } -> editor rows
@@ -10000,4 +9560,313 @@ function applyQuestSuggestions(aiRes) {
     }))
     : current.hints;
   renderCaseQuestFields({ timing: timing.length ? timing : ["anytime"], hints }, false);
+}
+
+// ===========================================================================
+// v9: first-login tips (overlay tour) and the editable playbook drafting prompt
+// ===========================================================================
+const uiTranslationsV9 = {
+  en: {
+    settingsDraftTitle: "Playbook drafting prompt",
+    settingsDraftDesc: "Gemini follows this prompt whenever it drafts or improves a playbook: new playbooks, converted feedback and improvements. Changes apply to the next draft.",
+    settingsDraftLabel: "Prompt",
+    settingsDraftFixedNote: "Added automatically after your prompt: the current form values, the task (create or improve, with the idea and clarification answers) and the JSON output format the form reads. Keep the feature names and prompt types as they are, or drafts may not fill the form.",
+    tourShowTips: "Show tips", tourSkip: "Skip tips", tourBack: "Back", tourNext: "Next", tourDone: "Got it",
+    tourStepOf: "Tip {n} of {total}",
+    tourUser: [
+      { title: "Find the right playbook", body: "Search, or filter by category, GE feature and your Liked list. You only see playbooks for the categories your admin gave you." },
+      { title: "Open a playbook", body: "Each card shows the GE features and connectors it uses. Open it for the steps, the Set up prompts and the sample prompt. Tap the heart to save it to Liked." },
+      { title: "Fill in, then Copy or Try it", body: "Fill in the variables once and they appear in every prompt. Copy prompt pastes into Gemini Notebook, Deep Research, Agent Designer or Skills; Try it opens Gemini Enterprise with the prompt ready." },
+      { title: "Quest Run tips", body: "Archie suggests playbooks that fit this point of the academic year. Open the scroll icon for news from your team." },
+      { title: "Share an idea", body: "Tell us what's missing. Good ideas become playbooks credited to you. You can replay these tips from your account menu." }
+    ],
+    tourAdmin: [
+      { title: "Your admin console", body: "Switch between Users, Analytics, Use cases, Feedback, News and Settings. What you can change depends on your admin role." },
+      { title: "Users and categories", body: "Add users by email (they get a temporary password), tick their categories and set each user's GE app link so Try it opens their Gemini Enterprise app." },
+      { title: "Create and improve playbooks", body: "Create a playbook by hand or with Draft with Gemini. Gemini checks for similar playbooks first and picks the features that fit the job. Generate an infographic when you're done." },
+      { title: "Turn feedback into playbooks", body: "Convert a user's idea into a new playbook or an improvement to an existing one. Vague ideas get clarification questions first, and the author is credited." },
+      { title: "Settings and news", body: "Super admins set up email, the academic calendar and the playbook drafting prompt Gemini follows. Use News to post announcements to the Quest Run. Replay these tips from your account menu." }
+    ],
+    draftIdeaFeedback: "User idea (from feedback)",
+    draftIdeaSimilar: "Your idea (from the similarity check)",
+    draftDesignNotes: "Gemini's feature choice: {text}",
+    draftPromptSaved: "Drafting prompt saved. The next draft uses it.",
+    draftPromptResetDone: "Drafting prompt reset to default.",
+    draftPromptConfirmReset: "Replace your drafting prompt with the default?",
+    draftPromptLoadFailed: "Couldn't load the drafting prompt.",
+    draftPromptCount: "{n} characters",
+    draftPromptTooShort: "The prompt is too short. Use Reset to default to start again."
+  },
+  "zh-TW": {
+    settingsDraftTitle: "Playbook 草擬提示詞",
+    settingsDraftDesc: "Gemini 每次草擬或改進 Playbook 時都會依循此提示詞，包括新 Playbook、轉換的意見回饋及改進。更改會在下次草擬時生效。",
+    settingsDraftLabel: "提示詞",
+    settingsDraftFixedNote: "系統會在你的提示詞後自動加上：目前表單內容、任務（建立或改進，連同構想及澄清答案）以及表單讀取的 JSON 輸出格式。請保留功能名稱及提示詞類型，否則草擬內容可能無法填入表單。",
+    tourShowTips: "顯示提示", tourSkip: "略過提示", tourBack: "上一個", tourNext: "下一個", tourDone: "明白了",
+    tourStepOf: "提示 {n} / {total}",
+    tourUser: [
+      { title: "找到合適的 Playbook", body: "搜尋，或按類別、GE 功能及「已讚好」篩選。你只會看到管理員為你設定的類別的 Playbook。" },
+      { title: "打開 Playbook", body: "每張卡片都會顯示所用的 GE 功能及連接器。打開後可看到步驟、設定提示詞及範例提示詞。按心形即可加入「已讚好」。" },
+      { title: "填寫變數，然後複製或試用", body: "變數只需填寫一次，便會套用到所有提示詞。「複製提示詞」可貼到 Gemini Notebook、Deep Research、Agent Designer 或 Skills；「試用」會直接在 Gemini Enterprise 開啟提示詞。" },
+      { title: "Quest Run 提示", body: "Archie 會按學年當前階段推薦合適的 Playbook。按卷軸圖示可查看團隊的最新消息。" },
+      { title: "分享構想", body: "告訴我們還缺少甚麼。好的構想會變成 Playbook，並註明你的貢獻。你可隨時在帳戶選單重看這些提示。" }
+    ],
+    tourAdmin: [
+      { title: "你的管理控制台", body: "在使用者、分析、使用案例、意見回饋、消息及設定之間切換。你可更改的內容取決於你的管理員角色。" },
+      { title: "使用者與類別", body: "以電郵新增使用者（系統會發出臨時密碼），勾選他們的類別，並設定每位使用者的 GE 應用程式連結，讓「試用」開啟他們的 Gemini Enterprise。" },
+      { title: "建立及改進 Playbook", body: "手動建立 Playbook，或使用「以 Gemini 草擬」。Gemini 會先檢查有沒有相似的 Playbook，並按工作需要選擇合適的功能。完成後可生成資訊圖。" },
+      { title: "把意見回饋變成 Playbook", body: "把使用者的構想轉換成新的 Playbook，或用來改進現有的 Playbook。內容含糊的構想會先提出澄清問題，並註明作者。" },
+      { title: "設定與消息", body: "超級管理員可設定電郵、校曆及 Gemini 草擬 Playbook 時依循的提示詞。在「消息」可向 Quest Run 發布公告。你可在帳戶選單重看這些提示。" }
+    ],
+    draftIdeaFeedback: "使用者構想（來自意見回饋）",
+    draftIdeaSimilar: "你的構想（來自相似檢查）",
+    draftDesignNotes: "Gemini 的功能選擇：{text}",
+    draftPromptSaved: "已儲存草擬提示詞，下次草擬即會使用。",
+    draftPromptResetDone: "已重設為預設草擬提示詞。",
+    draftPromptConfirmReset: "要以預設內容取代你的草擬提示詞嗎？",
+    draftPromptLoadFailed: "無法載入草擬提示詞。",
+    draftPromptCount: "{n} 個字元",
+    draftPromptTooShort: "提示詞太短。可按「重設為預設」重新開始。"
+  },
+  "zh-CN": {
+    settingsDraftTitle: "Playbook 起草提示词",
+    settingsDraftDesc: "Gemini 每次起草或改进 Playbook 时都会遵循此提示词，包括新 Playbook、转换的意见反馈及改进。更改会在下次起草时生效。",
+    settingsDraftLabel: "提示词",
+    settingsDraftFixedNote: "系统会在你的提示词后自动加上：当前表单内容、任务（创建或改进，连同创意及澄清答案）以及表单读取的 JSON 输出格式。请保留功能名称及提示词类型，否则起草内容可能无法填入表单。",
+    tourShowTips: "显示提示", tourSkip: "跳过提示", tourBack: "上一个", tourNext: "下一个", tourDone: "知道了",
+    tourStepOf: "提示 {n} / {total}",
+    tourUser: [
+      { title: "找到合适的 Playbook", body: "搜索，或按类别、GE 功能及“已点赞”筛选。你只会看到管理员为你设置的类别的 Playbook。" },
+      { title: "打开 Playbook", body: "每张卡片都会显示所用的 GE 功能及连接器。打开后可看到步骤、设置提示词及示例提示词。点击心形即可加入“已点赞”。" },
+      { title: "填写变量，然后复制或试用", body: "变量只需填写一次，便会应用到所有提示词。“复制提示词”可粘贴到 Gemini Notebook、Deep Research、Agent Designer 或 Skills；“试用”会直接在 Gemini Enterprise 打开提示词。" },
+      { title: "Quest Run 提示", body: "Archie 会按学年当前阶段推荐合适的 Playbook。点击卷轴图标可查看团队的最新消息。" },
+      { title: "分享创意", body: "告诉我们还缺少什么。好的创意会变成 Playbook，并注明你的贡献。你可随时在账户菜单重看这些提示。" }
+    ],
+    tourAdmin: [
+      { title: "你的管理控制台", body: "在用户、分析、使用案例、意见反馈、消息及设置之间切换。你可更改的内容取决于你的管理员角色。" },
+      { title: "用户与类别", body: "以电子邮件添加用户（系统会发出临时密码），勾选他们的类别，并设置每位用户的 GE 应用链接，让“试用”打开他们的 Gemini Enterprise。" },
+      { title: "创建及改进 Playbook", body: "手动创建 Playbook，或使用“用 Gemini 起草”。Gemini 会先检查有没有相似的 Playbook，并按工作需要选择合适的功能。完成后可生成信息图。" },
+      { title: "把意见反馈变成 Playbook", body: "把用户的创意转换成新的 Playbook，或用来改进现有的 Playbook。内容含糊的创意会先提出澄清问题，并注明作者。" },
+      { title: "设置与消息", body: "超级管理员可设置电子邮件、校历及 Gemini 起草 Playbook 时遵循的提示词。在“消息”可向 Quest Run 发布公告。你可在账户菜单重看这些提示。" }
+    ],
+    draftIdeaFeedback: "用户创意（来自意见反馈）",
+    draftIdeaSimilar: "你的创意（来自相似检查）",
+    draftDesignNotes: "Gemini 的功能选择：{text}",
+    draftPromptSaved: "已保存起草提示词，下次起草即会使用。",
+    draftPromptResetDone: "已重置为默认起草提示词。",
+    draftPromptConfirmReset: "要用默认内容替换你的起草提示词吗？",
+    draftPromptLoadFailed: "无法加载起草提示词。",
+    draftPromptCount: "{n} 个字符",
+    draftPromptTooShort: "提示词太短。可点击“重置为默认”重新开始。"
+  }
+};
+Object.keys(uiTranslationsV9).forEach(lang => {
+  if (uiTranslations[lang]) Object.assign(uiTranslations[lang], uiTranslationsV9[lang]);
+});
+
+/*
+ * Tip targets, in order, per portal. A target that is missing or hidden (e.g. Settings for an assistant
+ * admin, Quest Run before it loads) falls back to the next selector, then to a centred card.
+ */
+const TOUR_TARGETS = {
+  user: [[".filter-bar", ".topbar-search"], ["#useCasesContainer .card"], ["#wbVariables", "#modalOverlay .uc-hero-row"], ["#questStrip"], ["#btnFloatingFeedback", "#userAvatarBtn"]],
+  admin: [["#adminTabRow"], ["#adminTabUsersNav"], ["#adminTabCasesNav"], ["#adminTabFeedbacksNav", "#adminTabCasesNav"], ["#adminTabSettingsNav", "#adminTabNewsNav"]]
+};
+const tourState = { portal: null, index: 0, target: null, bound: false, lastFocus: null, openedModal: false };
+// User tip 3 ("Fill in, then Copy or Try it") shows inside an open playbook
+const TOUR_MODAL_STEP = { user: 2 };
+
+/** A playbook to demo in the tour: one with variables and Try it if possible, else the first card. */
+function tourDemoUseCase() {
+  const ids = [...document.querySelectorAll("#useCasesContainer .card")].map(c => c.dataset.ucId);
+  const cases = ids.map(id => useCasesDb.find(u => u.id === id)).filter(Boolean);
+  return cases.find(u => TRYABLE.has(u.promptType || "general") && /\{\{/.test(u.prompt || ""))
+    || cases.find(u => /\{\{/.test(u.prompt || "")) || cases[0] || null;
+}
+
+/** Opens (or closes) the demo playbook as the tour enters (or leaves) its modal step. */
+function syncTourModal(i) {
+  const wantModal = TOUR_MODAL_STEP[tourState.portal] === i;
+  if (wantModal && !tourState.openedModal) {
+    const uc = tourDemoUseCase();
+    if (uc) { openUseCaseModal(uc, { preview: true }); tourState.openedModal = true; }
+  } else if (!wantModal && tourState.openedModal) {
+    closeModal();
+    tourState.openedModal = false;
+  }
+}
+
+const isShown = (el) => {
+  if (!el || el.closest("[hidden]")) return false;
+  const r = el.getBoundingClientRect();
+  return r.width > 0 && r.height > 0 && getComputedStyle(el).visibility !== "hidden";
+};
+const tourTarget = (selectors) => {
+  for (const sel of selectors) {
+    const el = [...document.querySelectorAll(sel)].find(isShown);
+    if (el) return el;
+  }
+  return null;
+};
+
+function placeTour() {
+  const overlay = document.getElementById("tourOverlay");
+  if (!overlay || overlay.hidden) return;
+  const spot = document.getElementById("tourSpotlight");
+  const card = document.getElementById("tourCard");
+  const el = tourState.target;
+  const vw = window.innerWidth, vh = window.innerHeight, gap = 12, pad = 6;
+  overlay.classList.toggle("is-centered", !el);
+  if (!el) {
+    spot.hidden = true;
+    card.style.left = `${Math.max(16, (vw - card.offsetWidth) / 2)}px`;
+    card.style.top = `${Math.max(16, (vh - card.offsetHeight) / 2)}px`;
+    return;
+  }
+  const r = el.getBoundingClientRect();
+  spot.hidden = false;
+  Object.assign(spot.style, {
+    left: `${r.left - pad}px`, top: `${r.top - pad}px`, width: `${r.width + pad * 2}px`, height: `${r.height + pad * 2}px`
+  });
+  const below = r.bottom + pad + gap;
+  const top = below + card.offsetHeight <= vh - 8 ? below : Math.max(8, r.top - pad - gap - card.offsetHeight);
+  const left = Math.min(Math.max(8, r.left + r.width / 2 - card.offsetWidth / 2), vw - card.offsetWidth - 8);
+  card.style.left = `${left}px`;
+  card.style.top = `${top}px`;
+}
+
+function showTourStep(i) {
+  const t = tr();
+  const tips = tourState.portal === "admin" ? t.tourAdmin : t.tourUser;
+  tourState.index = i;
+  syncTourModal(i);
+  tourState.target = tourTarget(TOUR_TARGETS[tourState.portal][i] || []);
+  if (tourState.target) tourState.target.scrollIntoView({ block: "center", inline: "nearest" });
+  document.getElementById("tourStep").textContent = fmt(t.tourStepOf, { n: i + 1, total: tips.length });
+  document.getElementById("tourTitle").textContent = tips[i].title;
+  document.getElementById("tourBody").textContent = tips[i].body;
+  document.getElementById("tourDots").innerHTML = tips.map((_, k) => `<span class="${k === i ? "is-active" : ""}"></span>`).join("");
+  document.getElementById("tourBack").hidden = i === 0;
+  document.getElementById("tourNext").textContent = i === tips.length - 1 ? t.tourDone : t.tourNext;
+  placeTour();
+  // The demo playbook animates in; measure again once it has settled
+  if (tourState.openedModal) setTimeout(() => { if (tourState.index === i) { tourState.target?.scrollIntoView({ block: "center" }); placeTour(); } }, 400);
+  document.getElementById("tourNext").focus();
+}
+
+function closeTour() {
+  const overlay = document.getElementById("tourOverlay");
+  if (!overlay || overlay.hidden) return;
+  overlay.hidden = true;
+  syncTourModal(-1);
+  const portal = tourState.portal;
+  tourState.portal = null;
+  appState.tourSeen = { ...(appState.tourSeen || {}), [portal]: true };
+  apiJson("/api/tour/seen", { method: "POST", body: { portal } }).catch(() => {});
+  if (tourState.lastFocus && tourState.lastFocus.focus) tourState.lastFocus.focus();
+}
+
+function bindTour() {
+  if (tourState.bound) return;
+  tourState.bound = true;
+  const tipsCount = () => (tourState.portal === "admin" ? tr().tourAdmin : tr().tourUser).length;
+  document.getElementById("tourNext").addEventListener("click", () => {
+    if (tourState.index >= tipsCount() - 1) closeTour(); else showTourStep(tourState.index + 1);
+  });
+  document.getElementById("tourBack").addEventListener("click", () => { if (tourState.index > 0) showTourStep(tourState.index - 1); });
+  document.getElementById("tourSkip").addEventListener("click", closeTour);
+  document.addEventListener("keydown", (e) => {
+    if (document.getElementById("tourOverlay").hidden) return;
+    if (e.key === "Escape") closeTour();
+    else if (e.key === "ArrowRight") document.getElementById("tourNext").click();
+    else if (e.key === "ArrowLeft") document.getElementById("tourBack").click();
+  });
+  window.addEventListener("resize", placeTour);
+  window.addEventListener("scroll", placeTour, true);
+}
+
+/** Opens the 5-tip tour for "user" or "admin". */
+function runTour(portal) {
+  const overlay = document.getElementById("tourOverlay");
+  if (!overlay || !TOUR_TARGETS[portal]) return;
+  bindTour();
+  tourState.portal = portal;
+  tourState.lastFocus = document.activeElement;
+  overlay.hidden = false;
+  showTourStep(0);
+}
+
+/** First visit to a portal on this account: show its tips once (the server remembers per account). */
+function maybeStartTour(portal) {
+  if (appState.tourSeen && appState.tourSeen[portal]) return;
+  // Let the grid / tab row render first so the spotlight lands on real elements
+  setTimeout(() => { if (!tourState.portal) runTour(portal); }, 600);
+}
+
+function bindTourButtons() {
+  document.getElementById("btnUserTips")?.addEventListener("click", () => runTour("user"));
+  document.getElementById("btnAdminTips")?.addEventListener("click", () => runTour("admin"));
+}
+
+// --- Admin → Settings → Playbook drafting prompt (super admins) ---
+const draftPromptState = { loaded: null, bound: false };
+
+function renderDraftPromptStatus() {
+  const t = tr();
+  const s = draftPromptState.loaded;
+  const pill = document.getElementById("draftPromptStatusPill");
+  if (pill && s) {
+    pill.className = `status-pill ${s.isDefault ? "is-muted" : "is-ok"}`;
+    pill.textContent = s.isDefault ? t.calStatusDefault : t.calStatusCustom;
+  }
+  const changed = document.getElementById("draftPromptLastChanged");
+  if (changed) changed.textContent = s?.updatedBy ? fmt(t.lastChanged, { by: s.updatedBy, date: formatDateTime(s.updatedAt) }) : "";
+  const text = document.getElementById("draftPromptText");
+  const count = document.getElementById("draftPromptCount");
+  if (text && count) count.textContent = fmt(t.draftPromptCount, { n: text.value.length.toLocaleString() });
+}
+
+function bindDraftPromptForm() {
+  const form = document.getElementById("formDraftPrompt");
+  if (!form || draftPromptState.bound) return;
+  draftPromptState.bound = true;
+  const text = document.getElementById("draftPromptText");
+  const result = document.getElementById("draftPromptResult");
+  text.addEventListener("input", renderDraftPromptStatus);
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const t = tr();
+    if (text.value.trim().length < 200) { showInline(result, escapeHtml(t.draftPromptTooShort), "error"); return; }
+    const btn = document.getElementById("btnDraftPromptSave");
+    btn.disabled = true;
+    const { ok, data } = await apiJson("/api/admin/settings/draft-prompt", { method: "PUT", body: { text: text.value } });
+    btn.disabled = false;
+    if (!ok) { showInline(result, escapeHtml(errText(data)), "error"); return; }
+    result.hidden = true;
+    showToast(t.draftPromptSaved, "success");
+    loadDraftPromptSettings();
+  });
+  document.getElementById("btnDraftPromptReset").addEventListener("click", async () => {
+    const t = tr();
+    if (!confirm(t.draftPromptConfirmReset)) return;
+    const { ok, data } = await apiJson("/api/admin/settings/draft-prompt", { method: "DELETE" });
+    if (!ok) { showInline(result, escapeHtml(errText(data)), "error"); return; }
+    result.hidden = true;
+    showToast(t.draftPromptResetDone, "success");
+    loadDraftPromptSettings();
+  });
+}
+
+async function loadDraftPromptSettings() {
+  const panel = document.getElementById("draftPromptPanel");
+  if (!panel) return;
+  panel.hidden = !appState.isSuper;
+  if (!appState.isSuper) return;
+  bindDraftPromptForm();
+  const { ok, data } = await apiJson("/api/admin/settings/draft-prompt");
+  const result = document.getElementById("draftPromptResult");
+  if (!ok) { showInline(result, escapeHtml(tr().draftPromptLoadFailed), "error"); return; }
+  draftPromptState.loaded = data;
+  document.getElementById("draftPromptText").value = data.text || "";
+  renderDraftPromptStatus();
 }

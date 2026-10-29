@@ -27,15 +27,15 @@ Self-hosting guide, GitHub details and the full cost breakdown: [docs/HANDBOOK.m
 ## 🌟 Features
 
 ### Playbook library
-* **Categories decide what each user sees.** There are 7: Teaching (Lecturer, TA), Programme & Faculty Leadership (Program Leader, Dean), Student Affairs (SAO), Finance, Campus Security, IT Administration and Students (defined in `lib/categories.js`). Admins tick categories on each account and on each playbook. A user sees a playbook when they share at least one category; with no categories they see an "ask your admin" empty state. There is no profile wizard or "Switch profile".
-* Card grid of playbooks with dropdown filters for **Category** (the user's own categories; hidden if they have only one) (Agent Designer, Gemini Notebook, Deep Research, Canvas Mode, Image Generation, Video Generation), **Collection** (All / Liked) and **Sort** (popular, newest, A–Z). The headline reads "{n} playbooks for you" or "{n} playbooks · {category}".
+* **Categories decide what each user sees.** There are 8: Teaching (Lecturer, TA), Research (Researcher), Programme & Faculty Leadership (Program Leader, Dean), Student Affairs (SAO), Finance, Campus Security, IT Administration and Students (defined in `lib/categories.js`). Admins tick categories on each account and on each playbook. A user sees a playbook when they share at least one category; with no categories they see an "ask your admin" empty state. There is no profile wizard or "Switch profile".
+* Card grid of playbooks with dropdown filters for **Category** (the user's own categories; hidden if they have only one), **GE feature** (Agent Designer, Skills, Gemini Notebook, Deep Research, Canvas Mode, Image Generation, Video Generation), **Collection** (All / Liked) and **Sort** (popular, newest, A–Z). The headline reads "{n} playbooks for you" or "{n} playbooks · {category}".
 * Each card and modal shows the **idea provider** ("Idea by …"), or "Default playbook" when there is none.
 * Every card shows a **like** button (heart), a read-only **view** counter (eye), colour-toned GE feature icons and red connector icons.
 * **Feature colour tones** (`tone-*` classes in `style.css`) are the same on cards, modal chips, playbook-type chips and the GE feature filter (the filter takes the selected feature's tone): Gemini Notebook / Deep Research green, Canvas Mode / Video Generation blue, Agent Designer yellow, Image Generation purple. Each tone has a light-theme variant for contrast.
 
 ### Quest Run strip
 A pixel-art banner above the library (canvas renderer in `app.js`; sprites from `game/manifest.json`, with a drawn fallback for each missing asset).
-* **Hero by category:** the hero follows the user's categories. Teaching gives a Wizard. Otherwise any admin staff category (Programme & Faculty Leadership, Student Affairs, Finance, Campus Security, IT Administration) gives a Priest. Everyone else (Students only, or no categories) gets the default Warrior. Teaching wins over admin staff. The rule is `heroClassForCategories` in `lib/quest-core.js`; admins previewing with `?role=` get the hero of that role's category.
+* **Hero by category:** the hero follows the user's categories. Teaching or Research gives a Wizard. Otherwise any admin staff category (Programme & Faculty Leadership, Student Affairs, Finance, Campus Security, IT Administration) gives a Priest. Everyone else (Students only, or no categories) gets the default Warrior. Teaching / Research win over admin staff. The rule is `heroClassForCategories` in `lib/quest-core.js`; admins previewing with `?role=` get the hero of that role's category.
 * **Academic timeline:** Semester A, Winter, Semester B and Summer with month ticks and a "today" flag. The label reads, for example, "Semester A · Week 7 · Midterms". The phases are `sem_start`, `teaching`, `midterm`, `finals`, `winter` and `summer`. Defaults are in `DEFAULT_ACADEMIC_CALENDAR`; super admins can override them in **Settings → Calendar**.
 * **Quest bubble:** the hero asks a question that fits the current term and phase, for example "Drowning in essays to mark?". **Open playbook** opens the matching modal.
   * Questions come from `quest_hints`, filtered by audience and timing and picked with a weighted shuffle (`pickWeightedHint`).
@@ -64,7 +64,7 @@ A pixel-art banner above the library (canvas renderer in `app.js`; sprites from 
 | `prompt_type` | Actions |
 | :--- | :--- |
 | `general`, `canvas`, `image`, `video` | **Try it** + **Copy prompt** |
-| `notebooklm`, `deep_research`, `agent_designer` | **Copy prompt** only (these features can't be prefilled from a URL) |
+| `notebooklm`, `deep_research`, `agent_designer`, `skills` | **Copy prompt** only (these features can't be prefilled from a URL; a Skills prompt is the skill definition pasted into Skills) |
 
 ### Admin console
 * **Users:** bulk-provision users with temporary passwords and a **Categories** checklist. **Edit user** changes a user's email (cascades to preferences, analytics and feedback) and their Gemini Enterprise app link, edits their categories, and can reset access.
@@ -75,7 +75,7 @@ A pixel-art banner above the library (canvas renderer in `app.js`; sprites from 
   * It also holds up to 3 **Quest questions** per playbook (en / zh-TW / zh-CN).
   * **Set up prompts:** up to 5 ready-to-copy helper prompts per playbook (type, title and prompt in en / zh-TW / zh-CN), shown in step 1 of the use-case modal. Stored in `use_cases.helper_prompts` and validated by `lib/helper-prompts.js`. Blank Chinese fields fall back to the English text; removing every row stores `{}` (no helpers).
   * Gemini drafting suggests all three (Set up prompts: echoes the stored ones or drafts 1–3; document-creating ones use type `canvas`).
-  * Seeded playbooks (and their Set up prompts) are re-synced from `app.js` on every boot, so admin edits to seeded ids reset on the next deploy. Admin-created playbooks keep their edits.
+  * Seeded playbooks (and their Set up prompts) are re-synced from `app.js` and `lib/seed-playbooks.js` (research, Skills, and the Agent Designer chat / workflow agents; zh-TW / zh-CN in `lib/seed-playbooks.zh-*.json`) on every boot, so admin edits to seeded ids reset on the next deploy. Admin-created playbooks keep their edits.
 * **News** (all admins): create, edit and delete announcements.
   * Each announcement has a trilingual title and body, an optional link or linked playbook, an audience (roles), a start/end date, and a pin option.
   * The form shows character counters, a live scroll preview and per-field validation.
@@ -87,13 +87,16 @@ A pixel-art banner above the library (canvas renderer in `app.js`; sprites from 
   * **Similarity check on manual create:** before **Draft with Gemini** and before the first save of a new playbook, the same check runs on the title, summary and instruction. If a close match exists, the admin can improve it instead (opens it with a Gemini instruction) or **Create new anyway**.
   * **How the similarity check scales:** only compact fields are read (id, title, summary, zh title / summary), never steps or prompts. Stage 1 is a local keyword / CJK-bigram cosine shortlist (`lib/similarity.js`, the whole catalogue while it has ≤ 40 playbooks); stage 2 is a Gemini rerank of that shortlist at ~60 input tokens per playbook. Results are cached for 15 minutes and invalidated by any playbook change. Keyword ranking is the fallback when Vertex AI is unavailable.
 * The case form has **Categories** (at least one) and an editable **Idea provider** (empty = default playbook).
+* **One drafting path:** New playbook, Convert feedback → Create new / Improve selected, and the manual-create similarity check → Improve selected all call `POST /api/admin/generate-gemini` with `origin` (`manual` | `feedback` | `similar`), the `idea` text and the clarification answers. The server builds every brief with `buildDraftPrompt()`: the same design steps and **feature guide** (Gemini, Canvas Mode, Gemini Notebook, Deep Research, Skills, Agent Designer chat agent vs workflow agent, Image / Video Generation), so Gemini picks the features that fit the idea and explains the choice in `designNotes` (shown under the instruction box). The idea is shown read-only in the form.
+* **Settings → Playbook drafting prompt** (super admin only): the editable part of that brief (role, design steps, feature guide, conventions), stored in `app_settings['draft_prompt']` and read on every draft, so a saved change applies to the next draft. The form values, the task and the JSON output contract are always appended by the server. **Reset to default** restores `DEFAULT_DRAFT_GUIDE`.
+* **First-login tips:** a 5-tip overlay tour for the user portal and another for the admin console, shown once per account (`app_settings['tour_seen:<email>']`, `POST /api/tour/seen`) and replayable from the avatar menu (**Show tips**).
 * **Settings → Email** (super admin only): SMTP presets (Gmail, Outlook.com, Microsoft 365, Custom) with a test send.
 * **Settings → Calendar** (super admin only): edit the start and end dates of the four terms.
   * Changing a start date moves the previous term's end date to the day before, and changing an end date moves the next term's start date to the day after.
   * A live "Today: …" preview shows where today falls. **Reset** goes back to the default calendar.
 
 ### Localization
-All UI strings live in `uiTranslationsV3` (with V4/V6 layers merged on top) in `app.js` (en / zh-TW / zh-CN) and are applied through `data-i18n`, `data-i18n-placeholder`, `data-i18n-aria` and `data-i18n-title`. Product names (Gemini Notebook, Gemini, Canvas Mode, Deep Research, Agent Designer, Image Generation, Video Generation) stay in English in every language.
+All UI strings live in `uiTranslationsV3` (with V4/V6 layers merged on top) in `app.js` (en / zh-TW / zh-CN) and are applied through `data-i18n`, `data-i18n-placeholder`, `data-i18n-aria` and `data-i18n-title`. Product names (Gemini Notebook, Gemini, Canvas Mode, Deep Research, Agent Designer, Skills, Image Generation, Video Generation) stay in English in every language.
 
 ---
 
@@ -347,12 +350,14 @@ All endpoints return JSON and use the session cookie. "User" means a signed-in s
 | `POST/PUT/DELETE /api/admin/use-cases` · `GET /api/admin/use-cases/export` | Super · Admin | Edit · export playbooks |
 | `POST /api/admin/use-cases/:id/infographic` · `POST /api/admin/infographics/generate-missing` | Super | Generate infographics |
 | `GET/PUT /api/admin/settings/smtp` · `POST /api/admin/settings/smtp/test` | Super | SMTP settings and test send |
-| `POST /api/admin/generate-gemini` | Super | Gemini-assisted playbook drafting with `GEMINI_MODEL` (also suggests `promptType`, `timing`, quest questions and Set up prompts `helperPrompts`). Replies are normalised by `lib/draft-normalize.js`: `{{VARIABLE}}` tokens, portal category / feature / connector names. |
+| `POST /api/admin/generate-gemini` | Super | Gemini-assisted playbook drafting with `GEMINI_MODEL`; body adds `origin`, `idea`, `clarifications` (also suggests `promptType`, `timing`, quest questions and Set up prompts `helperPrompts`). Replies are normalised by `lib/draft-normalize.js`: `{{VARIABLE}}` tokens, portal category / feature / connector names. |
 | `GET /game/manifest.json` | Public | Quest Run sprite manifest (only assets that exist on disk) |
 | `GET /api/quest` | Signed in | Academic position, hero class, eligible quest hints and live news for the viewer's role |
 | `POST /api/quest/event` | Signed in | Log `quest_view` / `quest_click` / `news_view` / `news_click` |
 | `GET/POST/PUT/DELETE /api/admin/hints` | Admin (writes: Super) | Manage quest questions |
 | `GET/POST/PUT/DELETE /api/admin/announcements` | Admin | Manage news; GET adds `seenCount` and `clickCount`; 400 responses carry per-field `errors` |
+| `GET/PUT/DELETE /api/admin/settings/draft-prompt` | Super | Read, save or reset the playbook drafting prompt (200–30,000 characters) |
+| `POST /api/tour/seen` | Signed in | `{ portal: 'user' \| 'admin' }` marks the first-login tips as seen for this account (`/api/auth/session` returns `tourSeen`) |
 | `GET/PUT/DELETE /api/admin/settings/calendar` | Super | Read, save or reset the academic calendar (validated: ordered, contiguous terms) |
 | `POST /api/admin/translate` | Admin | Gemini translation of news fields into zh-TW / zh-CN |
 

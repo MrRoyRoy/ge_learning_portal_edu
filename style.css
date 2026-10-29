@@ -4085,9 +4085,16 @@ html[data-theme="light"] {
 .tag[class*="tone-"] .material-symbols-outlined, .type-chip[class*="tone-"] .material-symbols-outlined { color: inherit !important; }
 .tag.tag-icon-only[class*="tone-"]:hover { filter: brightness(1.1); }
 
-#filterFeature[data-tone="research"] { color: var(--tone-research-ink); border-color: var(--tone-research-line); background-color: var(--tone-research-bg); }
-#filterFeature[data-tone="create"] { color: var(--tone-create-ink); border-color: var(--tone-create-line); background-color: var(--tone-create-bg); }
-#filterFeature[data-tone="agent"] { color: var(--tone-agent-ink); border-color: var(--tone-agent-line); background-color: var(--tone-agent-bg); }
+/* Selected GE feature: pale solid fill in the chip's colour family (Google 100/200 shades, same in both themes) */
+#filterFeature[data-tone] { color: var(--pill-ink); font-weight: 600;
+  background-image: linear-gradient(45deg, transparent 50%, var(--pill-ink) 50%), linear-gradient(135deg, var(--pill-ink) 50%, transparent 50%); }
+#filterFeature[data-tone="research"] { --pill-ink: #0D652D; background-color: #CEEAD6; border-color: #81C995; }
+#filterFeature[data-tone="create"] { --pill-ink: #174EA6; background-color: #D2E3FC; border-color: #8AB4F8; }
+#filterFeature[data-tone="agent"] { --pill-ink: #7A5200; background-color: #FEEFC3; border-color: #FDD663; }
+#filterFeature[data-tone=""] { --pill-ink: var(--text-primary); color: var(--text-primary); font-weight: 500;
+  background-color: var(--surface-2); border-color: var(--line);
+  background-image: linear-gradient(45deg, transparent 50%, var(--text-muted) 50%), linear-gradient(135deg, var(--text-muted) 50%, transparent 50%); }
+#filterFeature[data-tone]:not([data-tone=""]):hover { filter: brightness(1.08); }
 #filterFeature option.tone-research { color: var(--tone-research-ink); }
 #filterFeature option.tone-create { color: var(--tone-create-ink); }
 #filterFeature option.tone-agent { color: var(--tone-agent-ink); }
@@ -4762,3 +4769,50 @@ html[data-theme="light"] .quest-scene { background: #bfe3ff; }
 .feedback-hint { font-size: 12px; color: var(--text-muted); margin: 6px 0 0; line-height: 1.4; }
 .feedback-error { font-size: 13px; color: var(--err); margin: 8px 0 0; line-height: 1.4; }
 .feedback-error[hidden] { display: none; }
+
+/* ==========================================================================
+   v9: first-login tips (overlay tour), drafting idea box, drafting prompt
+   ========================================================================== */
+.tour-overlay { position: fixed; inset: 0; z-index: 2000; }
+.tour-overlay.is-centered { background: rgba(0, 0, 0, 0.6); }
+.tour-spotlight {
+  position: fixed;
+  border-radius: var(--radius-md);
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6);
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  pointer-events: none;
+  transition: left 0.22s ease, top 0.22s ease, width 0.22s ease, height 0.22s ease;
+}
+.tour-card {
+  position: fixed;
+  width: min(360px, calc(100vw - 16px));
+  background: var(--bg-dark-surface);
+  color: var(--text-primary);
+  border: 1px solid var(--line-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-pop);
+  padding: 18px 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.tour-card:focus { outline: none; }
+.tour-kicker { display: flex; align-items: center; gap: 6px; font-size: var(--text-xs); font-weight: 600; color: var(--accent); letter-spacing: var(--tracking-wide); }
+.tour-kicker .material-symbols-outlined { font-size: 18px; }
+.tour-title { font-family: var(--font-heading); font-size: var(--text-lg); line-height: var(--leading-tight); margin: 0; }
+.tour-body { font-size: var(--text-sm); line-height: var(--leading-normal); color: var(--text-secondary); margin: 0; }
+.tour-dots { display: flex; gap: 6px; margin-top: 4px; }
+.tour-dots span { width: 6px; height: 6px; border-radius: 50%; background: var(--line-strong); }
+.tour-dots span.is-active { background: var(--accent); width: 18px; border-radius: 3px; }
+.tour-actions { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 6px; }
+.tour-nav { display: flex; gap: 8px; }
+.tour-skip { border-color: transparent; background: transparent; color: var(--text-muted); }
+@media (prefers-reduced-motion: reduce) { .tour-spotlight { transition: none; } }
+
+.draft-idea { border: 1px solid var(--line); border-left: 3px solid var(--warn); border-radius: var(--radius-sm); padding: 8px 12px; background: var(--surface-2); }
+.draft-idea-head { display: flex; align-items: center; gap: 6px; font-size: var(--text-xs); font-weight: 600; color: var(--text-secondary); }
+.draft-idea-head .material-symbols-outlined { font-size: 16px; color: var(--warn); }
+.draft-idea-text { margin: 4px 0 0; font-size: 13px; color: var(--text-primary); white-space: pre-wrap; max-height: 140px; overflow: auto; }
+.draft-notes { margin: 0; font-size: 13px; color: var(--text-secondary); }
+.draft-prompt-text { min-height: 320px; padding: 10px 12px; resize: vertical; font-family: var(--font-mono); font-size: 13px; line-height: var(--leading-snug); }

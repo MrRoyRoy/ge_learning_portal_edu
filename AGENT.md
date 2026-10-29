@@ -21,7 +21,7 @@ The application is built as a high-fidelity, dynamic web application supported b
   * **Invited DB Admins:** `admins` table (role `super` | `assist`). Super admins invite by email → verification link (`/?verify=TOKEN`, 48h) → set password. Verified DB admins can use **Forgot password** (`/?reset=TOKEN`, 1h). Tokens stored as sha256 in `auth_tokens`, single-use. Hard-coded accounts remain as break-glass logins.
 * **Email (`lib/mailer.js`, nodemailer):** SMTP config lives in the DB (`app_settings.smtp`), edited in **Admin → Settings → Email** (super only). Password encrypted with AES-256-GCM (`lib/secrets.js`, key `SETTINGS_ENCRYPTION_KEY` → `SESSION_SECRET`). Resolution: DB config → `SMTP_*` env → demo mode (links logged / shown to super admin only).
 * **Infographics (`lib/infographics.js`, `scripts/generate-infographics.js`):** Vertex `gemini-nano-banana-2.1` (locations/global, 16:9 image) → uploaded via GCS JSON API to the public bucket `INFOGRAPHIC_BUCKET` → URL in `use_cases.infographic_url`. CLI: `npm run infographics [-- --force] [-- --id=<id>]`. GCP token/headers in `lib/gcp.js`.
-* **Prompt Types:** `use_cases.prompt_type` and helper prompt `type` ∈ general | notebooklm | deep_research | agent_designer | canvas | image | video. General/Canvas/Image/Video show **Copy prompt + Try it** (`ge_app_link?q=<prompt>`); NotebookLM/Deep Research/Agent Designer show **Copy prompt** only.
+* **Prompt Types:** `use_cases.prompt_type` and helper prompt `type` ∈ general | notebooklm | deep_research | agent_designer | skills | canvas | image | video. General/Canvas/Image/Video show **Copy prompt + Try it** (`ge_app_link?q=<prompt>`); Gemini Notebook/Deep Research/Agent Designer/Skills show **Copy prompt** only.
 * **Seeding:** `seedDatabase()` upserts the 14 playbooks (never wipes `infographic_url` / admin-edited `prompt_type`).
 * **Markup & Client Logic:** Vanilla HTML5 paired with modular ES6+ client-side logic (`app.js`). Hydrates page templates dynamically from `/api/use-cases` on session validation.
 * **Styles & Visual Identity:** Pure Swiss Minimalism Vanilla CSS (`style.css`), powered by CSS variable maps. **TailwindCSS is strictly avoided** to preserve precise typographic scale and structural grids.
@@ -35,14 +35,14 @@ Strict guidelines govern how features, products, and connectors are named. These
 
 ### Approved Terminology
 * **Enterprise Title:** `Gemini Enterprise - Edu Portal` (Avoid *"Antigravity"* or general references).
-* **Main Models & Features:** `Gemini Notebook` (renamed from NotebookLM on 2026-10-19: never write *"NotebookLM"* or *"NotebookLM Enterprise"* in user-facing text; the internal prompt-type id stays `notebooklm`), `Gemini`, `Canvas Mode`, `Deep Research`, `Agent Designer`, `Image Generation` (Never use *"Nano Image Gen"*), `Video Generation`.
+* **Main Models & Features:** `Gemini Notebook` (renamed from NotebookLM on 2026-10-19: never write *"NotebookLM"* or *"NotebookLM Enterprise"* in user-facing text; the internal prompt-type id stays `notebooklm`), `Gemini`, `Canvas Mode`, `Deep Research`, `Agent Designer`, `Skills` (reusable skill definitions, prompt type `skills`), `Image Generation` (Never use *"Nano Image Gen"*), `Video Generation`.
 
 ### Forbidden Terminology
 * **Never** use the term **"Gem"** (always use **"Agent"**).
 * **Never** use the term **"Copilot"**.
 
 ### Localization Boundary
-* Keep product and system names (*Gemini Notebook*, *Gemini*, *Canvas Mode*, *Deep Research*, *Agent Designer*, *Image Generation*, *Video Generation*) strictly in **English** within both Traditional Chinese (`zh-TW`) and Simplified Chinese (`zh-CN`) translations.
+* Keep product and system names (*Gemini Notebook*, *Gemini*, *Canvas Mode*, *Deep Research*, *Agent Designer*, *Skills*, *Image Generation*, *Video Generation*) strictly in **English** within both Traditional Chinese (`zh-TW`) and Simplified Chinese (`zh-CN`) translations.
 
 ---
 
@@ -78,6 +78,9 @@ The portal supports intelligent integration simulation and dynamic prompt custom
   * File-based prompts carry a `KNOWLEDGE SOURCES` block (zh-TW 知識來源 / zh-CN 知识来源) and `GROUNDING RULES`: sources only, cite file + page / slide / section, say when something isn't covered and who to ask, never invent.
   * Never write "manually upload … into system instructions" or "connect Gemini Notebook to the Agent". Gemini Notebook can't run Deep Research: run it in Gemini, then add the report as a source.
   * Every listed feature / connector must be used in a step or the prompt. Agent Designer prompts never end with the Canvas sentence. These rules are enforced for Gemini drafts by `DRAFT_CONVENTIONS` rules 3, 10 and 11 in `server.js`.
+* **Skills are generic (GE limitation):** a Skills skill definition never names a course, school, office or person and has no `{{VARIABLES}}`. GE skill creation can't take attachments, so never say "attach files to the skill"; rubrics, templates and examples are pasted or attached in the chat request. A "Prompt to Use the Skill ..." Set up prompt calls the skill and carries the variables.
+* **Workflow agents: knowledge is added after the flow is built (GE limitation):** the prompt is pasted into the Agent Designer assistant, which can't take attachments. Steps say to add the knowledge files by hand to each agent node once the flow exists. The prompt heading reads "KNOWLEDGE SOURCES (added manually to the agent nodes after the flow is created ...)". Chat agents still use Knowledge › Add files.
+* Both rules are part of `DEFAULT_DRAFT_GUIDE` (server.js). A drafting prompt saved in Admin → Settings overrides the default, so re-apply them there if it has been customised.
 * **Dynamic "Fill in the Variables" Engine:**
   * Prompts automatically scan for variable tokens written as `{{UPPER_SNAKE}}` (e.g. `{{COURSE_NAME}}`); keys are identical in en / zh-TW / zh-CN. Never use `[BRACKET]` placeholders.
   * **Variables live only in prompts and Set up prompts — never in step instructions.** Steps are rendered as-is, so a token there stays visible as `{{…}}`. Write plain words instead ("your department", zh-TW 你的科系, zh-CN 你的院系). Enforced by `DRAFT_CONVENTIONS` rules 1–2 and `plainStepText` / `plainStepsForCase` in `lib/draft-normalize.js` (Gemini drafts + admin POST / PUT convert any leftover token to plain words).
@@ -123,6 +126,16 @@ graph TD
 
 ## 7. App State & Progress
  
+##### Accomplished Tasks (Latest Session Milestone — 2026-10-28, v9: research + Skills + chat/workflow agents, first-login tips, one drafting path with an editable prompt, GE link fix)
+* **GE app link bug:** `PUT /api/admin/users` treated an omitted `geAppLink` as "clear", so category-only edits (test scripts resetting the test user) wiped `test-user@google.com`'s link. Omitted now keeps the stored link; `''` / `null` still clears it.
+* **Research category:** `research` (role `Researcher`, hero wizard) in `lib/categories.js` / `lib/quest-core.js` + role labels. Existing "all categories" accounts don't get it automatically.
+* **Skills:** GE feature `Skills` (filter, case form, tone agent) and prompt type `skills` (copy only, icon `auto_awesome`) in `lib/draft-normalize.js`, `lib/helper-prompts.js`, `server.js`, `app.js`, `index.html`.
+* **Seed module `lib/seed-playbooks.js`** (+ `seed-playbooks.zh-TW.json` / `.zh-CN.json`, keyed by id, same counts / tokens): 3 research playbooks, 4 Skills playbooks (student revision quiz, teacher feedback comments, teacher lesson plan, admin-ops meeting minutes), the new IT Service Desk Chat Agent and 4 workflow agents (special consideration rewritten with Drive + Email Connectors and a second approval for escalations; scholarship turned into a staff-side screening workflow; new expense claim approval and exam paper moderation workflows). `server.js` merges them into `SEED_PROMPT_TYPES` / `SEED_QUEST` / `SEED_CATEGORIES` and upserts them after the app.js seeds. The two workflow seeds were removed from `app.js`. One-time marker `seed_v9_refresh` resets the scholarship workflow's categories (student_affairs + finance), timing and Quest hints.
+* **Agent types:** seeded Agent Designer playbooks are 4 chat agents (socratic_tutor, su_helpdesk, security_simulator, it_service_desk_agent; titles end "Chat Agent", step 2 says "create a chat agent") and 4 workflow agents (titles end "Workflow Agent"). DB-only prod playbooks `academic-ops-assistant-agent-designer` and `automated-assessment-rubric-generation-agent` were not touched.
+* **First-login tips:** `#tourOverlay` + `runTour(portal)` in `app.js` (5 tips per portal, spotlight + card, Back / Next / Skip, Esc / arrows), shown once per account (`app_settings['tour_seen:<email>']`, `POST /api/tour/seen`, `tourSeen` in `/api/auth/session`), replay from the avatar menu.
+* **One drafting path:** convert feedback (new / improve), similar-check improve and manual create all send `origin` + `idea` + `clarifications` to `/api/admin/generate-gemini`; `buildDraftPrompt()` uses the same design steps + feature guide for all of them and returns `designNotes`. The editable part (`DEFAULT_DRAFT_GUIDE`, replaces `DRAFT_CONVENTIONS`) is stored in `app_settings['draft_prompt']` and edited in **Admin → Settings → Playbook drafting prompt** (super only, `GET/PUT/DELETE /api/admin/settings/draft-prompt`); form values, task and JSON contract stay in code.
+* **i18n:** `uiTranslationsV9`. Removed keys `convertEnhanceInstruction`, `similarEnhanceInstruction`.
+
 ##### Accomplished Tasks (Latest Session Milestone — 2026-10-22, Quest Run hero follows categories, commit `5b8b528`, deployed to dev and prod; `test_hero.js` 17/17, `test_hero_api.sh` 10/10 on local, dev and prod, `test_v7.js` 33/33 on local, dev and prod)
 * **Rule:** new pure `QuestCore.heroClassForCategories(cats)` in `lib/quest-core.js`. Precedence: `teaching` → wizard; any `ADMIN_STAFF_CATEGORIES` (`leadership`, `student_affairs`, `finance`, `security`, `it_admin`) → priest; otherwise (students only, none) → **warrior (default)**. `heroClassForRole` now also defaults to warrior.
 * **Server:** `/api/quest` returns `heroClass` from the user's categories instead of the first role. Admin previews (`?role=`) map the role through `CategoryCore.categoryForRole` and use the same rule.

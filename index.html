@@ -180,6 +180,9 @@
             <button class="avatar-menu-item" id="btnBackToAdminDash" role="menuitem" hidden>
               <span class="material-symbols-outlined">admin_panel_settings</span><span data-i18n="goAdminPortal">Admin portal</span>
             </button>
+            <button class="avatar-menu-item" id="btnUserTips" role="menuitem">
+              <span class="material-symbols-outlined">tips_and_updates</span><span data-i18n="tourShowTips">Show tips</span>
+            </button>
             <button class="avatar-menu-item" id="btnLogout" role="menuitem">
               <span class="material-symbols-outlined">logout</span><span id="btnLogoutText" data-i18n="btnLogoutText">Log out</span>
             </button>
@@ -255,11 +258,12 @@
           <div class="filter-bar" role="group" aria-label="Filters">
             <select class="pill-select" id="filterCategory" aria-label="Category" data-i18n-aria="filterCategoryLabel">
               <!-- Options built by renderCategoryFilterOptions() from the user's categories (lib/categories.js) -->
-              <option value="all" data-i18n="catAll">All my categories</option>
+              <option value="all" data-i18n="catAll">All categories</option>
             </select>
             <select class="pill-select" id="filterFeature" aria-label="GE feature" data-i18n-aria="filterFeatureLabel">
               <option value="all" data-i18n="featAll">All GE features</option>
               <option value="Agent Designer" class="tone-agent">Agent Designer</option>
+              <option value="Skills" class="tone-agent">Skills</option>
               <option value="Gemini Notebook" class="tone-research">Gemini Notebook</option>
               <option value="Deep Research" class="tone-research">Deep Research</option>
               <option value="Canvas Mode" class="tone-create">Canvas Mode</option>
@@ -336,6 +340,9 @@
             </div>
             <button class="avatar-menu-item" id="btnAdminBackToPortal" role="menuitem">
               <span class="material-symbols-outlined">grid_view</span><span id="btnAdminBackToPortalText">Learning portal</span>
+            </button>
+            <button class="avatar-menu-item" id="btnAdminTips" role="menuitem">
+              <span class="material-symbols-outlined">tips_and_updates</span><span data-i18n="tourShowTips">Show tips</span>
             </button>
             <button class="avatar-menu-item" id="btnAdminLogout" role="menuitem">
               <span class="material-symbols-outlined">logout</span><span id="btnAdminLogoutText">Log out</span>
@@ -668,6 +675,33 @@
           </form>
         </div>
 
+        <!-- Playbook drafting prompt (used by every "Draft with Gemini" path: new, convert feedback, improve) -->
+        <div class="panel settings-panel" id="draftPromptPanel">
+          <div class="panel-head">
+            <div>
+              <h2 class="panel-title" data-i18n="settingsDraftTitle">Playbook drafting prompt</h2>
+              <p class="panel-desc" data-i18n="settingsDraftDesc">Gemini follows this prompt whenever it drafts or improves a playbook: new playbooks, converted feedback and improvements. Changes apply to the next draft.</p>
+            </div>
+            <span class="status-pill" id="draftPromptStatusPill">—</span>
+          </div>
+          <form id="formDraftPrompt" class="settings-form" novalidate>
+            <div class="form-group">
+              <label class="form-label" for="draftPromptText" data-i18n="settingsDraftLabel">Prompt</label>
+              <textarea class="select-control draft-prompt-text" id="draftPromptText" rows="18" spellcheck="false"></textarea>
+              <p class="field-hint" id="draftPromptCount"></p>
+              <p class="field-hint" data-i18n="settingsDraftFixedNote">Added automatically after your prompt: the current form values, the task (create or improve, with the idea and clarification answers) and the JSON output format the form reads. Keep the feature names and prompt types as they are, or drafts may not fill the form.</p>
+            </div>
+            <div id="draftPromptResult" class="inline-feedback" hidden></div>
+            <div class="settings-footer">
+              <span class="field-hint" id="draftPromptLastChanged"></span>
+              <div class="cal-footer-actions">
+                <button type="button" class="nav-button" id="btnDraftPromptReset" data-i18n="calResetDefault">Reset to default</button>
+                <button type="submit" class="nav-button nav-button-primary" id="btnDraftPromptSave" data-i18n="saveSettings">Save</button>
+              </div>
+            </div>
+          </form>
+        </div>
+
         <!-- Academic calendar (drives the Quest Run timeline and hint timing) -->
         <div class="panel settings-panel" id="calendarPanel">
           <div class="panel-head">
@@ -927,7 +961,12 @@
               </button>
             </div>
             <p style="font-size: 13px; color: var(--text-muted); margin: 0;" id="adminFormLabelGeminiPromptDesc" data-i18n="adminFormLabelGeminiPromptDesc">Describe what to create or change. Gemini drafts the steps, prompt, tip and translations.</p>
+            <div class="draft-idea" id="formCaseIdeaBox" hidden>
+              <div class="draft-idea-head"><span class="material-symbols-outlined" aria-hidden="true">lightbulb</span><span id="formCaseIdeaLabel"></span></div>
+              <p class="draft-idea-text" id="formCaseIdeaText"></p>
+            </div>
             <textarea class="select-control" id="formCaseGeminiInstruction" style="height: 60px; padding: 8px 12px; resize: none; font-size: 13px; border-color: rgba(79, 70, 229, 0.2);" placeholder="e.g. A Canvas Mode rubric for high school chemistry lab reports" data-i18n-placeholder="caseFormDraftPlaceholder"></textarea>
+            <p class="draft-notes" id="formCaseDesignNotes" hidden></p>
           </div>
 
           <!-- ID and Category Row -->
@@ -967,6 +1006,7 @@
               <label id="adminFormLabelFeatures" class="form-label" data-i18n="adminFormLabelFeatures">GE features</label>
               <div class="glass-panel" style="padding: 10px; display: grid; grid-template-columns: 1fr; gap: 4px; font-size: 13px;">
                 <label style="display: flex; align-items: center; gap: 6px;"><input type="checkbox" name="formFeatures" value="Agent Designer"> Agent Designer</label>
+                <label style="display: flex; align-items: center; gap: 6px;"><input type="checkbox" name="formFeatures" value="Skills"> Skills</label>
                 <label style="display: flex; align-items: center; gap: 6px;"><input type="checkbox" name="formFeatures" value="Gemini Notebook"> Gemini Notebook</label>
                 <label style="display: flex; align-items: center; gap: 6px;"><input type="checkbox" name="formFeatures" value="Deep Research"> Deep Research</label>
                 <label style="display: flex; align-items: center; gap: 6px;"><input type="checkbox" name="formFeatures" value="Canvas Mode"> Canvas Mode</label>
@@ -1002,6 +1042,7 @@
               <option value="notebooklm">Gemini Notebook</option>
               <option value="deep_research">Deep Research</option>
               <option value="agent_designer">Agent Designer</option>
+              <option value="skills">Skills</option>
               <option value="canvas">Canvas Mode</option>
               <option value="image">Image Generation</option>
               <option value="video">Video Generation</option>
@@ -1157,6 +1198,24 @@
   </div>
 
   <!-- PREMIUM FLOATING FEEDBACK BUTTON -->
+  <!-- First-login tips (overlay tour), rendered by runTour() in app.js -->
+  <div class="tour-overlay" id="tourOverlay" hidden>
+    <div class="tour-spotlight" id="tourSpotlight" aria-hidden="true"></div>
+    <div class="tour-card" id="tourCard" role="dialog" aria-modal="true" aria-labelledby="tourTitle" aria-describedby="tourBody" tabindex="-1">
+      <div class="tour-kicker"><span class="material-symbols-outlined" id="tourIcon" aria-hidden="true">tips_and_updates</span><span id="tourStep"></span></div>
+      <h2 class="tour-title" id="tourTitle"></h2>
+      <p class="tour-body" id="tourBody"></p>
+      <div class="tour-dots" id="tourDots" aria-hidden="true"></div>
+      <div class="tour-actions">
+        <button type="button" class="nav-button btn-sm tour-skip" id="tourSkip" data-i18n="tourSkip">Skip tips</button>
+        <div class="tour-nav">
+          <button type="button" class="nav-button btn-sm" id="tourBack" data-i18n="tourBack">Back</button>
+          <button type="button" class="nav-button nav-button-primary btn-sm" id="tourNext" data-i18n="tourNext">Next</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <button id="btnFloatingFeedback" class="floating-feedback-button" aria-label="Feedback" data-i18n-aria="feedbackBtn" hidden>
     <span class="material-symbols-outlined" style="font-size: 22px;">rate_review</span>
     <span class="feedback-button-text" data-i18n="feedbackBtn">Feedback</span>
