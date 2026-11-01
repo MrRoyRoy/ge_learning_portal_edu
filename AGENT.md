@@ -21,7 +21,7 @@ The application is built as a high-fidelity, dynamic web application supported b
   * **Invited DB Admins:** `admins` table (role `super` | `assist`). Super admins invite by email → verification link (`/?verify=TOKEN`, 48h) → set password. Verified DB admins can use **Forgot password** (`/?reset=TOKEN`, 1h). Tokens stored as sha256 in `auth_tokens`, single-use. Hard-coded accounts remain as break-glass logins.
 * **Email (`lib/mailer.js`, nodemailer):** SMTP config lives in the DB (`app_settings.smtp`), edited in **Admin → Settings → Email** (super only). Password encrypted with AES-256-GCM (`lib/secrets.js`, key `SETTINGS_ENCRYPTION_KEY` → `SESSION_SECRET`). Resolution: DB config → `SMTP_*` env → demo mode (links logged / shown to super admin only).
 * **Infographics (`lib/infographics.js`, `scripts/generate-infographics.js`):** Vertex `gemini-nano-banana-2.1` (locations/global, 16:9 image) → uploaded via GCS JSON API to the public bucket `INFOGRAPHIC_BUCKET` → URL in `use_cases.infographic_url`. CLI: `npm run infographics [-- --force] [-- --id=<id>]`. GCP token/headers in `lib/gcp.js`.
-* **Prompt Types:** `use_cases.prompt_type` and helper prompt `type` ∈ general | notebooklm | deep_research | agent_designer | skills | canvas | image | video. General/Canvas/Image/Video show **Copy prompt + Try it** (`ge_app_link?q=<prompt>`); Gemini Notebook/Deep Research/Agent Designer/Skills show **Copy prompt** only.
+* **Prompt Types:** `use_cases.prompt_type` and helper prompt `type` ∈ general | notebooklm | deep_research | agent_designer | skills | canvas | image | video. General/Canvas/Image/Video show **Copy prompt + Try it** (`ge_app_link?q=<prompt>`); Gemini Notebook/Deep Research/Workflow Builder/Skills show **Copy prompt** only.
 * **Seeding:** `seedDatabase()` upserts the 14 playbooks (never wipes `infographic_url` / admin-edited `prompt_type`).
 * **Markup & Client Logic:** Vanilla HTML5 paired with modular ES6+ client-side logic (`app.js`). Hydrates page templates dynamically from `/api/use-cases` on session validation.
 * **Styles & Visual Identity:** Pure Swiss Minimalism Vanilla CSS (`style.css`), powered by CSS variable maps. **TailwindCSS is strictly avoided** to preserve precise typographic scale and structural grids.
@@ -35,14 +35,14 @@ Strict guidelines govern how features, products, and connectors are named. These
 
 ### Approved Terminology
 * **Enterprise Title:** `Gemini Enterprise - Edu Portal` (Avoid *"Antigravity"* or general references).
-* **Main Models & Features:** `Gemini Notebook` (renamed from NotebookLM on 2026-10-19: never write *"NotebookLM"* or *"NotebookLM Enterprise"* in user-facing text; the internal prompt-type id stays `notebooklm`), `Gemini`, `Canvas Mode`, `Deep Research`, `Agent Designer`, `Skills` (reusable skill definitions, prompt type `skills`), `Image Generation` (Never use *"Nano Image Gen"*), `Video Generation`.
+* **Main Models & Features:** `Gemini Notebook` (renamed from NotebookLM on 2026-10-19: never write *"NotebookLM"* or *"NotebookLM Enterprise"* in user-facing text; the internal prompt-type id stays `notebooklm`), `Gemini`, `Canvas Mode`, `Deep Research`, `Workflow Builder` (renamed from Agent Designer on 2026-11-01 to match the Gemini Enterprise docs: never write *"Agent Designer"* in user-facing text; the internal prompt-type id stays `agent_designer`; chat agents: Create agent → Chat agent; workflows: Agents → Create agent → *Describe your agent*), `Skills` (reusable skill definitions, prompt type `skills`), `Image Generation` (Never use *"Nano Image Gen"*), `Video Generation`.
 
 ### Forbidden Terminology
 * **Never** use the term **"Gem"** (always use **"Agent"**).
 * **Never** use the term **"Copilot"**.
 
 ### Localization Boundary
-* Keep product and system names (*Gemini Notebook*, *Gemini*, *Canvas Mode*, *Deep Research*, *Agent Designer*, *Skills*, *Image Generation*, *Video Generation*) strictly in **English** within both Traditional Chinese (`zh-TW`) and Simplified Chinese (`zh-CN`) translations.
+* Keep product and system names (*Gemini Notebook*, *Gemini*, *Canvas Mode*, *Deep Research*, *Workflow Builder*, *Skills*, *Image Generation*, *Video Generation*) strictly in **English** within both Traditional Chinese (`zh-TW`) and Simplified Chinese (`zh-CN`) translations.
 
 ---
 
@@ -74,12 +74,12 @@ The portal supports intelligent integration simulation and dynamic prompt custom
 * **Manual Workflow Tips Box (Replaced Dual-Mode Toggle):**
   * Rather than complex dual-prompt switches, playbook detail views feature a streamlined, clean prompt container accompanied by a non-intrusive manual tips box (`.manual-tip-box`) recommending the manual file upload fallback workflow if institutional connectors are inactive or unavailable.
 * **Gemini Notebook → Agent grounding pattern (mandatory for every playbook):**
-  * Agent Designer cannot read a Gemini Notebook and there is no notebook connector. Gemini Notebook is the prep and verification workspace; the Agent gets the same files through **Agent Designer › Knowledge › Add files** (same file names so citations match).
+  * Workflow Builder cannot read a Gemini Notebook and there is no notebook connector. Gemini Notebook is the prep and verification workspace; the Agent gets the same files through **Workflow Builder › Knowledge › Add files** (same file names so citations match).
   * File-based prompts carry a `KNOWLEDGE SOURCES` block (zh-TW 知識來源 / zh-CN 知识来源) and `GROUNDING RULES`: sources only, cite file + page / slide / section, say when something isn't covered and who to ask, never invent.
   * Never write "manually upload … into system instructions" or "connect Gemini Notebook to the Agent". Gemini Notebook can't run Deep Research: run it in Gemini, then add the report as a source.
-  * Every listed feature / connector must be used in a step or the prompt. Agent Designer prompts never end with the Canvas sentence. These rules are enforced for Gemini drafts by `DRAFT_CONVENTIONS` rules 3, 10 and 11 in `server.js`.
+  * Every listed feature / connector must be used in a step or the prompt. Workflow Builder prompts never end with the Canvas sentence. These rules are enforced for Gemini drafts by `DRAFT_CONVENTIONS` rules 3, 10 and 11 in `server.js`.
 * **Skills are generic (GE limitation):** a Skills skill definition never names a course, school, office or person and has no `{{VARIABLES}}`. GE skill creation can't take attachments, so never say "attach files to the skill"; rubrics, templates and examples are pasted or attached in the chat request. A "Prompt to Use the Skill ..." Set up prompt calls the skill and carries the variables.
-* **Workflow agents: knowledge is added after the flow is built (GE limitation):** the prompt is pasted into the Agent Designer assistant, which can't take attachments. Steps say to add the knowledge files by hand to each agent node once the flow exists. The prompt heading reads "KNOWLEDGE SOURCES (added manually to the agent nodes after the flow is created ...)". Chat agents still use Knowledge › Add files.
+* **Workflow agents: knowledge is added after the flow is built (GE limitation):** the prompt is pasted into the Workflow Builder assistant, which can't take attachments. Steps say to add the knowledge files by hand to each agent node once the flow exists. The prompt heading reads "KNOWLEDGE SOURCES (added manually to the agent nodes after the flow is created ...)". Chat agents still use Knowledge › Add files.
 * Both rules are part of `DEFAULT_DRAFT_GUIDE` (server.js). A drafting prompt saved in Admin → Settings overrides the default, so re-apply them there if it has been customised.
 * **Dynamic "Fill in the Variables" Engine:**
   * Prompts automatically scan for variable tokens written as `{{UPPER_SNAKE}}` (e.g. `{{COURSE_NAME}}`); keys are identical in en / zh-TW / zh-CN. Never use `[BRACKET]` placeholders.
@@ -126,6 +126,10 @@ graph TD
 
 ## 7. App State & Progress
  
+##### Accomplished Tasks (Latest Session Milestone — 2026-11-01, Try it for every prompt type + Agent Designer → Workflow Builder)
+* **Try it everywhere:** `promptActions()` gives every type Copy + Try it. General / Canvas / Image / Video keep the `?q=` prefill. Workflow Builder (chat agent or workflow, detected by a "STEP 1 · TRIGGER" line), Skills, Deep Research and Gemini Notebook copy the prompt, open the user's GE app home (`geAppHome`) and show a `.try-guide` box with the clicks (`t.tryGuide.*`, en / zh-TW / zh-CN). Checked on 2026-11-01: the GE docs list no deep links or URL parameters for these features (`?q=` itself is undocumented), and Skills / agents are invoked in chat with `@name` (Skills also `/name`).
+* **Rename:** "Agent Designer" → "Workflow Builder" in UI, seeds, zh JSON, draft guide, README. `PRODUCT_RENAMES` rewrites DB-only rows on boot; `renameLegacyProducts` / `LEGACY_NAMES` / `normalizePromptType('Workflow Builder') → agent_designer` handle Gemini drafts. Workflow seed steps now say "Workflow Builder (Agents → Create agent), paste the prompt into Describe your agent".
+
 ##### Accomplished Tasks (Latest Session Milestone — 2026-10-28, v9: research + Skills + chat/workflow agents, first-login tips, one drafting path with an editable prompt, GE link fix)
 * **GE app link bug:** `PUT /api/admin/users` treated an omitted `geAppLink` as "clear", so category-only edits (test scripts resetting the test user) wiped `test-user@google.com`'s link. Omitted now keeps the stored link; `''` / `null` still clears it.
 * **Research category:** `research` (role `Researcher`, hero wizard) in `lib/categories.js` / `lib/quest-core.js` + role labels. Existing "all categories" accounts don't get it automatically.

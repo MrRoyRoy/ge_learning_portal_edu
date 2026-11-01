@@ -4816,3 +4816,12 @@ html[data-theme="light"] .quest-scene { background: #bfe3ff; }
 .draft-idea-text { margin: 4px 0 0; font-size: 13px; color: var(--text-primary); white-space: pre-wrap; max-height: 140px; overflow: auto; }
 .draft-notes { margin: 0; font-size: 13px; color: var(--text-secondary); }
 .draft-prompt-text { min-height: 320px; padding: 10px 12px; resize: vertical; font-family: var(--font-mono); font-size: 13px; line-height: var(--leading-snug); }
+
+/* Try it for copy-and-paste types: where to paste the copied prompt in Gemini Enterprise */
+.try-guide { margin-top: 10px; border: 1px solid var(--line-card); border-left: 3px solid #1e8e3e; border-radius: var(--radius-sm); padding: 10px 12px; background: var(--surface-2); font-size: 13px; }
+.try-guide-head { display: flex; align-items: center; gap: 6px; font-weight: 600; color: var(--text-primary); }
+.try-guide-head .material-symbols-outlined { font-size: 18px; color: #1e8e3e; }
+.try-guide-close { margin-left: auto; }
+.try-guide ol { margin: 6px 0 0; padding-left: 20px; color: var(--text-secondary); line-height: var(--leading-snug); }
+.try-guide li + li { margin-top: 3px; }
+.try-guide-note { margin: 6px 0 0; color: var(--text-muted); }

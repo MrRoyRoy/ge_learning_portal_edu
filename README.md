@@ -28,10 +28,10 @@ Self-hosting guide, GitHub details and the full cost breakdown: [docs/HANDBOOK.m
 
 ### Playbook library
 * **Categories decide what each user sees.** There are 8: Teaching (Lecturer, TA), Research (Researcher), Programme & Faculty Leadership (Program Leader, Dean), Student Affairs (SAO), Finance, Campus Security, IT Administration and Students (defined in `lib/categories.js`). Admins tick categories on each account and on each playbook. A user sees a playbook when they share at least one category; with no categories they see an "ask your admin" empty state. There is no profile wizard or "Switch profile".
-* Card grid of playbooks with dropdown filters for **Category** (the user's own categories; hidden if they have only one), **GE feature** (Agent Designer, Skills, Gemini Notebook, Deep Research, Canvas Mode, Image Generation, Video Generation), **Collection** (All / Liked) and **Sort** (popular, newest, A–Z). The headline reads "{n} playbooks for you" or "{n} playbooks · {category}".
+* Card grid of playbooks with dropdown filters for **Category** (the user's own categories; hidden if they have only one), **GE feature** (Workflow Builder, Skills, Gemini Notebook, Deep Research, Canvas Mode, Image Generation, Video Generation), **Collection** (All / Liked) and **Sort** (popular, newest, A–Z). The headline reads "{n} playbooks for you" or "{n} playbooks · {category}".
 * Each card and modal shows the **idea provider** ("Idea by …"), or "Default playbook" when there is none.
 * Every card shows a **like** button (heart), a read-only **view** counter (eye), colour-toned GE feature icons and red connector icons.
-* **Feature colour tones** (`tone-*` classes in `style.css`) are the same on cards, modal chips, playbook-type chips and the GE feature filter (the filter takes the selected feature's tone): Gemini Notebook / Deep Research green, Canvas Mode / Video Generation blue, Agent Designer yellow, Image Generation purple. Each tone has a light-theme variant for contrast.
+* **Feature colour tones** (`tone-*` classes in `style.css`) are the same on cards, modal chips, playbook-type chips and the GE feature filter (the filter takes the selected feature's tone): Gemini Notebook / Deep Research green, Canvas Mode / Video Generation blue, Workflow Builder yellow, Image Generation purple. Each tone has a light-theme variant for contrast.
 
 ### Quest Run strip
 A pixel-art banner above the library (canvas renderer in `app.js`; sprites from `game/manifest.json`, with a drawn fallback for each missing asset).
@@ -63,8 +63,8 @@ A pixel-art banner above the library (canvas renderer in `app.js`; sprites from 
 
 | `prompt_type` | Actions |
 | :--- | :--- |
-| `general`, `canvas`, `image`, `video` | **Try it** + **Copy prompt** |
-| `notebooklm`, `deep_research`, `agent_designer`, `skills` | **Copy prompt** only (these features can't be prefilled from a URL; a Skills prompt is the skill definition pasted into Skills) |
+| `general`, `canvas`, `image`, `video` | **Try it** opens `<ge_app_link>?q=<prompt>` (chat prefilled) + **Copy prompt** |
+| `notebooklm`, `deep_research`, `agent_designer` (Workflow Builder), `skills` | **Try it** copies the prompt, opens the GE app home and shows where to paste it (Create agent → Chat agent; Agents → Create agent → Describe your agent; Skills → + → Create skill with Gemini; Deep Research; Gemini Notebook). Gemini Enterprise documents no deep links into these features. + **Copy prompt** |
 
 ### Admin console
 * **Users:** bulk-provision users with temporary passwords and a **Categories** checklist. **Edit user** changes a user's email (cascades to preferences, analytics and feedback) and their Gemini Enterprise app link, edits their categories, and can reset access.
@@ -75,7 +75,7 @@ A pixel-art banner above the library (canvas renderer in `app.js`; sprites from 
   * It also holds up to 3 **Quest questions** per playbook (en / zh-TW / zh-CN).
   * **Set up prompts:** up to 5 ready-to-copy helper prompts per playbook (type, title and prompt in en / zh-TW / zh-CN), shown in step 1 of the use-case modal. Stored in `use_cases.helper_prompts` and validated by `lib/helper-prompts.js`. Blank Chinese fields fall back to the English text; removing every row stores `{}` (no helpers).
   * Gemini drafting suggests all three (Set up prompts: echoes the stored ones or drafts 1–3; document-creating ones use type `canvas`).
-  * Seeded playbooks (and their Set up prompts) are re-synced from `app.js` and `lib/seed-playbooks.js` (research, Skills, and the Agent Designer chat / workflow agents; zh-TW / zh-CN in `lib/seed-playbooks.zh-*.json`) on every boot, so admin edits to seeded ids reset on the next deploy. Admin-created playbooks keep their edits.
+  * Seeded playbooks (and their Set up prompts) are re-synced from `app.js` and `lib/seed-playbooks.js` (research, Skills, and the Workflow Builder chat / workflow agents; zh-TW / zh-CN in `lib/seed-playbooks.zh-*.json`) on every boot, so admin edits to seeded ids reset on the next deploy. Admin-created playbooks keep their edits.
 * **News** (all admins): create, edit and delete announcements.
   * Each announcement has a trilingual title and body, an optional link or linked playbook, an audience (roles), a start/end date, and a pin option.
   * The form shows character counters, a live scroll preview and per-field validation.
@@ -87,7 +87,7 @@ A pixel-art banner above the library (canvas renderer in `app.js`; sprites from 
   * **Similarity check on manual create:** before **Draft with Gemini** and before the first save of a new playbook, the same check runs on the title, summary and instruction. If a close match exists, the admin can improve it instead (opens it with a Gemini instruction) or **Create new anyway**.
   * **How the similarity check scales:** only compact fields are read (id, title, summary, zh title / summary), never steps or prompts. Stage 1 is a local keyword / CJK-bigram cosine shortlist (`lib/similarity.js`, the whole catalogue while it has ≤ 40 playbooks); stage 2 is a Gemini rerank of that shortlist at ~60 input tokens per playbook. Results are cached for 15 minutes and invalidated by any playbook change. Keyword ranking is the fallback when Vertex AI is unavailable.
 * The case form has **Categories** (at least one) and an editable **Idea provider** (empty = default playbook).
-* **One drafting path:** New playbook, Convert feedback → Create new / Improve selected, and the manual-create similarity check → Improve selected all call `POST /api/admin/generate-gemini` with `origin` (`manual` | `feedback` | `similar`), the `idea` text and the clarification answers. The server builds every brief with `buildDraftPrompt()`: the same design steps and **feature guide** (Gemini, Canvas Mode, Gemini Notebook, Deep Research, Skills, Agent Designer chat agent vs workflow agent, Image / Video Generation), so Gemini picks the features that fit the idea and explains the choice in `designNotes` (shown under the instruction box). The idea is shown read-only in the form.
+* **One drafting path:** New playbook, Convert feedback → Create new / Improve selected, and the manual-create similarity check → Improve selected all call `POST /api/admin/generate-gemini` with `origin` (`manual` | `feedback` | `similar`), the `idea` text and the clarification answers. The server builds every brief with `buildDraftPrompt()`: the same design steps and **feature guide** (Gemini, Canvas Mode, Gemini Notebook, Deep Research, Skills, Workflow Builder chat agent vs workflow agent, Image / Video Generation), so Gemini picks the features that fit the idea and explains the choice in `designNotes` (shown under the instruction box). The idea is shown read-only in the form.
 * **Settings → Playbook drafting prompt** (super admin only): the editable part of that brief (role, design steps, feature guide, conventions), stored in `app_settings['draft_prompt']` and read on every draft, so a saved change applies to the next draft. The form values, the task and the JSON output contract are always appended by the server. **Reset to default** restores `DEFAULT_DRAFT_GUIDE`.
 * **First-login tips:** a 5-tip overlay tour for the user portal and another for the admin console, shown once per account (`app_settings['tour_seen:<email>']`, `POST /api/tour/seen`) and replayable from the avatar menu (**Show tips**).
 * **Settings → Email** (super admin only): SMTP presets (Gmail, Outlook.com, Microsoft 365, Custom) with a test send.
@@ -96,7 +96,7 @@ A pixel-art banner above the library (canvas renderer in `app.js`; sprites from 
   * A live "Today: …" preview shows where today falls. **Reset** goes back to the default calendar.
 
 ### Localization
-All UI strings live in `uiTranslationsV3` (with V4/V6 layers merged on top) in `app.js` (en / zh-TW / zh-CN) and are applied through `data-i18n`, `data-i18n-placeholder`, `data-i18n-aria` and `data-i18n-title`. Product names (Gemini Notebook, Gemini, Canvas Mode, Deep Research, Agent Designer, Skills, Image Generation, Video Generation) stay in English in every language.
+All UI strings live in `uiTranslationsV3` (with V4/V6 layers merged on top) in `app.js` (en / zh-TW / zh-CN) and are applied through `data-i18n`, `data-i18n-placeholder`, `data-i18n-aria` and `data-i18n-title`. Product names (Gemini Notebook, Gemini, Canvas Mode, Deep Research, Workflow Builder, Skills, Image Generation, Video Generation) stay in English in every language.
 
 ---
 

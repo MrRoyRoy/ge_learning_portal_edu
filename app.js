@@ -2,7 +2,7 @@
 
 // Core Datastore - Comprehensive, Generalized Use Case Database (English defaults)
 
-// Research, Skills and the Agent Designer workflow / new chat agent playbooks are seeded from lib/seed-playbooks.js.
+// Research, Skills and the Workflow Builder workflow / new chat agent playbooks are seeded from lib/seed-playbooks.js.
 
 const useCasesDb = [
   // HUB 1: ACADEMIC PORTAL (Lecturers & TAs)
@@ -10,19 +10,19 @@ const useCasesDb = [
     id: "socratic_tutor",
     title: "Socratic Tutor Chat Agent",
     category: "academic",
-    summary: "Create a chat agent in Agent Designer, grounded in your lecture notes and syllabus, that students talk to 24/7 and that guides them with Socratic questions instead of answers.",
-    features: ["Agent Designer", "Gemini Notebook"],
+    summary: "Create a chat agent in Workflow Builder, grounded in your lecture notes and syllabus, that students talk to 24/7 and that guides them with Socratic questions instead of answers.",
+    features: ["Workflow Builder", "Gemini Notebook"],
     connectors: [],
     role: "Lecturer",
     level: ["University & College", "High School", "Generic"],
     steps: [
       "In Gemini Notebook, add your syllabus, lecture slides and key readings as sources, then use the Set up prompt to build a verification set: 10 typical student questions with cited answers.",
-      "In Agent Designer, create a chat agent, paste the tutor prompt and add the same files under Knowledge › Add files. Keep the same file names so the citations match.",
+      "In Workflow Builder, create a chat agent, paste the tutor prompt and add the same files under Knowledge › Add files. Keep the same file names so the citations match.",
       "Ask the Agent the 10 verification questions and compare its hints and citations with the notebook's answers. Fix any gaps, then publish the Agent link in your LMS."
     ],
     prompt: `You are the '{{COURSE_CODE}} Coach', a friendly and encouraging Socratic tutor for {{COURSE_NAME}}. Your sole objective is to guide students to find answers themselves.
 
-KNOWLEDGE SOURCES (Agent Designer › Knowledge › Add files: the same files as your Gemini Notebook course hub)
+KNOWLEDGE SOURCES (Workflow Builder › Knowledge › Add files: the same files as your Gemini Notebook course hub)
 The syllabus, lecture slides and key readings for {{COURSE_NAME}}.
 
 GROUNDING RULES
@@ -36,7 +36,7 @@ TUTORING RULES
 1. When a student asks for an answer (e.g. 'What is the answer to question 3?'), do NOT give it. Reply with a probing question that points to the right place in the materials (e.g. 'Look at slide 4 of Lecture 2: what is the first stage called?').
 2. When the student shows correct understanding, praise them and give a complete explanation with citations.
 3. If asked about topics outside this course, politely decline: 'I can only help with {{COURSE_NAME}} topics.'`,
-    proTip: "Agent Designer can't read a Gemini Notebook directly, so the Agent answers only from the files you add under Knowledge. Use the notebook as your answer key: if the Agent's citation doesn't match the notebook's, fix the files or the prompt before students use it.",
+    proTip: "Workflow Builder can't read a Gemini Notebook directly, so the Agent answers only from the files you add under Knowledge. Use the notebook as your answer key: if the Agent's citation doesn't match the notebook's, fix the files or the prompt before students use it.",
     connectorGuide: null
   },
   {
@@ -183,19 +183,19 @@ Use Canvas to create this as an editable document.`,
     id: "su_helpdesk",
     title: "24/7 Student Union Policy Chat Agent",
     category: "student",
-    summary: "Create a student-facing chat agent in Agent Designer, grounded in your union handbook and constitution, that answers venue booking, locker and funding questions 24/7.",
-    features: ["Agent Designer", "Gemini Notebook"],
+    summary: "Create a student-facing chat agent in Workflow Builder, grounded in your union handbook and constitution, that answers venue booking, locker and funding questions 24/7.",
+    features: ["Workflow Builder", "Gemini Notebook"],
     connectors: [],
     role: "Student",
     level: ["University & College", "High School", "Generic"],
     steps: [
       "Add the student handbook, welfare guidelines and club constitutions to Gemini Notebook as sources, then use the Set up prompt to build a verification set of 10 member questions with cited answers.",
-      "In Agent Designer, create a chat agent, paste the policy Agent prompt and add the same files under Knowledge › Add files. Fill in the officer's email for sensitive cases.",
+      "In Workflow Builder, create a chat agent, paste the policy Agent prompt and add the same files under Knowledge › Add files. Fill in the officer's email for sensitive cases.",
       "Ask the Agent the 10 verification questions plus 2 sensitive ones. Check that answers and citations match the notebook and that sensitive questions go to the officer, then share the Agent link with members."
     ],
     prompt: `You are the 24/7 Policy and Welfare Agent for {{STUDENT_UNION_NAME}} at {{INSTITUTION_NAME}}. You give quick, accurate answers to student questions about union bylaws, venue booking, lockers and society funding.
 
-KNOWLEDGE SOURCES (Agent Designer › Knowledge › Add files: the same files as your Gemini Notebook policy hub)
+KNOWLEDGE SOURCES (Workflow Builder › Knowledge › Add files: the same files as your Gemini Notebook policy hub)
 The student handbook, welfare guidelines and club constitutions of {{STUDENT_UNION_NAME}}.
 
 GROUNDING RULES
@@ -390,19 +390,19 @@ Audit requirements:
     id: "security_simulator",
     title: "Campus Safety Drill Simulator Chat Agent",
     category: "administrative",
-    summary: "Create a chat agent in Agent Designer that runs interactive emergency drills for your security team, checks every decision against the protocol handbook and scores the debrief.",
-    features: ["Agent Designer", "Video Generation"],
+    summary: "Create a chat agent in Workflow Builder that runs interactive emergency drills for your security team, checks every decision against the protocol handbook and scores the debrief.",
+    features: ["Workflow Builder", "Video Generation"],
     connectors: [],
     role: "Security",
     level: ["Generic"],
     steps: [
-      "In Agent Designer, create a chat agent, add the emergency protocol handbook, floor plans and evacuation routes under Knowledge › Add files, then paste the drill prompt.",
+      "In Workflow Builder, create a chat agent, add the emergency protocol handbook, floor plans and evacuation routes under Knowledge › Add files, then paste the drill prompt.",
       "Run a drill with the security team. The Agent presents each phase, checks every decision against the protocol and cites the section.",
       "Use Video Generation for short clips that open each phase, then review the debrief scores and update the handbook where the drill exposed gaps."
     ],
     prompt: `You are the Director of Campus Safety. Run an interactive emergency drill for {{EMERGENCY_SCENARIO}} at {{FACILITY_LOCATION}}.
 
-KNOWLEDGE SOURCES (Agent Designer › Knowledge › Add files)
+KNOWLEDGE SOURCES (Workflow Builder › Knowledge › Add files)
 The campus emergency protocol handbook, floor plans and evacuation routes.
 
 GROUNDING RULES
@@ -1449,15 +1449,15 @@ const useCasesTranslations = {
   socratic_tutor: {
     "en": {
       title: "Socratic Tutor Chat Agent",
-      summary: "Create a chat agent in Agent Designer, grounded in your lecture notes and syllabus, that students talk to 24/7 and that guides them with Socratic questions instead of answers.",
+      summary: "Create a chat agent in Workflow Builder, grounded in your lecture notes and syllabus, that students talk to 24/7 and that guides them with Socratic questions instead of answers.",
       steps: [
         "In Gemini Notebook, add your syllabus, lecture slides and key readings as sources, then use the Set up prompt to build a verification set: 10 typical student questions with cited answers.",
-        "In Agent Designer, create a chat agent, paste the tutor prompt and add the same files under Knowledge › Add files. Keep the same file names so the citations match.",
+        "In Workflow Builder, create a chat agent, paste the tutor prompt and add the same files under Knowledge › Add files. Keep the same file names so the citations match.",
         "Ask the Agent the 10 verification questions and compare its hints and citations with the notebook's answers. Fix any gaps, then publish the Agent link in your LMS."
       ],
       prompt: `You are the '{{COURSE_CODE}} Coach', a friendly and encouraging Socratic tutor for {{COURSE_NAME}}. Your sole objective is to guide students to find answers themselves.
 
-KNOWLEDGE SOURCES (Agent Designer › Knowledge › Add files: the same files as your Gemini Notebook course hub)
+KNOWLEDGE SOURCES (Workflow Builder › Knowledge › Add files: the same files as your Gemini Notebook course hub)
 The syllabus, lecture slides and key readings for {{COURSE_NAME}}.
 
 GROUNDING RULES
@@ -1471,19 +1471,19 @@ TUTORING RULES
 1. When a student asks for an answer (e.g. 'What is the answer to question 3?'), do NOT give it. Reply with a probing question that points to the right place in the materials (e.g. 'Look at slide 4 of Lecture 2: what is the first stage called?').
 2. When the student shows correct understanding, praise them and give a complete explanation with citations.
 3. If asked about topics outside this course, politely decline: 'I can only help with {{COURSE_NAME}} topics.'`,
-      proTip: "Agent Designer can't read a Gemini Notebook directly, so the Agent answers only from the files you add under Knowledge. Use the notebook as your answer key: if the Agent's citation doesn't match the notebook's, fix the files or the prompt before students use it."
+      proTip: "Workflow Builder can't read a Gemini Notebook directly, so the Agent answers only from the files you add under Knowledge. Use the notebook as your answer key: if the Agent's citation doesn't match the notebook's, fix the files or the prompt before students use it."
     },
     "zh-TW": {
       title: "Socratic 導師 Chat Agent（對話式 Agent）",
-      summary: "在 Agent Designer 建立一個以你的講義及課程大綱為依據的 Chat Agent，學生可全天候與它對話，它以 Socratic 式提問引導學生，而不是直接給答案。",
+      summary: "在 Workflow Builder 建立一個以你的講義及課程大綱為依據的 Chat Agent，學生可全天候與它對話，它以 Socratic 式提問引導學生，而不是直接給答案。",
       steps: [
         "在 Gemini Notebook 加入課程大綱、講義投影片及核心讀物作為來源，再用輔助提示詞建立驗證題組：10 條學生常問的問題，每條附有出處的答案。",
-        "在 Agent Designer 建立 Chat Agent（對話式 Agent），貼上導師提示詞，並在 Knowledge › Add files 加入同一批檔案。保持相同檔名，讓引用出處一致。",
+        "在 Workflow Builder 建立 Chat Agent（對話式 Agent），貼上導師提示詞，並在 Knowledge › Add files 加入同一批檔案。保持相同檔名，讓引用出處一致。",
         "向 Agent 提出這 10 條驗證問題，將它的提示及出處與 Notebook 的答案逐一比對。補好缺漏後，才在 LMS 發布 Agent 連結。"
       ],
       prompt: `你是「{{COURSE_CODE}} 導師」，一位親切、循循善誘的 {{COURSE_NAME}} Socratic 學習教練。你的唯一目標是引導學生自己找到答案。
 
-知識來源（在 Agent Designer › Knowledge › Add files 加入，與 Gemini Notebook 課程中心相同的檔案）
+知識來源（在 Workflow Builder › Knowledge › Add files 加入，與 Gemini Notebook 課程中心相同的檔案）
 {{COURSE_NAME}} 的課程大綱、講義投影片及核心讀物。
 
 引用規則
@@ -1497,19 +1497,19 @@ TUTORING RULES
 1. 學生直接要答案時（例如：「第 3 題答案是甚麼？」），不要直接回答。請以探究式的反問，指向教材中的相關位置（例如：「看看 Lecture 2 第 4 張投影片，第一個階段叫甚麼？」）。
 2. 學生展現正確理解時，給予肯定，並提供附出處的完整解說。
 3. 如被問及本課程以外的主題，請禮貌地拒絕：「我只能協助解答 {{COURSE_NAME}} 的問題。」`,
-      proTip: "Agent Designer 無法直接讀取 Gemini Notebook，Agent 只會根據你在 Knowledge 加入的檔案作答。把 Notebook 當作答案參考：如 Agent 的出處與 Notebook 不符，先修正檔案或提示詞，才讓學生使用。"
+      proTip: "Workflow Builder 無法直接讀取 Gemini Notebook，Agent 只會根據你在 Knowledge 加入的檔案作答。把 Notebook 當作答案參考：如 Agent 的出處與 Notebook 不符，先修正檔案或提示詞，才讓學生使用。"
     },
     "zh-CN": {
       title: "Socratic 导师 Chat Agent（对话式 Agent）",
-      summary: "在 Agent Designer 创建一个以你的讲义及课程大纲为依据的 Chat Agent，学生可全天候与它对话，它以 Socratic 式提问引导学生，而不是直接给答案。",
+      summary: "在 Workflow Builder 创建一个以你的讲义及课程大纲为依据的 Chat Agent，学生可全天候与它对话，它以 Socratic 式提问引导学生，而不是直接给答案。",
       steps: [
         "在 Gemini Notebook 加入课程大纲、讲义幻灯片及核心读物作为来源，再用辅助提示词建立验证题组：10 条学生常问的问题，每条附有出处的答案。",
-        "在 Agent Designer 创建 Chat Agent（对话式 Agent），贴上导师提示词，并在 Knowledge › Add files 加入同一批文件。保持相同文件名，让引用出处一致。",
+        "在 Workflow Builder 创建 Chat Agent（对话式 Agent），贴上导师提示词，并在 Knowledge › Add files 加入同一批文件。保持相同文件名，让引用出处一致。",
         "向 Agent 提出这 10 条验证问题，将它的提示及出处与 Notebook 的答案逐一比对。补好缺漏后，才在 LMS 发布 Agent 链接。"
       ],
       prompt: `你是「{{COURSE_CODE}} 导师」，一位亲切、循循善诱的 {{COURSE_NAME}} Socratic 学习教练。你的唯一目标是引导学生自己找到答案。
 
-知识来源（在 Agent Designer › Knowledge › Add files 加入，与 Gemini Notebook 课程中心相同的文件）
+知识来源（在 Workflow Builder › Knowledge › Add files 加入，与 Gemini Notebook 课程中心相同的文件）
 {{COURSE_NAME}} 的课程大纲、讲义幻灯片及核心读物。
 
 引用规则
@@ -1523,7 +1523,7 @@ TUTORING RULES
 1. 学生直接要答案时（例如：「第 3 题答案是什么？」），不要直接回答。请以探究式的反问，指向教材中的相关位置（例如：「看看 Lecture 2 第 4 张幻灯片，第一个阶段叫什么？」）。
 2. 学生展现正确理解时，给予肯定，并提供附出处的完整解说。
 3. 如被问及本课程以外的主题，请礼貌地拒绝：「我只能协助解答 {{COURSE_NAME}} 的问题。」`,
-      proTip: "Agent Designer 无法直接读取 Gemini Notebook，Agent 只会根据你在 Knowledge 加入的文件作答。把 Notebook 当作答案参考：如 Agent 的出处与 Notebook 不符，先修正文件或提示词，才让学生使用。"
+      proTip: "Workflow Builder 无法直接读取 Gemini Notebook，Agent 只会根据你在 Knowledge 加入的文件作答。把 Notebook 当作答案参考：如 Agent 的出处与 Notebook 不符，先修正文件或提示词，才让学生使用。"
     }
   },
   rubric_grading: {
@@ -1830,15 +1830,15 @@ Use Canvas to create this as an editable document.`,
   su_helpdesk: {
     "en": {
       title: "24/7 Student Union Policy Chat Agent",
-      summary: "Create a student-facing chat agent in Agent Designer, grounded in your union handbook and constitution, that answers venue booking, locker and funding questions 24/7.",
+      summary: "Create a student-facing chat agent in Workflow Builder, grounded in your union handbook and constitution, that answers venue booking, locker and funding questions 24/7.",
       steps: [
         "Add the student handbook, welfare guidelines and club constitutions to Gemini Notebook as sources, then use the Set up prompt to build a verification set of 10 member questions with cited answers.",
-        "In Agent Designer, create a chat agent, paste the policy Agent prompt and add the same files under Knowledge › Add files. Fill in the officer's email for sensitive cases.",
+        "In Workflow Builder, create a chat agent, paste the policy Agent prompt and add the same files under Knowledge › Add files. Fill in the officer's email for sensitive cases.",
         "Ask the Agent the 10 verification questions plus 2 sensitive ones. Check that answers and citations match the notebook and that sensitive questions go to the officer, then share the Agent link with members."
       ],
       prompt: `You are the 24/7 Policy and Welfare Agent for {{STUDENT_UNION_NAME}} at {{INSTITUTION_NAME}}. You give quick, accurate answers to student questions about union bylaws, venue booking, lockers and society funding.
 
-KNOWLEDGE SOURCES (Agent Designer › Knowledge › Add files: the same files as your Gemini Notebook policy hub)
+KNOWLEDGE SOURCES (Workflow Builder › Knowledge › Add files: the same files as your Gemini Notebook policy hub)
 The student handbook, welfare guidelines and club constitutions of {{STUDENT_UNION_NAME}}.
 
 GROUNDING RULES
@@ -1854,15 +1854,15 @@ ANSWER RULES
     },
     "zh-TW": {
       title: "24/7 學生會法規與會務諮詢 Chat Agent",
-      summary: "在 Agent Designer 建立一個以學生會手冊及會章為依據、面向學生的 Chat Agent，全天候解答場地預約、儲物櫃及資助問題。",
+      summary: "在 Workflow Builder 建立一個以學生會手冊及會章為依據、面向學生的 Chat Agent，全天候解答場地預約、儲物櫃及資助問題。",
       steps: [
         "把學生手冊、福利指引及各學會會章加入 Gemini Notebook 作為來源，再用輔助提示詞建立驗證題組：10 條會員常問的問題，每條附有出處的答案。",
-        "在 Agent Designer 建立 Chat Agent（對話式 Agent），貼上政策 Agent 提示詞，並在 Knowledge › Add files 加入同一批檔案。填上處理敏感個案的幹事電郵。",
+        "在 Workflow Builder 建立 Chat Agent（對話式 Agent），貼上政策 Agent 提示詞，並在 Knowledge › Add files 加入同一批檔案。填上處理敏感個案的幹事電郵。",
         "向 Agent 提出 10 條驗證問題及 2 條敏感問題，確認答案及出處與 Notebook 一致，而敏感問題會轉介幹事，然後才向會員分享 Agent 連結。"
       ],
       prompt: `你是 {{INSTITUTION_NAME}} {{STUDENT_UNION_NAME}} 的 24/7 政策及福利 Agent，為學生快速而準確地解答有關會章、場地預約、儲物櫃及學會資助的問題。
 
-知識來源（在 Agent Designer › Knowledge › Add files 加入，與 Gemini Notebook 政策中心相同的檔案）
+知識來源（在 Workflow Builder › Knowledge › Add files 加入，與 Gemini Notebook 政策中心相同的檔案）
 {{STUDENT_UNION_NAME}} 的學生手冊、福利指引及各學會會章。
 
 引用規則
@@ -1878,15 +1878,15 @@ ANSWER RULES
     },
     "zh-CN": {
       title: "24/7 学生会法规与会务咨询 Chat Agent",
-      summary: "在 Agent Designer 创建一个以学生会手册及章程为依据、面向学生的 Chat Agent，全天候解答场地预约、储物柜及资助问题。",
+      summary: "在 Workflow Builder 创建一个以学生会手册及章程为依据、面向学生的 Chat Agent，全天候解答场地预约、储物柜及资助问题。",
       steps: [
         "把学生手册、福利指引及各社团章程加入 Gemini Notebook 作为来源，再用辅助提示词建立验证题组：10 条会员常问的问题，每条附有出处的答案。",
-        "在 Agent Designer 创建 Chat Agent（对话式 Agent），贴上政策 Agent 提示词，并在 Knowledge › Add files 加入同一批文件。填上处理敏感个案的干事电子邮件。",
+        "在 Workflow Builder 创建 Chat Agent（对话式 Agent），贴上政策 Agent 提示词，并在 Knowledge › Add files 加入同一批文件。填上处理敏感个案的干事电子邮件。",
         "向 Agent 提出 10 条验证问题及 2 条敏感问题，确认答案及出处与 Notebook 一致，而敏感问题会转介干事，然后才向会员分享 Agent 链接。"
       ],
       prompt: `你是 {{INSTITUTION_NAME}} {{STUDENT_UNION_NAME}} 的 24/7 政策及福利 Agent，为学生快速而准确地解答有关章程、场地预约、储物柜及社团资助的问题。
 
-知识来源（在 Agent Designer › Knowledge › Add files 加入，与 Gemini Notebook 政策中心相同的文件）
+知识来源（在 Workflow Builder › Knowledge › Add files 加入，与 Gemini Notebook 政策中心相同的文件）
 {{STUDENT_UNION_NAME}} 的学生手册、福利指引及各社团章程。
 
 引用规则
@@ -2246,15 +2246,15 @@ Audit requirements:
   security_simulator: {
     "en": {
       title: "Campus Safety Drill Simulator Chat Agent",
-      summary: "Create a chat agent in Agent Designer that runs interactive emergency drills for your security team, checks every decision against the protocol handbook and scores the debrief.",
+      summary: "Create a chat agent in Workflow Builder that runs interactive emergency drills for your security team, checks every decision against the protocol handbook and scores the debrief.",
       steps: [
-        "In Agent Designer, create a chat agent, add the emergency protocol handbook, floor plans and evacuation routes under Knowledge › Add files, then paste the drill prompt.",
+        "In Workflow Builder, create a chat agent, add the emergency protocol handbook, floor plans and evacuation routes under Knowledge › Add files, then paste the drill prompt.",
         "Run a drill with the security team. The Agent presents each phase, checks every decision against the protocol and cites the section.",
         "Use Video Generation for short clips that open each phase, then review the debrief scores and update the handbook where the drill exposed gaps."
       ],
       prompt: `You are the Director of Campus Safety. Run an interactive emergency drill for {{EMERGENCY_SCENARIO}} at {{FACILITY_LOCATION}}.
 
-KNOWLEDGE SOURCES (Agent Designer › Knowledge › Add files)
+KNOWLEDGE SOURCES (Workflow Builder › Knowledge › Add files)
 The campus emergency protocol handbook, floor plans and evacuation routes.
 
 GROUNDING RULES
@@ -2271,15 +2271,15 @@ Simulation structure:
     },
     "zh-TW": {
       title: "校園防救災與重大危安演練模擬 Chat Agent",
-      summary: "在 Agent Designer 建立一個 Chat Agent，為保安團隊主持互動緊急演習，按應變手冊核對每個決定，並為檢討評分。",
+      summary: "在 Workflow Builder 建立一個 Chat Agent，為保安團隊主持互動緊急演習，按應變手冊核對每個決定，並為檢討評分。",
       steps: [
-        "在 Agent Designer 建立 Chat Agent（對話式 Agent），在 Knowledge › Add files 加入緊急應變手冊、樓層平面圖及疏散路線，然後貼上演習提示詞。",
+        "在 Workflow Builder 建立 Chat Agent（對話式 Agent），在 Knowledge › Add files 加入緊急應變手冊、樓層平面圖及疏散路線，然後貼上演習提示詞。",
         "與保安團隊進行演習。Agent 逐一展示每個階段，按應變程序核對每個決定並註明章節。",
         "用 Video Generation 製作每個階段開場的短片段，然後檢視檢討評分，並按演習暴露的不足更新手冊。"
       ],
       prompt: `你是校園安全總監。請為 {{FACILITY_LOCATION}} 發生的 {{EMERGENCY_SCENARIO}} 主持一場互動緊急演習。
 
-知識來源（在 Agent Designer › Knowledge › Add files 加入）
+知識來源（在 Workflow Builder › Knowledge › Add files 加入）
 校園緊急應變手冊、樓層平面圖及疏散路線。
 
 引用規則
@@ -2296,15 +2296,15 @@ Simulation structure:
     },
     "zh-CN": {
       title: "校园防救灾与重大危安演练模拟 Chat Agent",
-      summary: "在 Agent Designer 创建一个 Chat Agent，为安保团队主持互动紧急演习，按应变手册核对每个决定，并为检讨评分。",
+      summary: "在 Workflow Builder 创建一个 Chat Agent，为安保团队主持互动紧急演习，按应变手册核对每个决定，并为检讨评分。",
       steps: [
-        "在 Agent Designer 创建 Chat Agent（对话式 Agent），在 Knowledge › Add files 加入紧急应变手册、楼层平面图及疏散路线，然后贴上演习提示词。",
+        "在 Workflow Builder 创建 Chat Agent（对话式 Agent），在 Knowledge › Add files 加入紧急应变手册、楼层平面图及疏散路线，然后贴上演习提示词。",
         "与安保团队进行演习。Agent 逐一展示每个阶段，按应变程序核对每个决定并注明章节。",
         "用 Video Generation 制作每个阶段开场的短视频片段，然后检视检讨评分，并按演习暴露的不足更新手册。"
       ],
       prompt: `你是校园安全总监。请为 {{FACILITY_LOCATION}} 发生的 {{EMERGENCY_SCENARIO}} 主持一场互动紧急演习。
 
-知识来源（在 Agent Designer › Knowledge › Add files 加入）
+知识来源（在 Workflow Builder › Knowledge › Add files 加入）
 校园紧急应变手册、楼层平面图及疏散路线。
 
 引用规则
@@ -2615,7 +2615,7 @@ function getTagIcon(type, name) {
  * Colour family for a GE feature or prompt type (v6 colourful tags):
  *   research → Gemini Notebook, Deep Research (green)
  *   create   → Canvas Mode, Image / Video Generation (blue)
- *   agent    → Agent Designer (yellow)
+ *   agent    → Workflow Builder (yellow)
  *   connector→ any "... Connector" (red, matches .tag-connector)
  * Returns null for neutral items (e.g. the 'general' prompt type).
  */
@@ -2625,7 +2625,7 @@ function featureTone(name) {
   if (n.includes("connector")) return "connector";
   if (n.includes("notebook") || n.includes("research")) return "research";
   if (n.includes("canvas") || n.includes("image") || n.includes("video")) return "create";
-  if (n.includes("agent") || n.includes("skill")) return "agent";
+  if (n.includes("agent") || n.includes("workflow") || n.includes("skill")) return "agent";
   return null;
 }
 const toneClass = (name) => {
@@ -5053,7 +5053,7 @@ const uiTranslationsV2 = {
     setupGuideSuffix: "setup",
     promptTypes: {
       general: "General query", notebooklm: "Gemini Notebook", deep_research: "Deep Research",
-      agent_designer: "Agent Designer", skills: "Skills", canvas: "Canvas Mode", image: "Image Generation", video: "Video Generation"
+      agent_designer: "Workflow Builder", skills: "Skills", canvas: "Canvas Mode", image: "Image Generation", video: "Video Generation"
     },
     forgotPassword: "Forgot password?",
     forgotTitle: "Reset your password",
@@ -5280,7 +5280,7 @@ const uiTranslationsV2 = {
     setupGuideSuffix: "設定",
     promptTypes: {
       general: "一般查詢", notebooklm: "Gemini Notebook", deep_research: "Deep Research",
-      agent_designer: "Agent Designer", skills: "Skills", canvas: "Canvas Mode", image: "Image Generation", video: "Video Generation"
+      agent_designer: "Workflow Builder", skills: "Skills", canvas: "Canvas Mode", image: "Image Generation", video: "Video Generation"
     },
     forgotPassword: "忘記密碼？",
     forgotTitle: "重設密碼",
@@ -5507,7 +5507,7 @@ const uiTranslationsV2 = {
     setupGuideSuffix: "设置",
     promptTypes: {
       general: "一般查询", notebooklm: "Gemini Notebook", deep_research: "Deep Research",
-      agent_designer: "Agent Designer", skills: "Skills", canvas: "Canvas Mode", image: "Image Generation", video: "Video Generation"
+      agent_designer: "Workflow Builder", skills: "Skills", canvas: "Canvas Mode", image: "Image Generation", video: "Video Generation"
     },
     forgotPassword: "忘记密码？",
     forgotTitle: "重置密码",
@@ -6677,8 +6677,19 @@ function applyI18nAttributes() {
 /** Prompt types that Gemini Enterprise can open straight from a ?q= link. */
 const TRYABLE = new Set(["general", "canvas", "image", "video"]);
 
-/** Which actions a prompt of this type supports. Pure. */
-const promptActions = (type) => (TRYABLE.has(type || "general") ? ["copy", "try"] : ["copy"]);
+/** Every type gets Copy + Try it. Non-TRYABLE types "try" by copying the prompt, opening the GE app home
+ * and showing where to paste it (GE documents no deep links into Workflow Builder, Skills, Deep Research or
+ * Gemini Notebook, and the user's browser is already signed in). Pure. */
+const promptActions = () => ["copy", "try"];
+
+/** Where a copied prompt of this type goes in GE: key into t.tryGuide. Workflow prompts start with a trigger step. Pure. */
+const tryGuideKey = (type, text) => {
+  if (type === "agent_designer") return /STEP 1 · TRIGGER|步驟 1 · 觸發|步骤 1 · 触发/.test(text || "") ? "workflow" : "chatAgent";
+  return { skills: "skills", deep_research: "deepResearch", notebooklm: "notebook" }[type] || null;
+};
+
+/** The GE app link without any query: the signed-in home page. Pure. */
+const geAppHome = (geAppLink) => (geAppLink ? geAppLink.split("?")[0] : null);
 
 /**
  * Build the deep link that opens a prompt in the user's GE app. Pure.
@@ -7643,6 +7654,8 @@ async function onTryIt(scopeId) {
   }
   modalState.tryArmed[scopeId] = false;
   const prompt = interpolatePrompt(scope.text, modalState.values);
+  const guideKey = tryGuideKey(scope.type, scope.text);
+  if (guideKey) { await tryWithGuide(scopeId, prompt, guideKey); return; }
   const url = buildTryItUrl(appState.geAppLink, prompt);
   if (!url) {
     await copyText(prompt);
@@ -7658,6 +7671,43 @@ async function onTryIt(scopeId) {
     await copyText(prompt);
     showToast(t.tryLongCopied);
   }
+}
+
+/**
+ * Try it for prompts that can't be prefilled by a link: copy the prompt, open the user's GE app home in a new
+ * tab (already signed in) and show the clicks to paste it, in a box under the buttons that stays until closed.
+ */
+async function tryWithGuide(scopeId, prompt, guideKey) {
+  const t = tr();
+  const g = t.tryGuide[guideKey];
+  const copied = await copyText(prompt);
+  const home = geAppHome(appState.geAppLink);
+  if (home) {
+    window.open(home, "_blank", "noopener");
+    fetch("/api/use-cases/try", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ useCaseId: modalState.useCase?.id })
+    }).catch(() => {});
+  }
+  showToast(copied ? (home ? t.tryGuideOpened : t.tryGuideCopiedOnly) : t.tryGuideCopyFailed, copied ? "success" : "warning");
+  const btn = document.querySelector(`#modalDynamicContent .btn-try-it[data-scope="${CSS.escape(scopeId)}"]`);
+  const actions = btn && btn.closest(".prompt-actions");
+  if (!actions) return;
+  actions.parentElement.querySelectorAll(".try-guide").forEach(el => el.remove());
+  const box = document.createElement("div");
+  box.className = "try-guide";
+  box.setAttribute("role", "status");
+  box.innerHTML = `
+    <div class="try-guide-head">
+      <span class="material-symbols-outlined" aria-hidden="true">assignment_turned_in</span>
+      <span>${escapeHtml(g.title)}</span>
+      <button type="button" class="icon-btn btn-sm try-guide-close" aria-label="${escapeHtml(t.tryGuideClose)}"><span class="material-symbols-outlined">close</span></button>
+    </div>
+    <ol>${g.steps.map(st => `<li>${escapeHtml(st)}</li>`).join("")}</ol>
+    ${home ? "" : `<p class="try-guide-note">${escapeHtml(t.tryGuideNoLink)}</p>`}`;
+  box.querySelector(".try-guide-close").addEventListener("click", () => box.remove());
+  actions.insertAdjacentElement("afterend", box);
+  box.scrollIntoView({ block: "nearest", behavior: "smooth" });
 }
 
 // ---------------------------------------------------------------------------
@@ -9567,6 +9617,18 @@ function applyQuestSuggestions(aiRes) {
 // ===========================================================================
 const uiTranslationsV9 = {
   en: {
+    tryGuideOpened: "Prompt copied and Gemini Enterprise opened in a new tab. Follow the steps below to paste it.",
+    tryGuideCopiedOnly: "Prompt copied. Open Gemini Enterprise and follow the steps below.",
+    tryGuideCopyFailed: "Couldn't copy automatically. Use Copy prompt, then follow the steps below.",
+    tryGuideNoLink: "No Gemini Enterprise link is set for your account, so open your Gemini Enterprise app yourself.",
+    tryGuideClose: "Close",
+    tryGuide: {
+      chatAgent: { title: "Create the chat agent in Workflow Builder", steps: ["In Gemini Enterprise, click Create agent and choose Chat agent.", "Paste the prompt (Ctrl/Cmd + V), add your files with Add files, then Submit.", "Test it in the Preview tab and click Create."] },
+      workflow: { title: "Build the workflow in Workflow Builder", steps: ["In Gemini Enterprise, open Agents and click Create agent.", "Paste the prompt into Describe your agent (Ctrl/Cmd + V) and submit. Gemini builds the flow.", "Open each agent step and add the knowledge files listed in the prompt, then test in Preview and click Turn on."] },
+      skills: { title: "Create the skill in Skills", steps: ["In Gemini Enterprise, open Skills, click + and choose Create skill with Gemini.", "Enter the SKILL NAME as the name and the DESCRIPTION as the description, then paste the rest into Instructions.", "Click Save. Call it in any chat with @ or / and its name, adding your own details."] },
+      deepResearch: { title: "Run it in Deep Research", steps: ["In Gemini Enterprise, open Deep Research.", "Choose your Sources, paste the prompt (Ctrl/Cmd + V) and click Submit.", "Check the research plan, then click Start Research."] },
+      notebook: { title: "Run it in Gemini Notebook", steps: ["In Gemini Enterprise, open Gemini Notebook and open (or create) the notebook for this playbook.", "Make sure the sources named in step 1 are added.", "Paste the prompt into the notebook chat (Ctrl/Cmd + V) and send it."] }
+    },
     settingsDraftTitle: "Playbook drafting prompt",
     settingsDraftDesc: "Gemini follows this prompt whenever it drafts or improves a playbook: new playbooks, converted feedback and improvements. Changes apply to the next draft.",
     settingsDraftLabel: "Prompt",
@@ -9576,7 +9638,7 @@ const uiTranslationsV9 = {
     tourUser: [
       { title: "Find the right playbook", body: "Search, or filter by category, GE feature and your Liked list. You only see playbooks for the categories your admin gave you." },
       { title: "Open a playbook", body: "Each card shows the GE features and connectors it uses. Open it for the steps, the Set up prompts and the sample prompt. Tap the heart to save it to Liked." },
-      { title: "Fill in, then Copy or Try it", body: "Fill in the variables once and they appear in every prompt. Copy prompt pastes into Gemini Notebook, Deep Research, Agent Designer or Skills; Try it opens Gemini Enterprise with the prompt ready." },
+      { title: "Fill in, then Copy or Try it", body: "Fill in the variables once and they appear in every prompt. Try it opens Gemini Enterprise: chat prompts arrive ready to send; for Workflow Builder, Skills, Deep Research and Gemini Notebook the prompt is copied and the steps to paste it appear here." },
       { title: "Quest Run tips", body: "Archie suggests playbooks that fit this point of the academic year. Open the scroll icon for news from your team." },
       { title: "Share an idea", body: "Tell us what's missing. Good ideas become playbooks credited to you. You can replay these tips from your account menu." }
     ],
@@ -9598,6 +9660,18 @@ const uiTranslationsV9 = {
     draftPromptTooShort: "The prompt is too short. Use Reset to default to start again."
   },
   "zh-TW": {
+    tryGuideOpened: "已複製提示詞，並在新分頁開啟 Gemini Enterprise。請按以下步驟貼上。",
+    tryGuideCopiedOnly: "已複製提示詞。請開啟 Gemini Enterprise，並按以下步驟操作。",
+    tryGuideCopyFailed: "無法自動複製。請按「複製提示詞」，再按以下步驟操作。",
+    tryGuideNoLink: "你的帳戶未設定 Gemini Enterprise 連結，請自行開啟你的 Gemini Enterprise 應用程式。",
+    tryGuideClose: "關閉",
+    tryGuide: {
+      chatAgent: { title: "在 Workflow Builder 建立 Chat Agent", steps: ["在 Gemini Enterprise 按 Create agent，選擇 Chat agent。", "貼上提示詞（Ctrl/Cmd + V），以 Add files 加入你的檔案，然後按 Submit。", "在 Preview 分頁測試，再按 Create。"] },
+      workflow: { title: "在 Workflow Builder 建立工作流程", steps: ["在 Gemini Enterprise 開啟 Agents，按 Create agent。", "把提示詞貼到 Describe your agent（Ctrl/Cmd + V）並提交，Gemini 會建立流程。", "逐一開啟 Agent 步驟，加入提示詞列出的知識檔案，然後在 Preview 測試並按 Turn on。"] },
+      skills: { title: "在 Skills 建立技能", steps: ["在 Gemini Enterprise 開啟 Skills，按 +，選擇 Create skill with Gemini。", "以「技能名稱」作名稱、「說明」作描述，其餘內容貼到 Instructions。", "按 Save。在任何對話輸入 @ 或 / 加技能名稱即可使用，並補充你自己的資料。"] },
+      deepResearch: { title: "在 Deep Research 執行", steps: ["在 Gemini Enterprise 開啟 Deep Research。", "選擇 Sources，貼上提示詞（Ctrl/Cmd + V），按 Submit。", "檢查研究計劃，然後按 Start Research。"] },
+      notebook: { title: "在 Gemini Notebook 執行", steps: ["在 Gemini Enterprise 開啟 Gemini Notebook，打開（或建立）此 Playbook 的 Notebook。", "確認已加入步驟 1 提到的來源。", "把提示詞貼到 Notebook 對話（Ctrl/Cmd + V）並送出。"] }
+    },
     settingsDraftTitle: "Playbook 草擬提示詞",
     settingsDraftDesc: "Gemini 每次草擬或改進 Playbook 時都會依循此提示詞，包括新 Playbook、轉換的意見回饋及改進。更改會在下次草擬時生效。",
     settingsDraftLabel: "提示詞",
@@ -9607,7 +9681,7 @@ const uiTranslationsV9 = {
     tourUser: [
       { title: "找到合適的 Playbook", body: "搜尋，或按類別、GE 功能及「已讚好」篩選。你只會看到管理員為你設定的類別的 Playbook。" },
       { title: "打開 Playbook", body: "每張卡片都會顯示所用的 GE 功能及連接器。打開後可看到步驟、設定提示詞及範例提示詞。按心形即可加入「已讚好」。" },
-      { title: "填寫變數，然後複製或試用", body: "變數只需填寫一次，便會套用到所有提示詞。「複製提示詞」可貼到 Gemini Notebook、Deep Research、Agent Designer 或 Skills；「試用」會直接在 Gemini Enterprise 開啟提示詞。" },
+      { title: "填寫變數，然後複製或試用", body: "變數只需填寫一次，便會套用到所有提示詞。「試用」會開啟 Gemini Enterprise：一般對話提示詞會直接填好；Workflow Builder、Skills、Deep Research 及 Gemini Notebook 的提示詞會先複製，並在這裡顯示貼上步驟。" },
       { title: "Quest Run 提示", body: "Archie 會按學年當前階段推薦合適的 Playbook。按卷軸圖示可查看團隊的最新消息。" },
       { title: "分享構想", body: "告訴我們還缺少甚麼。好的構想會變成 Playbook，並註明你的貢獻。你可隨時在帳戶選單重看這些提示。" }
     ],
@@ -9629,6 +9703,18 @@ const uiTranslationsV9 = {
     draftPromptTooShort: "提示詞太短。可按「重設為預設」重新開始。"
   },
   "zh-CN": {
+    tryGuideOpened: "已复制提示词，并在新标签页打开 Gemini Enterprise。请按以下步骤粘贴。",
+    tryGuideCopiedOnly: "已复制提示词。请打开 Gemini Enterprise，并按以下步骤操作。",
+    tryGuideCopyFailed: "无法自动复制。请点击“复制提示词”，再按以下步骤操作。",
+    tryGuideNoLink: "你的账户未设置 Gemini Enterprise 链接，请自行打开你的 Gemini Enterprise 应用。",
+    tryGuideClose: "关闭",
+    tryGuide: {
+      chatAgent: { title: "在 Workflow Builder 创建 Chat Agent", steps: ["在 Gemini Enterprise 点击 Create agent，选择 Chat agent。", "粘贴提示词（Ctrl/Cmd + V），用 Add files 添加你的文件，然后点击 Submit。", "在 Preview 标签页测试，再点击 Create。"] },
+      workflow: { title: "在 Workflow Builder 创建工作流程", steps: ["在 Gemini Enterprise 打开 Agents，点击 Create agent。", "把提示词粘贴到 Describe your agent（Ctrl/Cmd + V）并提交，Gemini 会创建流程。", "逐一打开 Agent 步骤，添加提示词列出的知识文件，然后在 Preview 测试并点击 Turn on。"] },
+      skills: { title: "在 Skills 创建技能", steps: ["在 Gemini Enterprise 打开 Skills，点击 +，选择 Create skill with Gemini。", "以“技能名称”作名称、“说明”作描述，其余内容粘贴到 Instructions。", "点击 Save。在任何对话输入 @ 或 / 加技能名称即可使用，并补充你自己的信息。"] },
+      deepResearch: { title: "在 Deep Research 运行", steps: ["在 Gemini Enterprise 打开 Deep Research。", "选择 Sources，粘贴提示词（Ctrl/Cmd + V），点击 Submit。", "检查研究计划，然后点击 Start Research。"] },
+      notebook: { title: "在 Gemini Notebook 运行", steps: ["在 Gemini Enterprise 打开 Gemini Notebook，打开（或创建）此 Playbook 的 Notebook。", "确认已添加步骤 1 提到的来源。", "把提示词粘贴到 Notebook 对话（Ctrl/Cmd + V）并发送。"] }
+    },
     settingsDraftTitle: "Playbook 起草提示词",
     settingsDraftDesc: "Gemini 每次起草或改进 Playbook 时都会遵循此提示词，包括新 Playbook、转换的意见反馈及改进。更改会在下次起草时生效。",
     settingsDraftLabel: "提示词",
@@ -9638,7 +9724,7 @@ const uiTranslationsV9 = {
     tourUser: [
       { title: "找到合适的 Playbook", body: "搜索，或按类别、GE 功能及“已点赞”筛选。你只会看到管理员为你设置的类别的 Playbook。" },
       { title: "打开 Playbook", body: "每张卡片都会显示所用的 GE 功能及连接器。打开后可看到步骤、设置提示词及示例提示词。点击心形即可加入“已点赞”。" },
-      { title: "填写变量，然后复制或试用", body: "变量只需填写一次，便会应用到所有提示词。“复制提示词”可粘贴到 Gemini Notebook、Deep Research、Agent Designer 或 Skills；“试用”会直接在 Gemini Enterprise 打开提示词。" },
+      { title: "填写变量，然后复制或试用", body: "变量只需填写一次，便会应用到所有提示词。“试用”会打开 Gemini Enterprise：一般对话提示词会直接填好；Workflow Builder、Skills、Deep Research 及 Gemini Notebook 的提示词会先复制，并在这里显示粘贴步骤。" },
       { title: "Quest Run 提示", body: "Archie 会按学年当前阶段推荐合适的 Playbook。点击卷轴图标可查看团队的最新消息。" },
       { title: "分享创意", body: "告诉我们还缺少什么。好的创意会变成 Playbook，并注明你的贡献。你可随时在账户菜单重看这些提示。" }
     ],
