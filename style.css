@@ -4953,3 +4953,7 @@ html[data-theme="light"] .quest-scene { background: #bfe3ff; }
 .lb-chart-name { font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .lb-chart .lb-bar span { background: var(--chart-tone); }
 .lb-chart-value { font-size: 13px; font-weight: 800; white-space: nowrap; }
+
+/* Change password dialog */
+.cp-card { max-width: 440px; padding: 24px; height: auto; }
+#changePasswordModal .settings-form { gap: 12px; }

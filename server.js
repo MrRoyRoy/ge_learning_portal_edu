@@ -1162,6 +1162,11 @@ app.post('/api/auth/reset-password', async (req, res) => {
   if (!req.session.user) {
     return res.status(401).json({ success: false, message: 'Unauthorized session.' });
   }
+  // First sign-in only: setting a password without the current one is allowed while it is still temporary.
+  // Everyone else uses /api/auth/change-password, which checks the current password.
+  if (!req.session.user.isTemp) {
+    return res.status(403).json({ success: false, message: 'Use Change password and enter your current password.' });
+  }
 
   const { newPassword } = req.body;
 
@@ -1183,6 +1188,48 @@ app.post('/api/auth/reset-password', async (req, res) => {
   } catch (error) {
     console.error('Password reset error:', error);
     res.status(500).json({ success: false, message: 'Server database error during password reset.' });
+  }
+});
+
+/*
+ * Change password (signed-in standard users and invited DB admins). Needs the current password; the new one must
+ * be at least 8 characters and different. Other sessions of the account are signed out (the current one stays).
+ * Built-in admins get their passwords from Secret Manager / env, so they can't change them here.
+ */
+const MIN_PASSWORD = 8;
+app.post('/api/auth/change-password', async (req, res) => {
+  const user = req.session.user;
+  if (!user) return res.status(401).json({ success: false, code: 'session_expired', message: 'Your session has expired. Sign in again.' });
+  if (user.isAdmin && !user.isDbAdmin) {
+    return res.status(403).json({ success: false, code: 'builtin_admin', message: 'Default admin passwords are managed in the server settings (Secret Manager).' });
+  }
+  const current = typeof req.body.currentPassword === 'string' ? req.body.currentPassword : '';
+  const next = typeof req.body.newPassword === 'string' ? req.body.newPassword : '';
+  if (!current) return res.status(400).json({ success: false, code: 'current_required', message: 'Enter your current password.' });
+  if (next.length < MIN_PASSWORD) return res.status(400).json({ success: false, code: 'too_short', message: `Use at least ${MIN_PASSWORD} characters.` });
+  if (next === current) return res.status(400).json({ success: false, code: 'same', message: 'Choose a password different from your current one.' });
+
+  const table = user.isAdmin ? 'admins' : 'users';
+  try {
+    const rows = await query(`SELECT password_hash FROM ${table} WHERE email = ?`, [user.email]);
+    if (!rows.length || !rows[0].password_hash || !(await bcrypt.compare(current, rows[0].password_hash))) {
+      return res.status(400).json({ success: false, code: 'wrong_current', message: 'Your current password is incorrect.' });
+    }
+    const hash = await bcrypt.hash(next, await bcrypt.genSalt(10));
+    if (table === 'users') {
+      await query(`UPDATE users SET password_hash = ?, is_temp_password = ${dbType === 'postgres' ? 'false' : '0'} WHERE email = ?`, [hash, user.email]);
+    } else {
+      await query('UPDATE admins SET password_hash = ? WHERE email = ?', [hash, user.email]);
+    }
+    // Sign the account out on other devices: sessions are JSON rows keyed by sid
+    const others = await query('SELECT sid, sess FROM sessions WHERE sid <> ?', [req.sessionID]);
+    const stale = others.filter(r => { try { return (JSON.parse(r.sess).user || {}).email === user.email; } catch (_) { return false; } });
+    for (const r of stale) await query('DELETE FROM sessions WHERE sid = ?', [r.sid]);
+    req.session.user.isTemp = false;
+    res.json({ success: true, signedOutOthers: stale.length });
+  } catch (error) {
+    console.error('Change password error:', error);
+    res.status(500).json({ success: false, message: 'Failed to change the password.' });
   }
 });
 

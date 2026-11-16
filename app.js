@@ -2890,6 +2890,7 @@ async function initApp() {
   bindAvatarMenu("adminAvatarBtn", "adminAvatarMenu");
   bindTourButtons();
   bindLeaderboard();
+  bindChangePassword();
   setupForgotPasswordHandlers();
   bindUserEditModal();
 
@@ -2935,6 +2936,7 @@ async function initApp() {
         appState.isAdmin = auth.user.isAdmin;
         appState.isAssist = auth.user.isAssist || false;
         appState.isSuper = auth.user.isSuper ?? (auth.user.email === 'edu_portal_s_admin');
+        appState.isDbAdmin = auth.user.isDbAdmin === true;
         // Per-user GE app link drives "Try it"; admins always use the generic Gemini Enterprise URL
         appState.geAppLink = auth.user.isAdmin ? null : (auth.user.geAppLink || null);
         appState.activeLanguage = localStorage.getItem("ge_adoption_lang") || appState.activeLanguage || "en";
@@ -7026,6 +7028,11 @@ function updateAccountMenus() {
   set("adminMenuRole", appState.isSuper ? t.roleSuper : (appState.isAssist ? t.roleAssist : t.roleSuper));
   const adminLink = document.getElementById("btnBackToAdminDash");
   if (adminLink) adminLink.hidden = appState.isAdmin !== true;
+  // Default admins' passwords live in Secret Manager; standard users and invited admins can change theirs
+  const userCp = document.getElementById("btnUserChangePassword");
+  if (userCp) userCp.hidden = appState.isAdmin === true;
+  const adminCp = document.getElementById("btnAdminChangePassword");
+  if (adminCp) adminCp.hidden = !(appState.isAdmin === true && appState.isDbAdmin === true);
 }
 
 // ---------------------------------------------------------------------------
@@ -10300,5 +10307,103 @@ function bindLeaderboard() {
     if (action && action.dataset.lbAction === "suggest") { document.getElementById("btnFloatingFeedback")?.click(); return; }
     const item = e.target.closest(".lb-board-item.is-openable");
     if (item) { const uc = useCasesDb.find(u => u.id === item.dataset.ucId); if (uc) openUseCaseModal(uc); }
+  });
+}
+
+// ===========================================================================
+// v11: Change password (account menu)
+// ===========================================================================
+const uiTranslationsV11 = {
+  en: {
+    cpMenu: "Change password", cpTitle: "Change password", cpCurrent: "Current password", cpNew: "New password",
+    cpConfirm: "Confirm new password", cpShow: "Show passwords", cpSubmit: "Update password",
+    cpHint: "At least 8 characters. You'll stay signed in here; other devices are signed out.",
+    cpErrCurrent: "Enter your current password.", cpErrShort: "Use at least 8 characters.",
+    cpErrMatch: "The new passwords don't match.", cpErrSame: "Choose a password different from your current one.",
+    cpErrWrong: "Your current password is incorrect.", cpErrBuiltin: "Default admin passwords are managed in the server settings.",
+    cpDone: "Password updated.", cpDoneOthers: "Password updated. {n} other session(s) were signed out."
+  },
+  "zh-TW": {
+    cpMenu: "更改密碼", cpTitle: "更改密碼", cpCurrent: "目前密碼", cpNew: "新密碼",
+    cpConfirm: "確認新密碼", cpShow: "顯示密碼", cpSubmit: "更新密碼",
+    cpHint: "至少 8 個字元。你會在此裝置保持登入，其他裝置會被登出。",
+    cpErrCurrent: "請輸入目前密碼。", cpErrShort: "請使用至少 8 個字元。",
+    cpErrMatch: "兩次輸入的新密碼不一致。", cpErrSame: "新密碼不可與目前密碼相同。",
+    cpErrWrong: "目前密碼不正確。", cpErrBuiltin: "預設管理員的密碼由伺服器設定管理。",
+    cpDone: "密碼已更新。", cpDoneOthers: "密碼已更新，另有 {n} 個登入工作階段已被登出。"
+  },
+  "zh-CN": {
+    cpMenu: "修改密码", cpTitle: "修改密码", cpCurrent: "当前密码", cpNew: "新密码",
+    cpConfirm: "确认新密码", cpShow: "显示密码", cpSubmit: "更新密码",
+    cpHint: "至少 8 个字符。你会在此设备保持登录，其他设备会被退出。",
+    cpErrCurrent: "请输入当前密码。", cpErrShort: "请使用至少 8 个字符。",
+    cpErrMatch: "两次输入的新密码不一致。", cpErrSame: "新密码不能与当前密码相同。",
+    cpErrWrong: "当前密码不正确。", cpErrBuiltin: "默认管理员的密码由服务器设置管理。",
+    cpDone: "密码已更新。", cpDoneOthers: "密码已更新，另有 {n} 个登录会话已被退出。"
+  }
+};
+Object.keys(uiTranslationsV11).forEach(lang => {
+  if (uiTranslations[lang]) Object.assign(uiTranslations[lang], uiTranslationsV11[lang]);
+});
+
+/** Client-side checks before calling the server (same rules). Returns an i18n key or null. Pure. */
+const changePasswordError = (current, next, confirm) => {
+  if (!current) return "cpErrCurrent";
+  if (next.length < 8) return "cpErrShort";
+  if (next !== confirm) return "cpErrMatch";
+  if (next === current) return "cpErrSame";
+  return null;
+};
+
+function openChangePassword() {
+  const modal = document.getElementById("changePasswordModal");
+  const form = document.getElementById("formChangePassword");
+  if (!modal || !form) return;
+  form.reset();
+  document.getElementById("cpUsername").value = appState.userEmail || "";
+  ["cpCurrent", "cpNew", "cpConfirm"].forEach(id => { document.getElementById(id).type = "password"; });
+  document.getElementById("cpResult").hidden = true;
+  modal.classList.add("active");
+  setTimeout(() => document.getElementById("cpCurrent").focus(), 50);
+}
+
+function closeChangePassword() {
+  document.getElementById("changePasswordModal")?.classList.remove("active");
+}
+
+function bindChangePassword() {
+  const form = document.getElementById("formChangePassword");
+  if (!form || form.dataset.bound) return;
+  form.dataset.bound = "1";
+  document.getElementById("btnUserChangePassword")?.addEventListener("click", openChangePassword);
+  document.getElementById("btnAdminChangePassword")?.addEventListener("click", openChangePassword);
+  document.getElementById("cpClose").addEventListener("click", closeChangePassword);
+  document.getElementById("cpCancel").addEventListener("click", closeChangePassword);
+  const modal = document.getElementById("changePasswordModal");
+  modal.addEventListener("click", (e) => { if (e.target === modal) closeChangePassword(); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && modal.classList.contains("active")) closeChangePassword(); });
+  document.getElementById("cpShow").addEventListener("change", (e) => {
+    ["cpCurrent", "cpNew", "cpConfirm"].forEach(id => { document.getElementById(id).type = e.target.checked ? "text" : "password"; });
+  });
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const t = tr();
+    const result = document.getElementById("cpResult");
+    const current = document.getElementById("cpCurrent").value;
+    const next = document.getElementById("cpNew").value;
+    const errKey = changePasswordError(current, next, document.getElementById("cpConfirm").value);
+    if (errKey) { showInline(result, escapeHtml(t[errKey]), "error"); return; }
+    const btn = document.getElementById("cpSubmit");
+    btn.disabled = true;
+    const { ok, data } = await apiJson("/api/auth/change-password", { method: "POST", body: { currentPassword: current, newPassword: next } });
+    btn.disabled = false;
+    if (!ok) {
+      const byCode = { current_required: "cpErrCurrent", too_short: "cpErrShort", same: "cpErrSame", wrong_current: "cpErrWrong", builtin_admin: "cpErrBuiltin" };
+      showInline(result, escapeHtml(byCode[data.code] ? t[byCode[data.code]] : errText(data)), "error");
+      if (data.code === "wrong_current") document.getElementById("cpCurrent").select();
+      return;
+    }
+    closeChangePassword();
+    showToast(data.signedOutOthers ? fmt(t.cpDoneOthers, { n: data.signedOutOthers }) : t.cpDone, "success");
   });
 }

@@ -183,6 +183,9 @@
             <button class="avatar-menu-item" id="btnBackToAdminDash" role="menuitem" hidden>
               <span class="material-symbols-outlined">admin_panel_settings</span><span data-i18n="goAdminPortal">Admin portal</span>
             </button>
+            <button class="avatar-menu-item" id="btnUserChangePassword" role="menuitem">
+              <span class="material-symbols-outlined">key</span><span data-i18n="cpMenu">Change password</span>
+            </button>
             <button class="avatar-menu-item" id="btnUserTips" role="menuitem">
               <span class="material-symbols-outlined">tips_and_updates</span><span data-i18n="tourShowTips">Show tips</span>
             </button>
@@ -348,6 +351,9 @@
             </div>
             <button class="avatar-menu-item" id="btnAdminBackToPortal" role="menuitem">
               <span class="material-symbols-outlined">grid_view</span><span id="btnAdminBackToPortalText">Learning portal</span>
+            </button>
+            <button class="avatar-menu-item" id="btnAdminChangePassword" role="menuitem" hidden>
+              <span class="material-symbols-outlined">key</span><span data-i18n="cpMenu">Change password</span>
             </button>
             <button class="avatar-menu-item" id="btnAdminTips" role="menuitem">
               <span class="material-symbols-outlined">tips_and_updates</span><span data-i18n="tourShowTips">Show tips</span>
@@ -1191,6 +1197,44 @@
   </div>
 
   <!-- PREMIUM FLOATING FEEDBACK BUTTON -->
+  <!-- Change password (signed-in users and invited admins) -->
+  <div class="modal-overlay" id="changePasswordModal" aria-modal="true" role="dialog" aria-labelledby="cpTitle" style="z-index: 2010;">
+    <div class="modal-content-card cp-card">
+      <div class="modal-header">
+        <div class="modal-header-left feedback-modal-heading">
+          <span class="material-symbols-outlined feedback-modal-icon" aria-hidden="true">key</span>
+          <h3 class="modal-title" id="cpTitle" data-i18n="cpTitle">Change password</h3>
+        </div>
+        <button type="button" class="close-btn" id="cpClose" aria-label="Close" data-i18n-aria="closeLabel"><span class="material-symbols-outlined">close</span></button>
+      </div>
+      <form id="formChangePassword" class="settings-form" novalidate autocomplete="on">
+        <input type="text" id="cpUsername" autocomplete="username" hidden>
+        <div class="form-group">
+          <label class="form-label" for="cpCurrent" data-i18n="cpCurrent">Current password</label>
+          <input type="password" class="select-control" id="cpCurrent" autocomplete="current-password" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="cpNew" data-i18n="cpNew">New password</label>
+          <input type="password" class="select-control" id="cpNew" autocomplete="new-password" minlength="8" required>
+          <p class="field-hint" data-i18n="cpHint">At least 8 characters. You'll stay signed in here; other devices are signed out.</p>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="cpConfirm" data-i18n="cpConfirm">Confirm new password</label>
+          <input type="password" class="select-control" id="cpConfirm" autocomplete="new-password" required>
+        </div>
+        <label class="check-row"><input type="checkbox" id="cpShow"><span data-i18n="cpShow">Show passwords</span></label>
+        <div id="cpResult" class="inline-feedback" hidden></div>
+        <div class="settings-footer">
+          <span></span>
+          <div class="cal-footer-actions">
+            <button type="button" class="nav-button" id="cpCancel" data-i18n="cancel">Cancel</button>
+            <button type="submit" class="nav-button nav-button-primary" id="cpSubmit" data-i18n="cpSubmit">Update password</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- First-login tips (overlay tour), rendered by runTour() in app.js -->
   <div class="tour-overlay" id="tourOverlay" hidden>
     <div class="tour-spotlight" id="tourSpotlight" aria-hidden="true"></div>

@@ -126,6 +126,11 @@ graph TD
 
 ## 7. App State & Progress
  
+##### Accomplished Tasks (Latest Session Milestone — 2026-11-16, change password)
+* **Change password:** account menu item (`#btnUserChangePassword` for standard users, `#btnAdminChangePassword` for invited DB admins only) opens `#changePasswordModal` (current / new / confirm, show passwords). `POST /api/auth/change-password` checks the current password with bcrypt, requires ≥ 8 characters and a different password, updates `users` or `admins`, and deletes the account's other rows in `sessions` (the current session stays). Default admins get 403 `builtin_admin`.
+* **Hardening:** `POST /api/auth/reset-password` (first-login "set your password") now only works while `isTemp` is true; it used to accept any signed-in session without the current password.
+* **i18n:** `uiTranslationsV11`.
+
 ##### Accomplished Tasks (Latest Session Milestone — 2026-11-16, Idea Leaderboard)
 * **User Leaderboard:** trophy button in the user topbar (`#btnLeaderboard`) toggles `#leaderboardView` (hides `#playbooksView` and the Quest strip). Podium (top 3, places 2-1-3), "Your standing" with points to the next rank, runners-up to #10, most liked / most viewed playbooks with bars and "Idea by" credits, period pills (1m / 3m / 6m / all), "Suggest an idea" (opens Feedback), "How points work". A teaser line under the headline (`#lbTeaser`) shows the viewer's rank or the leader.
 * **Scoring (`lib/leaderboard.js`, pure):** idea 2 (feedback that passes `IdeaQuality.assessFeedback`), playbook credited 20, like 5, 1 per 10 views; ties break on playbooks, likes, views, ideas, name, so ranks are always 1, 2, 3...; users see the part before "@" (plus "(domain label)" when two short names clash).

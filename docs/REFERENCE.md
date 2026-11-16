@@ -321,6 +321,8 @@ All endpoints return JSON and use the session cookie. "User" means a signed-in s
 | `POST /api/auth/login` | Public | Sign in (user email or admin username) |
 | `POST /api/auth/reset-password` | User | Replace a temporary password |
 | `GET /api/auth/session` | Public | Current session, role and categories |
+| `POST /api/auth/change-password` | Signed in (standard users, invited DB admins) | `{ currentPassword, newPassword }`: checks the current password, new one ≥ 8 characters and different; signs the account out of its other sessions. 400 `code`: `current_required` / `too_short` / `same` / `wrong_current`; 403 `builtin_admin` for the default admins (passwords from Secret Manager) |
+| `POST /api/auth/reset-password` | Signed in, temporary password only | First sign-in: set a password without the current one (403 once the password is no longer temporary) |
 | `POST /api/auth/forgot-password` | Public | Email a reset link (verified DB admins) |
 | `POST /api/auth/complete-token` | Public | Finish `?verify=` / `?reset=` and set a password |
 | `POST /api/auth/logout` | Any | End the session |

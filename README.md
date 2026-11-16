@@ -16,8 +16,9 @@ A playbook library that helps schools and universities **actually use Gemini Ent
 3. [For admins: from idea to playbook](#-for-admins-from-idea-to-playbook)
 4. [What's in the library](#-whats-in-the-library)
 5. [What makes a good playbook](#-what-makes-a-good-playbook)
-6. [Run and deploy](#-run-and-deploy)
-7. [Estimated monthly cost](#-estimated-monthly-cost)
+6. [Meet Archie](#-meet-archie)
+7. [Run and deploy](#-run-and-deploy)
+8. [Estimated monthly cost](#-estimated-monthly-cost)
 
 Technical details (data model, API, environment variables, Terraform) are in [docs/REFERENCE.md](docs/REFERENCE.md). Self-hosting and the full cost breakdown are in [docs/HANDBOOK.md](docs/HANDBOOK.md).
 
@@ -54,6 +55,8 @@ The first time someone signs in, five tips walk them through the portal: filters
 | Tip 1: find the right playbook | Tip 3: fill in, then Try it |
 | :---: | :---: |
 | ![User tour, tip 1](docs/images/02-tour-user.jpg) | ![User tour, tip 3 opens a real playbook](docs/images/03-tour-user-playbook.jpg) |
+
+People sign in with the email and temporary password their admin sends, set their own password on first sign-in, and can change it any time from the account menu (**Change password**: current password, new password of at least 8 characters; other devices are signed out).
 
 ### 2. Open a playbook
 Every playbook has the same shape: an infographic and summary, the **variables** to fill in once, and three steps (**set up**, **run the prompt**, **review and share**). Set up prompts help people prepare what they need (a rubric, a sample, a template). The **Quest Run** strip on the home page suggests playbooks that fit the current point of the academic year.
@@ -179,6 +182,38 @@ These rules are built into the drafting prompt, so Gemini's drafts follow them t
 * **Fits the real product:** Skills are generic (details come in the request) and can't hold files from the editor; a workflow's knowledge files are added to its steps after Workflow Builder has built the flow.
 * **Easy to customise:** `{{VARIABLES}}` only in prompts, plain words in the steps.
 * **Consistent language:** product names stay in English in every language; never "Gem" or "Copilot".
+
+---
+
+## 🎓 Meet Archie
+
+![Archie from the front, three-quarter and side](docs/images/archie-character-sheet.jpg)
+
+**Archie** (short for *Archimedes*) is the raven who keeps watch over the portal. He flies through the Quest Run strip, carries the news scrolls and appears in every playbook's infographic. The character sheet above (front, three-quarter and side views) is the reference the image model uses to keep him on-model in every infographic; in the Quest Run he flies as a pixel sprite:
+
+![Archie's four-frame pixel flight sprite](docs/images/archie-pixel-sprite.png)
+
+> He was born in the snow,
+> a single drop of ink on a field of white,
+> and from his first cold morning he was hungry,
+> not for bread, but for knowing.
+>
+> He read the frost-script on the windows,
+> counted the stars through winter branches,
+> and asked the wind for every word it carried.
+> Book after book, page after page,
+> the knowledge of whole libraries poured into him,
+> until something deep inside began to change.
+>
+> Now one eye shines like a star,
+> a small bright spark of all he has learned,
+> and he wears the square cap of a doctor,
+> its golden tassel swaying as he flies.
+>
+> He is still that curious bird from the snow.
+> He just carries his light to others now,
+> landing wherever someone wonders *how*,
+> and leaving them a little brighter than he found them.
 
 ---
 
