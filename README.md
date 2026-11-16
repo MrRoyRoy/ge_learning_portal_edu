@@ -12,7 +12,7 @@ A playbook library that helps schools and universities **actually use Gemini Ent
 
 ## 📖 Contents
 1. [The idea in one picture](#-the-idea-in-one-picture)
-2. [For users: find, try, suggest](#-for-users-find-try-suggest)
+2. [For users: find, try, suggest, compete](#-for-users-find-try-suggest-compete)
 3. [For admins: from idea to playbook](#-for-admins-from-idea-to-playbook)
 4. [What's in the library](#-whats-in-the-library)
 5. [What makes a good playbook](#-what-makes-a-good-playbook)
@@ -34,17 +34,19 @@ flowchart LR
   C --> D["💬 Suggests a new idea<br/>(Feedback)"]
   D --> E["🛡️ Super admin converts it:<br/>similar-playbook check,<br/>Gemini draft, review"]
   E --> F["✨ New playbook,<br/>credited to the user"]
-  F --> A
+  F --> G["🏆 Points on the<br/>Idea Leaderboard"]
+  G --> A
 ```
 
 Three ideas run through everything:
 * **Right playbooks for the right people.** Each account and each playbook has categories (Teaching, Research, Leadership, Student Affairs, Finance, Security, IT, Students). People only see what matches their work.
 * **One click from idea to Gemini.** Variables are filled once; **Try it** opens Gemini Enterprise in the browser the user is already signed in to.
+* **Contributing is a game.** Ideas, the playbooks they become, and the likes and views those playbooks get all earn points on a public **Idea Leaderboard**.
 * **Humans stay in charge.** Gemini drafts playbooks, but an admin reviews every one, and every playbook keeps a person in the loop before anything reaches students.
 
 ---
 
-## 👩‍🎓 For users: find, try, suggest
+## 👩‍🎓 For users: find, try, suggest, compete
 
 ### 1. First sign-in: a short tour
 The first time someone signs in, five tips walk them through the portal: filters, playbook cards, Try it, the Quest Run strip and Feedback. They can replay the tips any time from the account menu (**Show tips**).
@@ -58,9 +60,13 @@ Every playbook has the same shape: an infographic and summary, the **variables**
 
 ![A playbook](docs/images/04-playbook.jpg)
 
-### 3. Try it
-* **Chat, Canvas, Image and Video prompts** open in Gemini Enterprise with the prompt already filled in.
-* **Workflow Builder, Skills, Deep Research and Gemini Notebook** can't be prefilled from a link (Gemini Enterprise documents no deep links into them). Try it copies the prompt, opens Gemini Enterprise and shows exactly where to paste it.
+### 3. Try it: straight into Gemini Enterprise
+No copying between tabs. The variables the user filled in are already inside the prompt (the green chips), and **Try it** sends that finished prompt to **their own Gemini Enterprise app**, in the browser where they're already signed in.
+
+![Try it sends the filled-in prompt to Gemini Enterprise](docs/images/16-try-it-chat.jpg)
+
+* **Chat, Canvas, Image and Video prompts** open in Gemini Enterprise **with the prompt already in the chat box**: press Enter and it runs. Each user's own app link is set by an admin, so it always opens the right Gemini Enterprise.
+* **Workflow Builder, Skills, Deep Research and Gemini Notebook** can't be prefilled from a link (Gemini Enterprise documents no deep links into them). Try it copies the prompt, opens Gemini Enterprise and shows exactly where to paste it, so it's still one paste away.
 
 ![Try it shows where to paste a Skill](docs/images/05-try-it-guide.jpg)
 
@@ -68,6 +74,26 @@ Every playbook has the same shape: an infographic and summary, the **variables**
 The **Feedback** button takes ideas as well as bugs. A short hint asks for who it's for, the task and what Gemini should produce, and empty or vague notes ("great, thanks!") are gently rejected so admins get ideas they can act on.
 
 ![Sharing an idea](docs/images/06-feedback.jpg)
+
+### 5. Climb the Idea Leaderboard
+Every contribution counts. Contributors earn points for each idea they submit, more when an idea becomes a playbook credited to them, and more again for every like and view that playbook gets. The **Leaderboard** (the trophy at the top) shows:
+* a **podium** for the top three contributors and the rest of the top ten;
+* **your standing**: your rank, your points and how many more you need to move up;
+* the **most liked** and **most viewed** playbooks, with "Idea by …" credits;
+* this month, the last 3 or 6 months, or all time.
+
+A line above the playbook grid keeps it in view ("You're #2 on the Idea Leaderboard with 27 pts"), and **Suggest an idea** is one click away. Users see short names (the part before "@"), never full email addresses.
+
+![Idea Leaderboard](docs/images/14-leaderboard.jpg)
+
+![The leaderboard line above the playbooks](docs/images/15-leaderboard-teaser.jpg)
+
+| Action | Points |
+| :--- | ---: |
+| Submit an idea | 2 |
+| Your idea becomes a playbook | 20 |
+| Each like on your playbooks | 5 |
+| Every 10 views of your playbooks | 1 |
 
 ---
 
@@ -101,6 +127,11 @@ Admins have their own console (Users · Analytics · Use cases · Feedback · Ne
 
 The same Gemini drafting is used when an admin creates a playbook from scratch or improves an existing one, so every path follows the same rules.
 
+### Watch the competition
+**Analytics** has the same podium and boards with full email addresses, plus totals for community playbooks, idea providers and converted feedback, so admins can see who drives adoption and recognise them.
+
+![Idea providers in Analytics](docs/images/17-admin-leaderboard.jpg)
+
 ### Tune how Gemini drafts
 Super admins can edit the **playbook drafting prompt** in **Settings**: the design steps, the feature guide and the writing conventions Gemini follows. A saved change applies to the next draft; **Reset to default** restores the built-in version.
 
@@ -108,7 +139,7 @@ Super admins can edit the **playbook drafting prompt** in **Settings**: the desi
 
 ### Everything else in the console
 * **Users:** add people by email (temporary password on first sign-in), tick their categories, set each person's Gemini Enterprise link for Try it. Super admins invite other admins (super or assistant).
-* **Analytics:** views, likes and Try it launches over time, and an idea-provider leaderboard.
+* **Analytics:** views, likes and Try it launches over time, and the idea-provider podium.
 * **Use cases:** create, edit, import / export playbooks; generate infographics.
 * **News:** announcements that Archie delivers in the Quest Run strip.
 * **Settings:** email (SMTP), the academic calendar and the drafting prompt.

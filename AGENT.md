@@ -126,6 +126,13 @@ graph TD
 
 ## 7. App State & Progress
  
+##### Accomplished Tasks (Latest Session Milestone — 2026-11-16, Idea Leaderboard)
+* **User Leaderboard:** trophy button in the user topbar (`#btnLeaderboard`) toggles `#leaderboardView` (hides `#playbooksView` and the Quest strip). Podium (top 3, places 2-1-3), "Your standing" with points to the next rank, runners-up to #10, most liked / most viewed playbooks with bars and "Idea by" credits, period pills (1m / 3m / 6m / all), "Suggest an idea" (opens Feedback), "How points work". A teaser line under the headline (`#lbTeaser`) shows the viewer's rank or the leader.
+* **Scoring (`lib/leaderboard.js`, pure):** idea 2 (feedback that passes `IdeaQuality.assessFeedback`), playbook credited 20, like 5, 1 per 10 views; ties break on playbooks, likes, views, ideas, name, so ranks are always 1, 2, 3...; users see the part before "@" (plus "(domain label)" when two short names clash).
+* **API:** `GET /api/leaderboard` (any signed-in account; admins `full=1`). Admin Analytics renders the same body (`leaderboardBodyHtml(data, t, { admin: true })`) in `#adminLeaderboard` instead of the old three lists + "Top community playbooks" table (which mislabelled default playbooks).
+* **i18n:** `uiTranslationsV10`. Tour tip 5 now mentions the Leaderboard.
+* **Dev demo data:** dev has 3 dummy accounts (ge-staff@cloudu.com.hk, ge-staff@mastermind.edu, ge-student@cloudu.com.hk, password 12345678) whose ideas were converted into 3 credited playbooks with a few likes / views, used for the README screenshots (docs/images 01-17).
+
 ##### Accomplished Tasks (Latest Session Milestone — 2026-11-01, Try it for every prompt type + Agent Designer → Workflow Builder)
 * **Try it everywhere:** `promptActions()` gives every type Copy + Try it. General / Canvas / Image / Video keep the `?q=` prefill. Workflow Builder (chat agent or workflow, detected by a "STEP 1 · TRIGGER" line), Skills, Deep Research and Gemini Notebook copy the prompt, open the user's GE app home (`geAppHome`) and show a `.try-guide` box with the clicks (`t.tryGuide.*`, en / zh-TW / zh-CN). Checked on 2026-11-01: the GE docs list no deep links or URL parameters for these features (`?q=` itself is undocumented), and Skills / agents are invoked in chat with `@name` (Skills also `/name`).
 * **Rename:** "Agent Designer" → "Workflow Builder" in UI, seeds, zh JSON, draft guide, README. `PRODUCT_RENAMES` rewrites DB-only rows on boot; `renameLegacyProducts` / `LEGACY_NAMES` / `normalizePromptType('Workflow Builder') → agent_designer` handle Gemini drafts. Workflow seed steps now say "Workflow Builder (Agents → Create agent), paste the prompt into Describe your agent".

@@ -160,6 +160,9 @@
       </div>
 
       <div class="topbar-actions">
+        <button type="button" class="nav-button btn-leaderboard" id="btnLeaderboard" aria-pressed="false">
+          <span class="material-symbols-outlined" aria-hidden="true">emoji_events</span><span class="btn-leaderboard-label" data-i18n="lbNavLabel">Leaderboard</span>
+        </button>
         <button class="icon-btn" id="btnThemeToggle" aria-label="Toggle theme" data-i18n-aria="themeToggle">
           <span class="material-symbols-outlined" id="themeIcon">dark_mode</span>
         </button>
@@ -252,6 +255,8 @@
         <div id="playbooksView">
           <div class="results-head">
             <h1 class="welcome-msg" id="welcomeMsg">Playbooks</h1>
+            <!-- Idea Leaderboard teaser: the viewer's rank / a nudge, filled by renderLeaderboardTeaser() -->
+            <button type="button" class="lb-teaser" id="lbTeaser" hidden></button>
           </div>
 
           <!-- Filter bar: native selects styled as pills -->
@@ -284,6 +289,9 @@
           <!-- Flat card grid, rendered by app.js -->
           <section class="cards-grid" id="useCasesContainer" aria-live="polite"></section>
         </div>
+
+        <!-- Idea Leaderboard (user portal), rendered by renderLeaderboard() -->
+        <section class="lb-view" id="leaderboardView" aria-labelledby="lbViewTitle" hidden></section>
       </article>
     </main>
   </div>
@@ -494,23 +502,8 @@
             <div class="stat-card-mini"><div class="stat-label" data-i18n="creatorSumConverted">Feedback converted</div><div class="stat-value" id="creatorSumConverted">0</div></div>
             <div class="stat-card-mini"><div class="stat-label" data-i18n="creatorSumDefault">Default playbooks</div><div class="stat-value" id="creatorSumDefault">0</div></div>
           </div>
-          <div class="leaderboard-grid">
-            <div class="leaderboard-col"><h3 class="leaderboard-title" data-i18n="lbProviders">Most playbooks provided</h3><ol class="leaderboard" id="lbProviders"></ol></div>
-            <div class="leaderboard-col"><h3 class="leaderboard-title" data-i18n="lbViews">Most viewed ideas</h3><ol class="leaderboard" id="lbViews"></ol></div>
-            <div class="leaderboard-col"><h3 class="leaderboard-title" data-i18n="lbLikes">Most liked ideas</h3><ol class="leaderboard" id="lbLikes"></ol></div>
-          </div>
-          <h3 class="leaderboard-title" data-i18n="lbTopCases">Top community playbooks</h3>
-          <div class="table-wrap">
-            <table class="data-table">
-              <thead><tr>
-                <th data-i18n="lbColPlaybook">Playbook</th>
-                <th data-i18n="adminCrudThCreator">Idea provider</th>
-                <th data-i18n="lbColViews">Views</th>
-                <th data-i18n="lbColLikes">Likes</th>
-              </tr></thead>
-              <tbody id="lbTopCases"></tbody>
-            </table>
-          </div>
+          <!-- Same podium + boards as the user Leaderboard, with full names (renderLeaderboard admin mode) -->
+          <div id="adminLeaderboard"></div>
         </div>
 
         <div class="panel">

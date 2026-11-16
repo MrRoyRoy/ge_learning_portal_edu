@@ -336,7 +336,8 @@ All endpoints return JSON and use the session cookie. "User" means a signed-in s
 | `GET/POST/DELETE /api/admin/admins` · `POST /api/admin/admins/resend` | Super | List all admins (default accounts first) · invite · remove · resend invites |
 | `PUT /api/admin/admins/builtin` | Super | Enable / disable a default admin (`{ username, disabled }`); rejected if it would leave no active super admin or targets yourself |
 | `GET /api/admin/stats` | Admin | Totals and 6-month history (views / likes / tries) |
-| `GET /api/admin/stats/creators?range=all\|1m\|3m\|6m` | Admin | Idea provider summary and leaderboards (playbooks, views, likes) |
+| `GET /api/admin/stats/creators?range=all\|1m\|3m\|6m` | Admin | Idea provider summary tiles (the podium uses `/api/leaderboard?full=1`) |
+| `GET /api/leaderboard?range=all\|1m\|3m\|6m[&full=1]` | Signed in | Idea Leaderboard: ranked contributors with points (`lib/leaderboard.js`: idea 2, playbook 20, like 5, 1 per 10 views; ideas must pass the quality gate), the viewer's standing (`me`: rank, points, `toNext`, `nextRank`), most liked / viewed playbooks. Users get short names (part before "@", plus the domain label when two clash); admins can ask for `full=1` |
 | `POST/PUT/DELETE /api/admin/use-cases` · `GET /api/admin/use-cases/export` | Super · Admin | Edit · export playbooks |
 | `POST /api/admin/use-cases/:id/infographic` · `POST /api/admin/infographics/generate-missing` | Super | Generate infographics |
 | `GET/PUT /api/admin/settings/smtp` · `POST /api/admin/settings/smtp/test` | Super | SMTP settings and test send |

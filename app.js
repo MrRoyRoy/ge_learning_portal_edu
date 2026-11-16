@@ -2449,6 +2449,12 @@ function updateUILanguage() {
   renderCategoryFilterOptions();
   refreshCategoryChecklistLabels();
 
+  // Idea Leaderboard text follows the language too
+  if (typeof leaderboardState !== "undefined") {
+    renderLeaderboardTeaser();
+    if (leaderboardState.open) renderLeaderboard();
+  }
+
   // Update the avatar-menu context line and document title immediately
   updateSidebarContextUI();
 
@@ -2883,6 +2889,7 @@ async function initApp() {
   bindAvatarMenu("userAvatarBtn", "userAvatarMenu");
   bindAvatarMenu("adminAvatarBtn", "adminAvatarMenu");
   bindTourButtons();
+  bindLeaderboard();
   setupForgotPasswordHandlers();
   bindUserEditModal();
 
@@ -2955,6 +2962,7 @@ async function initApp() {
             await loadUseCasesFromServer();
             renderUseCases();
             mountQuestRun();
+            refreshLeaderboardTeaser();
           } else {
             document.getElementById("appLayout").style.display = "none";
             document.getElementById("adminPortal").style.display = "block";
@@ -3133,6 +3141,7 @@ async function enterUserPortal() {
   await loadUseCasesFromServer();
   renderUseCases();
   mountQuestRun();
+  refreshLeaderboardTeaser();
   maybeStartTour("user");
 }
 
@@ -3476,43 +3485,28 @@ async function loadAdminStats() {
   }
 }
 
-/** Ordered leaderboard items -> <li> markup. `unit` formats the count (e.g. "{n} views"). Pure. */
-const leaderboardHtml = (items, unit, emptyText) => (items && items.length)
-  ? items.map((it, i) => `
-      <li class="lb-item">
-        <span class="lb-rank" data-rank="${i + 1}">${i + 1}</span>
-        <span class="lb-name" title="${escapeHtml(it.creator)}">${escapeHtml(it.creator)}</span>
-        <span class="lb-count">${escapeHtml(fmt(unit, { n: Number(it.count) || 0 }))}</span>
-      </li>`).join("")
-  : `<li class="lb-empty">${escapeHtml(emptyText)}</li>`;
-
 /**
- * Idea provider dashboard. `range` is all | 1m | 3m | 6m; the server windows playbook creation
- * dates (providers) and view / like events (views, likes). Default playbooks (no creator) are excluded.
+ * Idea provider dashboard (admin Analytics). `range` is all | 1m | 3m | 6m. Summary tiles come from
+ * /api/admin/stats/creators; the podium and playbook boards are the same component users see on the
+ * Leaderboard, with full names (/api/leaderboard?full=1).
  */
 async function loadCreatorStats(range = "all") {
-  const t = tr();
-  const { ok, data } = await apiJson(`/api/admin/stats/creators?range=${encodeURIComponent(range)}`);
+  const [{ ok, data }, board] = await Promise.all([
+    apiJson(`/api/admin/stats/creators?range=${encodeURIComponent(range)}`),
+    apiJson(`/api/leaderboard?range=${encodeURIComponent(range)}&full=1`)
+  ]);
   const setNum = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = Number(v) || 0; };
-  const setHtml = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
-  if (!ok) { setHtml("lbProviders", `<li class="lb-empty is-error">${escapeHtml(errText(data))}</li>`); return; }
-  const sum = data.summary || {};
-  setNum("creatorSumCommunity", sum.communityPlaybooks);
-  setNum("creatorSumCreators", sum.creators);
-  setNum("creatorSumConverted", sum.convertedFeedbacks);
-  setNum("creatorSumDefault", sum.defaultPlaybooks);
-  setHtml("lbProviders", leaderboardHtml(data.providers, t.lbUnitPlaybooks, t.lbEmpty));
-  setHtml("lbViews", leaderboardHtml(data.views, t.lbUnitViews, t.lbEmpty));
-  setHtml("lbLikes", leaderboardHtml(data.likes, t.lbUnitLikes, t.lbEmpty));
-  const top = data.topCases || [];
-  setHtml("lbTopCases", top.length
-    ? top.map(c => `<tr>
-        <td class="cell-strong">${escapeHtml(c.title)}</td>
-        <td>${escapeHtml(c.creator || "")}</td>
-        <td>${Number(c.views) || 0}</td>
-        <td>${Number(c.likes) || 0}</td>
-      </tr>`).join("")
-    : `<tr><td colspan="4" class="table-empty">${escapeHtml(t.lbEmpty)}</td></tr>`);
+  if (ok) {
+    const sum = data.summary || {};
+    setNum("creatorSumCommunity", sum.communityPlaybooks);
+    setNum("creatorSumCreators", sum.creators);
+    setNum("creatorSumConverted", sum.convertedFeedbacks);
+    setNum("creatorSumDefault", sum.defaultPlaybooks);
+  }
+  const el = document.getElementById("adminLeaderboard");
+  if (!el) return;
+  if (!board.ok) { el.innerHTML = `<p class="lb-empty is-error">${escapeHtml(errText(board.data))}</p>`; return; }
+  el.innerHTML = leaderboardBodyHtml(board.data, tr(), { admin: true });
 }
 
 // Render dynamic minimalist high-contrast SVG trend graph
@@ -4688,6 +4682,7 @@ window.handleFeedbackSubmit = async function(event) {
     const data = await res.json();
     if (data.success) {
       showToast(tr().feedbackThanks);
+      refreshLeaderboardTeaser();
       const modal = document.getElementById("feedbackSubmissionModal");
       if (modal) {
         modal.classList.remove("active");
@@ -7837,7 +7832,7 @@ function enterLearningPortalPreview() {
   updateAccountMenus();
   updateSidebarContextUI();
   updateUILanguage();
-  loadUseCasesFromServer().then(() => { renderUseCases(); mountQuestRun(); });
+  loadUseCasesFromServer().then(() => { renderUseCases(); mountQuestRun(); refreshLeaderboardTeaser(); });
 }
 
 // ---------------------------------------------------------------------------
@@ -9640,7 +9635,7 @@ const uiTranslationsV9 = {
       { title: "Open a playbook", body: "Each card shows the GE features and connectors it uses. Open it for the steps, the Set up prompts and the sample prompt. Tap the heart to save it to Liked." },
       { title: "Fill in, then Copy or Try it", body: "Fill in the variables once and they appear in every prompt. Try it opens Gemini Enterprise: chat prompts arrive ready to send; for Workflow Builder, Skills, Deep Research and Gemini Notebook the prompt is copied and the steps to paste it appear here." },
       { title: "Quest Run tips", body: "Archie suggests playbooks that fit this point of the academic year. Open the scroll icon for news from your team." },
-      { title: "Share an idea", body: "Tell us what's missing. Good ideas become playbooks credited to you. You can replay these tips from your account menu." }
+      { title: "Share an idea, climb the board", body: "Tell us what's missing. Good ideas become playbooks credited to you and earn points on the Leaderboard (the trophy at the top). You can replay these tips from your account menu." }
     ],
     tourAdmin: [
       { title: "Your admin console", body: "Switch between Users, Analytics, Use cases, Feedback, News and Settings. What you can change depends on your admin role." },
@@ -9683,7 +9678,7 @@ const uiTranslationsV9 = {
       { title: "打開 Playbook", body: "每張卡片都會顯示所用的 GE 功能及連接器。打開後可看到步驟、設定提示詞及範例提示詞。按心形即可加入「已讚好」。" },
       { title: "填寫變數，然後複製或試用", body: "變數只需填寫一次，便會套用到所有提示詞。「試用」會開啟 Gemini Enterprise：一般對話提示詞會直接填好；Workflow Builder、Skills、Deep Research 及 Gemini Notebook 的提示詞會先複製，並在這裡顯示貼上步驟。" },
       { title: "Quest Run 提示", body: "Archie 會按學年當前階段推薦合適的 Playbook。按卷軸圖示可查看團隊的最新消息。" },
-      { title: "分享構想", body: "告訴我們還缺少甚麼。好的構想會變成 Playbook，並註明你的貢獻。你可隨時在帳戶選單重看這些提示。" }
+      { title: "分享構想，登上排行榜", body: "告訴我們還缺少甚麼。好的構想會變成 Playbook，註明你的貢獻，並在排行榜（頂部的獎盃）為你加分。你可隨時在帳戶選單重看這些提示。" }
     ],
     tourAdmin: [
       { title: "你的管理控制台", body: "在使用者、分析、使用案例、意見回饋、消息及設定之間切換。你可更改的內容取決於你的管理員角色。" },
@@ -9726,7 +9721,7 @@ const uiTranslationsV9 = {
       { title: "打开 Playbook", body: "每张卡片都会显示所用的 GE 功能及连接器。打开后可看到步骤、设置提示词及示例提示词。点击心形即可加入“已点赞”。" },
       { title: "填写变量，然后复制或试用", body: "变量只需填写一次，便会应用到所有提示词。“试用”会打开 Gemini Enterprise：一般对话提示词会直接填好；Workflow Builder、Skills、Deep Research 及 Gemini Notebook 的提示词会先复制，并在这里显示粘贴步骤。" },
       { title: "Quest Run 提示", body: "Archie 会按学年当前阶段推荐合适的 Playbook。点击卷轴图标可查看团队的最新消息。" },
-      { title: "分享创意", body: "告诉我们还缺少什么。好的创意会变成 Playbook，并注明你的贡献。你可随时在账户菜单重看这些提示。" }
+      { title: "分享创意，登上排行榜", body: "告诉我们还缺少什么。好的创意会变成 Playbook，注明你的贡献，并在排行榜（顶部的奖杯）为你加分。你可随时在账户菜单重看这些提示。" }
     ],
     tourAdmin: [
       { title: "你的管理控制台", body: "在用户、分析、使用案例、意见反馈、消息及设置之间切换。你可更改的内容取决于你的管理员角色。" },
@@ -9955,4 +9950,313 @@ async function loadDraftPromptSettings() {
   draftPromptState.loaded = data;
   document.getElementById("draftPromptText").value = data.text || "";
   renderDraftPromptStatus();
+}
+
+// ===========================================================================
+// v10: Idea Leaderboard (user portal view, teaser above the grid, admin Analytics podium)
+// ===========================================================================
+const uiTranslationsV10 = {
+  en: {
+    lbNavLabel: "Leaderboard",
+    lbViewTitle: "Idea Leaderboard",
+    lbViewDesc: "Suggest ideas, see them become playbooks, and climb the board. Every idea, playbook, like and view earns points.",
+    lbBack: "Back to playbooks",
+    lbSuggest: "Suggest an idea",
+    lbRange: { "1m": "This month", "3m": "3 months", "6m": "6 months", all: "All time" },
+    lbPts: "{n} pts",
+    lbStatIdeas: "{n} ideas", lbStatPlaybooks: "{n} playbooks", lbStatLikes: "{n} likes", lbStatViews: "{n} views",
+    lbStatIdeasOne: "1 idea", lbStatPlaybooksOne: "1 playbook", lbStatLikesOne: "1 like", lbStatViewsOne: "1 view",
+    lbPtsOne: "1 pt",
+    lbOpenSlot: "Your name here",
+    lbOpenSlotHint: "Suggest an idea to take this spot",
+    lbYou: "You",
+    lbMeTitle: "Your standing",
+    lbMeRank: "Rank #{rank}",
+    lbMeUnranked: "Not on the board yet",
+    lbMeToNext: "{n} pts to reach #{rank}",
+    lbMeLeader: "You're leading. Keep the ideas coming!",
+    lbMeFirst: "One idea gets you on the board ({n} pts).",
+    lbRunnersUp: "Also on the board",
+    lbMostLiked: "Most liked playbooks",
+    lbMostViewed: "Most viewed playbooks",
+    lbIdeaBy: "Idea by {name}",
+    lbDefault: "Default playbook",
+    lbBoardEmpty: "No activity in this period yet.",
+    lbNoContributors: "Nobody has scored in this period yet. Be the first!",
+    lbHowTitle: "How points work",
+    lbHowIdea: "Idea submitted: {n} pts",
+    lbHowPlaybook: "Idea turned into a playbook: {n} pts",
+    lbHowLike: "Each like on your playbooks: {n} pts",
+    lbHowViews: "Every {n} views of your playbooks: 1 pt",
+    lbTeaserMe: "You're #{rank} on the Idea Leaderboard with {points} pts",
+    lbTeaserLeader: "{name} leads the Idea Leaderboard with {points} pts. Suggest an idea to join!",
+    lbTeaserEmpty: "Be the first on the Idea Leaderboard: suggest an idea",
+    lbTeaserAdmin: "See who's leading the Idea Leaderboard",
+    lbLoadFailed: "Couldn't load the leaderboard."
+  },
+  "zh-TW": {
+    lbNavLabel: "排行榜",
+    lbViewTitle: "構想排行榜",
+    lbViewDesc: "提出構想、看它變成 Playbook，並登上排行榜。每個構想、Playbook、讚好及瀏覽都可得分。",
+    lbBack: "返回 Playbook",
+    lbSuggest: "提出構想",
+    lbRange: { "1m": "本月", "3m": "3 個月", "6m": "6 個月", all: "全部" },
+    lbPts: "{n} 分",
+    lbStatIdeas: "{n} 個構想", lbStatPlaybooks: "{n} 個 Playbook", lbStatLikes: "{n} 個讚好", lbStatViews: "{n} 次瀏覽",
+    lbOpenSlot: "虛位以待",
+    lbOpenSlotHint: "提出構想即可爭取這個位置",
+    lbYou: "你",
+    lbMeTitle: "你的排名",
+    lbMeRank: "第 {rank} 名",
+    lbMeUnranked: "尚未上榜",
+    lbMeToNext: "再得 {n} 分即可升至第 {rank} 名",
+    lbMeLeader: "你暫時領先，繼續提出構想吧！",
+    lbMeFirst: "提出一個構想即可上榜（{n} 分）。",
+    lbRunnersUp: "其他上榜者",
+    lbMostLiked: "最多讚好的 Playbook",
+    lbMostViewed: "最多瀏覽的 Playbook",
+    lbIdeaBy: "構想來自 {name}",
+    lbDefault: "預設 Playbook",
+    lbBoardEmpty: "這段期間暫時未有活動。",
+    lbNoContributors: "這段期間暫時無人得分，成為第一人吧！",
+    lbHowTitle: "計分方法",
+    lbHowIdea: "提交構想：{n} 分",
+    lbHowPlaybook: "構想變成 Playbook：{n} 分",
+    lbHowLike: "你的 Playbook 每獲一個讚好：{n} 分",
+    lbHowViews: "你的 Playbook 每 {n} 次瀏覽：1 分",
+    lbTeaserMe: "你在構想排行榜排第 {rank} 名，共 {points} 分",
+    lbTeaserLeader: "{name} 以 {points} 分領先構想排行榜。提出構想一起參與吧！",
+    lbTeaserEmpty: "成為構想排行榜第一人：提出你的構想",
+    lbTeaserAdmin: "看看誰在構想排行榜領先",
+    lbLoadFailed: "無法載入排行榜。"
+  },
+  "zh-CN": {
+    lbNavLabel: "排行榜",
+    lbViewTitle: "创意排行榜",
+    lbViewDesc: "提出创意、看它变成 Playbook，并登上排行榜。每个创意、Playbook、点赞及浏览都可得分。",
+    lbBack: "返回 Playbook",
+    lbSuggest: "提出创意",
+    lbRange: { "1m": "本月", "3m": "3 个月", "6m": "6 个月", all: "全部" },
+    lbPts: "{n} 分",
+    lbStatIdeas: "{n} 个创意", lbStatPlaybooks: "{n} 个 Playbook", lbStatLikes: "{n} 个赞", lbStatViews: "{n} 次浏览",
+    lbOpenSlot: "虚位以待",
+    lbOpenSlotHint: "提出创意即可争取这个位置",
+    lbYou: "你",
+    lbMeTitle: "你的排名",
+    lbMeRank: "第 {rank} 名",
+    lbMeUnranked: "尚未上榜",
+    lbMeToNext: "再得 {n} 分即可升至第 {rank} 名",
+    lbMeLeader: "你暂时领先，继续提出创意吧！",
+    lbMeFirst: "提出一个创意即可上榜（{n} 分）。",
+    lbRunnersUp: "其他上榜者",
+    lbMostLiked: "点赞最多的 Playbook",
+    lbMostViewed: "浏览最多的 Playbook",
+    lbIdeaBy: "创意来自 {name}",
+    lbDefault: "默认 Playbook",
+    lbBoardEmpty: "这段期间暂时没有活动。",
+    lbNoContributors: "这段期间暂时无人得分，成为第一人吧！",
+    lbHowTitle: "计分方法",
+    lbHowIdea: "提交创意：{n} 分",
+    lbHowPlaybook: "创意变成 Playbook：{n} 分",
+    lbHowLike: "你的 Playbook 每获一个赞：{n} 分",
+    lbHowViews: "你的 Playbook 每 {n} 次浏览：1 分",
+    lbTeaserMe: "你在创意排行榜排第 {rank} 名，共 {points} 分",
+    lbTeaserLeader: "{name} 以 {points} 分领先创意排行榜。提出创意一起参与吧！",
+    lbTeaserEmpty: "成为创意排行榜第一人：提出你的创意",
+    lbTeaserAdmin: "看看谁在创意排行榜领先",
+    lbLoadFailed: "无法加载排行榜。"
+  }
+};
+Object.keys(uiTranslationsV10).forEach(lang => {
+  if (uiTranslations[lang]) Object.assign(uiTranslations[lang], uiTranslationsV10[lang]);
+});
+
+const LB_RANGES = ["1m", "3m", "6m", "all"];
+const leaderboardState = { range: "all", data: null, open: false, bound: false, teaser: null };
+
+/** "ge-student" -> "G", "Dr Chan" -> "DC". Pure. */
+const lbInitials = (name) => {
+  const parts = String(name || "?").replace(/[^\p{L}\p{N}\s._-]/gu, "").split(/[\s._-]+/).filter(Boolean);
+  return ((parts[0] || "?")[0] + (parts.length > 1 ? parts[1][0] : "")).toUpperCase();
+};
+
+/** "{n} ideas" with the singular form when the language has one (key + "One"). Pure. */
+const lbCount = (t, key, n) => fmt(n === 1 && t[`${key}One`] ? t[`${key}One`] : t[key], { n });
+
+const lbStatsHtml = (c, t) => `
+  <span>${escapeHtml(lbCount(t, "lbStatIdeas", c.ideas))}</span>
+  <span>${escapeHtml(lbCount(t, "lbStatPlaybooks", c.playbooks))}</span>
+  <span>${escapeHtml(lbCount(t, "lbStatLikes", c.likes))}</span>`;
+
+/** One podium place (1, 2 or 3); an empty place invites the viewer to take it. */
+const lbPodiumSlotHtml = (c, place, t) => c
+  ? `<div class="lb-podium-slot is-place-${place}${c.isMe ? " is-me" : ""}">
+      <div class="lb-avatar" aria-hidden="true">${escapeHtml(lbInitials(c.name))}<span class="lb-medal">${c.rank}</span></div>
+      <div class="lb-podium-name" title="${escapeHtml(c.name)}">${escapeHtml(c.name)}${c.isMe ? ` <span class="lb-you">${escapeHtml(t.lbYou)}</span>` : ""}</div>
+      <div class="lb-podium-points">${escapeHtml(lbCount(t, "lbPts", c.points))}</div>
+      <div class="lb-podium-stats">${lbStatsHtml(c, t)}</div>
+      <div class="lb-step"><span>${c.rank}</span></div>
+    </div>`
+  : `<div class="lb-podium-slot is-place-${place} is-open">
+      <div class="lb-avatar" aria-hidden="true">?</div>
+      <div class="lb-podium-name">${escapeHtml(t.lbOpenSlot)}</div>
+      <div class="lb-podium-stats"><span>${escapeHtml(t.lbOpenSlotHint)}</span></div>
+      <div class="lb-step"><span>${place}</span></div>
+    </div>`;
+
+/** Bar list for the most liked / most viewed playbooks. */
+const lbBoardHtml = (title, icon, items, metric, t, lang) => {
+  const max = Math.max(1, ...items.map(i => i[metric]));
+  return `<div class="lb-board">
+    <h3 class="lb-board-title"><span class="material-symbols-outlined" aria-hidden="true">${icon}</span>${escapeHtml(title)}</h3>
+    ${items.length ? `<ol class="lb-board-list">${items.map((c, i) => `
+      <li class="lb-board-item${useCasesDb.some(u => u.id === c.id) ? " is-openable" : ""}" data-uc-id="${escapeHtml(c.id)}">
+        <span class="lb-board-rank">${i + 1}</span>
+        <div class="lb-board-main">
+          <div class="lb-board-name">${escapeHtml((c.title && (c.title[lang] || c.title.en)) || c.id)}</div>
+          <div class="lb-board-credit${c.creator ? " is-community" : ""}">${escapeHtml(c.creator ? fmt(t.lbIdeaBy, { name: c.creator }) : t.lbDefault)}</div>
+          <div class="lb-bar"><span style="width:${Math.max(6, Math.round((c[metric] / max) * 100))}%"></span></div>
+        </div>
+        <span class="lb-board-count"><span class="material-symbols-outlined" aria-hidden="true">${metric === "likes" ? "favorite" : "visibility"}</span>${compactCount(c[metric])}</span>
+      </li>`).join("")}</ol>` : `<p class="lb-empty">${escapeHtml(t.lbBoardEmpty)}</p>`}
+  </div>`;
+};
+
+/** Podium, the viewer's standing (users only), runners-up, playbook boards and the points rules. Shared by the
+ * user Leaderboard and admin Analytics (opts.admin: full names, no "your standing"). */
+function leaderboardBodyHtml(data, t, opts = {}) {
+  const lang = appState.activeLanguage || "en";
+  const top = data.contributors || [];
+  const byPlace = (n) => top.find((c, i) => i === n - 1) || null;
+  const me = data.me;
+  const meHtml = !opts.admin && me ? `
+    <div class="lb-me">
+      <div class="lb-avatar is-small" aria-hidden="true">${escapeHtml(lbInitials(me.name))}</div>
+      <div class="lb-me-main">
+        <div class="lb-me-title">${escapeHtml(t.lbMeTitle)}</div>
+        <div class="lb-me-rank">${escapeHtml(me.rank ? fmt(t.lbMeRank, { rank: me.rank }) : t.lbMeUnranked)} · ${escapeHtml(lbCount(t, "lbPts", me.points))}</div>
+        <div class="lb-me-next">${escapeHtml(!me.rank ? fmt(t.lbMeFirst, { n: data.points.idea }) : me.nextRank ? fmt(t.lbMeToNext, { n: me.toNext, rank: me.nextRank }) : t.lbMeLeader)}</div>
+      </div>
+      <div class="lb-podium-stats">${lbStatsHtml(me, t)}</div>
+    </div>` : "";
+  const rest = top.slice(3);
+  return `
+    <div class="lb-podium">${[2, 1, 3].map(place => lbPodiumSlotHtml(byPlace(place), place, t)).join("")}</div>
+    ${top.length ? "" : `<p class="lb-empty lb-empty-wide">${escapeHtml(t.lbNoContributors)}</p>`}
+    ${meHtml}
+    ${rest.length ? `<h3 class="lb-sub">${escapeHtml(t.lbRunnersUp)}</h3><ol class="lb-rest">${rest.map(c => `
+      <li class="lb-rest-item${c.isMe ? " is-me" : ""}">
+        <span class="lb-rest-rank">${c.rank}</span>
+        <span class="lb-avatar is-tiny" aria-hidden="true">${escapeHtml(lbInitials(c.name))}</span>
+        <span class="lb-rest-name">${escapeHtml(c.name)}${c.isMe ? ` <span class="lb-you">${escapeHtml(t.lbYou)}</span>` : ""}</span>
+        <span class="lb-podium-stats">${lbStatsHtml(c, t)}</span>
+        <span class="lb-rest-points">${escapeHtml(lbCount(t, "lbPts", c.points))}</span>
+      </li>`).join("")}</ol>` : ""}
+    <div class="lb-boards">
+      ${lbBoardHtml(t.lbMostLiked, "favorite", data.mostLiked || [], "likes", t, lang)}
+      ${lbBoardHtml(t.lbMostViewed, "visibility", data.mostViewed || [], "views", t, lang)}
+    </div>
+    <details class="lb-how">
+      <summary>${escapeHtml(t.lbHowTitle)}</summary>
+      <ul>
+        <li>${escapeHtml(fmt(t.lbHowIdea, { n: data.points.idea }))}</li>
+        <li>${escapeHtml(fmt(t.lbHowPlaybook, { n: data.points.playbook }))}</li>
+        <li>${escapeHtml(fmt(t.lbHowLike, { n: data.points.like }))}</li>
+        <li>${escapeHtml(fmt(t.lbHowViews, { n: data.points.viewsPerPoint }))}</li>
+      </ul>
+    </details>`;
+}
+
+/** Full user Leaderboard view: header with period pills and "Suggest an idea", then the shared body. */
+function renderLeaderboard() {
+  const el = document.getElementById("leaderboardView");
+  if (!el) return;
+  const t = tr();
+  const data = leaderboardState.data;
+  el.innerHTML = `
+    <div class="lb-head">
+      <button type="button" class="nav-button btn-sm lb-back" data-lb-action="back"><span class="material-symbols-outlined" aria-hidden="true">arrow_back</span>${escapeHtml(t.lbBack)}</button>
+      <div class="lb-hero">
+        <span class="lb-trophy material-symbols-outlined" aria-hidden="true">emoji_events</span>
+        <div>
+          <h1 class="lb-title" id="lbViewTitle">${escapeHtml(t.lbViewTitle)}</h1>
+          <p class="lb-desc">${escapeHtml(t.lbViewDesc)}</p>
+        </div>
+        ${appState.isAdmin === true ? "" : `<button type="button" class="nav-button nav-button-primary lb-cta" data-lb-action="suggest"><span class="material-symbols-outlined" aria-hidden="true">lightbulb</span>${escapeHtml(t.lbSuggest)}</button>`}
+      </div>
+      <div class="lb-ranges" role="tablist">${LB_RANGES.map(r => `
+        <button type="button" role="tab" class="lb-range${r === leaderboardState.range ? " is-active" : ""}" aria-selected="${r === leaderboardState.range}" data-lb-range="${r}">${escapeHtml(t.lbRange[r])}</button>`).join("")}</div>
+    </div>
+    <div class="lb-body">${data ? leaderboardBodyHtml(data, t) : `<div class="lb-loading"><span class="spinner" aria-hidden="true"></span></div>`}</div>`;
+}
+
+async function loadLeaderboard(range = leaderboardState.range) {
+  leaderboardState.range = range;
+  leaderboardState.data = null;
+  renderLeaderboard();
+  const { ok, data } = await apiJson(`/api/leaderboard?range=${encodeURIComponent(range)}`);
+  if (leaderboardState.range !== range) return; // a newer request won
+  if (!ok) {
+    const body = document.querySelector("#leaderboardView .lb-body");
+    if (body) body.innerHTML = `<p class="lb-empty is-error">${escapeHtml(tr().lbLoadFailed)}</p>`;
+    return;
+  }
+  leaderboardState.data = data;
+  if (range === "all") leaderboardState.teaser = data;
+  renderLeaderboard();
+  renderLeaderboardTeaser();
+}
+
+function setLeaderboardOpen(open) {
+  leaderboardState.open = open;
+  const view = document.getElementById("leaderboardView");
+  const grid = document.getElementById("playbooksView");
+  const btn = document.getElementById("btnLeaderboard");
+  if (!view || !grid) return;
+  view.hidden = !open;
+  grid.hidden = open;
+  // The board takes the top of the page; the Quest Run strip comes back with the playbooks
+  document.querySelector(".content-area")?.classList.toggle("is-leaderboard", open);
+  if (btn) { btn.setAttribute("aria-pressed", String(open)); btn.classList.toggle("is-active", open); }
+  window.scrollTo({ top: 0 });
+  if (open) loadLeaderboard(leaderboardState.range);
+}
+
+/** One line above the grid: the viewer's rank, the current leader, or a nudge to take part. */
+function renderLeaderboardTeaser() {
+  const el = document.getElementById("lbTeaser");
+  if (!el) return;
+  const t = tr();
+  const d = leaderboardState.teaser;
+  if (!d) { el.hidden = true; return; }
+  const leader = (d.contributors || [])[0];
+  const text = appState.isAdmin === true ? t.lbTeaserAdmin
+    : d.me && d.me.rank ? fmt(t.lbTeaserMe, { rank: d.me.rank, points: d.me.points })
+      : leader ? fmt(t.lbTeaserLeader, { name: leader.name, points: leader.points })
+        : t.lbTeaserEmpty;
+  el.innerHTML = `<span class="material-symbols-outlined" aria-hidden="true">emoji_events</span><span>${escapeHtml(text)}</span><span class="material-symbols-outlined lb-teaser-go" aria-hidden="true">arrow_forward</span>`;
+  el.hidden = false;
+}
+
+async function refreshLeaderboardTeaser() {
+  const { ok, data } = await apiJson("/api/leaderboard?range=all");
+  if (!ok) return;
+  leaderboardState.teaser = data;
+  renderLeaderboardTeaser();
+}
+
+function bindLeaderboard() {
+  if (leaderboardState.bound) return;
+  leaderboardState.bound = true;
+  document.getElementById("btnLeaderboard")?.addEventListener("click", () => setLeaderboardOpen(!leaderboardState.open));
+  document.getElementById("lbTeaser")?.addEventListener("click", () => setLeaderboardOpen(true));
+  document.getElementById("leaderboardView")?.addEventListener("click", (e) => {
+    const range = e.target.closest("[data-lb-range]");
+    if (range) { loadLeaderboard(range.dataset.lbRange); return; }
+    const action = e.target.closest("[data-lb-action]");
+    if (action && action.dataset.lbAction === "back") { setLeaderboardOpen(false); return; }
+    if (action && action.dataset.lbAction === "suggest") { document.getElementById("btnFloatingFeedback")?.click(); return; }
+    const item = e.target.closest(".lb-board-item.is-openable");
+    if (item) { const uc = useCasesDb.find(u => u.id === item.dataset.ucId); if (uc) openUseCaseModal(uc); }
+  });
 }

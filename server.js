@@ -20,6 +20,7 @@ const CategoryCore = require('./lib/categories');
 const { rankBySimilarity, shortlistForRerank } = require('./lib/similarity');
 const IdeaQuality = require('./lib/idea-quality');
 const { normalizeDraft, plainStepsForCase, FEATURES: FEATURE_NAMES } = require('./lib/draft-normalize');
+const Leaderboard = require('./lib/leaderboard');
 // Research, Skills and Workflow Builder chat / workflow playbooks seeded from lib/ (en + zh JSON), next to the app.js seeds
 const SEED_PLAYBOOKS = require('./lib/seed-playbooks').buildSeedPlaybooks();
 const { validateHelperPrompts, parseHelperPrompts } = require('./lib/helper-prompts');
@@ -2867,6 +2868,110 @@ app.get('/api/admin/stats/creators', requireAdmin, async (req, res) => {
   } catch (error) {
     console.error('Creator stats error:', error);
     res.status(500).json({ success: false, message: 'Failed to load creator statistics.' });
+  }
+});
+
+/*
+ * Idea Leaderboard: GET /api/leaderboard?range=all|1m|3m|6m (any signed-in account).
+ * Contributors earn points (lib/leaderboard.js) for ideas submitted, ideas turned into credited playbooks, and
+ * likes / views on those playbooks within the window. Standard users see short names (the part before "@");
+ * admins can ask for full=1. Also returns the most liked / most viewed playbooks (default playbooks included,
+ * so the boards are never empty) and the viewer's own standing.
+ */
+async function computeLeaderboard({ range, viewerEmail, fullNames }) {
+  const since = sinceForRange(range);
+  const p = since ? [since] : [];
+  const ts = (col) => (since ? ` AND ${col} >= ?` : '');
+  const hasCreator = "uc.creator IS NOT NULL AND uc.creator <> ''";
+  const toMap = (rows, keyCol) => rows.reduce((m, r) => {
+    const k = String(r[keyCol] || '').trim().toLowerCase();
+    if (k) m[k] = (m[k] || 0) + Math.max(0, parseInt(r.cnt, 10) || 0);
+    return m;
+  }, {});
+
+  // Ideas: feedback that passes today's quality gate (older one-word "testing" notes don't score)
+  const ideaRows = (await query(
+    `SELECT user_email, feedback_text FROM feedbacks WHERE user_email IS NOT NULL AND user_email <> 'anonymous'${ts('created_at')}`, p))
+    .filter(r => IdeaQuality.assessFeedback(r.feedback_text || '').ok)
+    .map(r => ({ user_email: r.user_email, cnt: 1 }));
+  const ideas = toMap(ideaRows, 'user_email');
+  const playbooks = toMap(await query(
+    `SELECT uc.creator, COUNT(*) as cnt FROM use_cases uc WHERE ${hasCreator}${ts('uc.created_at')} GROUP BY uc.creator`, p), 'creator');
+  const likes = toMap(since
+    ? await query(`SELECT uc.creator, SUM(CASE WHEN a.action = 'like' THEN 1 WHEN a.action = 'unlike' THEN -1 ELSE 0 END) as cnt
+        FROM analytics a JOIN use_cases uc ON uc.id = a.use_case_id
+        WHERE a.action IN ('like','unlike') AND ${hasCreator} AND a.timestamp >= ? GROUP BY uc.creator`, p)
+    : await query(`SELECT uc.creator, COUNT(*) as cnt FROM user_preferences up JOIN use_cases uc ON uc.id = up.use_case_id
+        WHERE up.is_liked = true AND ${hasCreator} GROUP BY uc.creator`), 'creator');
+  const views = toMap(await query(
+    `SELECT uc.creator, COUNT(*) as cnt FROM analytics a JOIN use_cases uc ON uc.id = a.use_case_id
+     WHERE a.action = 'view' AND ${hasCreator}${ts('a.timestamp')} GROUP BY uc.creator`, p), 'creator');
+
+  // Keep the original spelling of each contributor for display
+  const spelling = {};
+  (await query(`SELECT DISTINCT uc.creator FROM use_cases uc WHERE ${hasCreator}`)).forEach(r => { spelling[r.creator.trim().toLowerCase()] = r.creator.trim(); });
+  const ranked = Leaderboard.rankContributors({ ideas, playbooks, likes, views });
+  const allCreators = (await query('SELECT DISTINCT creator FROM use_cases WHERE creator IS NOT NULL')).map(r => r.creator);
+  const clashes = Leaderboard.shortNameClashes([...ranked.map(c => c.key), ...allCreators]);
+  const viewerKey = String(viewerEmail || '').toLowerCase();
+  const shape = (c) => c && ({
+    name: Leaderboard.displayName(spelling[c.key] || c.key, fullNames, clashes),
+    isMe: c.key === viewerKey,
+    rank: c.rank, points: c.points, ideas: c.ideas, playbooks: c.playbooks, likes: c.likes, views: c.views,
+    ...(c.toNext !== undefined ? { toNext: c.toNext, nextRank: c.nextRank } : {})
+  });
+
+  // Playbook boards: per-playbook views and likes in the window
+  const caseViews = await query(`SELECT use_case_id, COUNT(*) as cnt FROM analytics a WHERE action = 'view'${ts('a.timestamp')} GROUP BY use_case_id`, p);
+  const caseLikes = since
+    ? await query(`SELECT use_case_id, SUM(CASE WHEN action = 'like' THEN 1 WHEN action = 'unlike' THEN -1 ELSE 0 END) as cnt
+        FROM analytics a WHERE action IN ('like','unlike') AND a.timestamp >= ? GROUP BY use_case_id`, p)
+    : await query('SELECT use_case_id, COUNT(*) as cnt FROM user_preferences WHERE is_liked = true GROUP BY use_case_id');
+  const vMap = toMap(caseViews, 'use_case_id');
+  const lMap = toMap(caseLikes, 'use_case_id');
+  const cases = (await query('SELECT id, title, creator, translations FROM use_cases')).map(c => {
+    let t = {};
+    try { t = JSON.parse(c.translations || '{}'); } catch (_) { t = {}; }
+    const key = String(c.id).toLowerCase();
+    return {
+      id: c.id,
+      title: { en: c.title, 'zh-TW': (t['zh-TW'] && t['zh-TW'].title) || c.title, 'zh-CN': (t['zh-CN'] && t['zh-CN'].title) || c.title },
+      creator: c.creator ? Leaderboard.displayName(c.creator, fullNames, clashes) : null,
+      views: vMap[key] || 0, likes: lMap[key] || 0
+    };
+  });
+  const top = (metric, other) => cases.filter(c => c[metric] > 0)
+    .sort((a, b) => b[metric] - a[metric] || b[other] - a[other] || a.title.en.localeCompare(b.title.en)).slice(0, 5);
+
+  return {
+    range, since,
+    points: Leaderboard.POINTS,
+    contributors: ranked.slice(0, Leaderboard.TOP_N).map(shape),
+    me: viewerKey ? shape(Leaderboard.standingFor(ranked, viewerKey)) : null,
+    totals: {
+      contributors: ranked.length,
+      ideas: Object.values(ideas).reduce((a, b) => a + b, 0),
+      communityPlaybooks: cases.filter(c => c.creator).length
+    },
+    mostLiked: top('likes', 'views'),
+    mostViewed: top('views', 'likes')
+  };
+}
+
+app.get('/api/leaderboard', async (req, res) => {
+  const user = req.session.user;
+  if (!user) return res.status(401).json({ success: false, code: 'session_expired', message: 'Sign in to see the leaderboard.' });
+  const range = ['all', '1m', '3m', '6m'].includes(req.query.range) ? req.query.range : 'all';
+  try {
+    const board = await computeLeaderboard({
+      range,
+      viewerEmail: user.isAdmin ? null : user.email,
+      fullNames: Boolean(user.isAdmin && req.query.full === '1')
+    });
+    res.json({ success: true, ...board });
+  } catch (error) {
+    console.error('Leaderboard error:', error);
+    res.status(500).json({ success: false, message: 'Failed to load the leaderboard.' });
   }
 });
 
