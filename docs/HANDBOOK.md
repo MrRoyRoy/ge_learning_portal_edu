@@ -1,6 +1,6 @@
 # Edu Portal handbook
 
-This document complements the [README](../README.md). It covers where the code lives, how to stand up your own copy on Google Cloud, and what that costs per month.
+This document complements the [README](../README.md), which explains how people use the portal (finding and trying playbooks, suggesting ideas, the idea-to-playbook workflow and the Idea Leaderboard). This handbook covers where the code lives, how to stand up your own copy on Google Cloud, and what that costs per month. Technical details are in [REFERENCE.md](REFERENCE.md).
 
 ---
 
@@ -12,7 +12,7 @@ This document complements the [README](../README.md). It covers where the code l
 | Clone (HTTPS) | `git clone https://github.com/MrRoyRoy/ge_learning_portal_edu.git` |
 | Clone (SSH) | `git clone git@github.com:MrRoyRoy/ge_learning_portal_edu.git` |
 | Default branch | `main` (production-ready) |
-| Other branches | `dev/quest-run` (historic feature branch, merged into `main`) |
+| Other branches | None. Feature work is merged into `main` and old branches are deleted. |
 | Tags | `v1.0.0` (first release), `local_w/o_db` (SQLite-only snapshot) |
 | Licence | None yet. Without a `LICENSE` file, others may view and fork the code on GitHub but have no explicit right to reuse it. Add one (for example Apache-2.0) if you want to allow reuse. |
 
@@ -22,7 +22,7 @@ This document complements the [README](../README.md). It covers where the code l
 | :--- | :--- |
 | `server.js` | Express server: REST API, auth, admin console endpoints, schema creation and migrations, playbook seeding |
 | `app.js`, `index.html`, `style.css` | Single-page client (vanilla JS / CSS), the seeded playbooks and all UI strings (en / zh-TW / zh-CN) |
-| `lib/` | Shared modules: database, sessions, mailer, encryption, GCP auth, infographics, categories, Quest Run core, similarity, draft normalisation |
+| `lib/` | Shared modules: database, sessions, mailer, encryption, GCP auth, infographics, categories, Quest Run core, similarity, draft normalisation, idea quality gate, leaderboard scoring |
 | `lib/seed-playbooks.js` (+ `.zh-TW.json` / `.zh-CN.json`) | Research, Skills and Workflow Builder playbooks seeded next to the `app.js` ones |
 | `scripts/deploy.sh` | One-command provisioning and deploys from an env file |
 | `scripts/generate-*.js` | Infographic, game-asset and favicon generators |
@@ -32,7 +32,8 @@ This document complements the [README](../README.md). It covers where the code l
 | `game/`, `imgs/`, `fonts/` | Quest Run sprites, the mascot reference image, web fonts |
 | `AGENT.md` | Engineering notes for contributors and coding agents |
 | `docs/REFERENCE.md` | Technical reference: feature details, data model, API, environment variables, deployment |
-| `docs/images/` | Screenshots used in the README |
+| `docs/HANDBOOK.md` | This handbook (the PDF version is built from it, the README and the reference; PDFs are not committed) |
+| `docs/images/` | Screenshots and Archie's character sheet / pixel sprite used in the README |
 
 ### Repository hygiene
 
@@ -124,12 +125,14 @@ Later releases only need `./scripts/deploy.sh app --env-file .env.prod`.
 3. When at least one named super admin is active, consider **disabling** the default accounts in the same table. The portal always keeps at least one active super admin.
 4. **Settings → Email:** add SMTP (Gmail / Microsoft 365 usually need an app password).
 5. **Settings → Calendar:** set your institution's term dates.
+6. **Settings → Playbook drafting prompt** (optional): adjust the design rules and feature guide Gemini follows when it drafts playbooks.
 
 ### Step 7: Content and users
 
 * **Admin → Use cases → Generate missing** creates the infographics (Vertex AI) in your bucket.
 * **Admin → Users:** provision staff and students with temporary passwords and tick their **Categories**; set each user's Gemini Enterprise app link for *Try it*.
-* Add playbooks, quest questions and news as needed. Convert good user feedback into playbooks.
+* Add playbooks, quest questions and news as needed.
+* Watch **Feedback**: convert good ideas into playbooks with Gemini (they're credited to the author) and keep the **Idea Leaderboard** moving. Users get a five-tip tour on first sign-in and can change their password from the account menu.
 
 ### Day-2 operations
 

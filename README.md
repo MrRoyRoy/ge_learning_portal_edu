@@ -193,26 +193,26 @@ These rules are built into the drafting prompt, so Gemini's drafts follow them t
 
 ![Archie's four-frame pixel flight sprite](docs/images/archie-pixel-sprite.png)
 
-> He was born in the snow,
-> a single drop of ink on a field of white,
-> and from his first cold morning he was hungry,
+> He was born in the snow,\
+> a single drop of ink on a field of white,\
+> and from his first cold morning he was hungry,\
 > not for bread, but for knowing.
 >
-> He read the frost-script on the windows,
-> counted the stars through winter branches,
-> and asked the wind for every word it carried.
-> Book after book, page after page,
-> the knowledge of whole libraries poured into him,
+> He read the frost-script on the windows,\
+> counted the stars through winter branches,\
+> and asked the wind for every word it carried.\
+> Book after book, page after page,\
+> the knowledge of whole libraries poured into him,\
 > until something deep inside began to change.
 >
-> Now one eye shines like a star,
-> a small bright spark of all he has learned,
-> and he wears the square cap of a doctor,
+> Now one eye shines like a star,\
+> a small bright spark of all he has learned,\
+> and he wears the square cap of a doctor,\
 > its golden tassel swaying as he flies.
 >
-> He is still that curious bird from the snow.
-> He just carries his light to others now,
-> landing wherever someone wonders *how*,
+> He is still that curious bird from the snow.\
+> He just carries his light to others now,\
+> landing wherever someone wonders *how*,\
 > and leaving them a little brighter than he found them.
 
 ---
