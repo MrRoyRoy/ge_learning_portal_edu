@@ -23,6 +23,7 @@ This document complements the [README](../README.md). It covers where the code l
 | `server.js` | Express server: REST API, auth, admin console endpoints, schema creation and migrations, playbook seeding |
 | `app.js`, `index.html`, `style.css` | Single-page client (vanilla JS / CSS), the seeded playbooks and all UI strings (en / zh-TW / zh-CN) |
 | `lib/` | Shared modules: database, sessions, mailer, encryption, GCP auth, infographics, categories, Quest Run core, similarity, draft normalisation |
+| `lib/seed-playbooks.js` (+ `.zh-TW.json` / `.zh-CN.json`) | Research, Skills and Workflow Builder playbooks seeded next to the `app.js` ones |
 | `scripts/deploy.sh` | One-command provisioning and deploys from an env file |
 | `scripts/generate-*.js` | Infographic, game-asset and favicon generators |
 | `terraform/` | Infrastructure as code (APIs, Cloud SQL, Secret Manager, service account, bucket, Cloud Run, optional domain) |
@@ -30,6 +31,8 @@ This document complements the [README](../README.md). It covers where the code l
 | `Dockerfile` | Container image used by Cloud Run |
 | `game/`, `imgs/`, `fonts/` | Quest Run sprites, the mascot reference image, web fonts |
 | `AGENT.md` | Engineering notes for contributors and coding agents |
+| `docs/REFERENCE.md` | Technical reference: feature details, data model, API, environment variables, deployment |
+| `docs/images/` | Screenshots used in the README |
 
 ### Repository hygiene
 
