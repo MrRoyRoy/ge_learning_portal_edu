@@ -2947,6 +2947,8 @@ async function computeLeaderboard({ range, viewerEmail, fullNames }) {
     range, since,
     points: Leaderboard.POINTS,
     contributors: ranked.slice(0, Leaderboard.TOP_N).map(shape),
+    // Admin charts rank by each metric separately, so they need every contributor
+    ...(fullNames ? { everyone: ranked.map(shape) } : {}),
     me: viewerKey ? shape(Leaderboard.standingFor(ranked, viewerKey)) : null,
     totals: {
       contributors: ranked.length,

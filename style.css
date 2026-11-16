@@ -4936,3 +4936,20 @@ html[data-theme="light"] .quest-scene { background: #bfe3ff; }
 #adminLeaderboard { display: flex; flex-direction: column; gap: 18px; margin-top: 18px; }
 .lb-body { display: flex; flex-direction: column; gap: 18px; }
 .content-area.is-leaderboard .quest-strip { display: none !important; }
+
+/* Admin Analytics: four compact contributor leaderboards */
+.lb-charts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 760px) { .lb-charts { grid-template-columns: minmax(0, 1fr); } }
+.lb-chart { border: 1px solid var(--line-card); border-radius: var(--radius-md); padding: 14px 16px; background: var(--bg-dark-surface); border-top: 3px solid var(--chart-tone); }
+.lb-chart.is-gold { --chart-tone: #FBBC04; } .lb-chart.is-amber { --chart-tone: #F29900; }
+.lb-chart.is-blue { --chart-tone: #4C8DF6; } .lb-chart.is-red { --chart-tone: #EA4335; }
+.lb-chart-title { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 15px; }
+.lb-chart-title .material-symbols-outlined { font-size: 20px; color: var(--chart-tone); }
+.lb-chart-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 9px; }
+.lb-chart-list li { display: flex; align-items: center; gap: 10px; }
+.lb-chart-rank { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 800; background: var(--surface-2); color: var(--text-secondary); flex-shrink: 0; }
+.lb-chart-list li:first-child .lb-chart-rank { background: var(--chart-tone); color: #202124; }
+.lb-chart-main { flex: 1; min-width: 0; }
+.lb-chart-name { font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lb-chart .lb-bar span { background: var(--chart-tone); }
+.lb-chart-value { font-size: 13px; font-weight: 800; white-space: nowrap; }

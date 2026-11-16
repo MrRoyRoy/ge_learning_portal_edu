@@ -3506,7 +3506,46 @@ async function loadCreatorStats(range = "all") {
   const el = document.getElementById("adminLeaderboard");
   if (!el) return;
   if (!board.ok) { el.innerHTML = `<p class="lb-empty is-error">${escapeHtml(errText(board.data))}</p>`; return; }
-  el.innerHTML = leaderboardBodyHtml(board.data, tr(), { admin: true });
+  el.innerHTML = adminLeaderboardChartsHtml(board.data, tr());
+}
+
+/** One small bar chart: contributors ranked by a single metric (top 8, zeros dropped). */
+const adminLbChartHtml = (title, icon, tone, rows, metric, unitKey, t) => {
+  const list = rows.filter(r => r[metric] > 0)
+    .sort((a, b) => b[metric] - a[metric] || a.rank - b.rank).slice(0, 8);
+  const max = Math.max(1, ...list.map(r => r[metric]));
+  return `<div class="lb-chart is-${tone}">
+    <h3 class="lb-chart-title"><span class="material-symbols-outlined" aria-hidden="true">${icon}</span>${escapeHtml(title)}</h3>
+    ${list.length ? `<ol class="lb-chart-list">${list.map((r, i) => `
+      <li>
+        <span class="lb-chart-rank">${i + 1}</span>
+        <div class="lb-chart-main">
+          <div class="lb-chart-name" title="${escapeHtml(r.name)}">${escapeHtml(r.name)}</div>
+          <div class="lb-bar"><span style="width:${Math.max(6, Math.round((r[metric] / max) * 100))}%"></span></div>
+        </div>
+        <span class="lb-chart-value">${escapeHtml(lbCount(t, unitKey, r[metric]))}</span>
+      </li>`).join("")}</ol>` : `<p class="lb-empty">${escapeHtml(t.lbBoardEmpty)}</p>`}
+  </div>`;
+};
+
+/** Admin Analytics: four compact leaderboards (overall, submissions, views, likes) with full addresses. */
+function adminLeaderboardChartsHtml(data, t) {
+  const rows = data.everyone || data.contributors || [];
+  return `<div class="lb-charts">
+    ${adminLbChartHtml(t.lbChartOverall, "emoji_events", "gold", rows, "points", "lbPts", t)}
+    ${adminLbChartHtml(t.lbChartIdeas, "lightbulb", "amber", rows, "ideas", "lbStatIdeas", t)}
+    ${adminLbChartHtml(t.lbChartViews, "visibility", "blue", rows, "views", "lbStatViews", t)}
+    ${adminLbChartHtml(t.lbChartLikes, "favorite", "red", rows, "likes", "lbStatLikes", t)}
+  </div>
+  <details class="lb-how">
+    <summary>${escapeHtml(t.lbHowTitle)}</summary>
+    <ul>
+      <li>${escapeHtml(fmt(t.lbHowIdea, { n: data.points.idea }))}</li>
+      <li>${escapeHtml(fmt(t.lbHowPlaybook, { n: data.points.playbook }))}</li>
+      <li>${escapeHtml(fmt(t.lbHowLike, { n: data.points.like }))}</li>
+      <li>${escapeHtml(fmt(t.lbHowViews, { n: data.points.viewsPerPoint }))}</li>
+    </ul>
+  </details>`;
 }
 
 // Render dynamic minimalist high-contrast SVG trend graph
@@ -9957,6 +9996,7 @@ async function loadDraftPromptSettings() {
 // ===========================================================================
 const uiTranslationsV10 = {
   en: {
+    lbChartOverall: "Overall score", lbChartIdeas: "Idea submissions", lbChartViews: "Views on their playbooks", lbChartLikes: "Likes on their playbooks",
     lbNavLabel: "Leaderboard",
     lbViewTitle: "Idea Leaderboard",
     lbViewDesc: "Suggest ideas, see them become playbooks, and climb the board. Every idea, playbook, like and view earns points.",
@@ -9995,6 +10035,7 @@ const uiTranslationsV10 = {
     lbLoadFailed: "Couldn't load the leaderboard."
   },
   "zh-TW": {
+    lbChartOverall: "總分", lbChartIdeas: "構想提交", lbChartViews: "其 Playbook 的瀏覽", lbChartLikes: "其 Playbook 的讚好",
     lbNavLabel: "排行榜",
     lbViewTitle: "構想排行榜",
     lbViewDesc: "提出構想、看它變成 Playbook，並登上排行榜。每個構想、Playbook、讚好及瀏覽都可得分。",
@@ -10031,6 +10072,7 @@ const uiTranslationsV10 = {
     lbLoadFailed: "無法載入排行榜。"
   },
   "zh-CN": {
+    lbChartOverall: "总分", lbChartIdeas: "创意提交", lbChartViews: "其 Playbook 的浏览", lbChartLikes: "其 Playbook 的点赞",
     lbNavLabel: "排行榜",
     lbViewTitle: "创意排行榜",
     lbViewDesc: "提出创意、看它变成 Playbook，并登上排行榜。每个创意、Playbook、点赞及浏览都可得分。",

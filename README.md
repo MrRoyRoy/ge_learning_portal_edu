@@ -95,6 +95,16 @@ A line above the playbook grid keeps it in view ("You're #2 on the Idea Leaderbo
 | Each like on your playbooks | 5 |
 | Every 10 views of your playbooks | 1 |
 
+**Sample leaderboard** (the demo environment in the screenshot above, all time):
+
+| | Contributor | Their idea became | Ideas | Playbooks | Likes | Views | Points |
+| :---: | :--- | :--- | ---: | ---: | ---: | ---: | ---: |
+| 🥇 | ge-student | Campus Sports Tournament & Event Planner | 1 | 1 | 3 | 8 | **37** |
+| 🥈 | ge-staff (mastermind) | Parent Inquiry Triage and Response Workflow Agent | 1 | 1 | 1 | 5 | **27** |
+| 🥉 | ge-staff (cloudu) | Journal Peer Review Response Letter Drafter | 1 | 1 | 1 | 2 | **27** |
+
+How the winner scored: 1 idea × 2 + 1 playbook × 20 + 3 likes × 5 + 8 views (under 10, so 0) = **37 points**. The two staff members tie on 27, so views break the tie and decide second place.
+
 ---
 
 ## 🛡️ For admins: from idea to playbook
@@ -128,7 +138,7 @@ Admins have their own console (Users · Analytics · Use cases · Feedback · Ne
 The same Gemini drafting is used when an admin creates a playbook from scratch or improves an existing one, so every path follows the same rules.
 
 ### Watch the competition
-**Analytics** has the same podium and boards with full email addresses, plus totals for community playbooks, idea providers and converted feedback, so admins can see who drives adoption and recognise them.
+**Analytics** breaks the competition into four small charts with full email addresses: **overall score**, **idea submissions**, **views** on each person's playbooks and **likes** on them. Totals for community playbooks, idea providers and converted feedback sit above. Admins can see who suggests the most, whose ideas get used, and recognise them.
 
 ![Idea providers in Analytics](docs/images/17-admin-leaderboard.jpg)
 
