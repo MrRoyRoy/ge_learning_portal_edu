@@ -6720,7 +6720,8 @@ const promptActions = () => ["copy", "try"];
 
 /** Where a copied prompt of this type goes in GE: key into t.tryGuide. Workflow prompts start with a trigger step. Pure. */
 const tryGuideKey = (type, text) => {
-  if (type === "agent_designer") return /STEP 1 · TRIGGER|步驟 1 · 觸發|步骤 1 · 触发/.test(text || "") ? "workflow" : "chatAgent";
+  // Workflow prompts end their decide step with "ROUTE: X" lines (kept in English in every language); older ones start with a trigger step
+  if (type === "agent_designer") return /ROUTE: [A-Z_]+|STEP 1 · TRIGGER|步驟 1 · 觸發|步骤 1 · 触发/.test(text || "") ? "workflow" : "chatAgent";
   return { skills: "skills", deep_research: "deepResearch", notebooklm: "notebook" }[type] || null;
 };
 
@@ -7865,7 +7866,7 @@ function showAdminTab(name) {
   else if (tab === "cases") loadAdminUseCases();
   else if (tab === "feedbacks") loadAdminFeedbacks();
   else if (tab === "news") loadAdminNews();
-  else if (tab === "settings") { loadSmtpSettings(); loadDraftPromptSettings(); loadCalendarSettings(); }
+  else if (tab === "settings") { loadSmtpSettings(); loadFeedbackNotifySettings(); loadDraftPromptSettings(); loadCalendarSettings(); }
 }
 
 /** Switch from the admin portal to the learning portal preview. */
@@ -9665,7 +9666,7 @@ const uiTranslationsV9 = {
     tryGuideClose: "Close",
     tryGuide: {
       chatAgent: { title: "Create the chat agent in Workflow Builder", steps: ["In Gemini Enterprise, click Create agent and choose Chat agent.", "Paste the prompt (Ctrl/Cmd + V), add your files with Add files, then Submit.", "Test it in the Preview tab and click Create."] },
-      workflow: { title: "Build the workflow in Workflow Builder", steps: ["In Gemini Enterprise, open Agents and click Create agent.", "Paste the prompt into Describe your agent (Ctrl/Cmd + V) and submit. Gemini builds the flow.", "Open each agent step and add the knowledge files listed in the prompt, then test in Preview and click Turn on."] },
+      workflow: { title: "Build the workflow in Workflow Builder", steps: ["In Gemini Enterprise, open Agents and click Create agent.", "Paste the prompt into Describe your agent (Ctrl/Cmd + V) and submit. Gemini builds the agent steps.", "Add by hand what it can't create: the trigger, the Condition on the ROUTE line, the Approval steps and the send email step (see Flow builder setup in step 3), plus the knowledge files. Then Test and Turn on."] },
       skills: { title: "Create the skill in Skills", steps: ["In Gemini Enterprise, open Skills, click + and choose Create skill with Gemini.", "Enter the SKILL NAME as the name and the DESCRIPTION as the description, then paste the rest into Instructions.", "Click Save. Call it in any chat with @ or / and its name, adding your own details."] },
       deepResearch: { title: "Run it in Deep Research", steps: ["In Gemini Enterprise, open Deep Research.", "Choose your Sources, paste the prompt (Ctrl/Cmd + V) and click Submit.", "Check the research plan, then click Start Research."] },
       notebook: { title: "Run it in Gemini Notebook", steps: ["In Gemini Enterprise, open Gemini Notebook and open (or create) the notebook for this playbook.", "Make sure the sources named in step 1 are added.", "Paste the prompt into the notebook chat (Ctrl/Cmd + V) and send it."] }
@@ -9708,7 +9709,7 @@ const uiTranslationsV9 = {
     tryGuideClose: "關閉",
     tryGuide: {
       chatAgent: { title: "在 Workflow Builder 建立 Chat Agent", steps: ["在 Gemini Enterprise 按 Create agent，選擇 Chat agent。", "貼上提示詞（Ctrl/Cmd + V），以 Add files 加入你的檔案，然後按 Submit。", "在 Preview 分頁測試，再按 Create。"] },
-      workflow: { title: "在 Workflow Builder 建立工作流程", steps: ["在 Gemini Enterprise 開啟 Agents，按 Create agent。", "把提示詞貼到 Describe your agent（Ctrl/Cmd + V）並提交，Gemini 會建立流程。", "逐一開啟 Agent 步驟，加入提示詞列出的知識檔案，然後在 Preview 測試並按 Turn on。"] },
+      workflow: { title: "在 Workflow Builder 建立工作流程", steps: ["在 Gemini Enterprise 開啟 Agents，按 Create agent。", "把提示詞貼到 Describe your agent（Ctrl/Cmd + V）並提交，Gemini 會建立 Agent 步驟。", "手動加入它無法建立的部分：觸發、按 ROUTE 行分流的 Condition、Approval 步驟及發送電郵步驟（見步驟 3 的 Flow builder 設定），以及知識檔案。然後測試並按 Turn on。"] },
       skills: { title: "在 Skills 建立技能", steps: ["在 Gemini Enterprise 開啟 Skills，按 +，選擇 Create skill with Gemini。", "以「技能名稱」作名稱、「說明」作描述，其餘內容貼到 Instructions。", "按 Save。在任何對話輸入 @ 或 / 加技能名稱即可使用，並補充你自己的資料。"] },
       deepResearch: { title: "在 Deep Research 執行", steps: ["在 Gemini Enterprise 開啟 Deep Research。", "選擇 Sources，貼上提示詞（Ctrl/Cmd + V），按 Submit。", "檢查研究計劃，然後按 Start Research。"] },
       notebook: { title: "在 Gemini Notebook 執行", steps: ["在 Gemini Enterprise 開啟 Gemini Notebook，打開（或建立）此 Playbook 的 Notebook。", "確認已加入步驟 1 提到的來源。", "把提示詞貼到 Notebook 對話（Ctrl/Cmd + V）並送出。"] }
@@ -9751,7 +9752,7 @@ const uiTranslationsV9 = {
     tryGuideClose: "关闭",
     tryGuide: {
       chatAgent: { title: "在 Workflow Builder 创建 Chat Agent", steps: ["在 Gemini Enterprise 点击 Create agent，选择 Chat agent。", "粘贴提示词（Ctrl/Cmd + V），用 Add files 添加你的文件，然后点击 Submit。", "在 Preview 标签页测试，再点击 Create。"] },
-      workflow: { title: "在 Workflow Builder 创建工作流程", steps: ["在 Gemini Enterprise 打开 Agents，点击 Create agent。", "把提示词粘贴到 Describe your agent（Ctrl/Cmd + V）并提交，Gemini 会创建流程。", "逐一打开 Agent 步骤，添加提示词列出的知识文件，然后在 Preview 测试并点击 Turn on。"] },
+      workflow: { title: "在 Workflow Builder 创建工作流程", steps: ["在 Gemini Enterprise 打开 Agents，点击 Create agent。", "把提示词粘贴到 Describe your agent（Ctrl/Cmd + V）并提交，Gemini 会创建 Agent 步骤。", "手动添加它无法创建的部分：触发、按 ROUTE 行分流的 Condition、Approval 步骤及发送邮件步骤（见步骤 3 的 Flow builder 设置），以及知识文件。然后测试并点击 Turn on。"] },
       skills: { title: "在 Skills 创建技能", steps: ["在 Gemini Enterprise 打开 Skills，点击 +，选择 Create skill with Gemini。", "以“技能名称”作名称、“说明”作描述，其余内容粘贴到 Instructions。", "点击 Save。在任何对话输入 @ 或 / 加技能名称即可使用，并补充你自己的信息。"] },
       deepResearch: { title: "在 Deep Research 运行", steps: ["在 Gemini Enterprise 打开 Deep Research。", "选择 Sources，粘贴提示词（Ctrl/Cmd + V），点击 Submit。", "检查研究计划，然后点击 Start Research。"] },
       notebook: { title: "在 Gemini Notebook 运行", steps: ["在 Gemini Enterprise 打开 Gemini Notebook，打开（或创建）此 Playbook 的 Notebook。", "确认已添加步骤 1 提到的来源。", "把提示词粘贴到 Notebook 对话（Ctrl/Cmd + V）并发送。"] }
@@ -10406,4 +10407,104 @@ function bindChangePassword() {
     closeChangePassword();
     showToast(data.signedOutOthers ? fmt(t.cpDoneOthers, { n: data.signedOutOthers }) : t.cpDone, "success");
   });
+}
+
+// ===========================================================================
+// v12: New feedback alerts (Admin → Settings, super admins)
+// ===========================================================================
+const uiTranslationsV12 = {
+  en: {
+    fnHintSaved: "Alerts go to the addresses above.", fnHintSavedSupers: "Leave it blank to email the super admins instead: {list}.",
+    fnTitle: "New feedback alerts",
+    fnDesc: "Email the full feedback, who sent it and a link to the admin console whenever someone submits feedback. Uses the email settings above.",
+    fnEnabled: "Send an email for every new feedback",
+    fnRecipients: "Send to",
+    fnHintDefault: "Leave blank to email every super admin with a verified address: {list}.",
+    fnHintNoDefault: "No super admin has a verified email address yet, so add at least one address here or alerts won't be sent.",
+    fnStatusOn: "On", fnStatusOff: "Off", fnStatusNobody: "No recipients",
+    fnSaved: "Feedback alert settings saved.",
+    fnLoadFailed: "Couldn't load the alert settings."
+  },
+  "zh-TW": {
+    fnHintSaved: "通知會發送到上方的地址。", fnHintSavedSupers: "留空則改為發送給超級管理員：{list}。",
+    fnTitle: "新意見回饋通知",
+    fnDesc: "每當有人提交意見回饋，便以電郵發送完整內容、提交者及管理控制台連結。使用上方的電郵設定。",
+    fnEnabled: "每有新意見回饋便發送電郵",
+    fnRecipients: "收件人",
+    fnHintDefault: "留空則發送給所有已驗證電郵的超級管理員：{list}。",
+    fnHintNoDefault: "目前沒有超級管理員已驗證電郵，請在此加入至少一個地址，否則不會發送通知。",
+    fnStatusOn: "開啟", fnStatusOff: "關閉", fnStatusNobody: "沒有收件人",
+    fnSaved: "已儲存意見回饋通知設定。",
+    fnLoadFailed: "無法載入通知設定。"
+  },
+  "zh-CN": {
+    fnHintSaved: "通知会发送到上方的地址。", fnHintSavedSupers: "留空则改为发送给超级管理员：{list}。",
+    fnTitle: "新意见反馈通知",
+    fnDesc: "每当有人提交意见反馈，便以邮件发送完整内容、提交者及管理控制台链接。使用上方的邮件设置。",
+    fnEnabled: "每有新意见反馈便发送邮件",
+    fnRecipients: "收件人",
+    fnHintDefault: "留空则发送给所有已验证邮箱的超级管理员：{list}。",
+    fnHintNoDefault: "目前没有超级管理员已验证邮箱，请在此添加至少一个地址，否则不会发送通知。",
+    fnStatusOn: "开启", fnStatusOff: "关闭", fnStatusNobody: "没有收件人",
+    fnSaved: "已保存意见反馈通知设置。",
+    fnLoadFailed: "无法加载通知设置。"
+  }
+};
+Object.keys(uiTranslationsV12).forEach(lang => {
+  if (uiTranslations[lang]) Object.assign(uiTranslations[lang], uiTranslationsV12[lang]);
+});
+
+const feedbackNotifyState = { loaded: null, bound: false };
+
+function renderFeedbackNotify() {
+  const t = tr();
+  const d = feedbackNotifyState.loaded;
+  if (!d) return;
+  const pill = document.getElementById("fnStatusPill");
+  const nobody = !(d.effectiveRecipients || []).length;
+  if (pill) {
+    pill.className = `status-pill ${!d.enabled ? "is-muted" : nobody ? "is-warn" : "is-ok"}`;
+    pill.textContent = !d.enabled ? t.fnStatusOff : nobody ? t.fnStatusNobody : t.fnStatusOn;
+  }
+  const supers = d.defaultRecipients || [];
+  document.getElementById("fnHint").textContent = (d.recipients || []).length
+    ? t.fnHintSaved + (supers.length ? " " + fmt(t.fnHintSavedSupers, { list: supers.join(", ") }) : "")
+    : supers.length ? fmt(t.fnHintDefault, { list: supers.join(", ") }) : t.fnHintNoDefault;
+  const changed = document.getElementById("fnLastChanged");
+  if (changed) changed.textContent = d.updatedBy ? fmt(t.lastChanged, { by: d.updatedBy, date: formatDateTime(d.updatedAt) }) : "";
+}
+
+async function loadFeedbackNotifySettings() {
+  const panel = document.getElementById("feedbackNotifyPanel");
+  if (!panel) return;
+  panel.hidden = !appState.isSuper;
+  if (!appState.isSuper) return;
+  const form = document.getElementById("formFeedbackNotify");
+  if (!feedbackNotifyState.bound) {
+    feedbackNotifyState.bound = true;
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const t = tr();
+      const btn = document.getElementById("btnFnSave");
+      btn.disabled = true;
+      const { ok, data } = await apiJson("/api/admin/settings/feedback-notify", {
+        method: "PUT",
+        body: { enabled: document.getElementById("fnEnabled").checked, recipients: document.getElementById("fnRecipients").value }
+      });
+      btn.disabled = false;
+      const result = document.getElementById("fnResult");
+      if (!ok) { showInline(result, escapeHtml(errText(data)), "error"); return; }
+      result.hidden = true;
+      feedbackNotifyState.loaded = data;
+      document.getElementById("fnRecipients").value = (data.recipients || []).join(", ");
+      renderFeedbackNotify();
+      showToast(t.fnSaved, "success");
+    });
+  }
+  const { ok, data } = await apiJson("/api/admin/settings/feedback-notify");
+  if (!ok) { showInline(document.getElementById("fnResult"), escapeHtml(tr().fnLoadFailed), "error"); return; }
+  feedbackNotifyState.loaded = data;
+  document.getElementById("fnEnabled").checked = data.enabled !== false;
+  document.getElementById("fnRecipients").value = (data.recipients || []).join(", ");
+  renderFeedbackNotify();
 }

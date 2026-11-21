@@ -1598,11 +1598,99 @@ app.post('/api/feedbacks', async (req, res) => {
       return res.status(400).json({ success: false, code: gate.code, error: messages[gate.code] });
     }
     const email = req.session.user ? req.session.user.email : 'anonymous';
-    await query('INSERT INTO feedbacks (user_email, feedback_text) VALUES (?, ?)', [email, feedbackText.trim()]);
+    const id = await insertReturningId('INSERT INTO feedbacks (user_email, feedback_text) VALUES (?, ?)', [email, feedbackText.trim()]);
     res.json({ success: true, message: 'Feedback submitted successfully!' });
+    // Email the alert recipients after responding, so a slow or failing SMTP never delays the user
+    const origin = requestOrigin(req);
+    setImmediate(() => notifyNewFeedback({ id, email, text: feedbackText.trim(), origin })
+      .catch(err => console.error('Feedback alert error:', err.message)));
   } catch (err) {
     console.error('Submit feedback error:', err);
     res.status(500).json({ error: 'Database error. Failed to save feedback.' });
+  }
+});
+
+/*
+ * New-feedback email alerts. app_settings['feedback_notify'] = { enabled, recipients: [email, ...] }.
+ * Recipients: the addresses saved in Admin → Settings → New feedback alerts, or, when none are saved, every
+ * verified super admin with an email address (invited DB admins; the built-in accounts have no address).
+ * Sent through lib/mailer.js (SMTP from Settings → Email; demo mode just logs).
+ */
+const FEEDBACK_NOTIFY_KEY = 'feedback_notify';
+const escHtml = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+async function readFeedbackNotify() {
+  const setting = await mailer.readSetting(query, FEEDBACK_NOTIFY_KEY);
+  const v = setting && setting.value && typeof setting.value === 'object' ? setting.value : {};
+  const supers = (await query("SELECT email FROM admins WHERE role = 'super' AND is_verified = 1")).map(r => r.email).filter(isValidEmail);
+  const recipients = Array.isArray(v.recipients) ? v.recipients.filter(isValidEmail) : [];
+  return {
+    enabled: v.enabled !== false,
+    recipients,
+    defaultRecipients: supers,
+    effectiveRecipients: recipients.length ? recipients : supers,
+    updatedBy: setting ? setting.updatedBy : null,
+    updatedAt: setting ? setting.updatedAt : null
+  };
+}
+
+async function notifyNewFeedback({ id, email, text, origin }) {
+  const cfg = await readFeedbackNotify();
+  if (!cfg.enabled || !cfg.effectiveRecipients.length) return;
+  const userRows = email && email !== 'anonymous' ? await query('SELECT categories FROM users WHERE email = ?', [email]) : [];
+  const cats = userRows.length ? CategoryCore.normalizeCategories(userRows[0].categories).map(c => CategoryCore.categoryLabel(c, 'en')) : [];
+  const total = parseInt((await query('SELECT COUNT(*) as cnt FROM feedbacks WHERE converted_use_case_id IS NULL'))[0].cnt, 10) || 0;
+  const when = new Date().toISOString().replace('T', ' ').slice(0, 16) + ' UTC';
+  const link = `${origin}/`;
+  const preview = text.length > 60 ? `${text.slice(0, 57).replace(/\s+\S*$/, '')}…` : text;
+  const subject = `New feedback from ${email}: ${preview.replace(/\s+/g, ' ')}`;
+  const textBody = [
+    'New feedback was submitted in Gemini Enterprise - Edu Portal.',
+    '',
+    `From: ${email}${cats.length ? ` (${cats.join(', ')})` : ''}`,
+    `Submitted: ${when}`,
+    `Feedback #${id}`,
+    '',
+    text,
+    '',
+    `Open the portal and go to Admin → Feedback to review it or convert it to a playbook: ${link}`,
+    `Feedback not yet converted: ${total}`
+  ].join('\n');
+  const html = `<div style="font-family:Arial,sans-serif;font-size:14px;color:#1f2328;max-width:640px">
+    <p style="margin:0 0 12px"><strong>New feedback</strong> was submitted in Gemini Enterprise - Edu Portal.</p>
+    <table style="border-collapse:collapse;margin:0 0 12px;font-size:13px">
+      <tr><td style="padding:3px 12px 3px 0;color:#57606a">From</td><td style="padding:3px 0"><strong>${escHtml(email)}</strong>${cats.length ? ` <span style="color:#57606a">(${escHtml(cats.join(', '))})</span>` : ''}</td></tr>
+      <tr><td style="padding:3px 12px 3px 0;color:#57606a">Submitted</td><td style="padding:3px 0">${escHtml(when)}</td></tr>
+      <tr><td style="padding:3px 12px 3px 0;color:#57606a">Feedback</td><td style="padding:3px 0">#${escHtml(id)}</td></tr>
+    </table>
+    <div style="white-space:pre-wrap;border-left:4px solid #1a73e8;background:#f5f8ff;padding:10px 14px;margin:0 0 16px;line-height:1.5">${escHtml(text)}</div>
+    <p style="margin:0 0 6px"><a href="${escHtml(link)}" style="display:inline-block;background:#1a73e8;color:#fff;text-decoration:none;padding:8px 16px;border-radius:999px">Open Admin → Feedback</a></p>
+    <p style="margin:12px 0 0;color:#57606a;font-size:12px">Review it or click Convert to playbook. Feedback not yet converted: ${total}. You get this email because you're listed under Admin → Settings → New feedback alerts (or you're a super admin).</p>
+  </div>`;
+  for (const to of cfg.effectiveRecipients) {
+    await mailer.sendMail(query, { to, subject, text: textBody, html });
+  }
+}
+
+app.get('/api/admin/settings/feedback-notify', requireSuper, async (req, res) => {
+  try {
+    res.json({ success: true, ...(await readFeedbackNotify()) });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to load the alert settings.' });
+  }
+});
+
+app.put('/api/admin/settings/feedback-notify', requireSuper, async (req, res) => {
+  const raw = req.body && req.body.recipients;
+  const list = (Array.isArray(raw) ? raw : String(raw || '').split(/[,;\s]+/)).map(normalizeEmail).filter(Boolean);
+  const bad = list.filter(e => !isValidEmail(e));
+  if (bad.length) return res.status(400).json({ success: false, message: `Check these addresses: ${bad.join(', ')}` });
+  if (list.length > 20) return res.status(400).json({ success: false, message: 'Use at most 20 addresses.' });
+  try {
+    await mailer.writeSetting(query, FEEDBACK_NOTIFY_KEY, { enabled: req.body.enabled !== false, recipients: [...new Set(list)] }, req.session.user.email);
+    res.json({ success: true, ...(await readFeedbackNotify()) });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to save the alert settings.' });
   }
 });
 
@@ -3433,7 +3521,7 @@ FEATURE GUIDE (pick by the job, not by habit)
 - Skills: a reusable, named procedure the user saves once and Gemini applies every time the same kind of task comes up (feedback in "my marking voice", minutes in the office's format, a revision quiz from any notes). Use it when the same task repeats with different inputs and must always follow the same steps and format. promptType skills. The prompt is the skill definition with these labelled sections: SKILL NAME, DESCRIPTION (when Gemini should use it, starting "Use this skill when ..."), INPUTS, INSTRUCTIONS (numbered), OUTPUT FORMAT, QUALITY CHECKS and one short EXAMPLE.
   SKILLS ARE GENERIC: the skill definition never names a course, school, office, person or other specific context and contains NO {{VARIABLES}}. INPUTS lists what the user gives in the request when calling the skill (course, level, rubric, template, examples), with sensible defaults when they don't. Skills cannot hold attachments: never tell the user to attach or upload files to a skill; rubrics, templates and example texts are pasted or attached in the chat request each time. Put the specifics in a Set up prompt titled "Prompt to Use the Skill ..." (type general, or canvas when the result is a document) that calls the skill by name and carries the {{VARIABLES}}.
 - Workflow Builder, CHAT AGENT: an assistant that many people talk to over time (tutor, policy help desk, IT service desk, drill simulator). It answers from Knowledge files with citations. Title ends "Chat Agent"; step 1 or 2 says "create a chat agent in Workflow Builder". promptType agent_designer.
-- Workflow Builder, WORKFLOW AGENT: a repeatable multi-step process that starts on its own or from a form, branches on conditions and needs human approval (intake triage, approvals, moderation, screening). Title ends "Workflow Agent"; steps say "in Workflow Builder (Agents → Create agent), paste the prompt into Describe your agent so Gemini builds the flow". That box cannot take attachments, so knowledge files are added by hand to the agent nodes AFTER the flow is created; the steps must say this. Prefer a real trigger: a new file in a Google Drive folder (Drive Connector) or a new email in a shared mailbox (Email Connector). After approval, the workflow can send the approved email or save the file through the connector. promptType agent_designer.
+- Workflow Builder, WORKFLOW AGENT: a repeatable multi-step process that starts on its own (a new file in a Google Drive folder via the Drive Connector, or a new email in a shared mailbox via the Email Connector), routes on a decision and needs human approval (intake triage, approvals, moderation, screening). Title ends "Workflow Agent". IMPORTANT product limit: "Describe your agent" (Agents → Create agent) can only build linear agent steps; it CANNOT create event triggers, Condition branches, Approval steps or filters, and it can't take attachments. So the prompt must be LINEAR (see convention 5), and step 2 must say to paste it into Describe your agent and then add the trigger, the Condition, the Approval steps, the send email step and the knowledge files by hand in the flow builder. promptType agent_designer.
 - Image Generation / Video Generation: visuals (posters, diagrams, short clips). promptType image / video.
 Typical combinations: Gemini Notebook to prepare and verify sources → Workflow Builder chat agent with the same files; Deep Research → Gemini Notebook → Canvas Mode for a cited document; Skills for the repeated step inside a larger routine.
 
@@ -3445,7 +3533,7 @@ PLAYBOOK CONVENTIONS (match the portal's existing playbooks exactly)
    (3) Review and deliver: what a person checks before the result is shared.
 3. PROMPT: a ready-to-paste prompt for the main feature. Open with the role ("You are ..." or "Act as ...") or, for Skills, with "SKILL NAME:"; use numbered or labelled sections, and describe the expected output. If the prompt should produce a document, end it with: "Use Canvas to create this as an editable document." Exception: never add the Canvas sentence or "in Canvas Mode" to Workflow Builder instructions or Skills (promptType agent_designer / skills); they reply with structured text (headings, tables) and Canvas Mode is only used by Set up prompts run in Gemini.
 4. PROMPT TYPE ("promptType"), one of: general | notebooklm | deep_research | agent_designer | skills | canvas | image | video. Match the feature the prompt is pasted into: Workflow Builder -> agent_designer, Skills -> skills, Gemini Notebook -> notebooklm, Deep Research -> deep_research, Canvas Mode -> canvas, Image Generation -> image, Video Generation -> video, anything else -> general.
-5. AGENT DESIGNER WORKFLOWS (workflow agents): label each step "STEP n · NAME (node type)"; start with "STEP 1 · TRIGGER (...)" naming the trigger (Drive Connector: new file in folder, Email Connector: new email in a shared mailbox, or a start form); write branches as "IF ... → go to Step n" in a condition node; keep the flow forward-only (never loop back to an earlier step); give approval nodes exactly two outcomes, Approve or Reject, and name the approver; label the reference files "KNOWLEDGE SOURCES (added manually to the agent nodes after the flow is created)": never say to attach files while building the workflow, because the assistant that builds it can't take attachments, and never ask for file uploads during a run; send or save results through the connector only after approval; end with a log row (date, reference, route, approver, outcome).
+5. WORKFLOW AGENT PROMPTS: write a LINEAR creation prompt that starts "Create a workflow agent for ... that processes one ... at a time. Use these steps in order:" followed by numbered steps such as 1. READ (extract the fields), 2. CHECK (against the knowledge files, citing clauses), 3. DECIDE (write the route as the first line of the output, exactly one of a few "ROUTE: UPPER_SNAKE" values, each with its rule, and keep these ROUTE lines in English in every language because the Condition step reads them), 4. DRAFT (the email / letter / summary for each route), 5. SUMMARISE (reviewer summary and one log row). Never write IF/ELSE branches, "go to Step n", trigger steps, Approve / Reject outcomes or "STEP n · NAME (node type)" labels in the prompt: Describe your agent refuses them. Put the hand-built parts in step 2 in plain words: the trigger (App event → Google Drive or Gmail / Outlook, with a filter), Flow control → Condition on the ROUTE line, Human in the loop → Approval before anything is sent (a rejected approval stops the run; there is no reject branch), the send email action at the end of each branch, and the knowledge files on the agent steps. Never ask for file uploads during a run and never let the agent send anything itself.
 6. AGENT DESIGNER CHAT AGENTS: the prompt is the agent's instructions: who it serves, KNOWLEDGE SOURCES, GROUNDING RULES, how to answer (format, tone, length), what to refuse, and when to hand over to a named person or office.
 7. CONNECTORS: list one only when the playbook really reads or writes live data through that system (a workflow trigger counts), otherwise return []. Use these names exactly: "Drive Connector", "Email Connector", "LMS Connector", "Calendar Connector".
 8. WRITING: plain, friendly English with short sentences. zh-TW is Traditional Chinese as written in Hong Kong; zh-CN is Simplified Chinese. Keep product names in English inside Chinese text: Gemini, Gemini Enterprise, Gemini Notebook, Canvas Mode, Deep Research, Workflow Builder, Skills, Image Generation, Video Generation and the connector names.

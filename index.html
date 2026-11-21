@@ -674,6 +674,30 @@
           </form>
         </div>
 
+        <!-- New feedback alerts: who gets an email when someone submits feedback -->
+        <div class="panel settings-panel" id="feedbackNotifyPanel">
+          <div class="panel-head">
+            <div>
+              <h2 class="panel-title" data-i18n="fnTitle">New feedback alerts</h2>
+              <p class="panel-desc" data-i18n="fnDesc">Email the full feedback, who sent it and a link to the admin console whenever someone submits feedback. Uses the email settings above.</p>
+            </div>
+            <span class="status-pill" id="fnStatusPill">—</span>
+          </div>
+          <form id="formFeedbackNotify" class="settings-form" novalidate>
+            <label class="check-row"><input type="checkbox" id="fnEnabled"><span data-i18n="fnEnabled">Send an email for every new feedback</span></label>
+            <div class="form-group">
+              <label class="form-label" for="fnRecipients" data-i18n="fnRecipients">Send to</label>
+              <input type="text" class="select-control" id="fnRecipients" placeholder="admin@school.edu, office@school.edu" autocomplete="off">
+              <p class="field-hint" id="fnHint"></p>
+            </div>
+            <div id="fnResult" class="inline-feedback" hidden></div>
+            <div class="settings-footer">
+              <span class="field-hint" id="fnLastChanged"></span>
+              <button type="submit" class="nav-button nav-button-primary" id="btnFnSave" data-i18n="saveSettings">Save</button>
+            </div>
+          </form>
+        </div>
+
         <!-- Playbook drafting prompt (used by every "Draft with Gemini" path: new, convert feedback, improve) -->
         <div class="panel settings-panel" id="draftPromptPanel">
           <div class="panel-head">

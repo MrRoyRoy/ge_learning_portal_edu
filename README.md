@@ -118,7 +118,7 @@ Admins have their own console (Users · Analytics · Use cases · Feedback · Ne
 
 ### The conversion workflow
 
-**Step 1: Read the ideas.** New suggestions arrive in **Feedback** with the author and status.
+**Step 1: Read the ideas.** New suggestions arrive in **Feedback** with the author and status, and an email alert with the full text goes to the people set in **Settings → New feedback alerts**.
 
 ![Feedback inbox](docs/images/08-feedback-inbox.jpg)
 
@@ -155,7 +155,7 @@ Super admins can edit the **playbook drafting prompt** in **Settings**: the desi
 * **Analytics:** views, likes and Try it launches over time, and the idea-provider podium.
 * **Use cases:** create, edit, import / export playbooks; generate infographics.
 * **News:** announcements that Archie delivers in the Quest Run strip.
-* **Settings:** email (SMTP), the academic calendar and the drafting prompt.
+* **Settings:** email (SMTP), **new feedback alerts** (who gets an email with the full feedback and a link whenever someone submits one; by default every super admin with a verified address), the academic calendar and the drafting prompt.
 
 ---
 
@@ -166,7 +166,7 @@ Super admins can edit the **playbook drafting prompt** in **Settings**: the desi
 | Type | What it is | Examples |
 | :--- | :--- | :--- |
 | **Workflow Builder · chat agents** | Assistants people talk to over time, grounded in your files | Socratic Tutor, Student Union Policy, IT Service Desk, Campus Safety Drill |
-| **Workflow Builder · workflow agents** | Multi-step processes started by a new file (Drive Connector) or email (Email Connector), with conditions and human approval before anything is sent | Special Consideration, Scholarship Screening, Expense Claim Approval, Exam Paper Moderation |
+| **Workflow Builder · workflow agents** | Multi-step processes started by a new file (Drive Connector) or email (Email Connector). The prompt builds the agent steps in *Describe your agent*; a short **Flow builder setup** checklist adds the trigger, the condition, the approvals and the send email step by hand (Gemini Enterprise can't create those from a prompt) | Special Consideration, Scholarship Screening, Expense Claim Approval, Exam Paper Moderation |
 | **Skills** | Generic, reusable procedures saved once and called with `@` in any chat | Revision Quiz, Feedback in my Marking Voice, Lesson Plan, Meeting Minutes |
 | **Research** | Evidence and proposals with Deep Research, Gemini Notebook and Canvas Mode | Literature Review Evidence Map, Grant Proposal Builder, Research Ethics Pre-Check |
 | **Teaching, students and operations** | Gemini Notebook analysis, Canvas Mode documents, Image and Video Generation | Rubric feedback, curriculum design, club budgets, accreditation reports |
@@ -179,7 +179,7 @@ These rules are built into the drafting prompt, so Gemini's drafts follow them t
 
 * **Grounded:** prompts that use files list their knowledge sources, cite file and page, and say what to do when the answer isn't there.
 * **Human in the loop:** a person reviews before anything reaches students or the public; workflows have explicit approval steps.
-* **Fits the real product:** Skills are generic (details come in the request) and can't hold files from the editor; a workflow's knowledge files are added to its steps after Workflow Builder has built the flow.
+* **Fits the real product:** Skills are generic (details come in the request) and can't hold files from the editor; workflow prompts are linear because *Describe your agent* can't create triggers, conditions or approvals, so those (and the knowledge files) are added in the flow builder from a checklist.
 * **Easy to customise:** `{{VARIABLES}}` only in prompts, plain words in the steps.
 * **Consistent language:** product names stay in English in every language; never "Gem" or "Copilot".
 

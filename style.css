@@ -2788,6 +2788,7 @@ textarea.select-control { height: auto; padding: 10px 12px; line-height: 1.5; }
 .status-pill.is-ok { color: var(--ok); border-color: rgba(52, 168, 83, 0.4); background: rgba(52, 168, 83, 0.10); }
 .status-pill.is-error { color: var(--err); border-color: rgba(234, 67, 53, 0.4); background: rgba(234, 67, 53, 0.10); }
 .status-pill.is-muted { color: var(--text-muted); }
+.status-pill.is-warn { color: #B06000; border-color: rgba(251, 188, 4, 0.55); background: rgba(251, 188, 4, 0.14); }
 
 .status-dot {
   display: inline-flex;

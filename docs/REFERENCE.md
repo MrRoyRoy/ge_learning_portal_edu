@@ -349,6 +349,7 @@ All endpoints return JSON and use the session cookie. "User" means a signed-in s
 | `POST /api/quest/event` | Signed in | Log `quest_view` / `quest_click` / `news_view` / `news_click` |
 | `GET/POST/PUT/DELETE /api/admin/hints` | Admin (writes: Super) | Manage quest questions |
 | `GET/POST/PUT/DELETE /api/admin/announcements` | Admin | Manage news; GET adds `seenCount` and `clickCount`; 400 responses carry per-field `errors` |
+| `GET/PUT /api/admin/settings/feedback-notify` | Super | New feedback alerts: `{ enabled, recipients }` (≤ 20 addresses). Blank recipients = every verified super admin with an email. Each new feedback emails the text, author, account categories, time and a link to the portal (sent after the response, through the SMTP settings; demo mode logs) |
 | `GET/PUT/DELETE /api/admin/settings/draft-prompt` | Super | Read, save or reset the playbook drafting prompt (200–30,000 characters) |
 | `POST /api/tour/seen` | Signed in | `{ portal: 'user' \| 'admin' }` marks the first-login tips as seen for this account (`/api/auth/session` returns `tourSeen`) |
 | `GET/PUT/DELETE /api/admin/settings/calendar` | Super | Read, save or reset the academic calendar (validated: ordered, contiguous terms) |
