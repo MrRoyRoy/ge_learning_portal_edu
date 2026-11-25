@@ -206,18 +206,18 @@
     "summary": "Workflow Agent 會逐一接收存入收件資料夾的特殊考量申請，按政策核對證明文件、決定分流路徑並草擬回覆。每份回覆都由職員批准，上報個案須再經部門主管批准，只有已批准的電郵才會發出。",
     "steps": [
       "用輔助提示詞草擬證明文件規則、電郵範本及申請表樣本，並把每項儲存為檔案。確認收件資料夾（Drive Connector）及部門郵箱（Email Connector）已連接。",
-      "在 Workflow Builder（Agents → Create agent）把提示詞貼到 Describe your agent，以建立 Agent 步驟。然後按下方 Flow builder 設定，手動加入觸發、Condition、審批及發送電郵步驟，因為 Describe your agent 無法建立這些步驟。",
+      "在 Workflow Builder（Agents → Create agent）把提示詞貼到 Describe your agent：它會建立六個互相連接的 Gemini Agent 步驟。然後按下方 Flow builder 設定，手動加入觸發、Condition、審批及發送步驟，因為 Describe your agent 無法建立這些步驟。",
       "在 Test 分頁用申請表樣本測試，然後啟用。職員在 Runs（Needs Review）批准每份回覆；被拒絕的執行會停止，不會發出任何內容。"
     ],
-    "prompt": "為 {{INSTITUTION_NAME}} {{OFFICE_NAME}}建立一個 Workflow Agent，每次處理一份特殊考量申請（延期交功課、延期考試或休學）。按以下次序執行步驟：\n\n1. 閱讀：閱讀新檔案中的申請表，並擷取：申請編號、學生姓名、學生編號、學生電郵、課程、科目編號、評核、申請類別、原因（醫療 | 恩恤 | 個人 | 其他）、受影響日期、申請日數、學生陳述、列出的證明文件（類別、日期、簽發者），以及本學期較早前的申請。\n2. 核對：把申請與特殊考量政策及證明文件規則表比較。列出欠缺的證明文件或未填寫的必填欄位、風險標記，以及每項對應的政策條文。\n3. 決定：在輸出的第一行寫出分流路徑，只可選以下其中一項：\n   ROUTE: EVIDENCE（欠缺證明文件或必填欄位）\n   ROUTE: ESCALATE（申請超過 {{AUTO_LIMIT_DAYS}} 日、日期與期末考試重疊、陳述提及人身安全、精神健康或福利問題、本學期第三次或以上申請，或沒有適用的標準規則）\n   ROUTE: STANDARD（其他情況）\n4. 草擬：以相應範本草擬給學生的電郵，並引用政策條文。如為 EVIDENCE，準確列明欠缺的項目。如為 ESCALATE，另撰寫一頁摘要（概要、時序、證明文件、條文、各方案及其利弊、標記）；如有福利標記，加上：「請於今天聯絡學生福利組 {{WELFARE_EMAIL}}。」\n5. 摘要：最後提供審批人摘要（學生編號、申請內容、分流路徑、主要原因、檔案名稱）及一行記錄：日期、申請編號、學生編號、分流路徑。\n\n每項判斷都必須以政策及證明文件規則為依據，並引用條文。不可在政策規則以外評價醫療證明。學生資料必須保密。絕不可自行發送任何內容。",
-    "proTip": "ROUTE 一行必須保持原樣：你在 Flow builder 加入的 Condition 步驟會讀取這一行，如路徑字眼被改寫，個案便會走錯分支。",
+    "prompt": "為 {{INSTITUTION_NAME}} {{OFFICE_NAME}}建立一個多步驟 Workflow Agent，每次執行處理一份特殊考量申請（延期交功課、延期考試或休學）。按以下次序建立六個獨立的 Gemini Agent 步驟，每個步驟一個節點。每個步驟把輸出作為變數傳給下一個步驟。使用結構化 JSON 輸出，只包含列明的欄位，欄位名稱及分流路徑值須保留英文。\n\n步驟 1 · 取得申請\n連接的應用程式：Google Drive（只限搜尋）。\n閱讀啟動這次執行的申請檔案。如執行是手動啟動，使用 {{INTAKE_FOLDER}} 資料夾內最新的檔案。\n輸出：{ file_name, file_text }\n\n步驟 2 · 擷取資料\n輸入：步驟 1 的輸出。\n輸出：{ reference, student_name, student_id, student_email, programme, course_code, assessment, request_type, reason, dates, days_requested, statement, evidence: [ { type, date, issuer } ], earlier_requests_this_term }\n\n步驟 3 · 核對證明文件及政策\n知識：特殊考量政策及證明文件規則表。\n輸入：步驟 2 的輸出。\n輸出：{ missing: [ ], flags: [ ], clauses: [ ] }   （欠缺的證明文件或未填寫的欄位；風險標記，例如福利問題、與期末考試重疊或重複申請；每一點對應的條文）\n\n步驟 4 · 決定分流路徑\n輸入：步驟 2 及 3 的輸出。\n輸出：{ route, reason }，route 只可為以下其中一項：\n- EVIDENCE：欠缺證明文件或必填欄位\n- ESCALATE：申請超過 {{AUTO_LIMIT_DAYS}} 日、日期與期末考試重疊、陳述提及人身安全、精神健康或福利問題、本學期第三次或以上申請，或沒有適用的標準規則\n- STANDARD：其他情況\n\n步驟 5 · 草擬電郵\n知識：電郵範本。連接的應用程式：Gmail（只限建立草稿，絕不發送）。\n輸入：步驟 2 至 4 的輸出。以部門郵箱用相應範本建立給 student_email 的電郵草稿，並引用政策條文。如為 EVIDENCE，準確列明欠缺的項目。如為 ESCALATE 而有福利標記，加上：「請於今天聯絡學生福利組 {{WELFARE_EMAIL}}。」\n輸出：{ draft_subject, draft_body }\n\n步驟 6 · 為審批人撰寫摘要\n輸入：步驟 2 至 5 的輸出。\n輸出：{ brief, log_row }：如為 ESCALATE，撰寫一頁摘要（概要、時序、證明文件、條文、各方案及其利弊、標記），否則撰寫簡短摘要；log_row 為「date | reference | student ID | route」。\n\n所有步驟的規則：每一點都必須以政策及證明文件規則為依據，並引用條文；不可在政策以外評價醫療證明；學生資料必須保密；絕不可發送電郵。",
+    "proTip": "Describe your agent 建立流程後，開啟 Flow tab，確認有六個 Gemini Agent 步驟，而每個步驟都有自己的輸出。如步驟被合併，請重新生成或手動拆分：步驟獨立，才可加入 Condition 及審批。",
     "connectorGuideSteps": [
+      "模型：Describe your agent 詢問時，揀選最強的 Gemini 模型（Google 建議以 Pro 模型從描述建立工作流程）。如欠缺某個步驟，請重新生成，或手動加入 Gemini Agent 步驟。",
       "觸發：按一下觸發，選擇 App event → Google Drive，為收件資料夾揀選新增檔案事件，並加入篩選條件，只讓申請表啟動執行。",
-      "知識：逐一開啟各 Agent 步驟，把特殊考量政策、證明文件規則表及電郵範本加入為知識檔案。",
-      "Condition：在 Agent 步驟後加入 Flow control → Condition，按 Agent 輸出分為兩個分支：輸出包含 \"ROUTE: ESCALATE\"，以及其他情況。",
-      "審批：在 ESCALATE 分支加入 Human in the loop → Approval，由個案主任審批，再加入第二個 Approval，由部門主管審批。在另一分支加入一個 Approval，由個案主任審批。向審批人展示電郵草稿及摘要。",
-      "發送：在每個分支末端加入 Gmail 或 Outlook 的發送電郵動作，由部門郵箱把草擬的電郵發送至學生電郵。如審批人拒絕，執行會停止，不會發出任何內容。",
-      "在 Test 分頁測試三份申請表樣本，然後按 Turn on。"
+      "知識及應用程式：逐一檢查各步驟：步驟 3 有政策及證明文件規則表；步驟 5 有電郵範本，以及已開啟建立草稿（Add or update data）和搜尋動作的 Gmail。",
+      "Condition：在步驟 6 後加入 Flow control → Condition，按步驟 4 的輸出分為兩個分支：route equals ESCALATE，以及其他情況。",
+      "審批：在 ESCALATE 分支加入 Human in the loop → Approval，由個案主任審批，再加入一個由部門主管審批的 Approval；在另一分支加入一個由個案主任審批的 Approval。向審批人展示步驟 6 的摘要及草稿。",
+      "發送：在每個分支末端加入已開啟 Gmail 發送功能的 Gemini Agent 步驟，發送步驟 5 的草稿，或由主任從郵箱發送草稿。用三份申請表樣本 Test，然後按 Turn on。"
     ],
     "helpers": [
       {
@@ -243,18 +243,18 @@
     "summary": "Workflow Agent 會審核每份存入 Drive 資料夾的獎學金申請：核對資格及文件、按評分準則為合資格申請評分，並草擬合適的電郵或評審小組摘要。每項結果都由獎學金主任批准後才會發出。",
     "steps": [
       "用輔助提示詞把獎學金規則轉為資格清單及評分準則，並草擬電郵範本。把每項儲存為檔案，並確認申請資料夾（Drive Connector）及獎學金郵箱（Email Connector）已連接。",
-      "在 Workflow Builder（Agents → Create agent）把提示詞貼到 Describe your agent，以建立 Agent 步驟。然後按下方 Flow builder 設定，手動加入觸發、Condition、審批及發送電郵步驟。",
+      "在 Workflow Builder（Agents → Create agent）把提示詞貼到 Describe your agent：它會建立六個互相連接的 Gemini Agent 步驟。然後按下方 Flow builder 設定，手動加入觸發、Condition、審批及發送步驟。",
       "用申請樣本測試，然後啟用。主任在 Runs（Needs Review）批准每項結果；評審小組只會收到已批准的候選名單摘要。"
     ],
-    "prompt": "為 {{INSTITUTION_NAME}} {{OFFICE_NAME}}建立一個 Workflow Agent，每次審核一份 {{SCHOLARSHIP_NAME}} 申請（截止日期 {{CLOSING_DATE}}）。按以下次序執行步驟：\n\n1. 閱讀：擷取申請人姓名、學生編號、電郵、課程、年級、GPA、居留身份、經濟需要陳述（如需要）、個人陳述、推薦人資料，以及附上或列出的文件。\n2. 核對：把申請與資格清單中的每項必要條件比較。每項條件標示為符合、不符合或未能確定，並附相關條文，再列出欠缺的文件。\n3. 評分：如申請人符合資格，按每項評分準則評 1-5 分，每項引述一行申請中的證據，計算總分，並撰寫 120 字的評審小組摘要。標明可能的利益衝突。不要評價評分準則以外的任何事項。\n4. 決定：在輸出的第一行寫出分流路徑，只可選以下其中一項：\n   ROUTE: DOCUMENTS（欠缺文件而截止日期未過）\n   ROUTE: DECLINE（未符合某項必要條件）\n   ROUTE: QUERY（未能確定是否符合資格；列出主任必須核實的事項）\n   ROUTE: PANEL（符合資格並已評分）\n5. 草擬：如為 DOCUMENTS 或 DECLINE，以範本草擬給申請人的電郵（列明欠缺的文件，或未符合的條件及其條文）。如為 PANEL，草擬給評審小組的電郵，附摘要及評分表。如為 QUERY，不草擬電郵。\n6. 摘要：最後提供一行記錄：日期、申請人編號、分流路徑、分數（如有）。\n\n以同一套評分準則對待每位申請人。評分時絕不可考慮姓名、性別、種族、宗教或相片。經濟資料必須保密。絕不可自行發送任何內容。",
+    "prompt": "為 {{INSTITUTION_NAME}} {{OFFICE_NAME}}建立一個多步驟 Workflow Agent，每次執行審核一份 {{SCHOLARSHIP_NAME}} 申請（截止日期 {{CLOSING_DATE}}）。按以下次序建立六個獨立的 Gemini Agent 步驟，每個步驟一個節點。每個步驟把輸出作為變數傳給下一個步驟。使用結構化 JSON 輸出，只包含列明的欄位，欄位名稱及分流路徑值須保留英文。\n\n步驟 1 · 取得申請\n連接的應用程式：Google Drive（只限搜尋）。\n閱讀啟動這次執行的申請檔案。如執行是手動啟動，使用 {{APPLICATIONS_FOLDER}} 資料夾內最新的檔案。\n輸出：{ file_name, file_text }\n\n步驟 2 · 擷取申請資料\n輸入：步驟 1 的輸出。\n輸出：{ applicant_name, student_id, email, programme, year, gpa, residency, financial_need, personal_statement, referees, documents: [ ] }\n\n步驟 3 · 核對資格\n知識：獎學金規則及資格清單。\n輸入：步驟 2 的輸出。\n輸出：{ requirements: [ { requirement, status, clause } ], missing_documents: [ ] }   （status 為 Met、Not met 或 Unclear）\n\n步驟 4 · 評分及決定\n知識：評分準則。\n輸入：步驟 2 及 3 的輸出。如符合資格，按每項準則評 1 至 5 分，並引用申請內容一行作為證據；標記可能的利益衝突；不可評價評分準則以外的任何事項。\n輸出：{ route, scores: [ { criterion, score, evidence } ], total }，route 只可為以下其中一項：\n- DOCUMENTS：欠缺文件，而截止日期未過\n- DECLINE：未符合必要條件\n- QUERY：資格不明確\n- PANEL：符合資格並已評分\n\n步驟 5 · 草擬電郵\n知識：電郵範本。連接的應用程式：Gmail（只限建立草稿，絕不發送）。\n輸入：步驟 2 至 4 的輸出。如為 DOCUMENTS 及 DECLINE，建立給申請人的電郵草稿，列明欠缺的文件，或未符合的條件及其條文。如為 PANEL，建立給 {{PANEL_EMAIL}} 的電郵草稿，附 120 字評審小組摘要及評分表。如為 QUERY，不建立草稿。\n輸出：{ draft_subject, draft_body }\n\n步驟 6 · 為主任撰寫摘要\n輸入：步驟 2 至 5 的輸出。\n輸出：{ summary, officer_checks, log_row }：如為 QUERY，officer_checks 列出不明確的事項；log_row 為「date | applicant ID | route | total」。\n\n所有步驟的規則：以同一套評分準則對待每位申請人；評分時絕不可考慮姓名、性別、種族、宗教或相片；財務資料必須保密；絕不可發送電郵。",
     "proTip": "先請兩位主任人手為同樣 5 份申請樣本評分，再與 Agent 的分數比較：如差距很大，啟用前先收緊評分準則的字眼。",
     "connectorGuideSteps": [
+      "模型：Describe your agent 詢問時，揀選最強的 Gemini 模型（Google 建議以 Pro 模型從描述建立工作流程）。如欠缺某個步驟，請重新生成，或手動加入 Gemini Agent 步驟。",
       "觸發：按一下觸發，選擇 App event → Google Drive，為申請資料夾揀選新增檔案事件，並加入只限申請檔案的篩選條件。",
-      "知識：逐一開啟各 Agent 步驟，把獎學金規則、資格清單、評分準則及電郵範本加入為知識檔案。",
-      "Condition：在 Agent 步驟後加入 Flow control → Condition，按 Agent 輸出分為三個分支：包含 \"ROUTE: PANEL\"、包含 \"ROUTE: QUERY\"，以及其他情況（DOCUMENTS 或 DECLINE）。",
-      "審批：在 PANEL 分支及 DOCUMENTS / DECLINE 分支開首加入 Human in the loop → Approval，由獎學金主任審批，並展示草稿及摘要。在 QUERY 分支加入 Request info，讓主任記錄已核實的事項。",
-      "發送：在 PANEL 分支的審批後，加入發送電郵動作，發送至評審小組的電郵地址；在 DOCUMENTS / DECLINE 分支，由獎學金郵箱把草擬的電郵發送給申請人。被拒絕的執行會停止，不會發出任何內容。",
-      "在 Test 分頁用申請樣本測試，然後按 Turn on。"
+      "知識及應用程式：逐一檢查各步驟：步驟 3 有規則及資格清單；步驟 4 有評分準則；步驟 5 有電郵範本，以及已開啟建立草稿（Add or update data）和搜尋動作的 Gmail。",
+      "Condition：在步驟 6 後加入 Flow control → Condition，按步驟 4 的輸出分為以下分支：route equals PANEL、route equals QUERY，以及其他情況（DOCUMENTS 或 DECLINE）。",
+      "審批：在 PANEL 及 DOCUMENTS / DECLINE 分支開頭加入 Human in the loop → Approval，由獎學金主任審批，並展示步驟 6 的摘要及草稿；在 QUERY 分支加入 Request info，讓主任記錄已核對的事項。",
+      "發送：在 PANEL 及 DOCUMENTS / DECLINE 分支末端加入已開啟 Gmail 發送功能的 Gemini Agent 步驟，發送步驟 5 的草稿，或由主任自行發送。用申請樣本 Test，然後按 Turn on。"
     ],
     "helpers": [
       {
@@ -280,18 +280,18 @@
     "summary": "Workflow Agent 會逐一接收電郵至報銷郵箱的開支報銷申請，按政策核對收據、決定分流路徑並草擬回覆。超出上限的申請須先經預算負責人批准才交財務處，回覆亦只會在有人批准後才發出。",
     "steps": [
       "用輔助提示詞把開支政策轉為規則表並草擬回覆範本，然後把每項儲存為檔案。確認報銷郵箱已透過 Email Connector 連接。",
-      "在 Workflow Builder（Agents → Create agent）把提示詞貼到 Describe your agent，以建立 Agent 步驟。然後按下方 Flow builder 設定，手動加入電郵觸發、Condition、審批及發送電郵步驟，因為 Describe your agent 無法建立這些步驟。",
+      "在 Workflow Builder（Agents → Create agent）把提示詞貼到 Describe your agent：它會建立六個互相連接的 Gemini Agent 步驟。然後按下方 Flow builder 設定，手動加入電郵觸發、Condition、審批及發送步驟，因為 Describe your agent 無法建立這些步驟。",
       "在 Test 分頁用報銷申請樣本測試，然後啟用。審批人在 Runs（Needs Review）批准；被拒絕的執行會停止，不會發出任何內容。"
     ],
-    "prompt": "為 {{INSTITUTION_NAME}} 財務處建立一個 Workflow Agent，每次處理一封開支報銷電郵。按以下次序執行步驟：\n\n1. 閱讀：閱讀報銷電郵及其附件。擷取申請人、職員或學生編號、成本中心、預算負責人電郵、用途，以及每個項目的：日期、商戶、類別、金額、貨幣及是否附有收據。\n2. 核對：按開支政策及開支規則表核對每個項目：附有收據、在類別上限之內、可報銷、在 {{SUBMISSION_DAYS}} 日內提交、此申請中沒有重複項目。列出每個問題及其政策條文，並以 {{CURRENCY}} 計算申請總額。\n3. 決定：在輸出的第一行寫出分流路徑，只可選以下其中一項：\n   ROUTE: RETURN（最少有一個問題）\n   ROUTE: BUDGET_HOLDER（沒有問題，而總額超過 {{APPROVAL_LIMIT}}）\n   ROUTE: FINANCE（沒有問題，而總額在上限之內）\n4. 草擬：草擬給申請人的回覆。如為 RETURN，列出每個問題、相關條文及需重新提交的內容。其他情況則撰寫一封簡短的「申請已批准付款」電郵，列出項目及總額。\n5. 摘要：最後提供審批人摘要（申請人、成本中心、預算負責人、總額、分流路徑、問題）及一行記錄：日期、申請人編號、成本中心、總額、分流路徑。\n\n絕不可更改金額或虛構收據。如發現可能重複或拆分的申請，標示給財務處跟進，但不可指控任何人。絕不可自行發送任何內容。",
-    "proTip": "上限應放在規則表，而不是提示詞內，ROUTE 一行亦必須保持原樣：Condition 步驟會讀取這一行，因此財務處更改上限時毋須改動流程。",
+    "prompt": "為 {{INSTITUTION_NAME}} 財務處建立一個多步驟 Workflow Agent，每次執行處理一封開支報銷電郵。按以下次序建立六個獨立的 Gemini Agent 步驟，每個步驟一個節點。每個步驟把輸出作為變數傳給下一個步驟。使用結構化 JSON 輸出，只包含列明的欄位，欄位名稱及分流路徑值須保留英文。\n\n步驟 1 · 取得報銷電郵\n連接的應用程式：Gmail 或 Outlook（只限搜尋）。\n閱讀啟動這次執行的電郵。如執行是手動啟動，使用 {{CLAIMS_MAILBOX}} 郵箱內主旨包含 \"Expense claim\" 的最新電郵。\n輸出：{ message_id, sender_email, subject, body, attachment_names }\n\n步驟 2 · 擷取報銷資料\n輸入：步驟 1 的輸出，包括附件。\n輸出：{ claimant, claimant_id, cost_centre, budget_holder_email, purpose, items: [ { date, merchant, category, amount, currency, receipt_attached } ] }\n\n步驟 3 · 按政策核對\n知識：開支政策及開支規則表。\n輸入：步驟 2 的輸出。逐項核對：附有收據、不超過類別上限、屬可報銷項目、在 {{SUBMISSION_DAYS}} 日內提交、報銷申請內沒有重複項目。\n輸出：{ issues: [ { item, problem, clause } ], total, currency }   （total 以 {{CURRENCY}} 計算）\n\n步驟 4 · 決定分流路徑\n輸入：步驟 3 的輸出。\n輸出：{ route, reason }，route 只可為以下其中一項：\n- RETURN：至少有一個問題\n- BUDGET_HOLDER：沒有問題，而總額超過 {{APPROVAL_LIMIT}}\n- FINANCE：沒有問題，而總額在上限以內\n\n步驟 5 · 草擬回覆\n知識：回覆範本。連接的應用程式：Gmail 或 Outlook（只限建立草稿，絕不發送）。\n輸入：步驟 1 至 4 的輸出。在報銷郵箱建立回覆 sender_email 的草稿。如為 RETURN，列出每個問題、對應條文及需重新提交的內容。其他情況則撰寫簡短的「報銷已獲批准付款」通知，列出各項目及總額。\n輸出：{ draft_subject, draft_body }\n\n步驟 6 · 為審批人撰寫摘要\n輸入：步驟 2 至 5 的輸出。\n輸出：{ summary, log_row }：summary 列出申請人、成本中心、預算負責人、總額、分流路徑、原因及問題；log_row 為「date | claimant ID | cost centre | total | route」。\n\n所有步驟的規則：絕不可更改金額或虛構收據；標記可能重複或拆分的報銷申請，但不可指控任何人；絕不可發送電郵。",
+    "proTip": "上限應放在規則表，而不是提示詞內，分流路徑值（RETURN、BUDGET_HOLDER、FINANCE）亦須保留英文：Condition 步驟會檢查步驟 4 的 route 欄位，因此財務處更改上限時毋須改動流程。",
     "connectorGuideSteps": [
-      "觸發：按一下觸發，為報銷郵箱選擇 App event → Gmail（或 Outlook）→ When an email is received，並加入篩選條件，例如主旨包含「Expense claim」並附有附件。",
-      "知識：逐一開啟各 Agent 步驟，把開支政策、規則表及回覆範本加入為知識檔案。",
-      "Condition：在 Agent 步驟後加入 Flow control → Condition，按 Agent 輸出分為兩個分支：輸出包含 \"ROUTE: BUDGET_HOLDER\"，以及其他情況（RETURN 或 FINANCE）。",
-      "審批：在 BUDGET_HOLDER 分支加入 Human in the loop → Approval，由預算負責人審批，再加入一個 Approval，由財務主任審批。在另一分支加入一個 Approval，由財務主任審批。向審批人展示摘要及回覆草稿。",
-      "發送：在每個分支末端加入 Gmail 或 Outlook 的發送電郵動作，由報銷郵箱以草擬的回覆回覆申請人。如審批人拒絕，執行會停止，不會發出任何內容。",
-      "在 Test 分頁用三份報銷申請樣本（合規、超出上限、欠缺收據）測試，然後按 Turn on。"
+      "模型：Describe your agent 詢問時，揀選最強的 Gemini 模型（Google 建議以 Pro 模型從描述建立工作流程）。如欠缺某個步驟，請重新生成，或手動加入 Gemini Agent 步驟。",
+      "觸發：按一下觸發，選擇 App event → Gmail（或 Outlook）→ When an email is received，指定報銷郵箱，並加入篩選條件，例如主旨包含 \"Expense claim\"。",
+      "知識及應用程式：逐一檢查各步驟：步驟 3 有開支政策及規則表；步驟 5 有回覆範本，以及已開啟建立草稿（Add or update data）和搜尋動作的 Gmail。",
+      "Condition：在步驟 6 後加入 Flow control → Condition，按步驟 4 的輸出分為兩個分支：route equals BUDGET_HOLDER，以及其他情況。",
+      "審批：在 BUDGET_HOLDER 分支加入 Human in the loop → Approval，由預算負責人審批，再加入一個由財務主任審批的 Approval；在另一分支加入一個由財務主任審批的 Approval。向審批人展示步驟 6 的摘要及草稿。",
+      "發送：在每個分支末端加入已開啟 Gmail 發送功能的 Gemini Agent 步驟，發送步驟 5 的草稿，或由財務主任從郵箱發送草稿。用三份報銷申請樣本 Test，然後按 Turn on。"
     ],
     "helpers": [
       {
@@ -313,18 +313,18 @@
     "summary": "Workflow Agent 會按課程學習成果及你的審閱清單，檢查每份存入審閱資料夾的試卷初稿，然後草擬給出卷人的意見或簽批通知。每項結果都由審閱人批准，沒有重大問題的試卷亦須經課程主任批准，電郵只會在批准後才發出。",
     "steps": [
       "用輔助提示詞草擬審閱清單，並儲存為檔案。確認審閱資料夾（Drive Connector）及部門郵箱（Email Connector）已連接。",
-      "在 Workflow Builder（Agents → Create agent）把提示詞貼到 Describe your agent，以建立 Agent 步驟。然後按下方 Flow builder 設定，手動加入觸發、Condition、審批及發送電郵步驟。",
+      "在 Workflow Builder（Agents → Create agent）把提示詞貼到 Describe your agent：它會建立五個互相連接的 Gemini Agent 步驟。然後按下方 Flow builder 設定，手動加入觸發、Condition、審批及發送步驟。",
       "用一份舊試卷測試，然後啟用。審閱人及課程主任在 Runs（Needs Review）批准；被拒絕的執行會停止，不會發出任何內容。"
     ],
-    "prompt": "為 {{INSTITUTION_NAME}} {{DEPARTMENT_NAME}}建立一個 Workflow Agent，每次預先檢查一份 {{EXAM_SESSION}} 的試卷初稿，讓審閱人專注作出專業判斷。按以下次序執行步驟：\n\n1. 閱讀：擷取科目編號（從檔案名稱）、出卷人、考試時間、總分、每條題目的分數及課題，以及評分標準。\n2. 核對：按課程學習成果、審閱清單、評核政策及試卷格式指引檢查試卷：學習成果覆蓋（每項學習成果 → 評核該成果的題目，或「未有評核」）、分數是否加起來等於總分、評分標準是否與每條題目相符、程度及時間、清晰程度、公平及無障礙，以及政策問題（附相關條文）。把每個問題評為重大或輕微。\n3. 決定：在輸出的第一行寫出分流路徑，只可選以下其中一項：\n   ROUTE: REVISE（最少有一個重大問題）\n   ROUTE: SIGN_OFF（只有輕微問題或沒有問題）\n4. 草擬：如為 REVISE，草擬一封給出卷人的電郵，列出每個重大問題及建議修正方法（絕不可改寫題目）。如為 SIGN_OFF，草擬一則給 {{EXAMS_OFFICE_EMAIL}} 的簡短通知，列明科目編號及檔案名稱，說明試卷獲批准後即可付印，並附上給出卷人的輕微問題。\n5. 摘要：最後以表格形式提供審閱報告，以及一行記錄：日期、科目編號、出卷人、分流路徑。\n\n試卷必須保密：不可在報告及草稿以外引述試卷內容。絕不可自行發送任何內容。",
+    "prompt": "為 {{INSTITUTION_NAME}} {{DEPARTMENT_NAME}}建立一個多步驟 Workflow Agent，每次執行預先檢查一份 {{EXAM_SESSION}} 的試卷初稿，讓審閱人可專注於專業判斷。按以下次序建立五個獨立的 Gemini Agent 步驟，每個步驟一個節點。每個步驟把輸出作為變數傳給下一個步驟。使用結構化 JSON 輸出，只包含列明的欄位，欄位名稱及分流路徑值須保留英文。\n\n步驟 1 · 取得試卷\n連接的應用程式：Google Drive（只限搜尋）。\n閱讀啟動這次執行的試卷。如執行是手動啟動，使用 {{MODERATION_FOLDER}} 資料夾內最新的檔案。在同一檔案或科目編號相同的檔案中找出評分方案。\n輸出：{ file_name, course_code, paper_text, marking_scheme_text }\n\n步驟 2 · 整理試卷結構\n輸入：步驟 1 的輸出。\n輸出：{ setter, duration, total_marks, questions: [ { number, marks, topic, outcome } ] }\n\n步驟 3 · 審閱檢查\n知識：載有學習成果的科目大綱、審閱清單、評核政策及格式指引。\n輸入：步驟 1 及 2 的輸出。檢查學習成果覆蓋範圍、分數加總是否正確、評分方案是否與每題相符、程度及作答時間、清晰度、公平性及無障礙程度，以及政策問題。\n輸出：{ issues: [ { question, problem, severity, clause, suggested_fix } ], uncovered_outcomes: [ ], route }，severity 為 Major 或 Minor，route 只可為以下其中一項：\n- REVISE：至少有一個 Major 問題\n- SIGN_OFF：只有 Minor 問題或沒有問題\n\n步驟 4 · 草擬電郵\n連接的應用程式：Gmail（只限建立草稿，絕不發送）。\n輸入：步驟 1 至 3 的輸出。如為 REVISE，建立給擬題人的電郵草稿，列出每個 Major 問題及建議修改（絕不可改寫題目）。如為 SIGN_OFF，建立給 {{EXAMS_OFFICE_EMAIL}} 的通知草稿，列明科目編號及檔案名稱，說明試卷獲批准後即可付印。\n輸出：{ draft_subject, draft_body }\n\n步驟 5 · 審閱報告\n輸入：步驟 2 至 4 的輸出。\n輸出：{ report, log_row }：report 是供審閱人參考的問題及學習成果覆蓋表；log_row 為「date | course code | setter | route」。\n\n所有步驟的規則：試卷必須保密，不可在報告及草稿以外引用；絕不可發送電郵。",
     "proTip": "先用一份你知道有問題的舊試卷測試工作流程：如 Agent 漏掉審閱人曾發現的問題，就把它加入審閱清單。",
     "connectorGuideSteps": [
+      "模型：Describe your agent 詢問時，揀選最強的 Gemini 模型（Google 建議以 Pro 模型從描述建立工作流程）。如欠缺某個步驟，請重新生成，或手動加入 Gemini Agent 步驟。",
       "觸發：按一下觸發，選擇 App event → Google Drive，為審閱資料夾揀選新增檔案事件，並加入只限試卷初稿的篩選條件。",
-      "知識：逐一開啟各 Agent 步驟，把課程大綱、審閱清單、評核政策及試卷格式指引加入為知識檔案。",
-      "Condition：在 Agent 步驟後加入 Flow control → Condition，按 Agent 輸出分為兩個分支：輸出包含 \"ROUTE: SIGN_OFF\"，以及其他情況（REVISE）。",
-      "審批：在 SIGN_OFF 分支加入 Human in the loop → Approval，由審閱人審批，再加入一個 Approval，由課程主任審批。在 REVISE 分支加入一個 Approval，由審閱人審批。展示報告及草稿。",
-      "發送：在 SIGN_OFF 分支末端加入發送電郵動作，發送至考試組；在 REVISE 分支末端，以電郵把草擬的意見發送給出卷人，並副本抄送審閱人。被拒絕的執行會停止，不會發出任何內容。",
-      "在 Test 分頁用一份舊試卷測試，然後按 Turn on。上載至資料夾的修訂試卷會啟動新一輪執行。"
+      "知識及應用程式：逐一檢查各步驟：步驟 3 有科目大綱、審閱清單、評核政策及格式指引；步驟 4 有已開啟建立草稿（Add or update data）和搜尋動作的 Gmail。",
+      "Condition：在步驟 5 後加入 Flow control → Condition，按步驟 3 的輸出分為兩個分支：route equals SIGN_OFF，以及其他情況（REVISE）。",
+      "審批：在 SIGN_OFF 分支加入 Human in the loop → Approval，由審閱人審批，再加入一個由課程主任審批的 Approval；在 REVISE 分支加入一個由審閱人審批的 Approval。向審批人展示步驟 5 的報告及草稿。",
+      "發送：在每個分支末端加入已開啟 Gmail 發送功能的 Gemini Agent 步驟，發送步驟 4 的草稿，或由審閱人自行發送。用一份舊試卷 Test，然後按 Turn on；修訂後的試卷會啟動新的執行。"
     ],
     "helpers": [
       {
@@ -335,6 +335,132 @@
     "hints": [
       "試卷正等待審閱？",
       "每份試卷都覆蓋學習成果嗎？"
+    ]
+  },
+  "canvas_concept_simulator": {
+    "title": "互動概念模擬器網頁應用程式",
+    "summary": "在 Canvas Mode 建立一個小型互動網頁應用程式，學生移動滑桿就能即時看到概念的變化，再配合「先預測，後測試」的問題，把示範變成主動學習。",
+    "steps": [
+      "揀選一個學生難以想像的概念，並記下他們應該可以調整的 2-4 個數值。",
+      "在 Gemini 執行提示詞，Canvas Mode 會把模擬器建立為網頁應用程式。逐一試用每個控制項，然後在同一個 Canvas 請 Gemini 修正或調整任何地方（標籤、數值範圍、顏色）。",
+      "對照你的筆記核對當中的物理、數學或經濟學內容，然後在 LMS 分享 Canvas 連結，或在課堂上展示。"
+    ],
+    "prompt": "擔任教育網頁開發人員及 {{SUBJECT}} 老師。建立一個互動模擬器網頁應用程式，幫助 {{STUDENT_LEVEL}} 學生理解 {{CONCEPT}}。\n\n應用程式內容\n1. 控制項：為 {{VARIABLES_TO_CHANGE}} 設置滑桿或輸入欄，每個都有標籤、單位、合理範圍及重設按鈕。\n2. 即時畫面：動畫、圖表或示意圖隨控制項改變即時更新，並以數字顯示主要數值。\n3. 先預測，後測試：3 條引導問題。每條問題先由學生寫下或揀選預測，然後執行模擬，看看預測是否正確，並附簡短解釋。\n4. 解釋面板：用淺白語言解釋概念，以及模擬背後的公式或規則。\n5. 老師模式：一個切換開關，可顯示底層數值，並讓老師為全班設定情境。\n\n規則\n- 使用 {{SUBJECT}} 正確、標準的公式及單位，並顯示所用的公式。\n- 簡潔、無障礙的設計：大控制項、易讀字體、良好顏色對比，在手機及課室投影機上都能使用。\n- 所有內容都在瀏覽器運行；無需登入，亦不涉及個人資料。\n\n請使用 Canvas 將此內容建立為互動網頁應用程式。",
+    "proTip": "每個模擬器只集中一個概念，最多四個控制項：學生五分鐘就能掌握的精簡應用程式，比繁雜的應用程式學得更多。",
+    "helpers": [
+      {
+        "title": "選擇學生探索內容提示詞",
+        "prompt": "就 {{SUBJECT}} 中 {{STUDENT_LEVEL}} 程度的 {{CONCEPT}} 概念，列出學生最常見的 3 個誤解、他們應在模擬中調整以消除這些誤解的 2-4 個數值，以及 3 條針對這些誤解的「先預測，後測試」問題。"
+      }
+    ],
+    "hints": [
+      "學生想像不到這個概念？",
+      "沒有實驗室也想做互動示範？"
+    ]
+  },
+  "canvas_practice_quiz_app": {
+    "title": "自動評分練習測驗網頁應用程式",
+    "summary": "在 Canvas Mode 把一個課題變成可分享的練習測驗網頁應用程式：即時評分、提示、詳細解說及分數總結，讓學生知道要溫習甚麼。",
+    "steps": [
+      "選擇課題及題目類型；如有自己的題庫或筆記，可貼到對話中。",
+      "在 Gemini 執行提示詞，Canvas Mode 會建立測驗應用程式。親自完成測驗，然後在同一個 Canvas 請 Gemini 修正任何題目或答案。",
+      "對照你的筆記核對每個答案，然後把 Canvas 連結分享給學生自學（應用程式不會收集姓名或分數）。"
+    ],
+    "prompt": "擔任 {{SUBJECT}} 老師及網頁開發人員。為 {{STUDENT_LEVEL}} 學生建立一個有關 {{TOPIC}} 的自動評分練習測驗網頁應用程式，共 {{QUESTION_COUNT}} 條題目。\n\n應用程式內容\n1. 題目類型：混合多項選擇題、是非題、簡短數字題（設可接受範圍），以及拖放排序或配對題。\n2. 每次顯示一條題目，附進度列及學生可關閉的計時器。\n3. 即時評分：每次作答後即時顯示對錯及詳細解說，並設提示按鈕供學生作答前使用。\n4. 結果畫面：分數、答錯的課題，以及「再練習這些題目」按鈕，只重新排列答錯的題目。\n5. 每次作答都重新排列題目及答案選項。\n\n規則\n- 只使用在此程度上對 {{SUBJECT}} 正確的事實；每個解說都必須說明正確答案為何正確。\n- 如我在此對話中貼上筆記或題庫，請根據它們出題。\n- 無障礙設計（可用鍵盤操作、易讀字體、良好對比），可在手機使用；無需登入，亦不儲存個人資料。\n\n請使用 Canvas 將此內容建立為互動網頁應用程式。",
+    "proTip": "在同一個 Canvas 請 Gemini「就大部分學生答錯的課題多加 10 條題目」：應用程式會隨你的班級成長，無需重新開始。",
+    "helpers": [
+      {
+        "title": "先草擬題庫提示詞",
+        "prompt": "為 {{STUDENT_LEVEL}} 學生撰寫一個有關 {{SUBJECT}} 中 {{TOPIC}} 的題庫，共 {{QUESTION_COUNT}} 條題目：難度不一，每條附正確答案、一句解說，以及該題所測試的常見錯誤答案。請使用 Canvas 將此內容建立為可編輯文件。"
+      }
+    ],
+    "hints": [
+      "想要會自動評分的練習？",
+      "學生測驗前需要即時回饋？"
+    ]
+  },
+  "canvas_classroom_review_game": {
+    "title": "課堂溫習遊戲網頁應用程式",
+    "summary": "在 Canvas Mode 建立適合投影的團隊遊戲，用作課堂重溫：多輪問答、倒數計時、團隊計分及最終排行榜，隨時可在課堂上進行。",
+    "steps": [
+      "決定課堂內容、隊伍數目及回合，並把重點或題目貼到對話中。",
+      "在 Gemini 執行提示詞，Canvas Mode 會建立遊戲。自己先玩一個回合，然後在同一個 Canvas 請 Gemini 調整時間、顏色或題目。",
+      "核對答案，然後在課室螢幕開啟 Canvas 連結，開始遊戲。"
+    ],
+    "prompt": "擔任遊戲設計師及 {{SUBJECT}} 老師。為一節有關 {{LESSON_TOPIC}} 的課堂建立一個課堂溫習遊戲網頁應用程式，由 {{TEAM_COUNT}} 隊在投影機上進行。\n\n遊戲內容\n1. 設定畫面：老師為各隊命名，並揀選回合數目及每題秒數。\n2. 回合：快速搶答回合（多項選擇題）、「是非題」回合，以及雙倍分數的最終「搶分」回合。每個回合 5 條題目。\n3. 大型倒數計時器、附一句解說的揭曉答案按鈕，以及可為任何隊伍加分的按鈕。\n4. 每個畫面都有即時計分板、答對時的聲效或視覺效果（附靜音按鈕），以及附慶祝效果的最終排行榜。\n5. 老師用的鍵盤快捷鍵：空白鍵揭曉答案，數字鍵加分。\n\n規則\n- 題目必須配合 {{STUDENT_LEVEL}} 程度的 {{LESSON_TOPIC}}，內容正確；如我在此對話中貼上題目，請使用它們。\n- 課室螢幕需要特大易讀文字及高對比；無需登入，亦不涉及學生資料。\n\n請使用 Canvas 將此內容建立為互動網頁應用程式。",
+    "proTip": "儲存遊戲的 Canvas，然後請 Gemini「換上下星期課堂的題目」：同一個遊戲就能成為學生期待的每週活動。",
+    "helpers": [
+      {
+        "title": "撰寫遊戲題目提示詞",
+        "prompt": "為 {{SUBJECT}} 的 {{STUDENT_LEVEL}} 學生撰寫 15 條有關 {{LESSON_TOPIC}} 的快速溫習題目：5 條多項選擇題、5 條是非題，以及 5 條較難的「搶分回合」題目，每條附答案及一句解說。"
+      }
+    ],
+    "hints": [
+      "需要生動的 10 分鐘課堂重溫？",
+      "想全班參與作答，而非幾個人？"
+    ]
+  },
+  "canvas_revision_planner_app": {
+    "title": "考試溫習計劃網頁應用程式",
+    "summary": "在 Canvas Mode 建立你專屬的溫習計劃網頁應用程式：考試倒數、間隔溫習時間表、專注計時器及進度剔選，全部在瀏覽器中運行。",
+    "steps": [
+      "列出你的考試及日期、每科的課題，以及每天可以溫習多少小時。",
+      "在 Gemini 執行提示詞，Canvas Mode 會建立溫習計劃。在同一個 Canvas 請 Gemini 修改任何地方，例如加入科目或調動休息日。",
+      "每天使用溫習計劃；如考試日期有變，在 Canvas 更新日期，讓它重新編排時間表。"
+    ],
+    "prompt": "擔任學習教練及網頁開發人員。為一名 {{STUDENT_LEVEL}} 學生建立一個考試溫習計劃網頁應用程式，考試如下：{{EXAM_LIST}}。我每天大約可以溫習 {{HOURS_PER_DAY}} 小時。\n\n應用程式內容\n1. 主頁：每個考試的倒數，以及今天的溫習任務。\n2. 時間表：直至最後一個考試的每日計劃，採用間隔重複（每個課題在 1、3 及 7 天後再溫習），較難的課題優先，每星期一天休息日，每個考試前一天的任務較輕。\n3. 專注計時器：25 分鐘專注及 5 分鐘休息循環，附柔和提示聲，並顯示今天已完成的節數。\n4. 進度：完成的課題可剔選，並評估信心程度（1-3）；信心較低的課題會較快再出現。\n5. 編輯：加入或移除考試或課題，時間表會重新編排。\n\n規則\n- 計劃要切實可行：每天的任務絕不超過 {{HOURS_PER_DAY}} 小時。\n- 只在瀏覽器儲存進度；無需登入，亦不會把個人資料傳送到任何地方。\n- 友善、平和的設計，可在手機使用。\n\n請使用 Canvas 將此內容建立為互動網頁應用程式。",
+    "proTip": "如實估計每天可溫習的時數：一個你真正能跟從的計劃，勝過三天後就放棄的進取計劃。",
+    "helpers": [
+      {
+        "title": "把每科拆分為課題提示詞",
+        "prompt": "就以下考試：{{EXAM_LIST}}，把每科拆分為 {{STUDENT_LEVEL}} 學生需要的 6-10 個溫習課題，標示通常最難的 3 個，並估計每個課題需要的時數。"
+      }
+    ],
+    "hints": [
+      "考試太多，不知從何溫起？",
+      "想要助你按部就班的溫習時間表？"
+    ]
+  },
+  "canvas_budget_scenario_app": {
+    "title": "預算假設情境計算器網頁應用程式",
+    "summary": "在 Canvas Mode 建立互動預算計算器，讓管理層移動收生人數、學費、人手及成本的滑桿，即時看到盈餘或赤字，並附圖表及並列比較的情境。",
+    "steps": [
+      "整理去年的預算項目（收入及成本類別連金額）及你想測試的假設，並移除機密細節或把數字約整。",
+      "在 Gemini 貼上數字並執行提示詞，Canvas Mode 會建立計算器。用去年的實際總額測試，然後在同一個 Canvas 請 Gemini 修正任何公式。",
+      "請財務同事核對每條公式，然後才在預算會議前把 Canvas 分享給管理層。"
+    ],
+    "prompt": "擔任財務分析師及網頁開發人員。為 {{INSTITUTION_NAME}} {{UNIT_NAME}}建立一個 {{BUDGET_YEAR}} 年度的預算假設情境計算器網頁應用程式。基準預算項目以 {{CURRENCY}} 列於下方（或在我下一則訊息中）。\n\n應用程式內容\n1. 滑桿輸入：學生人數、每名學生學費、員工人數及每名員工平均成本，以及其他每個成本項目的百分比變動；每個滑桿都顯示基準數值，並可重設。\n2. 即時結果：總收入、總成本、盈餘或赤字，以及每名學生成本，即時更新。\n3. 圖表：按類別比較收入與成本，以及由基準至情境的瀑布圖。\n4. 情境：最多儲存 3 個已命名的情境，並在表格中並列比較。\n5. 假設面板以淺白文字列出每條公式，並可把比較表匯出為 CSV。\n\n規則\n- 顯示公式；絕不可隱藏或虛構任何成本項目，並標示任何需要假設的項目。\n- 約整至 {{CURRENCY}} 整數；清晰、專業的設計，可在手提電腦及會議室螢幕使用。\n- 所有內容都在瀏覽器運行；無需登入。\n\n請使用 Canvas 將此內容建立為互動網頁應用程式。",
+    "proTip": "先用約整、非機密的數字：價值在於讓管理層即時探討取捨，而非精確到每一分錢。",
+    "helpers": [
+      {
+        "title": "整理預算項目提示詞",
+        "prompt": "把我在下面貼上的 {{UNIT_NAME}}預算數字，整理成以 {{CURRENCY}} 計算、按類別分組並附總額的收入及成本項目表格，並列出哪些項目取決於學生人數或員工人數。"
+      }
+    ],
+    "hints": [
+      "預算會議充滿「如果」問題？",
+      "想讓管理層自行測試預算方案？"
+    ]
+  },
+  "canvas_phishing_trainer_app": {
+    "title": "識別釣魚電郵訓練網頁應用程式",
+    "summary": "在 Canvas Mode 建立簡短的互動訓練，讓教職員及學生檢查逼真的示範電郵、點選警號並即時獲得解釋，內容按你院校實際面對的威脅度身訂造。",
+    "steps": [
+      "記下你院校實際遇到的釣魚主題（假冒重設密碼、發票騙案、包裹通知）及你的舉報地址。",
+      "在 Gemini 執行提示詞，Canvas Mode 會建立訓練應用程式。逐一檢視每封電郵，然後在同一個 Canvas 請 Gemini 調整任何看來有誤或太容易的地方。",
+      "確認建議符合你的 IT 政策，然後在網絡安全宣傳活動或入職培訓中分享 Canvas 連結。"
+    ],
+    "prompt": "擔任網絡安全培訓導師及網頁開發人員。根據以下常見主題，為 {{INSTITUTION_NAME}} 的教職員及學生建立一個釣魚電郵防範訓練網頁應用程式：{{PHISHING_THEMES}}。\n\n應用程式內容\n1. 8 封逼真的示範電郵（5 封釣魚電郵、3 封真實電郵），以電郵程式的樣式顯示：寄件人、主旨、內文、連結（滑鼠停留時顯示真實地址）及附件。\n2. 每封電郵由使用者先判斷「釣魚」或「安全」，然後點選所有能找到的警號（仿冒寄件人、語氣急迫、連結不符、意料之外的附件、索取登入資料）。\n3. 即時回饋：已找到的警號、遺漏的警號（以醒目標示），以及每個警號的一句解釋。\n4. 最終分數連簡短的個人化提示清單，以及「如何舉報」：把可疑電郵轉寄至 {{REPORT_ADDRESS}}。\n5. 最後設 3 條問題的快速重溫。\n\n規則\n- 只使用虛構的名稱及網域（例如仿冒「school.example」的網域），絕不使用真實人物或有效連結。\n- 建議必須符合良好做法：不要點擊、透過已知渠道核實、舉報。\n- 無障礙設計，可在手機使用；無需登入，亦不收集任何資料。\n\n請使用 Canvas 將此內容建立為互動網頁應用程式。",
+    "proTip": "每個學期用服務台最近遇到的真實誘餌更新示範電郵：反映本月威脅的訓練，效果持久得多。",
+    "helpers": [
+      {
+        "title": "研究教育界最新釣魚誘餌提示詞",
+        "prompt": "研究過去 12 個月針對大學及學校最常見的釣魚及社交工程誘餌（例如假冒重設密碼、更改薪酬資料、研究資助或發票騙案、包裹通知）。就每種誘餌列出典型警號及一個安全的措辭示例，並引用來源。集中研究與 {{INSTITUTION_NAME}} 所在地區相關的主題。"
+      }
+    ],
+    "hints": [
+      "教職員仍會點擊可疑連結？",
+      "想要大家真正會完成的保安培訓？"
     ]
   }
 }

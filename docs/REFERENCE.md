@@ -54,7 +54,7 @@ A pixel-art banner above the library (canvas renderer in `app.js`; sprites from 
 | `prompt_type` | Actions |
 | :--- | :--- |
 | `general`, `canvas`, `image`, `video` | **Try it** opens `<ge_app_link>?q=<prompt>` (chat prefilled) + **Copy prompt** |
-| `notebooklm`, `deep_research`, `agent_designer` (Workflow Builder), `skills` | **Try it** copies the prompt, opens the GE app home and shows where to paste it (Create agent → Chat agent; Agents → Create agent → Describe your agent; Skills → + → Create skill with Gemini; Deep Research; Gemini Notebook). Gemini Enterprise documents no deep links into these features. + **Copy prompt** |
+| `notebooklm`, `deep_research`, `agent_designer` (Workflow Builder), `skills` | **Copy prompt** only (no Try it: Gemini Enterprise documents no deep links into these features). After copying, a guide under the buttons shows where to paste it: Create agent → Chat agent; Agents → Create agent → Describe your agent (then add the trigger, Condition, Approvals and send email by hand); Skills → + → Create skill with Gemini; Deep Research; Gemini Notebook |
 
 ### Admin console
 * **Users:** bulk-provision users with temporary passwords and a **Categories** checklist. **Edit user** changes a user's email (cascades to preferences, analytics and feedback) and their Gemini Enterprise app link, edits their categories, and can reset access.

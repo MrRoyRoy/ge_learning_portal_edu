@@ -69,9 +69,9 @@ No copying between tabs. The variables the user filled in are already inside the
 ![Try it sends the filled-in prompt to Gemini Enterprise](docs/images/16-try-it-chat.jpg)
 
 * **Chat, Canvas, Image and Video prompts** open in Gemini Enterprise **with the prompt already in the chat box**: press Enter and it runs. Each user's own app link is set by an admin, so it always opens the right Gemini Enterprise.
-* **Workflow Builder, Skills, Deep Research and Gemini Notebook** can't be prefilled from a link (Gemini Enterprise documents no deep links into them). Try it copies the prompt, opens Gemini Enterprise and shows exactly where to paste it, so it's still one paste away.
+* **Workflow Builder, Skills, Deep Research and Gemini Notebook** can't be opened with the prompt filled in (Gemini Enterprise documents no deep links into them), so these playbooks have no Try it button. **Copy prompt** copies it and shows exactly where to paste it.
 
-![Try it shows where to paste a Skill](docs/images/05-try-it-guide.jpg)
+![Copy prompt shows where to paste a Skill](docs/images/05-try-it-guide.jpg)
 
 ### 4. Suggest an idea
 The **Feedback** button takes ideas as well as bugs. A short hint asks for who it's for, the task and what Gemini should produce, and empty or vague notes ("great, thanks!") are gently rejected so admins get ideas they can act on.
@@ -161,13 +161,14 @@ Super admins can edit the **playbook drafting prompt** in **Settings**: the desi
 
 ## 📚 What's in the library
 
-26 built-in playbooks (plus anything your admins add), in English, Traditional and Simplified Chinese.
+32 built-in playbooks (plus anything your admins add), in English, Traditional and Simplified Chinese.
 
 | Type | What it is | Examples |
 | :--- | :--- | :--- |
 | **Workflow Builder · chat agents** | Assistants people talk to over time, grounded in your files | Socratic Tutor, Student Union Policy, IT Service Desk, Campus Safety Drill |
-| **Workflow Builder · workflow agents** | Multi-step processes started by a new file (Drive Connector) or email (Email Connector). The prompt builds the agent steps in *Describe your agent*; a short **Flow builder setup** checklist adds the trigger, the condition, the approvals and the send email step by hand (Gemini Enterprise can't create those from a prompt) | Special Consideration, Scholarship Screening, Expense Claim Approval, Exam Paper Moderation |
+| **Workflow Builder · workflow agents** | Multi-step processes started by a new file (Drive Connector) or email (Email Connector). The prompt is a step-by-step spec, so *Describe your agent* builds several connected Gemini Agent steps (read, extract, check, decide, draft, summarise); a short **Flow builder setup** checklist adds the trigger, the condition, the approvals and the send step by hand (Gemini Enterprise can't create those from a prompt) | Special Consideration, Scholarship Screening, Expense Claim Approval, Exam Paper Moderation |
 | **Skills** | Generic, reusable procedures saved once and called with `@` in any chat | Revision Quiz, Feedback in my Marking Voice, Lesson Plan, Meeting Minutes |
+| **Canvas Mode · interactive web apps** | Working apps Canvas builds in the browser and anyone can open from a shared link, no logins or personal data | Concept Simulator, Self-Marking Practice Quiz, Classroom Review Game, Exam Revision Planner, Budget What-If Calculator, Phishing Trainer |
 | **Research** | Evidence and proposals with Deep Research, Gemini Notebook and Canvas Mode | Literature Review Evidence Map, Grant Proposal Builder, Research Ethics Pre-Check |
 | **Teaching, students and operations** | Gemini Notebook analysis, Canvas Mode documents, Image and Video Generation | Rubric feedback, curriculum design, club budgets, accreditation reports |
 

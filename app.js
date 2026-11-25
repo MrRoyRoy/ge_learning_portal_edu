@@ -6713,20 +6713,19 @@ function applyI18nAttributes() {
 /** Prompt types that Gemini Enterprise can open straight from a ?q= link. */
 const TRYABLE = new Set(["general", "canvas", "image", "video"]);
 
-/** Every type gets Copy + Try it. Non-TRYABLE types "try" by copying the prompt, opening the GE app home
- * and showing where to paste it (GE documents no deep links into Workflow Builder, Skills, Deep Research or
- * Gemini Notebook, and the user's browser is already signed in). Pure. */
-const promptActions = () => ["copy", "try"];
+/** Which actions a prompt of this type supports. Try it only where the prompt really lands in Gemini Enterprise
+ * (?q= prefill); Workflow Builder, Skills, Deep Research and Gemini Notebook have no deep link, so they get
+ * Copy prompt only, which then shows where to paste the prompt. Pure. */
+const promptActions = (type) => (TRYABLE.has(type || "general") ? ["copy", "try"] : ["copy"]);
 
 /** Where a copied prompt of this type goes in GE: key into t.tryGuide. Workflow prompts start with a trigger step. Pure. */
 const tryGuideKey = (type, text) => {
-  // Workflow prompts end their decide step with "ROUTE: X" lines (kept in English in every language); older ones start with a trigger step
-  if (type === "agent_designer") return /ROUTE: [A-Z_]+|STEP 1 · TRIGGER|步驟 1 · 觸發|步骤 1 · 触发/.test(text || "") ? "workflow" : "chatAgent";
+  // Workflow prompts are node-by-node specs of "Gemini Agent" steps (named in every language; chat agent prompts
+  // never mention them); older ones used "ROUTE: X" lines or started with a trigger step
+  if (type === "agent_designer") return /Gemini Agent|\{\s*route\b|ROUTE: [A-Z_]+|STEP 1 · TRIGGER|步驟 1 · 觸發|步骤 1 · 触发/.test(text || "") ? "workflow" : "chatAgent";
   return { skills: "skills", deep_research: "deepResearch", notebooklm: "notebook" }[type] || null;
 };
 
-/** The GE app link without any query: the signed-in home page. Pure. */
-const geAppHome = (geAppLink) => (geAppLink ? geAppLink.split("?")[0] : null);
 
 /**
  * Build the deep link that opens a prompt in the user's GE app. Pure.
@@ -7666,7 +7665,9 @@ async function onCopyPrompt(scopeId, btn) {
   if (!scope) return;
   const t = tr();
   if (await copyText(interpolatePrompt(scope.text, modalState.values))) {
-    showToast(t.promptCopiedSuccess);
+    const guideKey = tryGuideKey(scope.type, scope.text);
+    if (guideKey) showPasteGuide(scopeId, guideKey);
+    showToast(guideKey ? t.copyGuideToast : t.promptCopiedSuccess);
     if (btn) {
       const original = btn.innerHTML;
       btn.innerHTML = `<span class="material-symbols-outlined">check</span>${escapeHtml(t.copied)}`;
@@ -7696,8 +7697,6 @@ async function onTryIt(scopeId) {
   }
   modalState.tryArmed[scopeId] = false;
   const prompt = interpolatePrompt(scope.text, modalState.values);
-  const guideKey = tryGuideKey(scope.type, scope.text);
-  if (guideKey) { await tryWithGuide(scopeId, prompt, guideKey); return; }
   const url = buildTryItUrl(appState.geAppLink, prompt);
   if (!url) {
     await copyText(prompt);
@@ -7716,25 +7715,15 @@ async function onTryIt(scopeId) {
 }
 
 /**
- * Try it for prompts that can't be prefilled by a link: copy the prompt, open the user's GE app home in a new
- * tab (already signed in) and show the clicks to paste it, in a box under the buttons that stays until closed.
+ * After Copy prompt on a type Gemini Enterprise can't prefill (Workflow Builder, Skills, Deep Research, Gemini
+ * Notebook): show the clicks to paste it, in a box under the buttons that stays until closed.
  */
-async function tryWithGuide(scopeId, prompt, guideKey) {
+function showPasteGuide(scopeId, guideKey) {
   const t = tr();
   const g = t.tryGuide[guideKey];
-  const copied = await copyText(prompt);
-  const home = geAppHome(appState.geAppLink);
-  if (home) {
-    window.open(home, "_blank", "noopener");
-    fetch("/api/use-cases/try", {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ useCaseId: modalState.useCase?.id })
-    }).catch(() => {});
-  }
-  showToast(copied ? (home ? t.tryGuideOpened : t.tryGuideCopiedOnly) : t.tryGuideCopyFailed, copied ? "success" : "warning");
-  const btn = document.querySelector(`#modalDynamicContent .btn-try-it[data-scope="${CSS.escape(scopeId)}"]`);
+  const btn = document.querySelector(`#modalDynamicContent .btn-copy-prompt[data-scope="${CSS.escape(scopeId)}"]`);
   const actions = btn && btn.closest(".prompt-actions");
-  if (!actions) return;
+  if (!actions || !g) return;
   actions.parentElement.querySelectorAll(".try-guide").forEach(el => el.remove());
   const box = document.createElement("div");
   box.className = "try-guide";
@@ -7745,8 +7734,7 @@ async function tryWithGuide(scopeId, prompt, guideKey) {
       <span>${escapeHtml(g.title)}</span>
       <button type="button" class="icon-btn btn-sm try-guide-close" aria-label="${escapeHtml(t.tryGuideClose)}"><span class="material-symbols-outlined">close</span></button>
     </div>
-    <ol>${g.steps.map(st => `<li>${escapeHtml(st)}</li>`).join("")}</ol>
-    ${home ? "" : `<p class="try-guide-note">${escapeHtml(t.tryGuideNoLink)}</p>`}`;
+    <ol>${g.steps.map(st => `<li>${escapeHtml(st)}</li>`).join("")}</ol>`;
   box.querySelector(".try-guide-close").addEventListener("click", () => box.remove());
   actions.insertAdjacentElement("afterend", box);
   box.scrollIntoView({ block: "nearest", behavior: "smooth" });
@@ -9659,14 +9647,11 @@ function applyQuestSuggestions(aiRes) {
 // ===========================================================================
 const uiTranslationsV9 = {
   en: {
-    tryGuideOpened: "Prompt copied and Gemini Enterprise opened in a new tab. Follow the steps below to paste it.",
-    tryGuideCopiedOnly: "Prompt copied. Open Gemini Enterprise and follow the steps below.",
-    tryGuideCopyFailed: "Couldn't copy automatically. Use Copy prompt, then follow the steps below.",
-    tryGuideNoLink: "No Gemini Enterprise link is set for your account, so open your Gemini Enterprise app yourself.",
+    copyGuideToast: "Prompt copied. Follow the steps below to paste it in Gemini Enterprise.",
     tryGuideClose: "Close",
     tryGuide: {
       chatAgent: { title: "Create the chat agent in Workflow Builder", steps: ["In Gemini Enterprise, click Create agent and choose Chat agent.", "Paste the prompt (Ctrl/Cmd + V), add your files with Add files, then Submit.", "Test it in the Preview tab and click Create."] },
-      workflow: { title: "Build the workflow in Workflow Builder", steps: ["In Gemini Enterprise, open Agents and click Create agent.", "Paste the prompt into Describe your agent (Ctrl/Cmd + V) and submit. Gemini builds the agent steps.", "Add by hand what it can't create: the trigger, the Condition on the ROUTE line, the Approval steps and the send email step (see Flow builder setup in step 3), plus the knowledge files. Then Test and Turn on."] },
+      workflow: { title: "Build the workflow in Workflow Builder", steps: ["In Gemini Enterprise, open Agents and click Create agent.", "Paste the prompt into Describe your agent (Ctrl/Cmd + V) and submit. Gemini builds the agent steps.", "Add by hand what it can't create: the trigger, the Condition on the route field, the Approval steps and the send email step (see Flow builder setup in step 3), plus the knowledge files. Then Test and Turn on."] },
       skills: { title: "Create the skill in Skills", steps: ["In Gemini Enterprise, open Skills, click + and choose Create skill with Gemini.", "Enter the SKILL NAME as the name and the DESCRIPTION as the description, then paste the rest into Instructions.", "Click Save. Call it in any chat with @ or / and its name, adding your own details."] },
       deepResearch: { title: "Run it in Deep Research", steps: ["In Gemini Enterprise, open Deep Research.", "Choose your Sources, paste the prompt (Ctrl/Cmd + V) and click Submit.", "Check the research plan, then click Start Research."] },
       notebook: { title: "Run it in Gemini Notebook", steps: ["In Gemini Enterprise, open Gemini Notebook and open (or create) the notebook for this playbook.", "Make sure the sources named in step 1 are added.", "Paste the prompt into the notebook chat (Ctrl/Cmd + V) and send it."] }
@@ -9680,7 +9665,7 @@ const uiTranslationsV9 = {
     tourUser: [
       { title: "Find the right playbook", body: "Search, or filter by category, GE feature and your Liked list. You only see playbooks for the categories your admin gave you." },
       { title: "Open a playbook", body: "Each card shows the GE features and connectors it uses. Open it for the steps, the Set up prompts and the sample prompt. Tap the heart to save it to Liked." },
-      { title: "Fill in, then Copy or Try it", body: "Fill in the variables once and they appear in every prompt. Try it opens Gemini Enterprise: chat prompts arrive ready to send; for Workflow Builder, Skills, Deep Research and Gemini Notebook the prompt is copied and the steps to paste it appear here." },
+      { title: "Fill in, then Copy or Try it", body: "Fill in the variables once and they appear in every prompt. Try it opens Gemini Enterprise with the prompt ready to send. For Workflow Builder, Skills, Deep Research and Gemini Notebook, use Copy prompt: the steps to paste it appear here." },
       { title: "Quest Run tips", body: "Archie suggests playbooks that fit this point of the academic year. Open the scroll icon for news from your team." },
       { title: "Share an idea, climb the board", body: "Tell us what's missing. Good ideas become playbooks credited to you and earn points on the Leaderboard (the trophy at the top). You can replay these tips from your account menu." }
     ],
@@ -9702,14 +9687,11 @@ const uiTranslationsV9 = {
     draftPromptTooShort: "The prompt is too short. Use Reset to default to start again."
   },
   "zh-TW": {
-    tryGuideOpened: "已複製提示詞，並在新分頁開啟 Gemini Enterprise。請按以下步驟貼上。",
-    tryGuideCopiedOnly: "已複製提示詞。請開啟 Gemini Enterprise，並按以下步驟操作。",
-    tryGuideCopyFailed: "無法自動複製。請按「複製提示詞」，再按以下步驟操作。",
-    tryGuideNoLink: "你的帳戶未設定 Gemini Enterprise 連結，請自行開啟你的 Gemini Enterprise 應用程式。",
+    copyGuideToast: "已複製提示詞。請按以下步驟貼到 Gemini Enterprise。",
     tryGuideClose: "關閉",
     tryGuide: {
       chatAgent: { title: "在 Workflow Builder 建立 Chat Agent", steps: ["在 Gemini Enterprise 按 Create agent，選擇 Chat agent。", "貼上提示詞（Ctrl/Cmd + V），以 Add files 加入你的檔案，然後按 Submit。", "在 Preview 分頁測試，再按 Create。"] },
-      workflow: { title: "在 Workflow Builder 建立工作流程", steps: ["在 Gemini Enterprise 開啟 Agents，按 Create agent。", "把提示詞貼到 Describe your agent（Ctrl/Cmd + V）並提交，Gemini 會建立 Agent 步驟。", "手動加入它無法建立的部分：觸發、按 ROUTE 行分流的 Condition、Approval 步驟及發送電郵步驟（見步驟 3 的 Flow builder 設定），以及知識檔案。然後測試並按 Turn on。"] },
+      workflow: { title: "在 Workflow Builder 建立工作流程", steps: ["在 Gemini Enterprise 開啟 Agents，按 Create agent。", "把提示詞貼到 Describe your agent（Ctrl/Cmd + V）並提交，Gemini 會建立 Agent 步驟。", "手動加入它無法建立的部分：觸發、按 route 欄位分流的 Condition、Approval 步驟及發送電郵步驟（見步驟 3 的 Flow builder 設定），以及知識檔案。然後測試並按 Turn on。"] },
       skills: { title: "在 Skills 建立技能", steps: ["在 Gemini Enterprise 開啟 Skills，按 +，選擇 Create skill with Gemini。", "以「技能名稱」作名稱、「說明」作描述，其餘內容貼到 Instructions。", "按 Save。在任何對話輸入 @ 或 / 加技能名稱即可使用，並補充你自己的資料。"] },
       deepResearch: { title: "在 Deep Research 執行", steps: ["在 Gemini Enterprise 開啟 Deep Research。", "選擇 Sources，貼上提示詞（Ctrl/Cmd + V），按 Submit。", "檢查研究計劃，然後按 Start Research。"] },
       notebook: { title: "在 Gemini Notebook 執行", steps: ["在 Gemini Enterprise 開啟 Gemini Notebook，打開（或建立）此 Playbook 的 Notebook。", "確認已加入步驟 1 提到的來源。", "把提示詞貼到 Notebook 對話（Ctrl/Cmd + V）並送出。"] }
@@ -9723,7 +9705,7 @@ const uiTranslationsV9 = {
     tourUser: [
       { title: "找到合適的 Playbook", body: "搜尋，或按類別、GE 功能及「已讚好」篩選。你只會看到管理員為你設定的類別的 Playbook。" },
       { title: "打開 Playbook", body: "每張卡片都會顯示所用的 GE 功能及連接器。打開後可看到步驟、設定提示詞及範例提示詞。按心形即可加入「已讚好」。" },
-      { title: "填寫變數，然後複製或試用", body: "變數只需填寫一次，便會套用到所有提示詞。「試用」會開啟 Gemini Enterprise：一般對話提示詞會直接填好；Workflow Builder、Skills、Deep Research 及 Gemini Notebook 的提示詞會先複製，並在這裡顯示貼上步驟。" },
+      { title: "填寫變數，然後複製或試用", body: "變數只需填寫一次，便會套用到所有提示詞。「試用」會開啟 Gemini Enterprise，提示詞已填好可直接送出。Workflow Builder、Skills、Deep Research 及 Gemini Notebook 請用「複製提示詞」，貼上步驟會在這裡顯示。" },
       { title: "Quest Run 提示", body: "Archie 會按學年當前階段推薦合適的 Playbook。按卷軸圖示可查看團隊的最新消息。" },
       { title: "分享構想，登上排行榜", body: "告訴我們還缺少甚麼。好的構想會變成 Playbook，註明你的貢獻，並在排行榜（頂部的獎盃）為你加分。你可隨時在帳戶選單重看這些提示。" }
     ],
@@ -9745,14 +9727,11 @@ const uiTranslationsV9 = {
     draftPromptTooShort: "提示詞太短。可按「重設為預設」重新開始。"
   },
   "zh-CN": {
-    tryGuideOpened: "已复制提示词，并在新标签页打开 Gemini Enterprise。请按以下步骤粘贴。",
-    tryGuideCopiedOnly: "已复制提示词。请打开 Gemini Enterprise，并按以下步骤操作。",
-    tryGuideCopyFailed: "无法自动复制。请点击“复制提示词”，再按以下步骤操作。",
-    tryGuideNoLink: "你的账户未设置 Gemini Enterprise 链接，请自行打开你的 Gemini Enterprise 应用。",
+    copyGuideToast: "已复制提示词。请按以下步骤粘贴到 Gemini Enterprise。",
     tryGuideClose: "关闭",
     tryGuide: {
       chatAgent: { title: "在 Workflow Builder 创建 Chat Agent", steps: ["在 Gemini Enterprise 点击 Create agent，选择 Chat agent。", "粘贴提示词（Ctrl/Cmd + V），用 Add files 添加你的文件，然后点击 Submit。", "在 Preview 标签页测试，再点击 Create。"] },
-      workflow: { title: "在 Workflow Builder 创建工作流程", steps: ["在 Gemini Enterprise 打开 Agents，点击 Create agent。", "把提示词粘贴到 Describe your agent（Ctrl/Cmd + V）并提交，Gemini 会创建 Agent 步骤。", "手动添加它无法创建的部分：触发、按 ROUTE 行分流的 Condition、Approval 步骤及发送邮件步骤（见步骤 3 的 Flow builder 设置），以及知识文件。然后测试并点击 Turn on。"] },
+      workflow: { title: "在 Workflow Builder 创建工作流程", steps: ["在 Gemini Enterprise 打开 Agents，点击 Create agent。", "把提示词粘贴到 Describe your agent（Ctrl/Cmd + V）并提交，Gemini 会创建 Agent 步骤。", "手动添加它无法创建的部分：触发、按 route 字段分流的 Condition、Approval 步骤及发送邮件步骤（见步骤 3 的 Flow builder 设置），以及知识文件。然后测试并点击 Turn on。"] },
       skills: { title: "在 Skills 创建技能", steps: ["在 Gemini Enterprise 打开 Skills，点击 +，选择 Create skill with Gemini。", "以“技能名称”作名称、“说明”作描述，其余内容粘贴到 Instructions。", "点击 Save。在任何对话输入 @ 或 / 加技能名称即可使用，并补充你自己的信息。"] },
       deepResearch: { title: "在 Deep Research 运行", steps: ["在 Gemini Enterprise 打开 Deep Research。", "选择 Sources，粘贴提示词（Ctrl/Cmd + V），点击 Submit。", "检查研究计划，然后点击 Start Research。"] },
       notebook: { title: "在 Gemini Notebook 运行", steps: ["在 Gemini Enterprise 打开 Gemini Notebook，打开（或创建）此 Playbook 的 Notebook。", "确认已添加步骤 1 提到的来源。", "把提示词粘贴到 Notebook 对话（Ctrl/Cmd + V）并发送。"] }
@@ -9766,7 +9745,7 @@ const uiTranslationsV9 = {
     tourUser: [
       { title: "找到合适的 Playbook", body: "搜索，或按类别、GE 功能及“已点赞”筛选。你只会看到管理员为你设置的类别的 Playbook。" },
       { title: "打开 Playbook", body: "每张卡片都会显示所用的 GE 功能及连接器。打开后可看到步骤、设置提示词及示例提示词。点击心形即可加入“已点赞”。" },
-      { title: "填写变量，然后复制或试用", body: "变量只需填写一次，便会应用到所有提示词。“试用”会打开 Gemini Enterprise：一般对话提示词会直接填好；Workflow Builder、Skills、Deep Research 及 Gemini Notebook 的提示词会先复制，并在这里显示粘贴步骤。" },
+      { title: "填写变量，然后复制或试用", body: "变量只需填写一次，便会应用到所有提示词。“试用”会打开 Gemini Enterprise，提示词已填好可直接发送。Workflow Builder、Skills、Deep Research 及 Gemini Notebook 请用“复制提示词”，粘贴步骤会在这里显示。" },
       { title: "Quest Run 提示", body: "Archie 会按学年当前阶段推荐合适的 Playbook。点击卷轴图标可查看团队的最新消息。" },
       { title: "分享创意，登上排行榜", body: "告诉我们还缺少什么。好的创意会变成 Playbook，注明你的贡献，并在排行榜（顶部的奖杯）为你加分。你可随时在账户菜单重看这些提示。" }
     ],
